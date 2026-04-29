@@ -1,0 +1,215 @@
+ :root { 
+    --apc-orange: #F7941D; 
+    --apc-black: #1A1A1B; 
+    --apc-charcoal: #333333;
+    --apc-soft-grey: #555555;
+    --apc-blue: #0056b3;
+    --apc-amber: #FFF9F2;
+    --bg: #F4F4F4; 
+    --white: #ffffff; 
+}
+
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', sans-serif; 
+    background: var(--bg); 
+    padding-bottom: 90px; 
+}
+
+.sidebar-open { overflow: hidden; }
+
+/* HEADER */
+.top-nav-container { 
+    position: fixed; 
+    top: 0; 
+    left: 0;
+    width: 100%;
+    z-index: 1100; 
+    background: var(--white); 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+header { 
+    border-bottom: 5px solid var(--apc-orange); 
+    padding: 10px 15px 15px 15px; 
+}
+
+.logo-main img { 
+    height: 65px; 
+    width: auto; 
+    display: block; 
+    margin: 0 auto 10px auto; 
+}
+
+.search-group { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #ccc; }
+.search-group input { flex: 1; border: none; padding: 12px; font-size: 16px; outline: none; }
+.btn-search-main { background: var(--apc-orange); border: none; width: 50px; font-size: 18px; color: white; cursor: pointer; }
+
+/* RESULTS GRID */
+.results-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 5px; /* This keeps the 5px gap BETWEEN the columns and rows */
+    padding: 5px 0px; /* 5px top/bottom, 0px left/right (Touches the glass!) */
+    background: #E4E6EB; 
+    margin-top: 155px; 
+}
+
+/* 1. The Card: Flush to the edges */
+.item-card { 
+    background: white; 
+    overflow: hidden; 
+    position: relative; 
+    border-radius: 0px; 
+    border: 0px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 2. Image to the glass */
+.item-img { 
+    width: 100%; 
+    aspect-ratio: 4/3; 
+    object-fit: cover; 
+    background: #eee; 
+    display: block; /* Removes the tiny gap under images */
+    margin: 0;
+}
+
+/* 3. Ultra-compact info area */
+.item-info { 
+    padding: 8px; /* Tighter padding */
+}
+
+/* 4. Flexbox row for Price + Pill */
+.price-row {
+    display: flex;
+    justify-content: space-between; /* Pins price left, pill right */
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.item-price { 
+    font-weight: 900; 
+    color: var(--apc-blue); 
+    font-size: 15px; 
+}
+
+/* The Orange Installation Pill */
+.fitting-pill {
+    background: rgba(247, 148, 29, 0.1);
+    color: var(--apc-orange);
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(247, 148, 29, 0.3);
+}
+
+/* 5. The "Hook" - One line only with ellipsis (...) */
+.item-title { 
+    font-size: 11px; 
+    font-weight: 700; 
+    color: #333;
+    white-space: nowrap; /* Forces text to stay on one line */
+    overflow: hidden; /* Hides the rest */
+    text-overflow: ellipsis; /* Adds the ... */
+    margin: 0 0 4px 0; 
+}
+
+/* Location subtly below */
+.item-loc { 
+    font-size: 9px; 
+    color: #888; 
+    font-weight: 700; 
+}
+/* BOTTOM NAV */
+.bottom-nav {
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    background: var(--white);
+    display: flex; justify-content: space-around; align-items: center;
+    height: 75px; border-top: 1px solid #ddd; z-index: 1500;
+    transition: transform 0.3s ease;
+}
+.nav-hidden { transform: translateY(110%); }
+.nav-item { display: flex; flex-direction: column; align-items: center; color: var(--apc-charcoal); font-size: 10px; font-weight: 800; width: 20%; cursor: pointer; }
+.nav-item span { font-size: 22px; margin-bottom: 4px; }
+.nav-item.active { color: var(--apc-orange); }
+.nav-sell { background: var(--apc-orange); color: white !important; width: 60px; height: 60px; border-radius: 50%; justify-content: center; margin-top: -35px; border: 4px solid var(--white); }
+
+/* CLASS-BASED DRAWER SYSTEM */
+.drawer { 
+    display: none; /* HIDDEN BY DEFAULT */
+    position: fixed; top: 0; left: 0; width: 100%; height: 100vh; 
+    background: var(--white); z-index: 2000; flex-direction: column;
+}
+
+.drawer.active {
+    display: flex !important; /* ONLY SHOWS WHEN 'ACTIVE' IS ADDED BY JS */
+}
+
+.drawer-header { padding: 15px; border-bottom: 5px solid var(--apc-orange); display: flex; justify-content: space-between; align-items: center; font-weight: 900; background: white;}
+.drawer-content { padding: 15px; flex: 1; overflow-y: auto; background: white; padding-bottom: 100px; }
+
+/* STICKY BUTTON */
+.sticky-action-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 15px;
+    background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0));
+    transition: transform 0.3s ease-in-out; z-index: 100;
+}
+.sticky-hidden { transform: translateY(100%); }
+
+/* FORM ELEMENTS */
+.filter-section { margin-bottom: 22px; }
+.filter-section h4 { font-size: 10px; text-transform: uppercase; border-bottom: 2px solid var(--apc-orange); display: inline-block; margin-bottom: 10px; }
+.input-group { margin-bottom: 10px; }
+.input-group label { display: block; font-size: 9px; font-weight: 900; margin-bottom: 4px; color: #888; }
+.input-group input, .input-group select, .input-group textarea { 
+    width: 100%; 
+    padding: 12px; 
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    box-sizing: border-box; 
+    background: white; 
+    font-family: inherit; 
+    font-size: 14px; 
+    resize: vertical; 
+}
+.btn-full-action { width: 100%; background: var(--apc-orange); color: white; padding: 20px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; }
+
+/* DEMAND BADGES */
+.demand-icon-area { width: 100%; aspect-ratio: 4/3; background: #f9f9f9; display: flex; align-items: center; justify-content: center; font-size: 40px; border-bottom: 1px solid #eee; }
+.heat-badge { position: absolute; top: 8px; right: 8px; background: #FF3B30; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 10; }
+
+#imageCarousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; }
+#imageCarousel img { scroll-snap-align: start; flex-shrink: 0; width: 100%; aspect-ratio: 4/3; object-fit: cover; }
+
+/* --- IMAGE CAROUSEL TOGGLE (MOBILE VS DESKTOP) --- */
+
+/* Hide swipe carousel on big screens */
+.mobile-carousel { 
+    display: none; 
+}
+/* Show thumbnails on big screens */
+.desktop-thumbs-container { 
+    display: block; 
+}
+
+/* THE SWITCH: When the screen is smaller than 600px (Mobile) */
+@media (max-width: 600px) {
+    .mobile-carousel { 
+        display: block; 
+    }
+    .desktop-thumbs-container { 
+        display: none; /* This hides the old format! */
+    }
+    
+    /* Hide the ugly scrollbar but keep the swipe working */
+    #imageCarousel::-webkit-scrollbar { display: none; }
+    #imageCarousel { -ms-overflow-style: none; scrollbar-width: none; }
+    
+}

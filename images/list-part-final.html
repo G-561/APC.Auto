@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List a Part | Auto Parts Connection</title>
+    <style>
+        :root { 
+            --apc-orange: #F7941D; 
+            --apc-black: #1A1A1B; 
+            --bg: #F4F4F4; 
+            --white: #ffffff; 
+            --grey-text: #636e72; 
+        }
+
+        html, body { height: 100%; margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; flex-direction: column; }
+        
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .top-bar { background: var(--white); padding: 5px 2%; text-align: right; border-bottom: 5px solid var(--apc-orange); flex-shrink: 0; }
+        .top-bar a { margin-left: 20px; text-decoration: none; color: var(--apc-black); font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        .header-main { background: var(--white); padding: 15px 2%; border-bottom: 1px solid #ddd; display: flex; align-items: center; position: relative; min-height: 110px; flex-shrink: 0; }
+        .header-main img { height: 100px; display: block; }
+        
+        /* MATCHED SEARCH BAR */
+        .header-search-container { position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; display: flex !important; background: #f9f9f9 !important; padding: 4px !important; border-radius: 6px !important; border: 1px solid #ccc !important; width: 100% !important; max-width: 700px !important; }
+        .header-search-container input { flex: 1 !important; padding: 10px 15px !important; border: none !important; background: transparent !important; font-size: 15px !important; outline: none !important; }
+        .header-search-container button { background: var(--apc-orange) !important; color: var(--white) !important; border: none !important; padding: 0 25px !important; border-radius: 4px !important; font-weight: 900 !important; cursor: pointer !important; }
+
+        .main-layout { display: grid; grid-template-columns: 1fr 1000px 1fr; gap: 30px; padding: 30px 2%; width: 100%; box-sizing: border-box; flex: 1 0 auto; }
+        .sidebar-left, .sidebar-right { justify-self: center; width: 220px; }
+        .sidebar-box { background: var(--white); border-radius: 8px; border: 1px solid #ddd; padding: 15px; height: fit-content; width: 100%; box-sizing: border-box; }
+        .sidebar-title { font-size: 11px; font-weight: 900; text-transform: uppercase; color: var(--apc-black); border-bottom: 2px solid var(--apc-orange); padding-bottom: 5px; margin-bottom: 15px; display: block; }
+
+        .form-card { background: white; border-radius: 12px; border: 1px solid #ddd; padding: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { font-weight: 900; text-transform: uppercase; border-left: 6px solid var(--apc-orange); padding-left: 18px; font-size: 26px; margin-bottom: 35px; margin-top: 0; }
+        
+        .section-label { font-size: 12px; font-weight: 900; text-transform: uppercase; color: var(--apc-orange); margin-bottom: 18px; display: block; letter-spacing: 1.5px; margin-top: 25px; }
+        .form-group { margin-bottom: 22px; }
+        label { display: block; font-weight: 800; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; color: var(--apc-black); }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none; }
+
+        .photo-upload-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .photo-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #aaa; cursor: pointer; transition: 0.2s; }
+        .photo-box:hover { border-color: var(--apc-orange); color: var(--apc-orange); background: #fffaf5; }
+        .photo-box.main-photo { border: 2px solid var(--apc-orange); background: #fffaf5; color: var(--apc-orange); }
+
+        .fitting-box { background: #fffaf5; border: 2px solid #ffe0b3; padding: 25px; border-radius: 10px; display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
+        .wrench-toggle { width: 22px; height: 22px; accent-color: var(--apc-orange); margin-top: 2px; flex-shrink: 0; }
+        .fitting-text h3 { margin: 0; font-size: 14px; font-weight: 900; color: var(--apc-black); }
+        .fitting-text p { margin: 6px 0 0 0; font-size: 11px; color: var(--grey-text); line-height: 1.5; }
+
+        .btn-list { background: var(--apc-black); color: white; border: none; padding: 20px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; font-size: 18px; text-transform: uppercase; transition: 0.2s; margin-top: 10px; }
+        .btn-list:hover { background: var(--apc-orange); }
+
+        footer { background: var(--apc-black); color: #888; padding: 30px; text-align: center; font-size: 11px; border-top: 5px solid var(--apc-orange); flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index.html">SEARCH</a>
+        <a href="#">MY LISTINGS</a>
+        <a href="#">MESSAGES</a>
+        <a href="list-part.html" style="color: var(--apc-orange);">+ LIST A PART</a>
+    </div>
+
+    <div class="header-main">
+        <a href="index.html"><img src="APC.logo.png" alt="Auto Parts Connection"></a>
+        <div class="header-search-container">
+            <input type="text" placeholder="Search by model, part or number...">
+            <button>SEARCH</button>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="sidebar-left">
+            <aside class="sidebar-box">
+                <span class="sidebar-title">Helpful Tips</span>
+                <p style="font-size: 11px; color: #666; line-height: 1.6;">
+                    <b>Take clear photos:</b> Buyers trust listings with part numbers visible.<br><br>
+                    <b>Be Specific:</b> Mention the year and model in the title.
+                </p>
+            </aside>
+        </div>
+
+        <main>
+            <div class="form-card">
+                <h1>List Your Part</h1>
+                
+                <span class="section-label">1. Photos</span>
+                <div class="photo-upload-grid">
+                    <div class="photo-box main-photo"><span>📷</span><label style="font-size: 10px; margin-top: 5px; cursor: pointer;">Main Photo</label></div>
+                    <div class="photo-box"><span>+</span><label style="font-size: 10px; margin-top: 5px; cursor: pointer;">Side View</label></div>
+                    <div class="photo-box"><span>+</span><label style="font-size: 10px; margin-top: 5px; cursor: pointer;">Part Number</label></div>
+                    <div class="photo-box"><span>+</span><label style="font-size: 10px; margin-top: 5px; cursor: pointer;">Add More</label></div>
+                </div>
+
+                <span class="section-label">2. Part Details</span>
+                <div class="form-group">
+                    <label>Listing Title</label>
+                    <input type="text" id="partTitle" placeholder="e.g. 2019 Toyota Hiace L/H Mirror - Chrome Finish">
+                </div>
+
+                <div style="display:flex; gap:25px;">
+                    <div class="form-group" style="flex:1.5;">
+                        <label>Category</label>
+                        <select id="partCategory">
+                            <option>Body & Exterior</option>
+                            <option>Engine & Drivetrain</option>
+                            <option>Interior & Dash</option>
+                            <option>Wheels & Tyres</option>
+                            <option>Electrical & Lighting</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Price ($)</label>
+                        <input type="number" id="partPrice" placeholder="0.00">
+                    </div>
+                </div>
+
+                <span class="section-label">3. Location</span>
+                <div style="display:flex; gap:25px;">
+                    <div class="form-group" style="flex:2;">
+                        <label>Suburb / Town</label>
+                        <input type="text" id="partLocation" placeholder="e.g. Port Adelaide">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Postcode</label>
+                        <input type="text" placeholder="5000">
+                    </div>
+                </div>
+
+                <span class="section-label">4. Item Specs</span>
+                <div style="display:flex; gap:25px;">
+                    <div class="form-group" style="flex:2;">
+                        <label>Condition</label>
+                        <div style="display: flex; gap: 20px; padding-top: 10px;">
+                            <label style="font-weight: 600; text-transform: none; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                <input type="radio" name="cond" value="Used" checked style="width: auto; accent-color: var(--apc-orange);"> Used
+                            </label>
+                            <label style="font-weight: 600; text-transform: none; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                <input type="radio" name="cond" value="Refurbished" style="width: auto; accent-color: var(--apc-orange);"> Refurbished
+                            </label>
+                            <label style="font-weight: 600; text-transform: none; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                                <input type="radio" name="cond" value="New" style="width: auto; accent-color: var(--apc-orange);"> Brand New
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="flex:1.2;">
+                        <label>OEM Part Number</label>
+                        <input type="text" placeholder="e.g. 87940-26B20">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="partDesc" rows="5" placeholder="Mention fitment details, known history, and general condition..."></textarea>
+                </div>
+
+                <span class="section-label">5. Seller Services</span>
+                <div class="fitting-box">
+                    <input type="checkbox" id="fittingToggle" class="wrench-toggle">
+                    <div class="fitting-text">
+                        <h3>🔧 PROFESSIONAL FITTING AVAILABLE</h3>
+                        <p>Select this if you can offer installation at your workshop. A wrench icon will alert buyers.</p>
+                    </div>
+                </div>
+
+                <button type="button" id="postBtn" class="btn-list">POST LISTING NOW</button>
+            </div>
+        </main>
+
+        <div class="sidebar-right">
+            <aside class="sidebar-box">
+                <span class="sidebar-title">Sponsored</span>
+                <div style="width:100%; height:120px; background:#eee; border-radius:4px; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:10px;">AD SPACE</div>
+            </aside>
+        </div>
+    </div>
+
+    <footer>&copy; 2026 AUTOPARTSCONNECTION.ONLINE</footer>
+
+    <script>
+        document.getElementById('postBtn').addEventListener('click', function() {
+            // 1. Capture the values
+            const title = document.getElementById('partTitle').value;
+            const price = document.getElementById('partPrice').value;
+            const location = document.getElementById('partLocation').value;
+            
+            // Get selected radio button value
+            const condition = document.querySelector('input[name="cond"]:checked').value;
+
+            // Simple check: Don't post if empty
+            if(!title || !price || !location) {
+                alert("Please fill in the title, price, and location!");
+                return;
+            }
+
+            // 2. Create the data package
+            const newPart = {
+                title: title,
+                price: price,
+                location: location,
+                condition: condition,
+                image: "images/placeholder.jpg" // Placeholder until we handle uploads
+            };
+
+            // 3. Get existing parts from memory or start empty list
+            let savedParts = JSON.parse(localStorage.getItem('myParts')) || [];
+
+            // 4. Add new part to the front of the list
+            savedParts.unshift(newPart);
+
+            // 5. Save back to memory
+            localStorage.setItem('myParts', JSON.stringify(savedParts));
+
+            // 6. Notify and Go Home
+            alert("Part Listed Successfully!");
+            window.location.href = "index.html";
+        });
+    </script>
+
+</body>
+</html>

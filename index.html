@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>APC | Auto Parts Connection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="body">
+
+<div class="top-nav-container" id="mainHeader">
+    <header style="padding-bottom: 10px;">
+        <div class="logo-main"><img src="images/APC.logo.png" alt="APC Logo"></div>
+        
+        <div class="search-group">
+            <input type="text" id="mainSearchInput" placeholder="Search parts for sale...">
+        </div>
+
+        <div id="proSearchToggle" style="display: flex; background: #eee; border-radius: 8px; margin-top: 12px; padding: 2px; height: 32px;">
+            <div id="searchModeParts" onclick="setSearchMode('parts')" 
+                 style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; background: var(--white); color: var(--apc-orange); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                 FIND PARTS
+            </div>
+            <div id="searchModeWanted" onclick="setSearchMode('wanted')" 
+                 style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; color: #888;">
+                 FIND WANTED <span style="margin-left:4px; font-size:8px; background:var(--apc-orange); color:white; padding:1px 4px; border-radius:4px;">PRO</span>
+            </div>
+        </div>
+    </header>
+</div>
+
+<div class="results-grid" id="mainGrid"></div>
+
+<nav class="bottom-nav" id="bottomNav">
+    <div class="nav-item active" onclick="location.reload()"><span>🏠</span>Home</div>
+    <div class="nav-item" onclick="toggleDrawer('filterDrawer')"><span>⚙️</span>Filters</div>
+    <div class="nav-item nav-sell" onclick="toggleDrawer('sellOverlay')"><span>✚</span>Sell</div>
+    <div class="nav-item" onclick="toggleDrawer('myPartsDrawer')"><span>📦</span>My Parts</div>
+    <div class="nav-item" id="accountBtn" onclick="toggleDrawer('authDrawer')">
+        <span id="accountIcon">👤</span>
+        <div id="accountLabel" style="font-size: 10px; font-weight: 800;">Profile</div>
+    </div>
+</nav>
+
+<div id="detailOverlay" class="drawer">
+    <div class="drawer-header" style="padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid var(--apc-orange); background: var(--apc-amber);">
+        <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="openStorefront('Gary S.', true)">
+            <div style="width: 42px; height: 42px; background: #007AFF; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,122,255,0.2);">G</div>
+            <div style="line-height: 1.2;">
+                <div style="font-size: 14px; font-weight: 800; color: #333; display: flex; align-items: center; gap: 4px;">
+                    Gary's Parts <span style="font-size: 9px; color: #007AFF; font-weight: 900;">✔ PRO</span>
+                </div>
+                <div style="font-size: 11px; color: #007AFF; font-weight: 700; margin-top: 2px;">
+                    View seller's other items →
+                </div>
+            </div>
+        </div>
+        <div onclick="toggleDrawer('detailOverlay')" style="font-size: 34px; color: #888; cursor: pointer; padding-left: 10px; line-height: 1;">×</div>
+    </div>
+
+    <div class="drawer-content" id="detailScrollArea" style="background:#fff; height: calc(100% - 60px); overflow-y: auto; padding-bottom: 40px; position: relative;">
+        
+        <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
+            <div id="imageCarousel" style="display: flex; overflow-x: auto; snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
+                <img id="detailMainImg" src="" style="min-width: 100%; snap-align: start; aspect-ratio: 4/3; object-fit: cover;">
+            </div>
+        </div>
+
+        <div style="padding: 20px 15px 5px 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div id="detailPrice" style="font-size: 28px; font-weight: 900; color: #007AFF;">$0.00</div>
+            <div onclick="handleMessageSeller()" style="background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <span style="font-size: 12px;">🛠️</span>
+                <span style="font-size: 10px; font-weight: 800; color: #007AFF; text-transform: uppercase; letter-spacing: 0.5px;">Fitting Available</span>
+            </div>
+        </div>
+
+        <div id="detailTitle" style="padding: 0 15px; font-weight: 800; font-size: 17px; line-height: 1.3; color: #333;">
+            Part Title
+        </div>
+
+        <div style="padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
+                <span>📦</span> Postage Available
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
+                <span>📍</span> Pickup: <span id="detailLoc" style="color: #333;">Location</span>
+            </div>
+        </div>
+
+        <div style="padding: 15px 15px 20px 15px; border-top: 1px solid #f9f9f9; margin-top: 10px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #aaa; letter-spacing: 0.5px;">Description</h4>
+            <p style="font-size: 14px; line-height: 1.5; color: #444; margin: 0;">
+                Fully functional part. Tested and ready for installation.
+            </p>
+        </div>
+
+        <div style="padding: 0 15px 25px 15px;">
+            <button onclick="handleMessageSeller()" style="width: 100%; padding: 16px; background: var(--apc-orange); color: white; border: none; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
+                ✉️ MESSAGE SELLER
+            </button>
+        </div>
+
+        <div style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
+            <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 12px;">Have a part like this?</div>
+            <button onclick="toggleDrawer('sellOverlay')" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
+        </div>
+
+        <div id="dynamicDetailFooter"></div>
+    </div>
+</div>
+
+<div id="storefrontDrawer" class="drawer">
+    <div class="drawer-header" style="display: flex; align-items: center; padding: 10px 15px; height: 70px; border-bottom: 2px solid var(--apc-orange);">
+        <div class="seller-card" style="margin: 0; padding: 0; background: none; border: none; flex: 1; display: flex; align-items: center; gap: 10px;">
+            <div class="seller-avatar" style="width: 40px; height: 40px; font-size: 20px;">👤</div>
+            <div style="flex: 1; line-height: 1.2;">
+                <div id="displaySellerName" style="font-weight: 800; font-size: 15px; color: #333;">Seller Name</div>
+                <div style="font-size: 10px; color: #888;">Top Rated Seller</div>
+                <span id="proBadge" style="color: var(--apc-orange); font-weight: 900; font-size: 10px; letter-spacing: 1px;">PRO</span>
+            </div>
+        </div>
+        <div onclick="toggleDrawer('storefrontDrawer')" style="font-size: 32px; cursor: pointer; padding-left: 15px; line-height: 1;">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 0;">
+        <div style="padding: 15px 15px 5px 15px;">
+            <h4 id="storefrontTitle" style="margin: 0 0 10px 0; font-size: 14px; font-weight: 800;">Seller's Store</h4>
+            <div style="position: relative;">
+                <input type="text" id="storefrontSearch" placeholder="Search seller's parts..." style="width: 100%; padding: 10px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 14px; outline: none; background: #f9f9f9; box-sizing: border-box;">
+            </div>
+        </div>
+        <div class="results-grid" id="sellerPartsGrid" style="margin-top: 5px; padding-bottom: 30px;"></div>
+    </div>
+</div>
+
+<div id="chatDrawer" class="drawer">
+    <div class="drawer-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="seller-avatar" style="width: 35px; height: 35px; font-size: 14px;">👤</div>
+            <span id="chatPartnerName">Seller</span>
+        </div>
+        <div onclick="toggleDrawer('chatDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="display: flex; flex-direction: column; background: #E5DDD5; padding: 10px;">
+        <div id="chatBox" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;">
+            <div style="align-self: flex-start; background: white; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 80%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                Hi! Is this part still available?
+            </div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 25px; display: flex; align-items: center; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
+            <input type="text" id="chatInput" placeholder="Type a message..." style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px 10px;">
+            <button onclick="sendChatMessage()" style="background: var(--apc-orange); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: 900;">➔</button>
+        </div>
+    </div>
+</div>
+
+<div id="filterDrawer" class="drawer">
+    <div class="drawer-header"><span>FILTER RESULTS</span><div onclick="toggleDrawer('filterDrawer')" style="font-size:30px; cursor:pointer">×</div></div>
+    <div class="drawer-content">
+
+        <div class="filter-section">
+            <h4>Part Category</h4>
+            <div class="input-group">
+                <select>
+                    <option value="all">All Categories</option>
+                    <option value="body">Body & Exterior (Mirrors, Bumpers, Panels)</option>
+                    <option value="lighting">Lighting & Electrical (Headlights, ECUs)</option>
+                    <option value="engine">Engine & Drivetrain (Engines, Exhausts, Turbos)</option>
+                    <option value="wheels">Wheels, Tyres & Suspension</option>
+                    <option value="interior">Interior (Seats, Steering Wheels, Trim)</option>
+                    <option value="brakes">Brakes (Calipers, Rotors, Pads)</option>
+                    <option value="cooling">Cooling & Heating (Radiators, A/C)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Vehicle Details</h4>
+            <div class="input-row-flex">
+                <div class="input-group"><label>Make</label><input type="text" placeholder="e.g. Toyota"></div>
+                <div class="input-group"><label>Model</label><input type="text" placeholder="e.g. Hiace"></div>
+                <div class="input-group"><label>Year</label><input type="number" placeholder="2020"></div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Search Location</h4>
+            <div class="input-group">
+                <select>
+                    <option value="all">All Australia</option>
+                    <option value="SA">South Australia (SA)</option>
+                    <option value="VIC">Victoria (VIC)</option>
+                    <option value="NSW">New South Wales (NSW)</option>
+                    <option value="QLD">Queensland (QLD)</option>
+                    <option value="WA">Western Australia (WA)</option>
+                    <option value="TAS">Tasmania (TAS)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Price & Condition</h4>
+            <div class="input-row-flex" style="margin-bottom:10px;">
+                <div class="input-group"><label>Min $</label><input type="number" placeholder="0"></div>
+                <div class="input-group"><label>Max $</label><input type="number" placeholder="500+"></div>
+            </div>
+            <div class="shared-choice-box">
+                <label class="choice-item"><input type="checkbox" checked> New</label>
+                <label class="choice-item"><input type="checkbox" checked> Used</label>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Logistics & Seller</h4>
+            <div class="shared-choice-box" style="margin-bottom: 8px;">
+                <label class="choice-item"><input type="checkbox" checked> Postage</label>
+                <label class="choice-item"><input type="checkbox" checked> Pickup</label>
+            </div>
+            <div class="shared-choice-box">
+                <label class="choice-item"><input type="checkbox" checked> Private</label>
+                <label class="choice-item"><input type="checkbox" checked> APC Pro</label>
+            </div>
+        </div>
+
+        <div class="action-container"><button class="btn-full-action" onclick="toggleDrawer('filterDrawer')">Update Results</button></div>
+    </div>
+</div>
+
+<div id="authDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>Sign In</span>
+        <div onclick="toggleDrawer('authDrawer')" style="font-size: 30px; color: #888; cursor: pointer;">×</div>
+    </div>
+    <div class="drawer-content">
+        <p style="font-size: 12px; color: #666; margin-bottom: 20px;">Sign in to access your APC Dashboard.</p>
+        <button onclick="toggleDrawer('authDrawer'); alert('Signed in!');" style="width: 100%; padding: 15px; background: var(--apc-orange); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN IN</button>
+    </div>
+</div>
+
+<div id="sellOverlay" class="drawer">
+    <div class="drawer-header"><span>LIST A PART</span><div onclick="toggleDrawer('sellOverlay')" style="font-size:30px; cursor:pointer">×</div></div>
+    <div class="drawer-content">
+
+        <div class="filter-section">
+            <h4>Photos</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <div style="aspect-ratio: 1/1; border: 2px dashed var(--apc-orange); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--apc-orange); font-size: 10px; font-weight: 700; background: #fafafa; cursor: pointer;"><span>📷</span>Main</div>
+                <div style="aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; font-weight: 700; background: #fafafa; cursor: pointer;"><span>➕</span>Add</div>
+                <div style="aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; font-weight: 700; background: #fafafa; cursor: pointer;"><span>➕</span>Add</div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Part Details</h4>
+            <div class="input-group" style="margin-bottom: 10px;">
+                <label>Listing Title</label>
+                <input type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
+            </div>
+            <div class="input-group">
+                <label>Category</label>
+                <select>
+                    <option value="" disabled selected>Select a category...</option>
+                    <option value="body">Body & Exterior</option>
+                    <option value="lighting">Lighting & Electrical</option>
+                    <option value="engine">Engine & Drivetrain</option>
+                    <option value="wheels">Wheels, Tyres & Suspension</option>
+                    <option value="interior">Interior</option>
+                    <option value="brakes">Brakes</option>
+                    <option value="cooling">Cooling & Heating</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Vehicle Fitment</h4>
+            <div class="input-row-flex">
+                <div class="input-group"><label>Make</label><input type="text" placeholder="e.g. Lotus"></div>
+                <div class="input-group"><label>Model</label><input type="text" placeholder="e.g. Elise"></div>
+                <div class="input-group"><label>Year</label><input type="number" placeholder="2005"></div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Location & Delivery</h4>
+            <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
+                <div class="input-group"><label>P/Code</label><input type="number" placeholder="5000"></div>
+                <div class="input-group"><label>Suburb, State</label><input type="text" placeholder="e.g. Adelaide, SA"></div>
+            </div>
+            <div class="shared-choice-box">
+                <label class="choice-item"><input type="checkbox" checked> Pickup Available</label>
+                <label class="choice-item"><input type="checkbox"> Willing to Post</label>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Pricing & Condition</h4>
+            <div class="input-row-flex" style="margin-bottom: 10px;">
+                <div class="input-group"><label>Price ($)</label><input type="number" placeholder="0.00"></div>
+                <div class="input-group">
+                    <label>Condition</label>
+                    <select>
+                        <option value="" disabled selected>Select condition...</option>
+                        <option value="new_oem">New OEM (Genuine)</option>
+                        <option value="new_aftermarket">New Aftermarket</option>
+                        <option value="used">Used</option>
+                        <option value="refurbished">Refurbished</option>
+                        <option value="parts_only">For Parts / Not Working</option>
+                    </select>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Description</label>
+                <textarea rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
+            </div>
+        </div>
+
+        <div class="action-container"><button class="btn-full-action" onclick="alert('Part is live!'); toggleDrawer('sellOverlay')">LIST PART NOW</button></div>
+    </div>
+</div>
+
+<div id="myPartsDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>MY LISTINGS</span>
+        <div onclick="toggleDrawer('myPartsDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 15px; background: #f4f4f4;">
+        <div class="input-group" style="margin-bottom: 15px;">
+            <div style="position: relative;">
+                <input type="text" placeholder="Search my inventory..." style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #ddd; outline: none; box-sizing: border-box; font-size: 14px;">
+            </div>
+        </div>
+        <div id="myPartsList" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 50px;"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
