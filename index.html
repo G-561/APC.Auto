@@ -9,22 +9,53 @@
 <body id="body">
 
 <div class="top-nav-container" id="mainHeader">
-    <header style="padding-bottom: 10px;">
-        <div class="logo-main"><img src="images/APC.logo.png" alt="APC Logo"></div>
-        
+    <header style="padding-bottom: 10px; position: relative;">
+        <div class="header-top">
+            <div class="logo-main"><img src="images/APC.logo.png" alt="APC Logo"></div>
+            <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
+        </div>
+
         <div class="search-group">
             <input type="text" id="mainSearchInput" placeholder="Search parts for sale...">
         </div>
 
-        <div id="proSearchToggle" style="display: flex; background: #eee; border-radius: 8px; margin-top: 12px; padding: 2px; height: 32px;">
-            <div id="searchModeParts" onclick="setSearchMode('parts')" 
+        <!-- Pro-only filter: hidden by default; revealed only when user is APC Pro AND Pro Search is on -->
+        <div id="proSearchToggle" style="display: none; background: #eee; border-radius: 8px; margin-top: 12px; padding: 2px; height: 32px;">
+            <div id="searchModeParts" onclick="setSearchMode('parts')"
                  style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; background: var(--white); color: var(--apc-orange); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                  FIND PARTS
             </div>
-            <div id="searchModeWanted" onclick="setSearchMode('wanted')" 
+            <div id="searchModeWanted" onclick="setSearchMode('wanted')"
                  style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; color: #888;">
                  FIND WANTED <span style="margin-left:4px; font-size:8px; background:var(--apc-orange); color:white; padding:1px 4px; border-radius:4px;">PRO</span>
             </div>
+        </div>
+
+        <!-- Account dropdown — opens from the pill when signed in -->
+        <div class="account-menu" id="accountMenu" style="display:none;">
+            <div class="account-menu-header">
+                <div class="account-menu-avatar" id="accountMenuAvatar">G</div>
+                <div>
+                    <div class="account-menu-name" id="accountMenuName">Guest</div>
+                    <div class="account-menu-status" id="accountMenuStatus"></div>
+                </div>
+            </div>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Profile')"><span class="ico">👤</span> Profile</button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Settings')"><span class="ico">⚙️</span> Settings</button>
+            <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings</button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages</button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Saved Parts')"><span class="ico">❤️</span> Saved Parts</button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')"><span class="ico">❓</span> Help &amp; Support</button>
+            <div class="menu-divider"></div>
+            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">
+                <span class="ico">⭐</span> Upgrade to APC Pro
+            </button>
+            <button class="account-menu-item activate-search" id="accountMenuActivate" style="display:none;" onclick="onToggleProSearch(event)">
+                <span class="ico">🔍</span> Activate Pro Search
+                <span class="switch" id="proSearchSwitch"></span>
+            </button>
+            <div class="menu-divider"></div>
+            <button class="account-menu-item logout" onclick="onSignOut()"><span class="ico">↩</span> Log Out</button>
         </div>
     </header>
 </div>
@@ -43,14 +74,16 @@
 </nav>
 
 <div id="detailOverlay" class="drawer">
+    <!-- Seller header — IDs added so JS can update name/avatar per listing -->
     <div class="drawer-header" style="padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid var(--apc-orange); background: var(--apc-amber);">
-        <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="openStorefront('Gary S.', true)">
-            <div style="width: 42px; height: 42px; background: #007AFF; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,122,255,0.2);">G</div>
+        <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="openStorefront(currentOpenPartId)">
+            <div id="detailSellerAvatar" style="width: 42px; height: 42px; background: #007AFF; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,122,255,0.2);">G</div>
             <div style="line-height: 1.2;">
                 <div style="font-size: 14px; font-weight: 800; color: #333; display: flex; align-items: center; gap: 4px;">
-                    Gary's Parts <span style="font-size: 9px; color: #007AFF; font-weight: 900;">✔ PRO</span>
+                    <span id="detailSellerName">Seller</span>
+                    <span id="detailProBadge" style="font-size: 9px; color: #007AFF; font-weight: 900;">✔ PRO</span>
                 </div>
-                <div style="font-size: 11px; color: #007AFF; font-weight: 700; margin-top: 2px;">
+                <div id="detailSellerSub" style="font-size: 11px; color: #007AFF; font-weight: 700; margin-top: 2px;">
                     View seller's other items →
                 </div>
             </div>
@@ -61,9 +94,9 @@
     <div class="drawer-content" id="detailScrollArea" style="background:#fff; height: calc(100% - 60px); overflow-y: auto; padding-bottom: 40px; position: relative;">
         
         <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
-            <div id="imageCarousel" style="display: flex; overflow-x: auto; snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
-                <img id="detailMainImg" src="" style="min-width: 100%; snap-align: start; aspect-ratio: 4/3; object-fit: cover;">
+            <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
             </div>
+            <div id="carouselDots" class="carousel-dots"></div>
         </div>
 
         <div style="padding: 20px 15px 5px 15px; display: flex; align-items: center; justify-content: space-between;">
@@ -221,7 +254,7 @@
             </div>
         </div>
 
-        <div class="action-container"><button class="btn-full-action" onclick="toggleDrawer('filterDrawer')">Update Results</button></div>
+        <div class="action-container"><button class="btn-full-action">Update Results</button></div>
     </div>
 </div>
 
@@ -232,7 +265,7 @@
     </div>
     <div class="drawer-content">
         <p style="font-size: 12px; color: #666; margin-bottom: 20px;">Sign in to access your APC Dashboard.</p>
-        <button onclick="toggleDrawer('authDrawer'); alert('Signed in!');" style="width: 100%; padding: 15px; background: var(--apc-orange); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN IN</button>
+        <button onclick="handleSignInSubmit()" style="width: 100%; padding: 15px; background: var(--apc-orange); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN IN</button>
     </div>
 </div>
 
