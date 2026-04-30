@@ -17,6 +17,7 @@
 
         <div class="search-group">
             <input type="text" id="mainSearchInput" placeholder="Search parts for sale...">
+            <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
         </div>
 
         <!-- Pro-only filter: hidden by default; revealed only when user is APC Pro AND Pro Search is on -->
@@ -64,12 +65,11 @@
 
 <nav class="bottom-nav" id="bottomNav">
     <div class="nav-item active" onclick="location.reload()"><span>🏠</span>Home</div>
-    <div class="nav-item" onclick="toggleDrawer('filterDrawer')"><span>⚙️</span>Filters</div>
+    <div class="nav-item" onclick="onOpenGarage()"><span>🚗</span>Garage</div>
     <div class="nav-item nav-sell" onclick="toggleDrawer('sellOverlay')"><span>✚</span>Sell</div>
-    <div class="nav-item" onclick="toggleDrawer('myPartsDrawer')"><span>📦</span>My Parts</div>
-    <div class="nav-item" id="accountBtn" onclick="toggleDrawer('authDrawer')">
-        <span id="accountIcon">👤</span>
-        <div id="accountLabel" style="font-size: 10px; font-weight: 800;">Profile</div>
+    <div class="nav-item" id="inboxNavItem" onclick="onOpenInbox()">
+        <span>💬</span>Inbox
+        <span id="inboxBadge" style="display:none; position:absolute; top:8px; right:calc(50% - 22px); background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px;"></span>
     </div>
 </nav>
 
@@ -96,6 +96,7 @@
         <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
             <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
             </div>
+            <button id="detailSaveBtn" class="detail-save-btn" onclick="toggleSavedPart(currentOpenPartId)" aria-label="Save listing">♡</button>
             <div id="carouselDots" class="carousel-dots"></div>
         </div>
 
@@ -362,6 +363,71 @@
             </div>
         </div>
         <div id="myPartsList" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 50px;"></div>
+    </div>
+</div>
+
+<!-- GARAGE — list of user's vehicles, with add button at the bottom -->
+<div id="garageDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>MY GARAGE</span>
+        <div onclick="toggleDrawer('garageDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="background: #f4f4f4;">
+        <div id="garageVehicleList" class="garage-list"></div>
+        <button class="garage-add-btn" onclick="onAddVehicleClick()">+ Add Vehicle</button>
+    </div>
+</div>
+
+<!-- ADD VEHICLE — stacks on top of the garage drawer -->
+<div id="addVehicleDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>ADD VEHICLE</span>
+        <div onclick="toggleDrawer('addVehicleDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content">
+        <div class="filter-section">
+            <h4>Vehicle</h4>
+            <div class="input-row-flex">
+                <div class="input-group"><label>Make *</label><input type="text" id="vehMake" placeholder="e.g. Toyota"></div>
+                <div class="input-group"><label>Model *</label><input type="text" id="vehModel" placeholder="e.g. Hiace"></div>
+            </div>
+            <div class="input-row-flex">
+                <div class="input-group"><label>Year *</label><input type="number" id="vehYear" placeholder="2019" min="1900" max="2030"></div>
+                <div class="input-group"><label>Variant</label><input type="text" id="vehVariant" placeholder="e.g. GTti, LWB"></div>
+            </div>
+        </div>
+        <div class="filter-section">
+            <h4>Optional</h4>
+            <div class="input-group"><label>Nickname</label><input type="text" id="vehNickname" placeholder="e.g. Daily driver"></div>
+            <div class="input-group"><label>VIN</label><input type="text" id="vehVin" placeholder="17-character VIN" maxlength="17"></div>
+        </div>
+        <div class="action-container"><button class="btn-full-action" onclick="submitAddVehicle()">SAVE VEHICLE</button></div>
+    </div>
+</div>
+
+<!-- VEHICLE DETAIL — stacks on top of garage; segmented toggle inside -->
+<div id="vehicleDetailDrawer" class="drawer">
+    <div class="drawer-header">
+        <span id="vehDetailHeaderTitle">Vehicle</span>
+        <div onclick="toggleDrawer('vehicleDetailDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="background: #f4f4f4; padding: 12px;">
+        <div class="vehicle-banner">
+            <div class="ico" id="vehDetailBannerIco">🚗</div>
+            <div>
+                <div class="name" id="vehDetailBannerName">Vehicle</div>
+                <div class="meta" id="vehDetailBannerMeta">—</div>
+            </div>
+        </div>
+
+        <div class="segmented-control">
+            <div class="seg active" data-tab="all"     onclick="setVehicleTab('all')">All Parts</div>
+            <div class="seg"        data-tab="wanted"  onclick="setVehicleTab('wanted')">Wanted</div>
+            <div class="seg"        data-tab="saved"   onclick="setVehicleTab('saved')">Saved</div>
+            <div class="seg"        data-tab="matches" onclick="setVehicleTab('matches')">Matches</div>
+        </div>
+
+        <div id="vehDetailTabContent"></div>
     </div>
 </div>
 

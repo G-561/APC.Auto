@@ -24,15 +24,16 @@ let activeFilters = {
 // --- DATABASE ---
 // Each part now has a stable `id` field so lookups never break if the array is reordered.
 // `images` is an array so the carousel can show real photos per part.
+// `fits` = which vehicles a part suits. Empty array = universal (fits anything).
 const partDatabase = [
-    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body" },
-    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body" },
-    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting" },
-    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels" },
-    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body" },
-    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior" },
-    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes" },
-    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine" }
+    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }] },
+    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }] },
+    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }] },
+    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [] },
+    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }] },
+    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }] },
+    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }] },
+    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [] }
 ];
 
 // Look up a part by its stable id instead of array index
@@ -137,6 +138,16 @@ function buildCardHTML(part) {
                 <div class="item-loc">📍 ${part.loc}</div>
             </div>
         </div>`;
+}
+
+// Reflect the current saved state on the detail-overlay heart button
+function syncDetailSaveButton(partId) {
+    const btn = document.getElementById('detailSaveBtn');
+    if (!btn) return;
+    const isSaved = savedParts.has(partId);
+    btn.classList.toggle('saved', isSaved);
+    btn.textContent = isSaved ? '♥' : '♡';
+    btn.setAttribute('aria-label', isSaved ? 'Remove from saved' : 'Save listing');
 }
 
 // --- RENDER MAIN HOME GRID ---
@@ -252,6 +263,7 @@ function openItemDetail(partId) {
     safeText(document.getElementById('detailTitle'), part.title);
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
+    syncDetailSaveButton(part.id);   // heart reflects current saved state
 
     // 3. Update the seller header in the overlay (was hardcoded to Gary)
     const sellerHeaderName = document.getElementById('detailSellerName');
@@ -345,6 +357,263 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- GARAGE: vehicle data model + persistence ---
+const VEHICLES_STORAGE_KEY = 'apc.vehicles.v1';
+let myVehicles = loadVehicles();
+
+function loadVehicles() {
+    try {
+        const raw = localStorage.getItem(VEHICLES_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+}
+function saveVehicles() {
+    try { localStorage.setItem(VEHICLES_STORAGE_KEY, JSON.stringify(myVehicles)); } catch (e) {}
+}
+function nextVehicleId() {
+    return myVehicles.length ? Math.max(...myVehicles.map(v => v.id)) + 1 : 1;
+}
+
+// Open the garage drawer (called from bottom nav)
+function onOpenGarage() {
+    renderGarage();
+    toggleDrawer('garageDrawer');
+}
+
+// Open the Add Vehicle form on top of the garage drawer
+function onAddVehicleClick() {
+    ['vehMake','vehModel','vehYear','vehVariant','vehNickname','vehVin'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    toggleDrawer('addVehicleDrawer', true);  // stack — keeps garage open underneath
+}
+
+// Validate + save the new vehicle
+function submitAddVehicle() {
+    const make     = document.getElementById('vehMake').value.trim();
+    const model    = document.getElementById('vehModel').value.trim();
+    const yearStr  = document.getElementById('vehYear').value.trim();
+    const variant  = document.getElementById('vehVariant').value.trim();
+    const nickname = document.getElementById('vehNickname').value.trim();
+    const vin      = document.getElementById('vehVin').value.trim();
+
+    if (!make || !model || !yearStr) {
+        alert('Make, Model and Year are required.');
+        return;
+    }
+    const year = Number(yearStr);
+    if (!Number.isFinite(year) || year < 1900 || year > 2030) {
+        alert('Please enter a valid 4-digit year.');
+        return;
+    }
+
+    myVehicles.push({
+        id: nextVehicleId(),
+        make, model, year,
+        variant:  variant  || '',
+        nickname: nickname || '',
+        vin:      vin      || ''
+    });
+    saveVehicles();
+    renderGarage();
+    toggleDrawer('addVehicleDrawer');  // close the add drawer; garage stays open
+}
+
+// Remove a vehicle (used later from vehicle detail/edit)
+function deleteVehicle(id) {
+    myVehicles = myVehicles.filter(v => v.id !== id);
+    saveVehicles();
+    renderGarage();
+}
+
+// Render the garage list — XSS-safe via createElement + textContent
+function renderGarage() {
+    const list = document.getElementById('garageVehicleList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (myVehicles.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'garage-empty';
+        empty.innerHTML = `
+            <div class="ico">🏠</div>
+            <div class="title">Your garage is empty</div>
+            <div class="sub">Add a vehicle and we'll show you parts that fit, plus notify you when wanted parts come up for sale.</div>`;
+        list.appendChild(empty);
+        return;
+    }
+
+    myVehicles.forEach(v => {
+        const card  = document.createElement('div');
+        card.className = 'vehicle-card';
+        card.onclick = () => openVehicleDetail(v.id);
+
+        const icon = document.createElement('div');
+        icon.className = 'vehicle-card-icon';
+        icon.textContent = '🚗';
+
+        const info = document.createElement('div');
+        info.className = 'vehicle-card-info';
+
+        const name = document.createElement('div');
+        name.className = 'vehicle-card-name';
+        name.textContent = `${v.make} ${v.model}`;
+
+        const meta = document.createElement('div');
+        meta.className = 'vehicle-card-meta';
+        meta.textContent = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
+
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const arrow = document.createElement('div');
+        arrow.className = 'vehicle-card-arrow';
+        arrow.textContent = '›';
+
+        card.appendChild(icon);
+        card.appendChild(info);
+        card.appendChild(arrow);
+        list.appendChild(card);
+    });
+}
+
+// --- SAVED PARTS: data model + persistence ---
+const SAVED_STORAGE_KEY = 'apc.saved.v1';
+let savedParts = loadSavedParts();   // Set<partId>
+
+function loadSavedParts() {
+    try {
+        const raw = localStorage.getItem(SAVED_STORAGE_KEY);
+        return new Set(raw ? JSON.parse(raw) : []);
+    } catch (e) { return new Set(); }
+}
+function persistSavedParts() {
+    try { localStorage.setItem(SAVED_STORAGE_KEY, JSON.stringify([...savedParts])); } catch (e) {}
+}
+
+// Toggle the saved state of a part — wired to the heart on the detail overlay
+function toggleSavedPart(partId) {
+    if (!partId) return;
+    if (savedParts.has(partId)) {
+        savedParts.delete(partId);
+        showToast('Removed from saved');
+    } else {
+        savedParts.add(partId);
+        showToast('Saved');
+    }
+    persistSavedParts();
+    syncDetailSaveButton(partId);
+    // Vehicle Saved tab needs to update if the user is currently on it
+    if (currentVehicleId && currentVehicleTab === 'saved') renderVehicleTab();
+}
+
+// --- VEHICLE DETAIL: open, segmented toggle, render each tab ---
+let currentVehicleId   = null;
+let currentVehicleTab  = 'all';   // 'all' | 'wanted' | 'saved' | 'matches'
+
+// Does this part fit a given vehicle? Empty `fits` array means universal (always true).
+function partFitsVehicle(part, vehicle) {
+    if (!part.fits || part.fits.length === 0) return true;
+    return part.fits.some(f =>
+        f.make.toLowerCase()  === vehicle.make.toLowerCase() &&
+        f.model.toLowerCase() === vehicle.model.toLowerCase()
+    );
+}
+
+function openVehicleDetail(vehicleId) {
+    const v = myVehicles.find(x => x.id === vehicleId);
+    if (!v) return;
+    currentVehicleId  = vehicleId;
+    currentVehicleTab = 'all';
+
+    document.getElementById('vehDetailHeaderTitle').textContent = `${v.make} ${v.model}`;
+    document.getElementById('vehDetailBannerName').textContent  = `${v.make} ${v.model}`;
+    document.getElementById('vehDetailBannerMeta').textContent  =
+        [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
+
+    setVehicleTab('all');
+    toggleDrawer('vehicleDetailDrawer', true);  // stack on top of garage drawer
+}
+
+function setVehicleTab(tab) {
+    currentVehicleTab = tab;
+    document.querySelectorAll('#vehicleDetailDrawer .seg').forEach(s => {
+        s.classList.toggle('active', s.dataset.tab === tab);
+    });
+    renderVehicleTab();
+}
+
+function renderVehicleTab() {
+    const c = document.getElementById('vehDetailTabContent');
+    if (!c) return;
+    const v = myVehicles.find(x => x.id === currentVehicleId);
+    if (!v) { c.innerHTML = ''; return; }
+
+    c.innerHTML = '';
+
+    if (currentVehicleTab === 'all') {
+        const fitting = partDatabase.filter(p => partFitsVehicle(p, v));
+        if (!fitting.length) {
+            c.appendChild(buildVehicleEmpty('🔍', `No listings match a ${v.make} ${v.model} yet.\nCheck back soon.`));
+            return;
+        }
+        c.appendChild(buildPartsGrid(fitting));
+
+    } else if (currentVehicleTab === 'wanted') {
+        c.appendChild(buildVehicleEmpty('✦', "Wanted list — coming next.\nYou'll be able to add parts you're looking for and we'll notify you when they're listed."));
+
+    } else if (currentVehicleTab === 'saved') {
+        const savedFitting = partDatabase.filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
+        if (!savedFitting.length) {
+            c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.\nTap the heart on any listing to save it.`));
+            return;
+        }
+        c.appendChild(buildPartsGrid(savedFitting));
+
+    } else if (currentVehicleTab === 'matches') {
+        c.appendChild(buildVehicleEmpty('🔔', "Matches — coming next.\nWhen new listings hit your wanted criteria, they'll show up here."));
+    }
+}
+
+function buildPartsGrid(parts) {
+    const g = document.createElement('div');
+    g.className = 'results-grid';
+    g.style.marginTop = '0';
+    parts.forEach(p => { g.innerHTML += buildCardHTML(p); });
+    return g;
+}
+
+function buildVehicleEmpty(ico, text) {
+    const e = document.createElement('div');
+    e.className = 'veh-empty';
+    const i = document.createElement('div'); i.className = 'ico'; i.textContent = ico;
+    const t = document.createElement('div'); t.className = 'text'; t.textContent = text;
+    e.appendChild(i); e.appendChild(t);
+    return e;
+}
+
+// --- TOAST: lightweight global feedback chip ---
+let _toastTimer;
+function showToast(msg) {
+    let toast = document.getElementById('appToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.className = 'app-toast';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+// --- INBOX (stub — real screen lands in Phase 2) ---
+function onOpenInbox() {
+    alert('Inbox — coming with Wanted/Matches in the next phase. Will show messages, match notifications, and price drops.');
+}
 
 // --- AUTH STATE + ACCOUNT MENU ---
 
@@ -540,6 +809,7 @@ function updateCarouselActiveDot() {
 document.addEventListener('DOMContentLoaded', () => {
     renderMainGrid();
     renderMyParts();
+    renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     renderAccountState();      // sets pill label/colour, hides pro toggle, sizes the grid offset
 
     // Wire up the carousel scroll → active-dot sync once
