@@ -43,9 +43,10 @@
             </div>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Profile')"><span class="ico">👤</span> Profile</button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Settings')"><span class="ico">⚙️</span> Settings</button>
+            <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services</button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings</button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages</button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Saved Parts')"><span class="ico">❤️</span> Saved Parts</button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages</button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')"><span class="ico">❓</span> Help &amp; Support</button>
             <div class="menu-divider"></div>
             <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">
@@ -76,16 +77,14 @@
 <div id="detailOverlay" class="drawer">
     <!-- Seller header — IDs added so JS can update name/avatar per listing -->
     <div class="drawer-header" style="padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid var(--apc-orange); background: var(--apc-amber);">
-        <div id="detailSellerSection" class="detail-locked-group" style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="openStorefront(currentOpenPartId)">
-            <div id="detailSellerAvatar" style="width: 42px; height: 42px; background: #007AFF; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,122,255,0.2);">G</div>
-            <div style="line-height: 1.2;">
-                <div style="font-size: 14px; font-weight: 800; color: #333; display: flex; align-items: center; gap: 4px;">
-                    <span id="detailSellerName">Seller</span>
-                    <span id="detailProBadge" style="font-size: 9px; color: #007AFF; font-weight: 900;">✔ PRO</span>
+        <div id="detailSellerSection" class="detail-seller-card detail-locked-group" onclick="openStorefront(currentOpenPartId)">
+            <div id="detailSellerAvatar" class="seller-avatar">G</div>
+            <div class="seller-card-meta">
+                <div class="detail-seller-name-row">
+                    <span id="detailSellerName" class="detail-seller-name">Seller</span>
+                    <span id="detailProBadge" class="seller-pro-badge">✔ PRO</span>
                 </div>
-                <div id="detailSellerSub" style="font-size: 11px; color: #007AFF; font-weight: 700; margin-top: 2px;">
-                    View seller's other items →
-                </div>
+                <div id="detailSellerSub" class="detail-seller-sub">View seller's other items →</div>
             </div>
         </div>
         <div onclick="toggleDrawer('detailOverlay')" style="font-size: 34px; color: #888; cursor: pointer; padding-left: 10px; line-height: 1;">×</div>
@@ -134,6 +133,17 @@
             </button>
         </div>
 
+        <div id="detailWorkshopSection" style="display: none; padding: 15px 15px 0 15px; margin-top: 0;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+                <div>
+                    <div style="font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Need this fitted?</div>
+                    <div id="detailWorkshopHeadline" style="font-size: 14px; font-weight: 800; color: #333; margin-top: 5px; line-height: 1.3;">Local fitters near you</div>
+                </div>
+                <div class="workshop-sponsored-badge">Sponsored</div>
+            </div>
+            <div id="detailWorkshopCards" style="display: grid; gap: 12px;"></div>
+        </div>
+
         <div id="detailSignInPrompt" class="detail-signin-prompt" style="display:none; margin: 0 15px 20px 15px; padding: 18px; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; background: rgba(255,255,255,0.95); text-align: center;">
             <div style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color:#333;">Sign in to view the seller details, location and full description.</div>
             <button onclick="openAuthDrawer()" style="width: 100%; padding: 14px; background: var(--apc-orange); color:white; border:none; border-radius: 10px; font-weight:800; cursor:pointer;">SIGN IN TO VIEW DETAILS</button>
@@ -156,16 +166,16 @@
 </div>
 
 <div id="storefrontDrawer" class="drawer">
-    <div class="drawer-header" style="display: flex; align-items: center; padding: 10px 15px; height: 70px; border-bottom: 2px solid var(--apc-orange);">
-        <div class="seller-card" style="margin: 0; padding: 0; background: none; border: none; flex: 1; display: flex; align-items: center; gap: 10px;">
-            <div class="seller-avatar" style="width: 40px; height: 40px; font-size: 20px;">👤</div>
-            <div style="flex: 1; line-height: 1.2;">
-                <div id="displaySellerName" style="font-weight: 800; font-size: 15px; color: #333;">Seller Name</div>
-                <div style="font-size: 10px; color: #888;">Top Rated Seller</div>
-                <span id="proBadge" style="color: var(--apc-orange); font-weight: 900; font-size: 10px; letter-spacing: 1px;">PRO</span>
+    <div class="drawer-header storefront-header">
+        <div class="storefront-seller-card">
+            <div class="seller-avatar">👤</div>
+            <div class="seller-card-meta">
+                <div id="displaySellerName" class="seller-card-name">Seller Name</div>
+                <div class="seller-card-sub">Top Rated Seller</div>
             </div>
+            <span id="proBadge" class="seller-pro-badge">PRO</span>
         </div>
-        <div onclick="toggleDrawer('storefrontDrawer')" style="font-size: 32px; cursor: pointer; padding-left: 15px; line-height: 1;">×</div>
+        <div onclick="toggleDrawer('storefrontDrawer')" class="close-drawer-icon">×</div>
     </div>
     <div class="drawer-content" style="padding: 0;">
         <div style="padding: 15px 15px 5px 15px;">
@@ -193,6 +203,8 @@
             </div>
         </div>
         <div style="background: white; padding: 10px; border-radius: 25px; display: flex; align-items: center; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);">
+            <button type="button" class="chat-attach-btn" onclick="document.getElementById('chatAttachmentInput').click()" aria-label="Attach photo">📷</button>
+            <input id="chatAttachmentInput" type="file" accept="image/*" style="display: none;" onchange="sendChatImage(event)">
             <input type="text" id="chatInput" placeholder="Type a message..." style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px 10px;">
             <button onclick="sendChatMessage()" style="background: var(--apc-orange); border: none; color: white; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: 900;">➔</button>
         </div>
@@ -406,6 +418,84 @@
     </div>
 </div>
 
+<div id="workshopDrawer" class="drawer">
+    <div class="drawer-header">
+        <span id="workshopDrawerTitle">Find workshops & services</span>
+        <div onclick="toggleDrawer('workshopDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content">
+        <div id="workshopBrowseSection" style="display:none;">
+            <div class="filter-section">
+                <h4>Filter by service</h4>
+                <div class="shared-choice-box" style="margin-top: 8px;">
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterMechanical" onclick="renderWorkshopBrowseView()"> Mechanical</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterCrash" onclick="renderWorkshopBrowseView()"> Crash repair</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterElectrician" onclick="renderWorkshopBrowseView()"> Auto electrician</label>
+                </div>
+                <div class="shared-choice-box" style="margin-top: 8px;">
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterTyres" onclick="renderWorkshopBrowseView()"> Tyres</label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Sponsored workshops near you</h4>
+                <div id="workshopSponsoredList" class="workshop-sponsor-grid"></div>
+            </div>
+        </div>
+
+        <div id="workshopProfileFields" style="display:none;">
+            <div id="workshopProNotice" style="display:none; padding: 18px; margin-bottom: 18px; border: 1px solid #f0d7b1; border-radius: 16px; background: #fff7eb; color: #7a4b0d; font-size: 13px;">
+                <div>This feature is for APC Pro accounts. Upgrade now to list the types of vehicles and fitment services your workshop can handle.</div>
+                <button onclick="onUpgradeToPro()" style="margin-top: 12px; width: 100%; background: var(--apc-blue); color: white; border: none; border-radius: 12px; padding: 12px 0; font-weight: 700; cursor: pointer;">Upgrade to APC Pro</button>
+            </div>
+
+            <div class="filter-section">
+                <h4>Workshop / Repairer profile</h4>
+                <div class="input-group">
+                    <label>Business name</label>
+                    <input id="workshopName" type="text" placeholder="e.g. Eastside Toyota Repairs">
+                </div>
+                <div class="input-group">
+                    <label>Location</label>
+                    <input id="workshopLocation" type="text" placeholder="e.g. Adelaide, SA">
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Vehicle types</h4>
+                <div class="input-group">
+                    <label>Vehicles you work on</label>
+                    <input id="workshopVehicles" type="text" placeholder="e.g. Toyota Camry, Hiace, Volkswagen Golf">
+                </div>
+                <div style="font-size: 11px; color: #888; margin-top: 6px;">Comma-separated make/model keywords help APC match your workshop to local part buyers.</div>
+            </div>
+
+            <div class="filter-section">
+                <h4>Service specialties</h4>
+                <div class="shared-choice-box" style="margin-top: 8px;">
+                    <label class="choice-item"><input type="checkbox" id="workshopServicePanel"> Panel & body repair</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopServiceFitment"> Part fitting</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopServiceMechanical"> Mechanical repair</label>
+                </div>
+                <div class="shared-choice-box" style="margin-top: 8px;">
+                    <label class="choice-item"><input type="checkbox" id="workshopServiceElectrical"> Electrical & lighting</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopServiceAlignment"> Wheel alignment</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopServiceTyres"> Tyres</label>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h4>About your workshop</h4>
+                <textarea id="workshopDescription" rows="4" placeholder="Tell buyers what you specialise in and the vehicles you want to attract."></textarea>
+            </div>
+
+            <div class="action-container">
+                <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE WORKSHOP PROFILE</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- GARAGE — list of user's vehicles, with add button at the bottom -->
 <div id="garageDrawer" class="drawer">
     <div class="drawer-header">
@@ -504,9 +594,29 @@
             <div class="inbox-tab active" data-tab="all" onclick="setInboxTab('all')">All</div>
             <div class="inbox-tab" data-tab="messages" onclick="setInboxTab('messages')">Messages</div>
             <div class="inbox-tab" data-tab="matches" onclick="setInboxTab('matches')">Matches</div>
-            <div class="inbox-tab" data-tab="activity" onclick="setInboxTab('activity')">Activity</div>
         </div>
         <div id="inboxContent"></div>
+    </div>
+</div>
+
+<!-- MESSAGE DETAIL — shows full notification content -->
+<div id="messageDetailDrawer" class="drawer">
+    <div class="drawer-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div id="messageDetailIcon" style="font-size: 24px;">💬</div>
+            <div>
+                <div id="messageDetailTitle" style="font-weight: 800; font-size: 16px; color: #333;">Message Title</div>
+                <div id="messageDetailMeta" style="font-size: 12px; color: #666;">Message meta</div>
+            </div>
+        </div>
+        <div onclick="toggleDrawer('messageDetailDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content">
+        <div id="messageDetailContent" style="padding: 15px;"></div>
+        <div style="padding: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <button id="messageDetailFlagBtn" class="message-detail-action-btn" style="display: none;">⚑</button>
+            <button id="messageDetailDeleteBtn" class="message-detail-action-btn delete">🗑️ Delete</button>
+        </div>
     </div>
 </div>
 

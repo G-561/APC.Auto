@@ -1,4 +1,4 @@
-// --- GLOBAL STATE ---
+﻿// --- GLOBAL STATE ---
 let userIsSignedIn = false;          // starts logged out — header shows "Sign In" pill
 let currentUserName = null;          // e.g. "Gary"
 let currentUserTier = null;          // 'standard' | 'pro'
@@ -40,6 +40,56 @@ const partDatabase = [
     { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [] }
 ];
 
+// Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
+const publicWantedDatabase = [
+    { id: 101, partName: 'Hiace sliding door complete assembly', buyer: 'Mark T.', loc: 'ADELAIDE, SA', make: 'Toyota', model: 'Hiace', year: '2019', maxPrice: 400, posted: '2 hours ago' },
+    { id: 102, partName: 'Lotus Elise S2 front clamshell', buyer: 'Chris B.', loc: 'MELBOURNE, VIC', make: 'Lotus', model: 'Elise', year: '2004', maxPrice: 1200, posted: '5 hours ago' },
+    { id: 103, partName: 'Toyota Hiace radiator 2015+', buyer: 'Sam R.', loc: 'SYDNEY, NSW', make: 'Toyota', model: 'Hiace', year: '2017', maxPrice: 300, posted: '1 day ago' },
+    { id: 104, partName: 'Elise exhaust manifold', buyer: 'Jay P.', loc: 'BRISBANE, QLD', make: 'Lotus', model: 'Elise', year: '2006', maxPrice: 600, posted: '1 day ago' },
+    { id: 105, partName: 'Hiace front bumper bar grey', buyer: 'Tanya W.', loc: 'PERTH, WA', make: 'Toyota', model: 'Hiace', year: '2020', maxPrice: 250, posted: '2 days ago' },
+    { id: 106, partName: 'Ford Falcon BA XR6 turbo engine complete', buyer: 'Dave L.', loc: 'ADELAIDE, SA', make: 'Ford', model: 'Falcon', year: '2004', maxPrice: 2500, posted: '2 days ago' },
+    { id: 107, partName: 'Commodore VE SS front seats pair', buyer: 'Nic A.', loc: 'MELBOURNE, VIC', make: 'Holden', model: 'Commodore', year: '2008', maxPrice: 700, posted: '3 days ago' },
+    { id: 108, partName: 'Golf MK7 GTI exhaust', buyer: 'Petra H.', loc: 'SYDNEY, NSW', make: 'Volkswagen', model: 'Golf', year: '2016', maxPrice: 800, posted: '4 days ago' }
+];
+
+const workshopDatabase = [
+    { id: 1, name: 'Eastside Toyota Repairs', specialty: 'Camry bonnet, body panels & crash repair', distance: '3.4km', loc: 'ADELAIDE, SA', rating: 4.9, vehicleTypes: ['Toyota', 'Camry', 'Hiace'], services: ['panel', 'crash repair', 'fitting'] },
+    { id: 2, name: 'City Crash Workshop', specialty: 'Volkswagen and general panel fitment', distance: '5.1km', loc: 'ADELAIDE, SA', rating: 4.8, vehicleTypes: ['Volkswagen', 'Golf', 'Passat'], services: ['panel', 'alignment', 'fitment', 'electrical'] },
+    { id: 3, name: 'Suburban Auto Fitters', specialty: 'Suspension, brakes and body fitment for Japanese sedans', distance: '6.8km', loc: 'ADELAIDE, SA', rating: 4.7, vehicleTypes: ['Toyota', 'Mazda', 'Nissan'], services: ['mechanical', 'fitting', 'inspection', 'tyres'] },
+    { id: 4, name: 'Crash & Panel Pros', specialty: 'Full repair, repaint and fitting service', distance: '8.4km', loc: 'ADELAIDE, SA', rating: 4.6, vehicleTypes: ['Toyota', 'Volkswagen', 'Ford'], services: ['panel', 'body', 'fitment'] }
+];
+
+const WORKSHOP_PROFILE_KEY = 'apc.workshopProfile.v1';
+let workshopProfile = loadWorkshopProfile();
+
+function loadWorkshopProfile() {
+    try {
+        const raw = localStorage.getItem(WORKSHOP_PROFILE_KEY);
+        return raw ? JSON.parse(raw) : getDefaultWorkshopProfile();
+    } catch (e) {
+        return getDefaultWorkshopProfile();
+    }
+}
+function saveWorkshopProfile() {
+    try { localStorage.setItem(WORKSHOP_PROFILE_KEY, JSON.stringify(workshopProfile)); } catch (e) {}
+}
+function getDefaultWorkshopProfile() {
+    return {
+        name: '',
+        location: '',
+        vehicles: '',
+        services: {
+            panel: false,
+            fitment: false,
+            mechanical: false,
+            electrical: false,
+            alignment: false,
+            tyres: false
+        },
+        description: ''
+    };
+}
+
 const LISTINGS_STORAGE_KEY = 'apc.listings.v1';
 const REMEMBER_ME_KEY = 'apc.rememberMe.v1';
 let userListings = loadUserListings();
@@ -70,6 +120,32 @@ function saveRememberedUser(user) {
 function clearRememberedUser() {
     try { localStorage.removeItem(REMEMBER_ME_KEY); } catch (e) {}
 }
+
+const INBOX_STORAGE_KEY = 'apc.inbox.v1';
+let inboxItems = loadInboxItems();
+
+function loadInboxItems() {
+    try {
+        const raw = localStorage.getItem(INBOX_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : getInitialInboxItems();
+    } catch (e) {
+        return getInitialInboxItems();
+    }
+}
+function saveInboxItems() {
+    try { localStorage.setItem(INBOX_STORAGE_KEY, JSON.stringify(inboxItems)); } catch (e) {}
+}
+function getInitialInboxItems() {
+    return [
+        { id: 1, type: 'messages', icon: '💬', title: 'New message from Gary S.', meta: 'About your brake pads listing', unread: true, flagged: false },
+        { id: 2, type: 'messages', icon: '💬', title: 'Message from Sarah J.', meta: 'Interested in your Elise parts', unread: true, flagged: false },
+        { id: 3, type: 'matches', icon: '🔔', title: 'Match found for "Lotus Elise" Wanted', meta: '2 parts available', unread: true, flagged: false }
+    ];
+}
+function nextInboxItemId() {
+    return inboxItems.length ? Math.max(...inboxItems.map(i => i.id)) + 1 : 1;
+}
+
 function nextPartId() {
     const ids = [...partDatabase, ...userListings].map(p => p.id);
     return ids.length ? Math.max(...ids) + 1 : 1;
@@ -79,6 +155,53 @@ function getAllParts() {
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
+}
+
+function getDetailVehicleLabel(part) {
+    if (!part || !part.fits || !part.fits.length) return 'vehicle';
+    const fit = part.fits[0];
+    if (fit.model && fit.make) return `${fit.make} ${fit.model}`;
+    return fit.make || fit.model || 'vehicle';
+}
+
+function getRecommendedWorkshops(part) {
+    const targetMake = part.fits && part.fits.length ? part.fits[0].make : null;
+    const targetModel = part.fits && part.fits.length ? part.fits[0].model : null;
+    return workshopDatabase
+        .map(workshop => ({
+            workshop,
+            score: [
+                targetMake && workshop.vehicleTypes.includes(targetMake) ? 2 : 0,
+                targetModel && workshop.vehicleTypes.includes(targetModel) ? 2 : 0,
+                workshop.services.some(s => part.category && s.toLowerCase().includes(part.category.toLowerCase())) ? 1 : 0
+            ].reduce((sum, value) => sum + value, 0)
+        }))
+        .filter(entry => entry.score > 0)
+        .sort((a, b) => b.score - a.score || a.workshop.distance.localeCompare(b.workshop.distance))
+        .map(entry => entry.workshop);
+}
+
+function buildWorkshopCardHTML(workshop) {
+    const stars = workshop.rating ? `<span class="workshop-rating">★ ${workshop.rating}</span>` : '';
+    return `
+        <div class="workshop-card">
+            <div class="workshop-card-header">
+                <div class="workshop-card-name">${workshop.name}</div>
+                <div class="workshop-card-distance">${workshop.distance}</div>
+            </div>
+            <div class="workshop-card-specialty">${workshop.specialty}</div>
+            <div class="workshop-card-meta">
+                Expert in ${workshop.vehicleTypes.join(', ')}${stars ? ' &nbsp;' + stars : ''}
+            </div>
+            <button class="workshop-card-button" onclick="contactWorkshop(${workshop.id})">CONTACT WORKSHOP</button>
+        </div>
+    `;
+}
+
+function contactWorkshop(workshopId) {
+    const workshop = workshopDatabase.find(w => w.id === workshopId);
+    if (!workshop) return;
+    showToast(`Contact request sent to ${workshop.name}`);
 }
 
 function getCurrentSellerName() {
@@ -104,6 +227,14 @@ function toggleDrawer(id, allowStack = false) {
 
     drawer.classList.toggle('active');
     document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : 'auto';
+
+    // Reset scroll position to top when opening drawer
+    if (drawer.classList.contains('active')) {
+        const content = drawer.querySelector('.drawer-content');
+        if (content) {
+            content.scrollTop = 0;
+        }
+    }
 }
 
 // --- FILTER HELPERS ---
@@ -179,11 +310,9 @@ function escapeHtml(text) {
 
 function buildCardHTML(part) {
     // Only part.id goes into the onclick — never unsanitised user content
-    const fittingLabel = part.isPro
-        ? `<button type="button" class="item-card-pro-btn" onclick="event.stopPropagation()">Fitting Available</button>`
-        : part.fit
-            ? `<span class="fitting-pill">FITTING AVAILABLE</span>`
-            : '';
+    const fittingLabel = part.fit
+        ? `<span class="fitting-pill">FITTING AVAILABLE</span>`
+        : '';
 
     const locationHTML = userIsSignedIn
         ? `📍 ${part.loc}`
@@ -247,22 +376,23 @@ function renderMainGrid() {
     });
 }
 
+// FIND WANTED mode — shows other buyers' public wanted listings so sellers can see the market.
+// This is a Pro seller tool: search what buyers are looking for, then list it.
 function renderWantedSearchResults(mainGrid) {
     const query = activeFilters.search.toLowerCase();
-    const matching = myWanted.filter(w => {
+    const matching = publicWantedDatabase.filter(w => {
         if (!query) return true;
         return w.partName.toLowerCase().includes(query) ||
-               (w.vehicleId !== null && myVehicles.find(v => v.id === w.vehicleId)?.make.toLowerCase().includes(query)) ||
-               (w.vehicleId !== null && myVehicles.find(v => v.id === w.vehicleId)?.model.toLowerCase().includes(query));
+               w.make.toLowerCase().includes(query) ||
+               w.model.toLowerCase().includes(query);
     });
 
     if (!matching.length) {
         const safeSearch = escapeHtml(activeFilters.search);
         mainGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
-                <div style="font-weight: 700; margin-bottom: 10px;">No wanted items found${safeSearch ? ` for "${safeSearch}"` : ''}</div>
-                <div style="font-size: 13px; margin-bottom: 20px;">Create a wanted part request and we’ll alert you when it shows up.</div>
-                <button onclick="onAddWantedFromSearch()" style="background: var(--apc-orange); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">ADD TO WANTED LIST</button>
+                <div style="font-weight: 700; margin-bottom: 10px;">No buyers looking for "${safeSearch}" right now</div>
+                <div style="font-size: 13px;">Try a broader search — make, model, or part type.</div>
             </div>`;
         return;
     }
@@ -270,8 +400,7 @@ function renderWantedSearchResults(mainGrid) {
     const header = document.createElement('div');
     header.style.cssText = 'grid-column: 1/-1; display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;';
     header.innerHTML = `
-        <div style="font-size:14px; font-weight:700; color:#333;">${matching.length} wanted item${matching.length === 1 ? '' : 's'}</div>
-        <button onclick="onAddWantedFromSearch()" style="background: none; border: 1px solid var(--apc-orange); color: var(--apc-orange); padding: 8px 14px; border-radius: 999px; font-weight:700; cursor:pointer;">New Wanted</button>
+        <div style="font-size:14px; font-weight:700; color:#333;">${matching.length} buyer${matching.length === 1 ? '' : 's'} looking</div>
     `;
     mainGrid.appendChild(header);
 
@@ -290,31 +419,23 @@ function renderWantedSearchResults(mainGrid) {
 
         const meta = document.createElement('div');
         meta.className = 'wanted-meta';
-        const metaParts = [];
-        if (w.maxPrice) metaParts.push(`Max $${w.maxPrice}`);
-        if (w.vehicleId !== null) {
-            const vehicle = myVehicles.find(v => v.id === w.vehicleId);
-            if (vehicle) metaParts.push(`${vehicle.make} ${vehicle.model}`);
-        } else {
-            metaParts.push('Any vehicle');
-        }
+        const metaParts = [`${w.make} ${w.model} ${w.year}`, w.loc];
+        if (w.maxPrice) metaParts.push(`Budget $${w.maxPrice}`);
+        metaParts.push(w.posted);
         meta.textContent = metaParts.join(' · ');
 
         info.appendChild(name);
         info.appendChild(meta);
         card.appendChild(info);
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'wanted-delete';
-        deleteBtn.textContent = '🗑️';
-        deleteBtn.onclick = (e) => {
+        const contactBtn = document.createElement('button');
+        contactBtn.className = 'wanted-contact-btn';
+        contactBtn.textContent = 'I HAVE THIS';
+        contactBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm('Delete this wanted part?')) {
-                deleteWanted(w.id);
-                renderMainGrid();
-            }
+            showToast(`Contact request sent to ${w.buyer}`);
         };
-        card.appendChild(deleteBtn);
+        card.appendChild(contactBtn);
         list.appendChild(card);
     });
 
@@ -670,6 +791,24 @@ function openItemDetail(partId) {
     const detailProBadge = document.getElementById('detailProBadge');
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
 
+    const workshopSection = document.getElementById('detailWorkshopSection');
+    const workshopHeadline = document.getElementById('detailWorkshopHeadline');
+    const workshopCards = document.getElementById('detailWorkshopCards');
+    if (workshopSection && workshopHeadline && workshopCards) {
+        const isUniversal = !part.fits || part.fits.length === 0;
+        if (isUniversal) {
+            workshopSection.style.display = 'none';
+        } else {
+            const workshops = getRecommendedWorkshops(part).slice(0, 3);
+            const vehicleLabel = getDetailVehicleLabel(part);
+            workshopHeadline.textContent = `Local ${vehicleLabel} specialists near you`;
+            workshopCards.innerHTML = workshops.length
+                ? workshops.map(buildWorkshopCardHTML).join('')
+                : `<div style="padding: 14px; border: 1px solid #eee; border-radius: 14px; background: #fbfbfb; color: #555; font-size: 13px;">No local fitters are listed for this vehicle yet — check back soon.</div>`;
+            workshopSection.style.display = 'block';
+        }
+    }
+
     // 4. Footer — more from seller or similar items
     const footer = document.getElementById('dynamicDetailFooter');
     if (!footer) return;
@@ -752,18 +891,60 @@ function handleMessageSeller() {
 }
 
 // XSS-safe chat: build message node with textContent, never innerHTML
-function sendChatMessage() {
-    const input = document.getElementById('chatInput');
-    const box   = document.getElementById('chatBox');
-    if (!input || input.value.trim() === '') return;
+function appendChatBubble({ text = '', imgSrc = '' }) {
+    const box = document.getElementById('chatBox');
+    if (!box) return;
 
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble-sent';
-    bubble.textContent = input.value;  // safe — no HTML injection possible
-    box.appendChild(bubble);
 
-    input.value = '';
+    if (imgSrc) {
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = 'Sent photo';
+        img.className = 'chat-bubble-image';
+        bubble.appendChild(img);
+        if (text) {
+            const caption = document.createElement('div');
+            caption.textContent = text;
+            caption.style.marginTop = '8px';
+            caption.style.fontSize = '13px';
+            caption.style.color = '#333';
+            bubble.appendChild(caption);
+        }
+    } else {
+        bubble.textContent = text;
+    }
+
+    box.appendChild(bubble);
     box.scrollTop = box.scrollHeight;
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    if (!input || input.value.trim() === '') return;
+
+    appendChatBubble({ text: input.value.trim() });
+    input.value = '';
+}
+
+function sendChatImage(event) {
+    const file = event.target.files?.[0];
+    const input = document.getElementById('chatInput');
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+        alert('Please choose an image file.');
+        event.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        appendChatBubble({ imgSrc: reader.result });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+    if (input) input.focus();
 }
 
 // Allow sending chat with Enter key
@@ -1103,7 +1284,7 @@ function renderVehicleTab() {
     c.innerHTML = '';
 
     if (currentVehicleTab === 'all') {
-        const fitting = partDatabase.filter(p => partFitsVehicle(p, v));
+        const fitting = getAllParts().filter(p => partFitsVehicle(p, v));
         if (!fitting.length) {
             c.appendChild(buildVehicleEmpty('🔍', `No listings match a ${v.make} ${v.model} yet.\nCheck back soon.`));
             return;
@@ -1120,10 +1301,18 @@ function renderVehicleTab() {
             ));
             return;
         }
+        const addRow = document.createElement('div');
+        addRow.style.cssText = 'display:flex; justify-content:flex-end; padding: 0 0 10px 0;';
+        const addBtn = document.createElement('button');
+        addBtn.textContent = '+ Add Wanted';
+        addBtn.style.cssText = 'background:none; border:1px solid var(--apc-orange); color:var(--apc-orange); padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; cursor:pointer;';
+        addBtn.onclick = () => openAddWantedForVehicle(currentVehicleId);
+        addRow.appendChild(addBtn);
+        c.appendChild(addRow);
         c.appendChild(buildWantedGrid(vehicleWanted));
 
     } else if (currentVehicleTab === 'saved') {
-        const savedFitting = partDatabase.filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
+        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
         if (!savedFitting.length) {
             c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.\nTap the heart on any listing to save it.`));
             return;
@@ -1132,7 +1321,7 @@ function renderVehicleTab() {
 
     } else if (currentVehicleTab === 'matches') {
         const vehicleWanted = myWanted.filter(w => w.vehicleId === currentVehicleId);
-        const matchingParts = partDatabase.filter(p =>
+        const matchingParts = getAllParts().filter(p =>
             vehicleWanted.some(w => wantedMatchesPart(w, p))
         );
         if (!matchingParts.length) {
@@ -1227,18 +1416,15 @@ function showToast(msg) {
 
 // --- INBOX ---
 let currentInboxTab = 'all';
-let inboxHasUnread = true;
 
 function onOpenInbox() {
-    inboxHasUnread = false;
     renderInbox();
     updateInboxBadge();
     toggleDrawer('inboxDrawer');
 }
 
 function updateInboxBadge() {
-    const notifications = generateInboxNotifications();
-    const unreadCount = inboxHasUnread ? notifications.length : 0;
+    const unreadCount = inboxItems.filter(item => item.unread).length;
     const badge = document.getElementById('inboxBadge');
     if (badge) {
         badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
@@ -1263,12 +1449,9 @@ function renderInboxContent() {
     if (!content) return;
     content.innerHTML = '';
 
-    // Generate mock notifications
-    const notifications = generateInboxNotifications();
-
-    let filtered = notifications;
+    let filtered = inboxItems;
     if (currentInboxTab !== 'all') {
-        filtered = notifications.filter(n => n.type === currentInboxTab);
+        filtered = inboxItems.filter(n => n.type === currentInboxTab);
     }
 
     if (!filtered.length) {
@@ -1276,18 +1459,144 @@ function renderInboxContent() {
         return;
     }
 
-    filtered.forEach(n => {
-        const item = document.createElement('div');
-        item.className = 'inbox-item';
-        item.innerHTML = `
-            <div class="inbox-icon">${n.icon}</div>
-            <div class="inbox-text">
-                <div class="inbox-title">${n.title}</div>
-                <div class="inbox-meta">${n.meta}</div>
+    filtered.forEach(item => content.appendChild(buildInboxItemNode(item)));
+}
+
+function buildInboxItemNode(item) {
+    const node = document.createElement('div');
+    node.className = 'inbox-item' + (item.unread ? ' unread' : '') + (item.flagged ? ' flagged' : '');
+    node.onclick = () => openMessageDetail(item.id);
+
+    const icon = document.createElement('div');
+    icon.className = 'inbox-icon';
+    icon.textContent = item.icon;
+
+    const text = document.createElement('div');
+    text.className = 'inbox-text';
+
+    const title = document.createElement('div');
+    title.className = 'inbox-title';
+    title.textContent = item.title;
+    text.appendChild(title);
+
+    const meta = document.createElement('div');
+    meta.className = 'inbox-meta';
+    meta.textContent = item.meta;
+    text.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'inbox-actions';
+
+    if (item.type === 'messages') {
+        const flagButton = document.createElement('button');
+        flagButton.className = 'inbox-action-btn inbox-flag-btn' + (item.flagged ? ' flagged' : '');
+        flagButton.type = 'button';
+        flagButton.title = item.flagged ? 'Unflag message' : 'Flag message';
+        flagButton.textContent = item.flagged ? '🚩' : '⚑';
+        flagButton.onclick = e => {
+            e.stopPropagation();
+            toggleInboxFlag(item.id);
+        };
+        actions.appendChild(flagButton);
+    }
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'inbox-action-btn inbox-delete-btn';
+    deleteButton.type = 'button';
+    deleteButton.title = 'Delete notification';
+    deleteButton.textContent = '🗑️';
+    deleteButton.onclick = e => {
+        e.stopPropagation();
+        deleteInboxItem(item.id);
+    };
+    actions.appendChild(deleteButton);
+
+    node.appendChild(icon);
+    node.appendChild(text);
+    node.appendChild(actions);
+    return node;
+}
+
+function toggleInboxFlag(id) {
+    const item = inboxItems.find(n => n.id === id);
+    if (!item) return;
+    item.flagged = !item.flagged;
+    saveInboxItems();
+    renderInboxContent();
+}
+
+function deleteInboxItem(id) {
+    inboxItems = inboxItems.filter(item => item.id !== id);
+    saveInboxItems();
+    renderInboxContent();
+    updateInboxBadge();
+}
+
+function openMessageDetail(id) {
+    const item = inboxItems.find(i => i.id === id);
+    if (!item) return;
+
+    // Mark as read
+    item.unread = false;
+    saveInboxItems();
+    updateInboxBadge();
+
+    // Populate the detail drawer
+    safeText(document.getElementById('messageDetailIcon'), item.icon);
+    safeText(document.getElementById('messageDetailTitle'), item.title);
+    safeText(document.getElementById('messageDetailMeta'), item.meta);
+
+    // Show different content based on type
+    const contentEl = document.getElementById('messageDetailContent');
+    if (item.type === 'messages') {
+        contentEl.innerHTML = `
+            <div style="padding: 20px; background: #E5DDD5; border-radius: 15px; margin: 15px 0;">
+                <div style="font-size: 14px; line-height: 1.5; color: #333;">
+                    Hi! I'm interested in your listing. Is this part still available? Can you tell me more about the condition and any modifications?
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="toggleDrawer('chatDrawer', true)" style="background: var(--apc-orange); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; cursor: pointer;">
+                    REPLY TO MESSAGE
+                </button>
             </div>
         `;
-        content.appendChild(item);
-    });
+    } else if (item.type === 'matches') {
+        contentEl.innerHTML = `
+            <div style="padding: 20px; background: #FFF9F2; border-radius: 15px; margin: 15px 0; border: 1px solid #F7941D;">
+                <div style="font-size: 14px; line-height: 1.5; color: #333;">
+                    Great news! We found matching parts for your wanted item. Check out these available options that fit your vehicle.
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="openVehicleDetail(currentVehicleId); toggleDrawer('messageDetailDrawer')" style="background: var(--apc-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; cursor: pointer;">
+                    VIEW MATCHES
+                </button>
+            </div>
+        `;
+    }
+
+    // Show/hide flag button based on type
+    const flagBtn = document.getElementById('messageDetailFlagBtn');
+    if (flagBtn) {
+        flagBtn.style.display = item.type === 'messages' ? 'inline-flex' : 'none';
+        flagBtn.className = 'message-detail-action-btn' + (item.flagged ? ' flagged' : '');
+        flagBtn.textContent = item.flagged ? '🚩' : '⚑';
+        flagBtn.onclick = () => {
+            toggleInboxFlag(id);
+            openMessageDetail(id); // Refresh the detail view
+        };
+    }
+
+    const deleteBtn = document.getElementById('messageDetailDeleteBtn');
+    if (deleteBtn) {
+        deleteBtn.onclick = () => {
+            deleteInboxItem(id);
+            toggleDrawer('messageDetailDrawer');
+        };
+    }
+
+    toggleDrawer('messageDetailDrawer');
 }
 
 // Generate mock notifications for prototype
@@ -1444,6 +1753,9 @@ function onUpgradeToPro() {
     proSearchOn = true;             // default ON so they immediately see what they paid for
     closeAccountMenu();
     renderAccountState();
+    if (document.getElementById('workshopDrawer')?.classList.contains('active')) {
+        renderWorkshopProfile();
+    }
 }
 
 // Pro-only: turn the FIND PARTS / FIND WANTED bar on/off
@@ -1473,7 +1785,125 @@ function closeAccountMenu() {
 // Menu-item helpers — placeholders until each screen is built
 function onMenuPlaceholder(label) {
     closeAccountMenu();
-    alert(label + ' — coming soon.');
+    showToast(label + ' — coming soon.');
+}
+function onMenuOpenWorkshops() {
+    closeAccountMenu();
+    if (!userIsSignedIn) {
+        openAuthDrawer(onMenuOpenWorkshops);
+        return;
+    }
+    renderWorkshopProfile();
+    if (currentUserTier !== 'pro') {
+        renderWorkshopBrowseView();
+    }
+    toggleDrawer('workshopDrawer');
+}
+function submitWorkshopProfile() {
+    if (!userIsSignedIn) {
+        openAuthDrawer(submitWorkshopProfile);
+        return;
+    }
+    if (currentUserTier !== 'pro') {
+        showToast('Upgrade to APC Pro to save your workshop profile');
+        return;
+    }
+    workshopProfile = {
+        name: document.getElementById('workshopName')?.value.trim() || '',
+        location: document.getElementById('workshopLocation')?.value.trim() || '',
+        vehicles: document.getElementById('workshopVehicles')?.value.trim() || '',
+        services: {
+            panel: document.getElementById('workshopServicePanel')?.checked || false,
+            fitment: document.getElementById('workshopServiceFitment')?.checked || false,
+            mechanical: document.getElementById('workshopServiceMechanical')?.checked || false,
+            electrical: document.getElementById('workshopServiceElectrical')?.checked || false,
+            alignment: document.getElementById('workshopServiceAlignment')?.checked || false,
+            tyres: document.getElementById('workshopServiceTyres')?.checked || false
+        },
+        description: document.getElementById('workshopDescription')?.value.trim() || ''
+    };
+    saveWorkshopProfile();
+    showToast('Workshop profile saved');
+    toggleDrawer('workshopDrawer');
+}
+function renderWorkshopProfile() {
+    const notice = document.getElementById('workshopProNotice');
+    const profileFields = document.getElementById('workshopProfileFields');
+    const browseSection = document.getElementById('workshopBrowseSection');
+    const drawerTitle = document.getElementById('workshopDrawerTitle');
+    const saveBtn = document.querySelector('#workshopDrawer .btn-full-action');
+    const isPro = currentUserTier === 'pro';
+
+    if (notice) notice.style.display = isPro ? 'none' : 'block';
+    if (profileFields) profileFields.style.display = isPro ? 'block' : 'none';
+    if (browseSection) browseSection.style.display = isPro ? 'none' : 'block';
+    if (drawerTitle) drawerTitle.textContent = isPro ? 'APC Pro Workshops' : 'Find workshops & services';
+    if (saveBtn) saveBtn.disabled = !isPro;
+
+    const nameField = document.getElementById('workshopName');
+    const locationField = document.getElementById('workshopLocation');
+    const vehiclesField = document.getElementById('workshopVehicles');
+    const descField = document.getElementById('workshopDescription');
+    const servicePanel = document.getElementById('workshopServicePanel');
+    const serviceFitment = document.getElementById('workshopServiceFitment');
+    const serviceMechanical = document.getElementById('workshopServiceMechanical');
+    const serviceElectrical = document.getElementById('workshopServiceElectrical');
+    const serviceAlignment = document.getElementById('workshopServiceAlignment');
+    const serviceTyres = document.getElementById('workshopServiceTyres');
+
+    if (nameField) nameField.value = workshopProfile.name;
+    if (locationField) locationField.value = workshopProfile.location;
+    if (vehiclesField) vehiclesField.value = workshopProfile.vehicles;
+    if (descField) descField.value = workshopProfile.description;
+    if (servicePanel) servicePanel.checked = workshopProfile.services.panel;
+    if (serviceFitment) serviceFitment.checked = workshopProfile.services.fitment;
+    if (serviceMechanical) serviceMechanical.checked = workshopProfile.services.mechanical;
+    if (serviceElectrical) serviceElectrical.checked = workshopProfile.services.electrical;
+    if (serviceAlignment) serviceAlignment.checked = workshopProfile.services.alignment;
+    if (serviceTyres) serviceTyres.checked = workshopProfile.services.tyres;
+}
+function renderWorkshopBrowseView() {
+    const filters = {
+        mechanical: document.getElementById('workshopFilterMechanical')?.checked,
+        crash: document.getElementById('workshopFilterCrash')?.checked,
+        electrician: document.getElementById('workshopFilterElectrician')?.checked,
+        tyres: document.getElementById('workshopFilterTyres')?.checked
+    };
+    const sponsoredList = document.getElementById('workshopSponsoredList');
+    if (!sponsoredList) return;
+
+    const activeFilters = Object.entries(filters).filter(([, value]) => value).map(([key]) => key);
+    const matches = workshopDatabase.filter(w => {
+        if (!activeFilters.length) return true;
+        return activeFilters.some(filter => {
+            if (filter === 'mechanical') return w.services.includes('mechanical');
+            if (filter === 'crash') return w.services.includes('crash repair') || w.services.includes('panel');
+            if (filter === 'electrician') return w.services.includes('electrical');
+            if (filter === 'tyres') return w.services.includes('tyres');
+            return false;
+        });
+    });
+
+    if (!matches.length) {
+        sponsoredList.innerHTML = '<div class="workshop-card"><div class="workshop-card-name">No sponsored workshops match those filters yet.</div></div>';
+        return;
+    }
+
+    sponsoredList.innerHTML = matches.map(buildSponsoredWorkshopCardHTML).join('');
+}
+function buildSponsoredWorkshopCardHTML(workshop) {
+    return `
+        <div class="workshop-card workshop-sponsor-card">
+            <div class="workshop-card-header">
+                <div class="workshop-card-name">${workshop.name}</div>
+                <div class="workshop-card-distance">${workshop.distance}</div>
+            </div>
+            <div class="workshop-card-specialty">${workshop.specialty}</div>
+            <div class="workshop-card-meta">${workshop.services.join(', ')}</div>
+            <div class="workshop-card-meta" style="margin-top: 6px; color: #666;">${workshop.loc}</div>
+            <button class="workshop-card-button" onclick="showToast('Contacting ${workshop.name}...')">View sponsor</button>
+        </div>
+    `;
 }
 function onMenuOpenMyListings() {
     closeAccountMenu();
