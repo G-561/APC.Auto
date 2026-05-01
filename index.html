@@ -66,7 +66,7 @@
 <nav class="bottom-nav" id="bottomNav">
     <div class="nav-item active" onclick="location.reload()"><span>🏠</span>Home</div>
     <div class="nav-item" onclick="onOpenGarage()"><span>🚗</span>Garage</div>
-    <div class="nav-item nav-sell" onclick="toggleDrawer('sellOverlay')"><span>✚</span>Sell</div>
+    <div class="nav-item nav-sell" onclick="openSellOverlay()"><span>✚</span>Sell</div>
     <div class="nav-item" id="inboxNavItem" onclick="onOpenInbox()">
         <span>💬</span>Inbox
         <span id="inboxBadge" style="display:none; position:absolute; top:8px; right:calc(50% - 22px); background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px;"></span>
@@ -76,7 +76,7 @@
 <div id="detailOverlay" class="drawer">
     <!-- Seller header — IDs added so JS can update name/avatar per listing -->
     <div class="drawer-header" style="padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid var(--apc-orange); background: var(--apc-amber);">
-        <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="openStorefront(currentOpenPartId)">
+        <div id="detailSellerSection" class="detail-locked-group" style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="openStorefront(currentOpenPartId)">
             <div id="detailSellerAvatar" style="width: 42px; height: 42px; background: #007AFF; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,122,255,0.2);">G</div>
             <div style="line-height: 1.2;">
                 <div style="font-size: 14px; font-weight: 800; color: #333; display: flex; align-items: center; gap: 4px;">
@@ -116,14 +116,14 @@
             <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
                 <span>📦</span> Postage Available
             </div>
-            <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
+            <div id="detailLocationSection" class="detail-locked-group" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
                 <span>📍</span> Pickup: <span id="detailLoc" style="color: #333;">Location</span>
             </div>
         </div>
 
-        <div style="padding: 15px 15px 20px 15px; border-top: 1px solid #f9f9f9; margin-top: 10px;">
+        <div id="detailDescriptionSection" class="detail-locked-group" style="padding: 15px 15px 20px 15px; border-top: 1px solid #f9f9f9; margin-top: 10px;">
             <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #aaa; letter-spacing: 0.5px;">Description</h4>
-            <p style="font-size: 14px; line-height: 1.5; color: #444; margin: 0;">
+            <p id="detailDescription" style="font-size: 14px; line-height: 1.5; color: #444; margin: 0;">
                 Fully functional part. Tested and ready for installation.
             </p>
         </div>
@@ -134,12 +134,24 @@
             </button>
         </div>
 
+        <div id="detailSignInPrompt" class="detail-signin-prompt" style="display:none; margin: 0 15px 20px 15px; padding: 18px; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; background: rgba(255,255,255,0.95); text-align: center;">
+            <div style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color:#333;">Sign in to view the seller details, location and full description.</div>
+            <button onclick="openAuthDrawer()" style="width: 100%; padding: 14px; background: var(--apc-orange); color:white; border:none; border-radius: 10px; font-weight:800; cursor:pointer;">SIGN IN TO VIEW DETAILS</button>
+        </div>
+
         <div style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
             <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 12px;">Have a part like this?</div>
             <button onclick="toggleDrawer('sellOverlay')" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
         </div>
 
         <div id="dynamicDetailFooter"></div>
+    </div>
+</div>
+
+<div id="imageLightbox" class="image-lightbox" onclick="closeDetailImageViewer()">
+    <div class="image-lightbox-inner" onclick="event.stopPropagation()">
+        <button class="image-lightbox-close" onclick="event.stopPropagation(); closeDetailImageViewer()" aria-label="Close photo preview">×</button>
+        <img id="lightboxImage" src="" alt="Photo preview" />
     </div>
 </div>
 
@@ -261,37 +273,62 @@
 
 <div id="authDrawer" class="drawer">
     <div class="drawer-header">
-        <span>Sign In</span>
+        <span id="authTitle">Sign In / Sign Up</span>
         <div onclick="toggleDrawer('authDrawer')" style="font-size: 30px; color: #888; cursor: pointer;">×</div>
     </div>
     <div class="drawer-content">
-        <p style="font-size: 12px; color: #666; margin-bottom: 20px;">Sign in to access your APC Dashboard.</p>
-        <button onclick="handleSignInSubmit()" style="width: 100%; padding: 15px; background: var(--apc-orange); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN IN</button>
+        <div style="display:flex; gap: 10px; margin-bottom: 18px;">
+            <button type="button" class="auth-tab active" id="authTabSignIn" onclick="setAuthMode('signin')">Sign In</button>
+            <button type="button" class="auth-tab" id="authTabSignUp" onclick="setAuthMode('signup')">Sign Up</button>
+        </div>
+        <div id="authSignInSection">
+            <div class="input-group" style="margin-bottom: 12px;"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
+            <div class="input-group" style="margin-bottom: 12px;"><label>Password</label><input type="password" id="authPassword" placeholder="Password"></div>
+            <label class="choice-item" style="margin-bottom: 18px;"><input type="checkbox" id="authRememberMe"> Remember me</label>
+            <button onclick="handleSignInSubmit()" style="width: 100%; padding: 15px; background: var(--apc-orange); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN IN</button>
+        </div>
+        <div id="authSignUpSection" style="display:none;">
+            <div class="input-group" style="margin-bottom: 12px;"><label>Name</label><input type="text" id="authName" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom: 12px;"><label>Email</label><input type="email" id="authEmailSignup" placeholder="you@example.com"></div>
+            <div class="input-group" style="margin-bottom: 12px;"><label>Password</label><input type="password" id="authPasswordSignup" placeholder="Password"></div>
+            <label class="choice-item" style="margin-bottom: 18px;"><input type="checkbox" id="authRememberMeSignup"> Remember me</label>
+            <button onclick="handleSignUpSubmit()" style="width: 100%; padding: 15px; background: var(--apc-blue); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN UP</button>
+        </div>
+        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <button type="button" onclick="onShowProBenefits()" style="background: none; border: none; color: var(--apc-orange); font-weight: 800; cursor: pointer; text-align: left; padding: 0;">APC Pro benefits outlined →</button>
+            <div id="proBenefitsPanel" style="display:none; background: #fffdeb; border: 1px solid rgba(255,165,0,0.2); border-radius: 12px; padding: 14px; font-size: 13px; color: #333;">
+                <strong style="display:block; margin-bottom: 8px;">APC Pro benefits</strong>
+                <ul style="padding-left: 18px; margin: 0; color: #555;">
+                    <li>Pro-only search for wanted and part listings</li>
+                    <li>Priority listing placement for your parts</li>
+                    <li>Fitting Available toggle for pro sellers</li>
+                    <li>Seller badge and priority buyer access</li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
 <div id="sellOverlay" class="drawer">
-    <div class="drawer-header"><span>LIST A PART</span><div onclick="toggleDrawer('sellOverlay')" style="font-size:30px; cursor:pointer">×</div></div>
+    <div class="drawer-header"><span id="sellOverlayTitle">LIST A PART</span><div onclick="toggleDrawer('sellOverlay')" style="font-size:30px; cursor:pointer">×</div></div>
     <div class="drawer-content">
 
         <div class="filter-section">
             <h4>Photos</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <div style="aspect-ratio: 1/1; border: 2px dashed var(--apc-orange); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--apc-orange); font-size: 10px; font-weight: 700; background: #fafafa; cursor: pointer;"><span>📷</span>Main</div>
-                <div style="aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; font-weight: 700; background: #fafafa; cursor: pointer;"><span>➕</span>Add</div>
-                <div style="aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; font-weight: 700; background: #fafafa; cursor: pointer;"><span>➕</span>Add</div>
-            </div>
+            <div id="sellPhotoGrid" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px;"></div>
+            <input type="file" id="sellImageInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleSellImageFiles(event)">
+            <div style="font-size: 12px; color: #666; margin-top: 8px;">Upload up to 5 photos. On mobile, this may open your camera.</div>
         </div>
 
         <div class="filter-section">
             <h4>Part Details</h4>
             <div class="input-group" style="margin-bottom: 10px;">
                 <label>Listing Title</label>
-                <input type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
+                <input id="sellTitle" type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
             </div>
             <div class="input-group">
                 <label>Category</label>
-                <select>
+                <select id="sellCategory">
                     <option value="" disabled selected>Select a category...</option>
                     <option value="body">Body & Exterior</option>
                     <option value="lighting">Lighting & Electrical</option>
@@ -307,31 +344,34 @@
         <div class="filter-section">
             <h4>Vehicle Fitment</h4>
             <div class="input-row-flex">
-                <div class="input-group"><label>Make</label><input type="text" placeholder="e.g. Lotus"></div>
-                <div class="input-group"><label>Model</label><input type="text" placeholder="e.g. Elise"></div>
-                <div class="input-group"><label>Year</label><input type="number" placeholder="2005"></div>
+                <div class="input-group"><label>Make</label><input id="sellMake" type="text" placeholder="e.g. Lotus"></div>
+                <div class="input-group"><label>Model</label><input id="sellModel" type="text" placeholder="e.g. Elise"></div>
+                <div class="input-group"><label>Year</label><input id="sellYear" type="number" placeholder="2005"></div>
+            </div>
+            <div id="sellFittingToggleSection" style="display:none; margin-top: 10px;">
+                <label class="choice-item"><input id="sellFittingAvailable" type="checkbox"> Fitting Available</label>
             </div>
         </div>
 
         <div class="filter-section">
             <h4>Location & Delivery</h4>
             <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
-                <div class="input-group"><label>P/Code</label><input type="number" placeholder="5000"></div>
-                <div class="input-group"><label>Suburb, State</label><input type="text" placeholder="e.g. Adelaide, SA"></div>
+                <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="number" placeholder="5000"></div>
+                <div class="input-group"><label>Suburb, State</label><input id="sellLocation" type="text" placeholder="e.g. Adelaide, SA"></div>
             </div>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" checked> Pickup Available</label>
-                <label class="choice-item"><input type="checkbox"> Willing to Post</label>
+                <label class="choice-item"><input id="sellPickup" type="checkbox" checked> Pickup Available</label>
+                <label class="choice-item"><input id="sellPostage" type="checkbox"> Willing to Post</label>
             </div>
         </div>
 
         <div class="filter-section">
             <h4>Pricing & Condition</h4>
             <div class="input-row-flex" style="margin-bottom: 10px;">
-                <div class="input-group"><label>Price ($)</label><input type="number" placeholder="0.00"></div>
+                <div class="input-group"><label>Price ($)</label><input id="sellPrice" type="number" placeholder="0.00"></div>
                 <div class="input-group">
                     <label>Condition</label>
-                    <select>
+                    <select id="sellCondition">
                         <option value="" disabled selected>Select condition...</option>
                         <option value="new_oem">New OEM (Genuine)</option>
                         <option value="new_aftermarket">New Aftermarket</option>
@@ -343,11 +383,11 @@
             </div>
             <div class="input-group">
                 <label>Description</label>
-                <textarea rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
+                <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
             </div>
         </div>
 
-        <div class="action-container"><button class="btn-full-action" onclick="alert('Part is live!'); toggleDrawer('sellOverlay')">LIST PART NOW</button></div>
+        <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
     </div>
 </div>
 
@@ -405,11 +445,33 @@
     </div>
 </div>
 
+<!-- ADD WANTED — modal for adding wanted parts -->
+<div id="addWantedDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>ADD TO WANTED LIST</span>
+        <div onclick="toggleDrawer('addWantedDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content">
+        <div class="filter-section">
+            <h4>Part Details</h4>
+            <div class="input-group"><label>Part Name *</label><input type="text" id="wantedPartName" placeholder="e.g. Brake pads, Exhaust manifold"></div>
+            <div class="input-group"><label>Max Price (optional)</label><input type="number" id="wantedMaxPrice" placeholder="e.g. 500" min="0"></div>
+        </div>
+        <div class="filter-section">
+            <h4>For Vehicle</h4>
+            <select id="wantedVehicleSelect">
+                <option value="">Any vehicle</option>
+            </select>
+        </div>
+        <div class="action-container"><button class="btn-full-action" onclick="submitAddWanted()">ADD TO WANTED</button></div>
+    </div>
+</div>
+
 <!-- VEHICLE DETAIL — stacks on top of garage; segmented toggle inside -->
 <div id="vehicleDetailDrawer" class="drawer">
     <div class="drawer-header">
+        <div class="back-btn" onclick="onBackToGarage()">‹ Garage</div>
         <span id="vehDetailHeaderTitle">Vehicle</span>
-        <div onclick="toggleDrawer('vehicleDetailDrawer')" style="font-size:30px; cursor:pointer">×</div>
     </div>
     <div class="drawer-content" style="background: #f4f4f4; padding: 12px;">
         <div class="vehicle-banner">
@@ -428,6 +490,23 @@
         </div>
 
         <div id="vehDetailTabContent"></div>
+    </div>
+</div>
+
+<!-- INBOX — bottom nav stub becomes real screen -->
+<div id="inboxDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>INBOX</span>
+        <div onclick="toggleDrawer('inboxDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content">
+        <div class="inbox-tabs">
+            <div class="inbox-tab active" data-tab="all" onclick="setInboxTab('all')">All</div>
+            <div class="inbox-tab" data-tab="messages" onclick="setInboxTab('messages')">Messages</div>
+            <div class="inbox-tab" data-tab="matches" onclick="setInboxTab('matches')">Matches</div>
+            <div class="inbox-tab" data-tab="activity" onclick="setInboxTab('activity')">Activity</div>
+        </div>
+        <div id="inboxContent"></div>
     </div>
 </div>
 

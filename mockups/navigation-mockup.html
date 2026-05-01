@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APC Navigation Mockup — Garage, Wanted, Saved, Inbox</title>
+<style>
+:root {
+    --apc-orange: #F7941D;
+    --apc-orange-dark: #d97c0c;
+    --apc-blue: #007AFF;
+    --apc-blue-bg: #0056b3;
+    --apc-charcoal: #333;
+    --apc-soft-grey: #555;
+    --apc-green: #28a745;
+    --bg: #F4F4F4;
+    --white: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #ECEEF2;
+    margin: 0;
+    padding: 30px 20px 80px 20px;
+    color: var(--apc-charcoal);
+}
+
+h1 { font-size: 22px; margin: 0 0 4px 0; }
+h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 1px; color: var(--apc-soft-grey); margin: 30px 0 10px 0; border-bottom: 2px solid #ddd; padding-bottom: 6px; }
+.lead { color: #666; margin: 0 0 20px 0; max-width: 720px; }
+
+.note {
+    background: #FFF9E6;
+    border-left: 4px solid var(--apc-orange);
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.45;
+    border-radius: 4px;
+    max-width: 720px;
+}
+.note.blue { background: #EAF4FF; border-left-color: var(--apc-blue); }
+.note b { color: var(--apc-charcoal); }
+
+/* === Phone frame === */
+.phone-row { display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-start; }
+.phone {
+    width: 380px;
+    background: var(--bg);
+    border-radius: 28px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    overflow: hidden;
+    border: 8px solid #1A1A1B;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.phone-tall { height: 760px; }
+.phone-label {
+    background: #1A1A1B;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: center;
+    padding: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* === App header (compact for nav demo) === */
+.app-header {
+    background: var(--white);
+    border-bottom: 5px solid var(--apc-orange);
+    padding: 10px 14px 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.app-header .back {
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--apc-charcoal);
+    padding: 0 4px;
+}
+.app-header .title {
+    font-weight: 800;
+    font-size: 15px;
+    flex: 1;
+}
+.app-header .header-action {
+    background: rgba(0,0,0,0.05);
+    border-radius: 999px;
+    padding: 6px 11px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--apc-charcoal);
+}
+
+/* === Screen container & screens === */
+.screen-container {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--bg);
+    position: relative;
+}
+.screen { display: none; padding: 12px 14px 24px 14px; }
+.screen.active { display: block; }
+
+/* === Home === */
+.search-bar {
+    display: flex;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.search-bar input {
+    flex: 1;
+    border: none;
+    padding: 10px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+}
+.search-bar .filter-btn {
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    padding: 0 14px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 700;
+}
+.parts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+.part-card {
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+}
+.part-card .img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    background: #ddd;
+    display: block;
+}
+.part-card .body { padding: 6px 8px; }
+.part-card .price { font-weight: 900; color: var(--apc-blue-bg); font-size: 13px; }
+.part-card .name { font-size: 10px; font-weight: 700; line-height: 1.3; margin-top: 2px; }
+.part-card .loc { font-size: 9px; color: #888; margin-top: 2px; }
+
+.demo-button {
+    background: white;
+    border: 2px dashed var(--apc-blue);
+    color: var(--apc-blue);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    margin: 12px 0;
+    cursor: pointer;
+}
+
+/* === Garage === */
+.section-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin: 8px 0;
+}
+.vehicle-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+.vehicle-card:hover { border-color: var(--apc-orange); }
+.vehicle-icon {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--apc-orange), #FFB85C);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    color: white;
+}
+.vehicle-info { flex: 1; }
+.vehicle-name { font-weight: 800; font-size: 14px; }
+.vehicle-meta { font-size: 11px; color: #666; margin-top: 2px; }
+.vehicle-counts {
+    margin-top: 6px;
+    display: flex;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 700;
+}
+.vehicle-counts .badge { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; color: #555; }
+.vehicle-counts .badge.match { background: #E6F8F0; color: var(--apc-green); }
+.vehicle-arrow { font-size: 20px; color: #ccc; align-self: center; }
+.add-vehicle {
+    background: white;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    color: #888;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* === Vehicle detail === */
+.vehicle-banner {
+    background: linear-gradient(135deg, var(--apc-orange), #FF6E00);
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.vehicle-banner .ico { font-size: 32px; }
+.vehicle-banner .name { font-size: 17px; font-weight: 800; }
+.vehicle-banner .meta { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+
+.segmented {
+    display: flex;
+    background: #e8e8e8;
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 12px;
+}
+.segmented .seg {
+    flex: 1;
+    text-align: center;
+    padding: 7px 4px;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #888;
+    position: relative;
+}
+.segmented .seg.active {
+    background: white;
+    color: var(--apc-orange);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.segmented .seg .seg-badge {
+    position: absolute;
+    top: 1px;
+    right: 6px;
+    background: #FF3B30;
+    color: white;
+    border-radius: 999px;
+    font-size: 8px;
+    padding: 1px 4px;
+    font-weight: 800;
+}
+
+/* Wanted card */
+.wanted-card {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.wanted-card .ico {
+    width: 38px; height: 38px;
+    background: rgba(0,122,255,0.12);
+    color: var(--apc-blue);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+.wanted-card .body { flex: 1; min-width: 0; }
+.wanted-card .body .name { font-weight: 800; font-size: 13px; }
+.wanted-card .body .meta { font-size: 10px; color: #888; margin-top: 2px; }
+.wanted-card .status {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--apc-blue);
+    background: rgba(0,122,255,0.08);
+    padding: 3px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* Match card */
+.match-card {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border-left: 4px solid var(--apc-green);
+}
+.match-card .img {
+    width: 56px; height: 56px;
+    background: #ddd;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.match-card .body { flex: 1; min-width: 0; }
+.match-card .body .label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--apc-green);
+    letter-spacing: 0.5px;
+}
+.match-card .body .name { font-weight: 700; font-size: 12px; line-height: 1.3; margin: 2px 0; }
+.match-card .body .price { font-weight: 900; color: var(--apc-blue-bg); font-size: 13px; }
+
+/* Empty state */
+.empty {
+    background: white;
+    border-radius: 12px;
+    padding: 30px 16px;
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+}
+.empty .big { font-size: 30px; margin-bottom: 8px; }
+.empty .add-cta {
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-weight: 800;
+    margin-top: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* === Inbox === */
+.inbox-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.inbox-tabs .tab {
+    background: white;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+.inbox-tabs .tab.active {
+    background: var(--apc-charcoal);
+    color: white;
+    border-color: var(--apc-charcoal);
+}
+.inbox-item {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    cursor: pointer;
+}
+.inbox-item .ico {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: #f0f0f0;
+}
+.inbox-item.message .ico { background: #DCF8C6; }
+.inbox-item.match .ico { background: #E6F8F0; color: var(--apc-green); }
+.inbox-item.price .ico { background: rgba(0,122,255,0.12); color: var(--apc-blue); }
+.inbox-item.activity .ico { background: rgba(247,148,29,0.15); color: var(--apc-orange); }
+.inbox-item .body { flex: 1; min-width: 0; }
+.inbox-item .body .label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+}
+.inbox-item.match .body .label { color: var(--apc-green); }
+.inbox-item.price .body .label { color: var(--apc-blue); }
+.inbox-item.activity .body .label { color: var(--apc-orange); }
+.inbox-item .body .text { font-size: 12px; font-weight: 600; line-height: 1.3; margin: 2px 0; color: var(--apc-charcoal); }
+.inbox-item .body .when { font-size: 10px; color: #aaa; }
+.inbox-item .unread {
+    width: 8px; height: 8px;
+    background: var(--apc-blue);
+    border-radius: 50%;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* === Bottom nav === */
+.bottom-nav {
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
+    display: flex;
+    height: 64px;
+    border-top: 1px solid #eee;
+    flex-shrink: 0;
+}
+.nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #999;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.15s;
+    position: relative;
+}
+.nav-item .ico { font-size: 22px; line-height: 1; margin-bottom: 3px; }
+.nav-item.active { color: var(--apc-orange); }
+.nav-item.nav-sell {
+    background: var(--apc-orange);
+    color: white !important;
+    margin: 6px 8px;
+    border-radius: 12px;
+}
+.nav-item.nav-sell .ico { font-size: 26px; }
+.nav-item .nav-badge {
+    position: absolute;
+    top: 8px;
+    right: calc(50% - 22px);
+    background: #FF3B30;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 1px 5px;
+}
+
+/* === Modal === */
+.modal-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 50;
+    align-items: flex-end;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+    background: white;
+    border-radius: 16px 16px 0 0;
+    padding: 18px 16px 22px 16px;
+    width: 100%;
+    animation: slideUp 0.18s ease;
+}
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+.modal h3 { margin: 0 0 12px 0; font-size: 15px; }
+.modal .field { margin-bottom: 10px; }
+.modal label { display: block; font-size: 9px; font-weight: 900; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.modal input, .modal select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+}
+.modal .actions { display: flex; gap: 10px; margin-top: 14px; }
+.modal button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: inherit;
+}
+.modal .cancel { background: #eee; color: #555; }
+.modal .save { background: var(--apc-orange); color: white; }
+
+/* === Toast === */
+.toast {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--apc-charcoal);
+    color: white;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+/* === Reference flow stamps === */
+.flow {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+.flow .step { flex-shrink: 0; }
+.flow .step-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--apc-soft-grey);
+    text-align: center;
+    margin-bottom: 6px;
+}
+.flow .arrow {
+    font-size: 20px;
+    color: #aaa;
+    align-self: center;
+    margin-top: 100px;
+}
+</style>
+</head>
+<body>
+
+<h1>APC navigation mockup — Garage, Wanted, Saved, Inbox</h1>
+<p class="lead">Click around the live phone below. Tap the bottom nav to switch screens. In Garage, tap a vehicle to drill in and see the segmented toggle (All / Wanted / Saved / Matches). Try the "search with no results" demo to see the Add-to-Wanted flow.</p>
+
+<div class="note">
+    <b>Bottom nav restructured:</b>
+    <b>Home · Garage · Sell · Inbox</b> (Profile is now in the header pill from the previous mockup, Filters becomes a button on Home).
+    Garage and Inbox are the two new tabs — both earn their place by being touched daily.
+</div>
+
+<div class="note blue">
+    <b>Wanted vs Saved — different things:</b>
+    <i>Wanted</i> declares an intention ("I want a Charade radiator"). It triggers notifications when matches appear.
+    <i>Saved</i> bookmarks a specific listing that exists right now. Both live as views inside a Garage vehicle so you can ask "what about <b>this</b> car?" — plus they're surfaced in Inbox when something happens.
+</div>
+
+<h2>Live interactive demo</h2>
+
+<div class="phone-row">
+
+<!-- ============== PHONE 1 — Live demo ============== -->
+<div class="phone phone-tall">
+    <div class="phone-label">Live preview — try the bottom nav</div>
+
+    <!-- HEADER — different per screen via JS -->
+    <div class="app-header" id="appHeader">
+        <span class="title" id="headerTitle">APC</span>
+    </div>
+
+    <!-- SCREEN CONTAINER -->
+    <div class="screen-container">
+
+        <!-- HOME -->
+        <div class="screen active" id="screenHome">
+            <div class="search-bar">
+                <input type="text" id="homeSearch" placeholder="Search parts for sale...">
+                <button class="filter-btn" title="Filters">⚙️</button>
+            </div>
+
+            <div class="demo-button" onclick="demoSearchNoResults()">
+                📱 Demo: search "Charade radiator" (no results)
+            </div>
+
+            <div class="parts-grid">
+                <div class="part-card"><img class="img" src="../images/hiace.mirror.jpg"><div class="body"><div class="price">$85</div><div class="name">Hiace Side Mirror</div><div class="loc">📍 Adelaide, SA</div></div></div>
+                <div class="part-card"><img class="img" src="../images/elise.wing.jpg"><div class="body"><div class="price">$850</div><div class="name">Elise GT Spoiler</div><div class="loc">📍 Adelaide, SA</div></div></div>
+                <div class="part-card"><img class="img" src="../images/hiace.taillight.webp"><div class="body"><div class="price">$145</div><div class="name">Hiace Tail Light</div><div class="loc">📍 Adelaide, SA</div></div></div>
+                <div class="part-card"><img class="img" src="../images/elise.brake.pads.jpg"><div class="body"><div class="price">$450</div><div class="name">Performance Calipers</div><div class="loc">📍 Melbourne, VIC</div></div></div>
+                <div class="part-card"><img class="img" src="../images/hiace.handle.jpg"><div class="body"><div class="price">$35</div><div class="name">Hiace Door Handle</div><div class="loc">📍 Adelaide, SA</div></div></div>
+                <div class="part-card"><img class="img" src="../images/Elise.scoops.webp"><div class="body"><div class="price">$120</div><div class="name">Cold Air Intake</div><div class="loc">📍 Brisbane, QLD</div></div></div>
+            </div>
+        </div>
+
+        <!-- GARAGE LIST -->
+        <div class="screen" id="screenGarageList">
+            <div class="section-title">My Vehicles · 3</div>
+
+            <div class="vehicle-card" onclick="openVehicle('charade')">
+                <div class="vehicle-icon">🚗</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">Daihatsu Charade</div>
+                    <div class="vehicle-meta">1985 · GTti · Daily driver</div>
+                    <div class="vehicle-counts">
+                        <span class="badge">2 wanted</span>
+                        <span class="badge">1 saved</span>
+                        <span class="badge match">3 new matches</span>
+                    </div>
+                </div>
+                <div class="vehicle-arrow">›</div>
+            </div>
+
+            <div class="vehicle-card" onclick="openVehicle('hiace')">
+                <div class="vehicle-icon">🚐</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">Toyota Hiace</div>
+                    <div class="vehicle-meta">2019 · LWB · Work vehicle</div>
+                    <div class="vehicle-counts">
+                        <span class="badge">0 wanted</span>
+                        <span class="badge">2 saved</span>
+                    </div>
+                </div>
+                <div class="vehicle-arrow">›</div>
+            </div>
+
+            <div class="vehicle-card" onclick="openVehicle('elise')">
+                <div class="vehicle-icon">🏎️</div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">Lotus Elise</div>
+                    <div class="vehicle-meta">2005 · S2 · Track</div>
+                    <div class="vehicle-counts">
+                        <span class="badge">1 wanted</span>
+                        <span class="badge">3 saved</span>
+                    </div>
+                </div>
+                <div class="vehicle-arrow">›</div>
+            </div>
+
+            <div class="add-vehicle" onclick="showToast('Add Vehicle flow — coming soon')">+ Add Another Vehicle</div>
+
+            <div class="note" style="margin-top: 14px; font-size: 11px;">
+                <b>Why Garage matters:</b> the badges on each vehicle card give you a glance — what's wanted, saved, and freshly matched. Tap a car to drill in.
+            </div>
+        </div>
+
+        <!-- VEHICLE DETAIL -->
+        <div class="screen" id="screenVehicle">
+            <div class="vehicle-banner">
+                <div class="ico" id="vehBannerIco">🚗</div>
+                <div>
+                    <div class="name" id="vehBannerName">Daihatsu Charade</div>
+                    <div class="meta" id="vehBannerMeta">1985 · GTti · Daily driver</div>
+                </div>
+            </div>
+
+            <div class="segmented">
+                <div class="seg active" data-tab="all" onclick="setVehTab('all')">All Parts</div>
+                <div class="seg" data-tab="wanted" onclick="setVehTab('wanted')">Wanted</div>
+                <div class="seg" data-tab="saved" onclick="setVehTab('saved')">Saved</div>
+                <div class="seg" data-tab="matches" onclick="setVehTab('matches')">Matches<span class="seg-badge" id="matchesBadge">3</span></div>
+            </div>
+
+            <!-- Tab content -->
+            <div id="vehTabContent">
+                <!-- Filled in by JS -->
+            </div>
+        </div>
+
+        <!-- INBOX -->
+        <div class="screen" id="screenInbox">
+            <div class="inbox-tabs">
+                <div class="tab active">All</div>
+                <div class="tab">Messages</div>
+                <div class="tab">Matches</div>
+                <div class="tab">Activity</div>
+            </div>
+
+            <div class="inbox-item match" onclick="goToMatchesInGarage()">
+                <div class="ico">🔔</div>
+                <div class="body">
+                    <div class="label">Wanted match · Charade</div>
+                    <div class="text">3 new listings match your "Charade radiator" wanted</div>
+                    <div class="when">12 minutes ago</div>
+                </div>
+                <div class="unread"></div>
+            </div>
+
+            <div class="inbox-item message">
+                <div class="ico">💬</div>
+                <div class="body">
+                    <div class="label">Sarah J.</div>
+                    <div class="text">"Hi! Is this part still available?"</div>
+                    <div class="when">1 hour ago</div>
+                </div>
+                <div class="unread"></div>
+            </div>
+
+            <div class="inbox-item price">
+                <div class="ico">💰</div>
+                <div class="body">
+                    <div class="label">Price drop · Saved</div>
+                    <div class="text">Hiace Side Mirror dropped from $95 to $85</div>
+                    <div class="when">3 hours ago</div>
+                </div>
+            </div>
+
+            <div class="inbox-item activity">
+                <div class="ico">📦</div>
+                <div class="body">
+                    <div class="label">Listing activity</div>
+                    <div class="text">Mike D. messaged about your Performance Calipers</div>
+                    <div class="when">Yesterday</div>
+                </div>
+            </div>
+
+            <div class="inbox-item message">
+                <div class="ico">💬</div>
+                <div class="body">
+                    <div class="label">Alex T.</div>
+                    <div class="text">"Would you take $100 for the intake?"</div>
+                    <div class="when">Yesterday</div>
+                </div>
+            </div>
+
+            <div class="inbox-item match">
+                <div class="ico">🔔</div>
+                <div class="body">
+                    <div class="label">Wanted match · Elise</div>
+                    <div class="text">New listing matches your "Elise gear knob" wanted</div>
+                    <div class="when">2 days ago</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-screen="screenHome" onclick="switchScreen('Home')">
+            <span class="ico">🏠</span>Home
+        </div>
+        <div class="nav-item" data-screen="screenGarageList" onclick="switchScreen('Garage')">
+            <span class="ico">🚗</span>Garage
+        </div>
+        <div class="nav-item nav-sell" onclick="showToast('Sell flow — already exists')">
+            <span class="ico">✚</span>Sell
+        </div>
+        <div class="nav-item" data-screen="screenInbox" onclick="switchScreen('Inbox')">
+            <span class="ico">💬</span>Inbox
+            <span class="nav-badge">3</span>
+        </div>
+    </nav>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ADD-TO-WANTED MODAL -->
+    <div class="modal-overlay" id="modalWanted">
+        <div class="modal">
+            <h3>Add to Wanted list</h3>
+            <p style="font-size:12px; color:#666; margin: 0 0 12px 0;">We'll notify you when a matching listing appears.</p>
+            <div class="field">
+                <label>Part description</label>
+                <input type="text" id="wantedPart" value="Charade radiator">
+            </div>
+            <div class="field">
+                <label>For vehicle</label>
+                <select>
+                    <option>Daihatsu Charade (1985, GTti)</option>
+                    <option>Toyota Hiace (2019)</option>
+                    <option>Lotus Elise (2005)</option>
+                    <option>Any vehicle</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Max price (optional)</label>
+                <input type="number" placeholder="e.g. 150">
+            </div>
+            <div class="actions">
+                <button class="cancel" onclick="closeWantedModal()">Cancel</button>
+                <button class="save" onclick="saveWanted()">Add to Wanted</button>
+            </div>
+        </div>
+    </div>
+
+</div> <!-- end phone -->
+
+</div>
+
+<h2>How the search → wanted handoff works</h2>
+<div class="note">
+    <b>Friction-free Wanted creation:</b> the user types <i>"Charade radiator"</i> into search → no results → empty state offers <b>"Add to Wanted?"</b> → tapping it opens a pre-filled modal (part name + their car already chosen if Garage knows). One confirm and it's saved. No menu hunting, no separate "create wanted" screen needed for the common case. Try it via the demo button at the top of Home.
+</div>
+
+<h2>Open questions worth deciding</h2>
+<div class="note">
+    <ol style="margin: 4px 0 4px 18px; padding: 0; line-height: 1.6;">
+        <li><b>Wanted notifications by default?</b> I'd say yes — push + Inbox both. User can mute per-item from the Wanted card.</li>
+        <li><b>Match scope for Wanted:</b> exact title match, or fuzzy (Charade radiator → "Daihatsu radiator")? Probably fuzzy with confidence threshold; refine over time.</li>
+        <li><b>Matches inside vehicle vs Inbox:</b> shown both places. Inbox is the "what changed" list; vehicle Matches tab is the "show me what's relevant to this car right now" list.</li>
+        <li><b>Listings tab:</b> we kept "My Listings" in the header pill dropdown. Should it also be a tab inside Garage (per car) so a seller can see their listings against a particular vehicle? Maybe yes, but only for sellers with multiple cars.</li>
+        <li><b>Filters:</b> currently a button on the Home header. Inside a vehicle, the segmented toggle effectively replaces filtering (already filtered by car). Filters could remain accessible inside Garage too if needed for category/price refinement.</li>
+    </ol>
+</div>
+
+<script>
+// ====== Vehicle data ======
+const VEHICLES = {
+    charade: {
+        ico: '🚗',
+        name: 'Daihatsu Charade',
+        meta: '1985 · GTti · Daily driver',
+        all: [
+            { img: '../images/hiace.taillight.webp', price: 85, name: 'OEM Tail Light', loc: 'Adelaide, SA' },
+            { img: '../images/elise.headlight.jpg', price: 120, name: 'Headlight Assembly', loc: 'Sydney, NSW' },
+            { img: '../images/hiace.bumper.jpg', price: 200, name: 'Front Bumper', loc: 'Melbourne, VIC' },
+            { img: '../images/elise.wheel.jpg', price: 60, name: 'Steel Wheels (Set)', loc: 'Brisbane, QLD' }
+        ],
+        wanted: [
+            { name: 'Charade Radiator', meta: 'Max $150 · Notify me', status: 'Active' },
+            { name: 'Charade ECU (GTti turbo)', meta: 'Any price · Notify me', status: 'Active' }
+        ],
+        saved: [
+            { img: '../images/elise.headlight.jpg', price: 120, name: 'Headlight Assembly', loc: 'Sydney, NSW' }
+        ],
+        matches: [
+            { img: '../images/elise.brake.pads.jpg', price: 80, name: 'Charade Radiator (Aluminium)', loc: 'Brisbane, QLD' },
+            { img: '../images/hiace.taillight.webp', price: 95, name: 'Daihatsu OEM Radiator', loc: 'Perth, WA' },
+            { img: '../images/Elise.scoops.webp', price: 130, name: 'GTti Radiator + Hoses', loc: 'Sydney, NSW' }
+        ]
+    },
+    hiace: {
+        ico: '🚐',
+        name: 'Toyota Hiace',
+        meta: '2019 · LWB · Work vehicle',
+        all: [
+            { img: '../images/hiace.mirror.jpg', price: 85, name: 'Side Mirror', loc: 'Adelaide, SA' },
+            { img: '../images/hiace.taillight.webp', price: 145, name: 'Tail Light Assembly', loc: 'Adelaide, SA' },
+            { img: '../images/hiace.handle.jpg', price: 35, name: 'Sliding Door Handle', loc: 'Adelaide, SA' },
+            { img: '../images/hiace.grille.jpg', price: 65, name: 'Front Grille', loc: 'Sydney, NSW' }
+        ],
+        wanted: [],
+        saved: [
+            { img: '../images/hiace.mirror.jpg', price: 85, name: 'Side Mirror', loc: 'Adelaide, SA' },
+            { img: '../images/hiace.handle.jpg', price: 35, name: 'Sliding Door Handle', loc: 'Adelaide, SA' }
+        ],
+        matches: []
+    },
+    elise: {
+        ico: '🏎️',
+        name: 'Lotus Elise',
+        meta: '2005 · S2 · Track',
+        all: [
+            { img: '../images/elise.wing.jpg', price: 850, name: 'GT Track Spoiler', loc: 'Adelaide, SA' },
+            { img: '../images/elise.brake.pads.jpg', price: 450, name: 'Performance Calipers', loc: 'Melbourne, VIC' },
+            { img: '../images/elise.steering.wheel.jpeg', price: 320, name: 'Sport Steering Wheel', loc: 'Sydney, NSW' },
+            { img: '../images/elise.diffuser.jpg', price: 280, name: 'Carbon Diffuser', loc: 'Adelaide, SA' }
+        ],
+        wanted: [
+            { name: 'Elise S2 Gear Knob (alloy)', meta: 'Max $80 · Notify me', status: 'Active' }
+        ],
+        saved: [
+            { img: '../images/elise.wing.jpg', price: 850, name: 'GT Track Spoiler', loc: 'Adelaide, SA' },
+            { img: '../images/elise.steering.wheel.jpeg', price: 320, name: 'Sport Steering Wheel', loc: 'Sydney, NSW' },
+            { img: '../images/elise.brake.pads.jpg', price: 450, name: 'Performance Calipers', loc: 'Melbourne, VIC' }
+        ],
+        matches: [
+            { img: '../images/elise.diffuser.jpg', price: 75, name: 'Elise Gear Knob (alloy)', loc: 'Sydney, NSW' }
+        ]
+    }
+};
+
+let activeVehicle = 'charade';
+let activeVehTab = 'all';
+
+// ====== Screen switching ======
+function switchScreen(label) {
+    const map = { Home: 'screenHome', Garage: 'screenGarageList', Inbox: 'screenInbox' };
+    const screenId = map[label];
+    if (!screenId) return;
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+
+    // header
+    setHeader(label);
+
+    // bottom nav active state
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.bottom-nav .nav-item').forEach(n => {
+        if (n.dataset.screen === screenId) n.classList.add('active');
+    });
+
+    // scroll back to top
+    document.querySelector('.screen-container').scrollTop = 0;
+}
+
+function setHeader(title, withBack = false) {
+    const header = document.getElementById('appHeader');
+    header.innerHTML = '';
+    if (withBack) {
+        const back = document.createElement('span');
+        back.className = 'back';
+        back.textContent = '‹';
+        back.onclick = () => switchScreen('Garage');
+        header.appendChild(back);
+    }
+    const t = document.createElement('span');
+    t.className = 'title';
+    t.textContent = title;
+    header.appendChild(t);
+
+    // contextual action button
+    if (title === 'Home') {
+        const btn = document.createElement('span');
+        btn.className = 'header-action';
+        btn.textContent = '👤';
+        btn.title = 'Account';
+        btn.onclick = () => showToast('Header pill — see previous mockup');
+        header.appendChild(btn);
+    }
+}
+
+// ====== Vehicle drill-in ======
+function openVehicle(key) {
+    activeVehicle = key;
+    activeVehTab = 'all';
+    const v = VEHICLES[key];
+    document.getElementById('vehBannerIco').textContent = v.ico;
+    document.getElementById('vehBannerName').textContent = v.name;
+    document.getElementById('vehBannerMeta').textContent = v.meta;
+    document.getElementById('matchesBadge').textContent = v.matches.length;
+    document.getElementById('matchesBadge').style.display = v.matches.length ? 'inline-block' : 'none';
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screenVehicle').classList.add('active');
+
+    setHeader(v.name, true);
+    setVehTab('all');
+}
+
+function setVehTab(tab) {
+    activeVehTab = tab;
+    document.querySelectorAll('#screenVehicle .seg').forEach(s => {
+        s.classList.toggle('active', s.dataset.tab === tab);
+    });
+    renderVehTab();
+}
+
+function renderVehTab() {
+    const v = VEHICLES[activeVehicle];
+    const c = document.getElementById('vehTabContent');
+    c.innerHTML = '';
+
+    if (activeVehTab === 'all') {
+        if (!v.all.length) return showEmpty(c, '🔍', 'No listings match this vehicle yet.');
+        c.appendChild(buildPartsGrid(v.all));
+    } else if (activeVehTab === 'wanted') {
+        if (!v.wanted.length) {
+            const e = showEmpty(c, '✦', "You haven't added anything to your Wanted list for this car.");
+            const btn = document.createElement('button');
+            btn.className = 'add-cta';
+            btn.textContent = '+ Add to Wanted';
+            btn.onclick = () => { document.getElementById('wantedPart').value = v.name + ' '; openWantedModal(); };
+            e.appendChild(btn);
+            return;
+        }
+        v.wanted.forEach(w => {
+            const card = document.createElement('div');
+            card.className = 'wanted-card';
+            card.innerHTML = `
+                <div class="ico">✦</div>
+                <div class="body">
+                    <div class="name">${w.name}</div>
+                    <div class="meta">${w.meta}</div>
+                </div>
+                <div class="status">${w.status}</div>`;
+            c.appendChild(card);
+        });
+    } else if (activeVehTab === 'saved') {
+        if (!v.saved.length) return showEmpty(c, '❤', 'No saved listings for this car yet.');
+        c.appendChild(buildPartsGrid(v.saved));
+    } else if (activeVehTab === 'matches') {
+        if (!v.matches.length) return showEmpty(c, '🔔', 'No new matches yet — we\'ll notify you when one appears.');
+        v.matches.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <img class="img" src="${m.img}" alt="">
+                <div class="body">
+                    <div class="label">New match</div>
+                    <div class="name">${m.name}</div>
+                    <div class="price">$${m.price}</div>
+                </div>`;
+            c.appendChild(card);
+        });
+    }
+}
+
+function buildPartsGrid(arr) {
+    const g = document.createElement('div');
+    g.className = 'parts-grid';
+    arr.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'part-card';
+        card.innerHTML = `
+            <img class="img" src="${p.img}" alt="">
+            <div class="body">
+                <div class="price">$${p.price}</div>
+                <div class="name">${p.name}</div>
+                <div class="loc">📍 ${p.loc}</div>
+            </div>`;
+        g.appendChild(card);
+    });
+    return g;
+}
+
+function showEmpty(parent, icon, text) {
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.innerHTML = `<div class="big">${icon}</div><div>${text}</div>`;
+    parent.appendChild(e);
+    return e;
+}
+
+function goToMatchesInGarage() {
+    activeVehicle = 'charade';
+    openVehicle('charade');
+    setVehTab('matches');
+}
+
+// ====== Demo: search with no results ======
+function demoSearchNoResults() {
+    const input = document.getElementById('homeSearch');
+    input.value = 'Charade radiator';
+
+    const screen = document.getElementById('screenHome');
+    screen.querySelector('.parts-grid').style.display = 'none';
+    screen.querySelector('.demo-button').style.display = 'none';
+
+    const empty = document.createElement('div');
+    empty.id = 'searchEmpty';
+    empty.className = 'empty';
+    empty.style.background = 'white';
+    empty.innerHTML = `
+        <div class="big">🔍</div>
+        <div><b>No matches for "Charade radiator"</b></div>
+        <div style="margin-top: 6px; font-size: 12px;">Want us to notify you when one's listed?</div>
+        <button class="add-cta" onclick="openWantedModal()">+ Add to Wanted list</button>
+        <div style="margin-top: 10px;">
+            <a style="font-size:11px; color:var(--apc-blue); cursor:pointer;" onclick="resetHomeSearch()">← Back to browse</a>
+        </div>`;
+    screen.appendChild(empty);
+}
+function resetHomeSearch() {
+    document.getElementById('homeSearch').value = '';
+    const screen = document.getElementById('screenHome');
+    screen.querySelector('.parts-grid').style.display = '';
+    screen.querySelector('.demo-button').style.display = '';
+    const e = document.getElementById('searchEmpty');
+    if (e) e.remove();
+}
+
+// ====== Wanted modal ======
+function openWantedModal() {
+    document.getElementById('modalWanted').classList.add('active');
+}
+function closeWantedModal() {
+    document.getElementById('modalWanted').classList.remove('active');
+}
+function saveWanted() {
+    closeWantedModal();
+    showToast('Added to Wanted — we\'ll notify you');
+    resetHomeSearch();
+    // bump charade wanted count for demo realism
+    if (!VEHICLES.charade.wanted.find(w => w.name === document.getElementById('wantedPart').value)) {
+        VEHICLES.charade.wanted.push({
+            name: document.getElementById('wantedPart').value,
+            meta: 'Just added · Notify me',
+            status: 'Active'
+        });
+    }
+}
+
+// ====== Toast ======
+let toastTimer;
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// init
+setHeader('Home');
+</script>
+
+</body>
+</html>

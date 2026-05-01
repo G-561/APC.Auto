@@ -118,6 +118,23 @@ header {
 .account-menu-status { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
 .account-menu-status.pro { color: var(--apc-blue); font-weight: 800; }
 
+.auth-tab {
+    flex: 1;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+    border-radius: 999px;
+    padding: 10px 0;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+.auth-tab.active {
+    background: var(--apc-orange);
+    color: white;
+    border-color: var(--apc-orange);
+}
+
 .account-menu-item {
     display: flex;
     align-items: center;
@@ -241,6 +258,91 @@ header {
     border: 1px solid rgba(247, 148, 29, 0.3);
 }
 
+.item-card-pro-btn {
+    border: none;
+    background: var(--apc-orange);
+    color: white;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    cursor: default;
+    white-space: nowrap;
+}
+
+.blurred-location {
+    filter: blur(4px);
+    opacity: 0.65;
+    display: inline-block;
+}
+
+.blurred-detail {
+    filter: blur(6px);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.detail-locked-group {
+    transition: filter 0.15s ease, opacity 0.15s ease;
+}
+
+.detail-signin-prompt {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.image-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(12px);
+}
+
+.image-lightbox.active {
+    display: flex;
+}
+
+.image-lightbox-inner {
+    position: relative;
+    width: 100%;
+    max-width: 980px;
+    max-height: 92vh;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.35);
+}
+
+.image-lightbox img {
+    width: 100%;
+    height: auto;
+    max-height: 92vh;
+    object-fit: contain;
+    display: block;
+    background: #111;
+}
+
+.image-lightbox-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.45);
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+}
+
 .item-title { 
     font-size: 11px; 
     font-weight: 700; 
@@ -292,6 +394,17 @@ header {
     display: flex !important;
 }
 .drawer-header { padding: 15px; border-bottom: 5px solid var(--apc-orange); display: flex; justify-content: space-between; align-items: center; font-weight: 900; background: white; }
+
+.back-btn {
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--apc-orange);
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+.back-btn:hover { background: rgba(255, 138, 51, 0.1); }
 .drawer-content { padding: 15px; flex: 1; overflow-y: auto; background: white; padding-bottom: 100px; }
 
 /* GARAGE — vehicle cards */
@@ -325,6 +438,16 @@ header {
 .vehicle-card-name { font-weight: 800; font-size: 14px; color: var(--apc-charcoal); }
 .vehicle-card-meta { font-size: 11px; color: #666; margin-top: 2px; }
 .vehicle-card-arrow { font-size: 22px; color: #ccc; flex-shrink: 0; }
+.vehicle-delete {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #ccc;
+    flex-shrink: 0;
+    padding: 4px;
+}
+.vehicle-delete:hover { color: #ff3b30; }
 
 .garage-add-btn {
     width: 100%;
@@ -403,6 +526,82 @@ header {
 }
 .veh-empty .ico { font-size: 38px; margin-bottom: 10px; }
 .veh-empty .text { white-space: pre-line; max-width: 260px; margin: 0 auto; }
+.veh-empty-cta {
+    margin-top: 18px;
+    border: none;
+    background: var(--apc-orange);
+    color: white;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-weight: 800;
+    cursor: pointer;
+}
+.veh-empty-cta:hover { background: #ff8b33; }
+
+/* WANTED LIST — cards for wanted parts */
+.wanted-list { padding-bottom: 4px; }
+.wanted-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 2px solid transparent;
+}
+.wanted-info { flex: 1; min-width: 0; }
+.wanted-name { font-weight: 800; font-size: 14px; color: var(--apc-charcoal); }
+.wanted-meta { font-size: 11px; color: #666; margin-top: 2px; }
+.wanted-delete {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #ccc;
+    flex-shrink: 0;
+    padding: 4px;
+}
+.wanted-delete:hover { color: #ff3b30; }
+
+/* INBOX — tabs and content */
+.inbox-tabs {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+.inbox-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #888;
+    cursor: pointer;
+    background: #f4f4f4;
+    transition: background 0.15s, color 0.15s;
+}
+.inbox-tab.active {
+    background: var(--apc-orange);
+    color: white;
+}
+.inbox-tab:not(.active):hover { background: #e0e0e0; }
+
+.inbox-item {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.inbox-icon { font-size: 24px; }
+.inbox-text { flex: 1; min-width: 0; }
+.inbox-title { font-weight: 800; font-size: 14px; color: var(--apc-charcoal); }
+.inbox-meta { font-size: 11px; color: #666; margin-top: 2px; }
 
 /* SAVE / HEART button — sits on the carousel inside the detail overlay */
 .detail-save-btn {
@@ -589,7 +788,8 @@ header {
     padding: 2px 6px;
     border-radius: 4px;
 }
-.my-part-edit-btn {
+.my-part-edit-btn,
+.my-part-delete-btn {
     border: 1px solid #ddd;
     background: #f9f9f9;
     padding: 8px 12px;
@@ -598,6 +798,12 @@ header {
     font-size: 10px;
     cursor: pointer;
     flex-shrink: 0;
+}
+.my-part-delete-btn {
+    margin-left: 8px;
+    color: #b00;
+    border-color: #f2c2c2;
+    background: #fff5f5;
 }
 
 /* CHAT BUBBLE — replaces inline style from JS, safe textContent insertion */

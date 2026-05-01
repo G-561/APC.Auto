@@ -3,7 +3,11 @@ let userIsSignedIn = false;          // starts logged out — header shows "Sign
 let currentUserName = null;          // e.g. "Gary"
 let currentUserTier = null;          // 'standard' | 'pro'
 let proSearchOn    = true;           // when user is pro, controls FIND PARTS / FIND WANTED bar
+let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let currentOpenPartId = null;  // tracks which part detail is open
+let currentEditingListingId = null; // edit mode for Sell form
+let authReturnAction = null; // optional callback after sign-in
+let authMode = 'signin';
 let activeFilters = {
     search: '',
     category: 'all',
@@ -36,9 +40,49 @@ const partDatabase = [
     { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [] }
 ];
 
-// Look up a part by its stable id instead of array index
+const LISTINGS_STORAGE_KEY = 'apc.listings.v1';
+const REMEMBER_ME_KEY = 'apc.rememberMe.v1';
+let userListings = loadUserListings();
+let sellListingImages = [];
+
+function loadUserListings() {
+    try {
+        const raw = localStorage.getItem(LISTINGS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+        return [];
+    }
+}
+function saveUserListings() {
+    try { localStorage.setItem(LISTINGS_STORAGE_KEY, JSON.stringify(userListings)); } catch (e) {}
+}
+function loadRememberedUser() {
+    try {
+        const raw = localStorage.getItem(REMEMBER_ME_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        return null;
+    }
+}
+function saveRememberedUser(user) {
+    try { localStorage.setItem(REMEMBER_ME_KEY, JSON.stringify(user)); } catch (e) {}
+}
+function clearRememberedUser() {
+    try { localStorage.removeItem(REMEMBER_ME_KEY); } catch (e) {}
+}
+function nextPartId() {
+    const ids = [...partDatabase, ...userListings].map(p => p.id);
+    return ids.length ? Math.max(...ids) + 1 : 1;
+}
+function getAllParts() {
+    return [...partDatabase, ...userListings];
+}
 function getPartById(id) {
-    return partDatabase.find(p => p.id === id);
+    return getAllParts().find(p => p.id === id);
+}
+
+function getCurrentSellerName() {
+    return currentUserName || 'Guest Seller';
 }
 
 // --- CORE UI CONTROLS ---
@@ -102,7 +146,7 @@ function applyFiltersAndRender() {
 
 function getFilteredParts() {
     const search = activeFilters.search.toLowerCase();
-    return partDatabase.filter(part => {
+    return getAllParts().filter(part => {
         if (search && !part.title.toLowerCase().includes(search) && !part.loc.toLowerCase().includes(search)) return false;
         if (activeFilters.category !== 'all' && part.category !== activeFilters.category) return false;
         if (activeFilters.location !== 'all') {
@@ -124,18 +168,37 @@ function safeText(el, text) {
     if (el) el.textContent = text;
 }
 
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function buildCardHTML(part) {
     // Only part.id goes into the onclick — never unsanitised user content
+    const fittingLabel = part.isPro
+        ? `<button type="button" class="item-card-pro-btn" onclick="event.stopPropagation()">Fitting Available</button>`
+        : part.fit
+            ? `<span class="fitting-pill">FITTING AVAILABLE</span>`
+            : '';
+
+    const locationHTML = userIsSignedIn
+        ? `📍 ${part.loc}`
+        : `<span class="blurred-location">📍 ${part.loc}</span>`;
+
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="lazy">
             <div class="item-info">
                 <div class="price-row">
                     <span class="item-price">$${part.price}</span>
-                    ${part.fit ? `<span class="fitting-pill">FITTING AVAILABLE</span>` : ''}
+                    ${fittingLabel}
                 </div>
                 <div class="item-title">${part.title}</div>
-                <div class="item-loc">📍 ${part.loc}</div>
+                <div class="item-loc">${locationHTML}</div>
             </div>
         </div>`;
 }
@@ -155,18 +218,107 @@ function renderMainGrid() {
     const mainGrid = document.getElementById('mainGrid');
     if (!mainGrid) return;
 
+    mainGrid.innerHTML = '';
+
+    if (currentSearchMode === 'wanted') {
+        return renderWantedSearchResults(mainGrid);
+    }
+
     const filtered = getFilteredParts();
     mainGrid.innerHTML = '';
 
     if (filtered.length === 0) {
-        mainGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888; font-weight: 700;">No parts match your filters.</div>`;
+        if (activeFilters.search.trim()) {
+            const safeSearch = escapeHtml(activeFilters.search);
+            mainGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
+                    <div style="font-weight: 700; margin-bottom: 10px;">No parts found for "${safeSearch}"</div>
+                    <div style="font-size: 13px; margin-bottom: 20px;">Can't find what you're looking for?</div>
+                    <button onclick="onAddWantedFromSearch()" style="background: var(--apc-orange); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">ADD TO WANTED LIST</button>
+                </div>`;
+        } else {
+            mainGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888; font-weight: 700;">No parts match your filters.</div>`;
+        }
         return;
     }
 
-    // Repeat to fill the grid (remove this loop once you have real data)
-    for (let i = 0; i < 12; i++) {
-        mainGrid.innerHTML += buildCardHTML(filtered[i % filtered.length]);
+    filtered.forEach(part => {
+        mainGrid.innerHTML += buildCardHTML(part);
+    });
+}
+
+function renderWantedSearchResults(mainGrid) {
+    const query = activeFilters.search.toLowerCase();
+    const matching = myWanted.filter(w => {
+        if (!query) return true;
+        return w.partName.toLowerCase().includes(query) ||
+               (w.vehicleId !== null && myVehicles.find(v => v.id === w.vehicleId)?.make.toLowerCase().includes(query)) ||
+               (w.vehicleId !== null && myVehicles.find(v => v.id === w.vehicleId)?.model.toLowerCase().includes(query));
+    });
+
+    if (!matching.length) {
+        const safeSearch = escapeHtml(activeFilters.search);
+        mainGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
+                <div style="font-weight: 700; margin-bottom: 10px;">No wanted items found${safeSearch ? ` for "${safeSearch}"` : ''}</div>
+                <div style="font-size: 13px; margin-bottom: 20px;">Create a wanted part request and we’ll alert you when it shows up.</div>
+                <button onclick="onAddWantedFromSearch()" style="background: var(--apc-orange); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">ADD TO WANTED LIST</button>
+            </div>`;
+        return;
     }
+
+    const header = document.createElement('div');
+    header.style.cssText = 'grid-column: 1/-1; display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;';
+    header.innerHTML = `
+        <div style="font-size:14px; font-weight:700; color:#333;">${matching.length} wanted item${matching.length === 1 ? '' : 's'}</div>
+        <button onclick="onAddWantedFromSearch()" style="background: none; border: 1px solid var(--apc-orange); color: var(--apc-orange); padding: 8px 14px; border-radius: 999px; font-weight:700; cursor:pointer;">New Wanted</button>
+    `;
+    mainGrid.appendChild(header);
+
+    const list = document.createElement('div');
+    list.className = 'wanted-list';
+    matching.forEach(w => {
+        const card = document.createElement('div');
+        card.className = 'wanted-card';
+
+        const info = document.createElement('div');
+        info.className = 'wanted-info';
+
+        const name = document.createElement('div');
+        name.className = 'wanted-name';
+        name.textContent = w.partName;
+
+        const meta = document.createElement('div');
+        meta.className = 'wanted-meta';
+        const metaParts = [];
+        if (w.maxPrice) metaParts.push(`Max $${w.maxPrice}`);
+        if (w.vehicleId !== null) {
+            const vehicle = myVehicles.find(v => v.id === w.vehicleId);
+            if (vehicle) metaParts.push(`${vehicle.make} ${vehicle.model}`);
+        } else {
+            metaParts.push('Any vehicle');
+        }
+        meta.textContent = metaParts.join(' · ');
+
+        info.appendChild(name);
+        info.appendChild(meta);
+        card.appendChild(info);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'wanted-delete';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this wanted part?')) {
+                deleteWanted(w.id);
+                renderMainGrid();
+            }
+        };
+        card.appendChild(deleteBtn);
+        list.appendChild(card);
+    });
+
+    mainGrid.appendChild(list);
 }
 
 // --- RENDER MY PARTS ---
@@ -175,7 +327,8 @@ function renderMyParts() {
     if (!myPartsList) return;
 
     myPartsList.innerHTML = '';
-    const myParts = partDatabase.filter(part => part.seller === "Gary S.");
+    const mySeller = getCurrentSellerName();
+    const myParts = getAllParts().filter(part => part.seller === mySeller);
 
     if (myParts.length === 0) {
         myPartsList.innerHTML = `<div style="text-align:center; color:#888; padding: 30px; font-weight: 700;">No active listings.</div>`;
@@ -216,12 +369,238 @@ function renderMyParts() {
         const editBtn = document.createElement('button');
         editBtn.className = 'my-part-edit-btn';
         editBtn.textContent = 'EDIT';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            openEditListing(part.id);
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'my-part-delete-btn';
+        deleteBtn.textContent = 'DELETE';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this listing?')) {
+                deleteListing(part.id);
+            }
+        };
 
         row.appendChild(thumb);
         row.appendChild(info);
         row.appendChild(editBtn);
+        row.appendChild(deleteBtn);
         myPartsList.appendChild(row);
     });
+}
+
+function openSellOverlay() {
+    if (!userIsSignedIn) {
+        openAuthDrawer(openSellOverlay);
+        return;
+    }
+
+    currentEditingListingId = null;
+    resetSellForm();
+    const title = document.getElementById('sellOverlayTitle');
+    const submit = document.getElementById('sellSubmitBtn');
+    if (title) title.textContent = 'LIST A PART';
+    if (submit) submit.textContent = 'LIST PART NOW';
+    updateSellFittingToggleVisibility();
+    toggleDrawer('sellOverlay');
+}
+
+function openEditListing(listingId) {
+    const listing = userListings.find(l => l.id === listingId);
+    if (!listing) return;
+    currentEditingListingId = listingId;
+    sellListingImages = [...listing.images];
+
+    document.getElementById('sellTitle').value = listing.title || '';
+    document.getElementById('sellCategory').value = listing.category || '';
+    document.getElementById('sellMake').value = listing.fits?.[0]?.make || '';
+    document.getElementById('sellModel').value = listing.fits?.[0]?.model || '';
+    document.getElementById('sellYear').value = listing.year || '';
+    document.getElementById('sellPostcode').value = listing.postcode || '';
+    document.getElementById('sellLocation').value = listing.loc || '';
+    document.getElementById('sellPickup').checked = !!listing.pickup;
+    document.getElementById('sellPostage').checked = !!listing.postage;
+    document.getElementById('sellPrice').value = listing.price ?? '';
+    document.getElementById('sellCondition').value = listing.condition || '';
+    document.getElementById('sellDescription').value = listing.description || '';
+    if (document.getElementById('sellFittingAvailable')) {
+        document.getElementById('sellFittingAvailable').checked = !!listing.fit;
+    }
+
+    renderSellImagePreviews();
+
+    const title = document.getElementById('sellOverlayTitle');
+    const submit = document.getElementById('sellSubmitBtn');
+    if (title) title.textContent = 'EDIT LISTING';
+    if (submit) submit.textContent = 'UPDATE LISTING';
+    updateSellFittingToggleVisibility();
+    toggleDrawer('sellOverlay');
+}
+
+function deleteListing(id) {
+    userListings = userListings.filter(l => l.id !== id);
+    saveUserListings();
+    renderMyParts();
+    renderMainGrid();
+    if (currentEditingListingId === id) {
+        currentEditingListingId = null;
+        resetSellForm();
+    }
+    showToast('Listing removed');
+}
+
+function handleSellImageFiles(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    files.slice(0, 5 - sellListingImages.length).forEach(file => {
+        if (!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            sellListingImages.push(e.target.result);
+            renderSellImagePreviews();
+        };
+        reader.readAsDataURL(file);
+    });
+    event.target.value = '';
+}
+
+function renderSellImagePreviews() {
+    const grid = document.getElementById('sellPhotoGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const maxPhotos = 5;
+    for (let index = 0; index < maxPhotos; index++) {
+        const box = document.createElement('div');
+        box.style.cssText = 'aspect-ratio: 1/1; border: 2px dashed var(--apc-orange); border-radius: 12px; background: #fafafa; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; overflow: hidden;';
+        box.onclick = () => document.getElementById('sellImageInput')?.click();
+
+        if (sellListingImages[index]) {
+            const img = document.createElement('img');
+            img.src = sellListingImages[index];
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+            box.appendChild(img);
+
+            const remove = document.createElement('button');
+            remove.textContent = '×';
+            remove.style.cssText = 'position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border: none; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; cursor: pointer;';
+            remove.onclick = (e) => {
+                e.stopPropagation();
+                sellListingImages.splice(index, 1);
+                renderSellImagePreviews();
+            };
+            box.appendChild(remove);
+        } else {
+            const label = document.createElement('div');
+            label.style.cssText = 'text-align: center; color: #888; font-size: 10px; font-weight: 700;';
+            label.innerHTML = '<span style="font-size: 22px; display: block;">📷</span><span style="display:block; margin-top: 6px;">Add photo</span>';
+            box.appendChild(label);
+        }
+
+        grid.appendChild(box);
+    }
+}
+
+function resetSellForm() {
+    currentEditingListingId = null;
+    sellListingImages = [];
+    const fields = [
+        'sellTitle', 'sellCategory', 'sellMake', 'sellModel', 'sellYear', 'sellPostcode', 'sellLocation', 'sellPrice', 'sellCondition', 'sellDescription'
+    ];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (el.tagName.toLowerCase() === 'select' || el.tagName.toLowerCase() === 'input') el.value = '';
+        if (el.tagName.toLowerCase() === 'textarea') el.value = '';
+    });
+    const pickup = document.getElementById('sellPickup');
+    const postage = document.getElementById('sellPostage');
+    const fitting = document.getElementById('sellFittingAvailable');
+    if (pickup) pickup.checked = true;
+    if (postage) postage.checked = false;
+    if (fitting) fitting.checked = false;
+    renderSellImagePreviews();
+    updateSellFittingToggleVisibility();
+}
+
+function updateSellFittingToggleVisibility() {
+    const section = document.getElementById('sellFittingToggleSection');
+    if (!section) return;
+    section.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'block' : 'none';
+}
+
+function submitSellListing() {
+    const title = document.getElementById('sellTitle')?.value.trim();
+    const category = document.getElementById('sellCategory')?.value;
+    const make = document.getElementById('sellMake')?.value.trim();
+    const model = document.getElementById('sellModel')?.value.trim();
+    const year = document.getElementById('sellYear')?.value.trim();
+    const postcode = document.getElementById('sellPostcode')?.value.trim();
+    const location = document.getElementById('sellLocation')?.value.trim();
+    const pickup = document.getElementById('sellPickup')?.checked;
+    const postage = document.getElementById('sellPostage')?.checked;
+    const price = document.getElementById('sellPrice')?.value.trim();
+    const condition = document.getElementById('sellCondition')?.value;
+    const description = document.getElementById('sellDescription')?.value.trim();
+
+    if (!title || !category || !price || !location) {
+        alert('Please complete the title, category, price and location fields.');
+        return;
+    }
+    if (!sellListingImages.length) {
+        alert('Please add at least one photo.');
+        return;
+    }
+
+    const numericPrice = Number(price);
+    if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+        alert('Enter a valid price.');
+        return;
+    }
+
+    const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
+    const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
+    const listingPayload = {
+        title,
+        price: numericPrice,
+        images: [...sellListingImages],
+        loc: location.toUpperCase(),
+        postcode,
+        fit: !!fittingAvailable,
+        seller: getCurrentSellerName(),
+        isPro: currentUserTier === 'pro',
+        category,
+        fits,
+        year: year ? Number(year) : null,
+        description,
+        pickup,
+        postage,
+        condition: condition || 'used'
+    };
+
+    let message = 'Listing created';
+    if (currentEditingListingId !== null) {
+        const existing = userListings.find(l => l.id === currentEditingListingId);
+        if (existing) {
+            Object.assign(existing, listingPayload);
+            message = 'Listing updated';
+        } else {
+            userListings.push({ id: nextPartId(), ...listingPayload });
+        }
+    } else {
+        userListings.push({ id: nextPartId(), ...listingPayload });
+    }
+
+    saveUserListings();
+    renderMainGrid();
+    renderMyParts();
+    showToast(message);
+    toggleDrawer('sellOverlay');
+    resetSellForm();
 }
 
 // --- DYNAMIC ITEM DETAIL ---
@@ -239,8 +618,9 @@ function openItemDetail(partId) {
         part.images.forEach(src => {
             const img = document.createElement('img');
             img.src = src;
-            img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:4/3; object-fit:cover;';
+            img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:4/3; object-fit:cover; cursor: zoom-in;';
             img.alt = part.title;
+            img.onclick = () => openDetailImageViewer(src);
             carousel.appendChild(img);
         });
     }
@@ -263,15 +643,32 @@ function openItemDetail(partId) {
     safeText(document.getElementById('detailTitle'), part.title);
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
+    safeText(document.getElementById('detailDescription'), part.description || 'Fully functional part. Tested and ready for installation.');
     syncDetailSaveButton(part.id);   // heart reflects current saved state
+
+    const detailSellerSection = document.getElementById('detailSellerSection');
+    const detailLocationSection = document.getElementById('detailLocationSection');
+    const detailDescriptionSection = document.getElementById('detailDescriptionSection');
+    const detailSignInPrompt = document.getElementById('detailSignInPrompt');
+    const lockDetails = !userIsSignedIn;
+
+    [detailSellerSection, detailLocationSection, detailDescriptionSection].forEach(el => {
+        if (!el) return;
+        el.classList.toggle('blurred-detail', lockDetails);
+    });
+    if (detailSignInPrompt) {
+        detailSignInPrompt.style.display = lockDetails ? 'block' : 'none';
+    }
 
     // 3. Update the seller header in the overlay (was hardcoded to Gary)
     const sellerHeaderName = document.getElementById('detailSellerName');
     const sellerHeaderSub  = document.getElementById('detailSellerSub');
     const sellerAvatar     = document.getElementById('detailSellerAvatar');
-    if (sellerHeaderName) sellerHeaderName.textContent = part.seller + (part.isPro ? '' : '');
+    if (sellerHeaderName) sellerHeaderName.textContent = part.seller;
     if (sellerHeaderSub)  sellerHeaderSub.textContent  = 'View seller\'s other items →';
     if (sellerAvatar)     sellerAvatar.textContent      = part.seller.charAt(0).toUpperCase();
+    const detailProBadge = document.getElementById('detailProBadge');
+    if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
 
     // 4. Footer — more from seller or similar items
     const footer = document.getElementById('dynamicDetailFooter');
@@ -300,7 +697,26 @@ function openItemDetail(partId) {
             </div>`;
     }
 
+    const detailScrollArea = document.getElementById('detailScrollArea');
+    if (detailScrollArea) detailScrollArea.scrollTop = 0;
+
     toggleDrawer('detailOverlay');
+}
+
+function openDetailImageViewer(src) {
+    const lightbox = document.getElementById('imageLightbox');
+    const image = document.getElementById('lightboxImage');
+    if (!lightbox || !image) return;
+    image.src = src;
+    lightbox.classList.add('active');
+}
+
+function closeDetailImageViewer() {
+    const lightbox = document.getElementById('imageLightbox');
+    const image = document.getElementById('lightboxImage');
+    if (!lightbox || !image) return;
+    lightbox.classList.remove('active');
+    image.src = '';
 }
 
 // --- SELLER STOREFRONT ---
@@ -320,6 +736,8 @@ function openStorefront(partId) {
             .filter(p => p.seller === sellerName)
             .forEach(p => { sellerGrid.innerHTML += buildCardHTML(p); });
     }
+    const sellerBadge = document.getElementById('proBadge');
+    if (sellerBadge) sellerBadge.style.display = isPro ? 'inline-block' : 'none';
 
     toggleDrawer('storefrontDrawer', true); // stack on top of detail overlay
 }
@@ -327,7 +745,7 @@ function openStorefront(partId) {
 // --- MESSAGING ---
 function handleMessageSeller() {
     if (!userIsSignedIn) {
-        toggleDrawer('authDrawer');
+        openAuthDrawer();
     } else {
         toggleDrawer('chatDrawer', true);
     }
@@ -390,6 +808,13 @@ function onAddVehicleClick() {
     toggleDrawer('addVehicleDrawer', true);  // stack — keeps garage open underneath
 }
 
+// Back to garage from vehicle detail
+function onBackToGarage() {
+    const drawer = document.getElementById('vehicleDetailDrawer');
+    if (drawer) drawer.classList.remove('active');
+    document.body.style.overflow = 'hidden';  // keep hidden since garage is still open
+}
+
 // Validate + save the new vehicle
 function submitAddVehicle() {
     const make     = document.getElementById('vehMake').value.trim();
@@ -424,7 +849,13 @@ function submitAddVehicle() {
 // Remove a vehicle (used later from vehicle detail/edit)
 function deleteVehicle(id) {
     myVehicles = myVehicles.filter(v => v.id !== id);
+    myWanted = myWanted.filter(w => w.vehicleId !== id);
     saveVehicles();
+    saveWanted();
+    if (currentVehicleId === id) {
+        currentVehicleId = null;
+        toggleDrawer('vehicleDetailDrawer');
+    }
     renderGarage();
 }
 
@@ -468,12 +899,23 @@ function renderGarage() {
         info.appendChild(name);
         info.appendChild(meta);
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'vehicle-delete';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Remove this vehicle from your garage? This will also remove any wanted parts for this vehicle.')) {
+                deleteVehicle(v.id);
+            }
+        };
+
         const arrow = document.createElement('div');
         arrow.className = 'vehicle-card-arrow';
         arrow.textContent = '›';
 
         card.appendChild(icon);
         card.appendChild(info);
+        card.appendChild(deleteBtn);
         card.appendChild(arrow);
         list.appendChild(card);
     });
@@ -507,6 +949,113 @@ function toggleSavedPart(partId) {
     syncDetailSaveButton(partId);
     // Vehicle Saved tab needs to update if the user is currently on it
     if (currentVehicleId && currentVehicleTab === 'saved') renderVehicleTab();
+}
+
+// --- WANTED PARTS: data model + persistence ---
+const WANTED_STORAGE_KEY = 'apc.wanted.v1';
+let myWanted = loadWanted();
+
+function loadWanted() {
+    try {
+        const raw = localStorage.getItem(WANTED_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+}
+function saveWanted() {
+    try { localStorage.setItem(WANTED_STORAGE_KEY, JSON.stringify(myWanted)); } catch (e) {}
+}
+function nextWantedId() {
+    return myWanted.length ? Math.max(...myWanted.map(w => w.id)) + 1 : 1;
+}
+
+// Add a new wanted entry
+function addWanted(partName, vehicleId, maxPrice) {
+    const id = nextWantedId();
+    myWanted.push({
+        id,
+        partName,
+        vehicleId, // null for any vehicle
+        maxPrice: maxPrice || null,
+        mutedNotifications: false,
+        createdAt: new Date().toISOString()
+    });
+    saveWanted();
+}
+
+// Delete a wanted entry
+function deleteWanted(id) {
+    myWanted = myWanted.filter(w => w.id !== id);
+    saveWanted();
+}
+
+// Match logic: does this part match the wanted criteria?
+function wantedMatchesPart(wanted, part) {
+    // Fuzzy substring match on part name (case-insensitive)
+    if (!part.title.toLowerCase().includes(wanted.partName.toLowerCase())) return false;
+    // Vehicle compatibility: if wanted has vehicleId, check fit; if null, always true
+    if (wanted.vehicleId !== null) {
+        const vehicle = myVehicles.find(v => v.id === wanted.vehicleId);
+        if (!vehicle || !partFitsVehicle(part, vehicle)) return false;
+    }
+    return true;
+}
+
+// Placeholder for Add Wanted from search
+function onAddWantedFromSearch() {
+    document.getElementById('wantedPartName').value = activeFilters.search;
+    document.getElementById('wantedMaxPrice').value = '';
+    populateWantedVehicleSelect();
+
+    const vehicleSelect = document.getElementById('wantedVehicleSelect');
+    if (myVehicles.length === 1 && vehicleSelect) {
+        vehicleSelect.value = myVehicles[0].id;
+    }
+
+    toggleDrawer('addWantedDrawer');
+}
+
+// Populate the vehicle dropdown for Add Wanted
+function populateWantedVehicleSelect() {
+    const select = document.getElementById('wantedVehicleSelect');
+    select.innerHTML = '<option value="">Any vehicle</option>';
+    myVehicles.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.id;
+        option.textContent = `${v.make} ${v.model} ${v.year}`;
+        select.appendChild(option);
+    });
+}
+
+function openAddWantedForVehicle(vehicleId) {
+    document.getElementById('wantedPartName').value = '';
+    document.getElementById('wantedMaxPrice').value = '';
+    populateWantedVehicleSelect();
+    const vehicleSelect = document.getElementById('wantedVehicleSelect');
+    if (vehicleSelect && vehicleId !== null) {
+        vehicleSelect.value = vehicleId;
+    }
+    toggleDrawer('addWantedDrawer');
+}
+
+// Submit Add Wanted
+function submitAddWanted() {
+    const partName = document.getElementById('wantedPartName').value.trim();
+    const maxPriceStr = document.getElementById('wantedMaxPrice').value.trim();
+    const vehicleIdStr = document.getElementById('wantedVehicleSelect').value;
+
+    if (!partName) {
+        alert('Part name is required.');
+        return;
+    }
+
+    const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
+    const vehicleId = vehicleIdStr ? Number(vehicleIdStr) : null;
+
+    addWanted(partName, vehicleId, maxPrice);
+    showToast('Added to wanted list');
+    toggleDrawer('addWantedDrawer');
+    // If in vehicle detail, refresh the wanted tab
+    if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
 }
 
 // --- VEHICLE DETAIL: open, segmented toggle, render each tab ---
@@ -562,7 +1111,16 @@ function renderVehicleTab() {
         c.appendChild(buildPartsGrid(fitting));
 
     } else if (currentVehicleTab === 'wanted') {
-        c.appendChild(buildVehicleEmpty('✦', "Wanted list — coming next.\nYou'll be able to add parts you're looking for and we'll notify you when they're listed."));
+        const vehicleWanted = myWanted.filter(w => w.vehicleId === currentVehicleId);
+        if (!vehicleWanted.length) {
+            c.appendChild(buildVehicleEmpty(
+                '✦',
+                `No wanted parts for your ${v.make} ${v.model} yet.\nAdd parts you're looking for to get notified when they're listed.`,
+                { label: 'ADD WANTED PART', onClick: () => openAddWantedForVehicle(currentVehicleId) }
+            ));
+            return;
+        }
+        c.appendChild(buildWantedGrid(vehicleWanted));
 
     } else if (currentVehicleTab === 'saved') {
         const savedFitting = partDatabase.filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
@@ -573,7 +1131,15 @@ function renderVehicleTab() {
         c.appendChild(buildPartsGrid(savedFitting));
 
     } else if (currentVehicleTab === 'matches') {
-        c.appendChild(buildVehicleEmpty('🔔', "Matches — coming next.\nWhen new listings hit your wanted criteria, they'll show up here."));
+        const vehicleWanted = myWanted.filter(w => w.vehicleId === currentVehicleId);
+        const matchingParts = partDatabase.filter(p =>
+            vehicleWanted.some(w => wantedMatchesPart(w, p))
+        );
+        if (!matchingParts.length) {
+            c.appendChild(buildVehicleEmpty('🔔', `No new matches for your ${v.make} ${v.model} wanted parts yet.\nWe'll notify you when parts come up for sale.`));
+            return;
+        }
+        c.appendChild(buildPartsGrid(matchingParts));
     }
 }
 
@@ -585,12 +1151,61 @@ function buildPartsGrid(parts) {
     return g;
 }
 
-function buildVehicleEmpty(ico, text) {
+function buildWantedGrid(wanteds) {
+    const g = document.createElement('div');
+    g.className = 'wanted-list';
+    wanteds.forEach(w => {
+        const card = document.createElement('div');
+        card.className = 'wanted-card';
+
+        const info = document.createElement('div');
+        info.className = 'wanted-info';
+
+        const name = document.createElement('div');
+        name.className = 'wanted-name';
+        name.textContent = w.partName;
+
+        const meta = document.createElement('div');
+        meta.className = 'wanted-meta';
+        const metaParts = [];
+        if (w.maxPrice) metaParts.push(`Max: $${w.maxPrice}`);
+        metaParts.push(w.mutedNotifications ? 'Muted' : 'Active');
+        meta.textContent = metaParts.join(' · ');
+
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'wanted-delete';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this wanted part?')) {
+                deleteWanted(w.id);
+                renderVehicleTab();
+            }
+        };
+
+        card.appendChild(info);
+        card.appendChild(deleteBtn);
+        g.appendChild(card);
+    });
+    return g;
+}
+
+function buildVehicleEmpty(ico, text, cta) {
     const e = document.createElement('div');
     e.className = 'veh-empty';
     const i = document.createElement('div'); i.className = 'ico'; i.textContent = ico;
     const t = document.createElement('div'); t.className = 'text'; t.textContent = text;
     e.appendChild(i); e.appendChild(t);
+    if (cta && cta.label && typeof cta.onClick === 'function') {
+        const btn = document.createElement('button');
+        btn.className = 'veh-empty-cta';
+        btn.textContent = cta.label;
+        btn.onclick = cta.onClick;
+        e.appendChild(btn);
+    }
     return e;
 }
 
@@ -610,31 +1225,214 @@ function showToast(msg) {
     _toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
 }
 
-// --- INBOX (stub — real screen lands in Phase 2) ---
+// --- INBOX ---
+let currentInboxTab = 'all';
+let inboxHasUnread = true;
+
 function onOpenInbox() {
-    alert('Inbox — coming with Wanted/Matches in the next phase. Will show messages, match notifications, and price drops.');
+    inboxHasUnread = false;
+    renderInbox();
+    updateInboxBadge();
+    toggleDrawer('inboxDrawer');
+}
+
+function updateInboxBadge() {
+    const notifications = generateInboxNotifications();
+    const unreadCount = inboxHasUnread ? notifications.length : 0;
+    const badge = document.getElementById('inboxBadge');
+    if (badge) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.style.display = unreadCount > 0 ? 'block' : 'none';
+    }
+}
+
+function setInboxTab(tab) {
+    currentInboxTab = tab;
+    document.querySelectorAll('#inboxDrawer .inbox-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    renderInboxContent();
+}
+
+function renderInbox() {
+    setInboxTab('all');
+}
+
+function renderInboxContent() {
+    const content = document.getElementById('inboxContent');
+    if (!content) return;
+    content.innerHTML = '';
+
+    // Generate mock notifications
+    const notifications = generateInboxNotifications();
+
+    let filtered = notifications;
+    if (currentInboxTab !== 'all') {
+        filtered = notifications.filter(n => n.type === currentInboxTab);
+    }
+
+    if (!filtered.length) {
+        content.innerHTML = '<div style="text-align:center; padding:40px; color:#888; font-weight:700;">No notifications.</div>';
+        return;
+    }
+
+    filtered.forEach(n => {
+        const item = document.createElement('div');
+        item.className = 'inbox-item';
+        item.innerHTML = `
+            <div class="inbox-icon">${n.icon}</div>
+            <div class="inbox-text">
+                <div class="inbox-title">${n.title}</div>
+                <div class="inbox-meta">${n.meta}</div>
+            </div>
+        `;
+        content.appendChild(item);
+    });
+}
+
+// Generate mock notifications for prototype
+function generateInboxNotifications() {
+    const notifications = [];
+
+    // Mock messages: each unread chat
+    // For simplicity, add a few
+    notifications.push({ type: 'messages', icon: '💬', title: 'New message from Gary S.', meta: 'About your brake pads listing' });
+    notifications.push({ type: 'messages', icon: '💬', title: 'Message from Sarah J.', meta: 'Interested in your Elise parts' });
+
+    // Mock matches: each wanted with matches
+    myWanted.forEach(w => {
+        const matches = partDatabase.filter(p => wantedMatchesPart(w, p));
+        if (matches.length) {
+            notifications.push({ type: 'matches', icon: '🔔', title: `Match found for "${w.partName}"`, meta: `${matches.length} part${matches.length > 1 ? 's' : ''} available` });
+        }
+    });
+
+    // Mock activity: price drops, etc.
+    notifications.push({ type: 'activity', icon: '💰', title: 'Price drop on saved part', meta: 'Lotus Elise Sport Steering Wheel - now $300' });
+    notifications.push({ type: 'activity', icon: '📦', title: 'Listing activity', meta: 'Your Hiace mirror has 5 views this week' });
+
+    return notifications;
 }
 
 // --- AUTH STATE + ACCOUNT MENU ---
 
 // Sign in (stub — wire into real auth later). Always lands as Standard tier.
-function signIn(name = 'Gary', tier = 'standard') {
+function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '') {
     userIsSignedIn = true;
     currentUserName = name;
     currentUserTier = tier;
+    if (remember) {
+        saveRememberedUser({ name, tier, email });
+    } else {
+        clearRememberedUser();
+    }
     renderAccountState();
 }
 
 // Wired to the SIGN IN button inside #authDrawer
-function handleSignInSubmit() {
-    signIn('Gary', 'standard');
+function setAuthMode(mode) {
+    authMode = mode;
+    const signInTab = document.getElementById('authTabSignIn');
+    const signUpTab = document.getElementById('authTabSignUp');
+    const signInSection = document.getElementById('authSignInSection');
+    const signUpSection = document.getElementById('authSignUpSection');
+    const authTitle = document.getElementById('authTitle');
+    const proBenefitsPanel = document.getElementById('proBenefitsPanel');
+
+    if (signInTab) signInTab.classList.toggle('active', mode === 'signin');
+    if (signUpTab) signUpTab.classList.toggle('active', mode === 'signup');
+    if (signInSection) signInSection.style.display = mode === 'signin' ? 'block' : 'none';
+    if (signUpSection) signUpSection.style.display = mode === 'signup' ? 'block' : 'none';
+    if (authTitle) authTitle.textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
+    if (proBenefitsPanel) proBenefitsPanel.style.display = 'none';
+
+    if (mode === 'signin') {
+        prefillRememberedSignIn();
+        if (signUpSection) clearSignUpFields();
+    } else {
+        clearSignUpFields();
+    }
+}
+
+function prefillRememberedSignIn() {
+    const remembered = loadRememberedUser();
+    const emailInput = document.getElementById('authEmail');
+    const rememberCheckbox = document.getElementById('authRememberMe');
+    if (remembered && emailInput) {
+        emailInput.value = remembered.email || '';
+        if (rememberCheckbox) rememberCheckbox.checked = true;
+    } else if (emailInput) {
+        emailInput.value = '';
+        if (rememberCheckbox) rememberCheckbox.checked = false;
+    }
+}
+
+function clearSignUpFields() {
+    const nameInput = document.getElementById('authName');
+    const emailInput = document.getElementById('authEmailSignup');
+    const passwordInput = document.getElementById('authPasswordSignup');
+    const rememberCheckbox = document.getElementById('authRememberMeSignup');
+    if (nameInput) nameInput.value = '';
+    if (emailInput) emailInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+    if (rememberCheckbox) rememberCheckbox.checked = false;
+}
+
+function openAuthDrawer(returnAction = null, mode = 'signin') {
+    authReturnAction = returnAction;
+    setAuthMode(mode);
     toggleDrawer('authDrawer');
+}
+
+function handleSignInSubmit() {
+    const email = document.getElementById('authEmail')?.value.trim() || '';
+    const password = document.getElementById('authPassword')?.value;
+    const remember = document.getElementById('authRememberMe')?.checked;
+    if (!email || !password) {
+        alert('Enter your email and password to sign in.');
+        return;
+    }
+    document.getElementById('authPassword').value = '';
+    const userName = email.split('@')[0] || 'Member';
+    signIn(userName, 'standard', remember, email);
+    toggleDrawer('authDrawer');
+    if (authReturnAction) {
+        const nextAction = authReturnAction;
+        authReturnAction = null;
+        nextAction();
+    }
+}
+
+function handleSignUpSubmit() {
+    const name = document.getElementById('authName')?.value.trim();
+    const email = document.getElementById('authEmailSignup')?.value.trim() || '';
+    const password = document.getElementById('authPasswordSignup')?.value;
+    const remember = document.getElementById('authRememberMeSignup')?.checked;
+    document.getElementById('authPasswordSignup').value = '';
+    if (!name || !email || !password) {
+        alert('Please enter your name, email and password to sign up.');
+        return;
+    }
+    signIn(name, 'standard', remember, email);
+    toggleDrawer('authDrawer');
+    if (authReturnAction) {
+        const nextAction = authReturnAction;
+        authReturnAction = null;
+        nextAction();
+    }
+}
+
+function onShowProBenefits() {
+    const panel = document.getElementById('proBenefitsPanel');
+    if (!panel) return;
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 }
 
 function onSignOut() {
     userIsSignedIn = false;
     currentUserName = null;
     currentUserTier = null;
+    // Preserve remembered login state so the user can sign back in faster.
     closeAccountMenu();
     renderAccountState();
 }
@@ -659,7 +1457,7 @@ function onToggleProSearch(e) {
 function onAccountPillClick(e) {
     if (e) e.stopPropagation();
     if (!userIsSignedIn) {
-        toggleDrawer('authDrawer');
+        openAuthDrawer();
         return;
     }
     const m = document.getElementById('accountMenu');
@@ -727,6 +1525,15 @@ function renderAccountState() {
         menuActivate.classList.toggle('on', proSearchOn);
     }
     if (proSearchSwitch)  proSearchSwitch.classList.toggle('on', proSearchOn);
+    if (proSearchOn && currentUserTier === 'pro') {
+        const proToggle = document.getElementById('proSearchToggle');
+        if (proToggle) proToggle.style.display = 'flex';
+    }
+    updateSellFittingToggleVisibility();
+    if (!userIsSignedIn || currentUserTier !== 'pro' || !proSearchOn) {
+        currentSearchMode = 'parts';
+        setSearchMode('parts');
+    }
 
     // Header height changes when the pro toggle appears/disappears, so re-sync the grid offset.
     updateHeaderOffset();
@@ -754,7 +1561,10 @@ window.addEventListener('resize', updateHeaderOffset);
 function setSearchMode(mode) {
     const partBtn   = document.getElementById('searchModeParts');
     const wantedBtn = document.getElementById('searchModeWanted');
+    const searchInput = document.getElementById('mainSearchInput');
     if (!partBtn || !wantedBtn) return;
+
+    currentSearchMode = mode === 'wanted' ? 'wanted' : 'parts';
 
     if (mode === 'parts') {
         partBtn.style.background   = 'var(--white)';
@@ -763,6 +1573,7 @@ function setSearchMode(mode) {
         wantedBtn.style.background = 'none';
         wantedBtn.style.color      = '#888';
         wantedBtn.style.boxShadow  = 'none';
+        if (searchInput) searchInput.placeholder = 'Search parts for sale...';
     } else {
         wantedBtn.style.background = 'var(--white)';
         wantedBtn.style.color      = 'var(--apc-orange)';
@@ -770,7 +1581,10 @@ function setSearchMode(mode) {
         partBtn.style.background   = 'none';
         partBtn.style.color        = '#888';
         partBtn.style.boxShadow    = 'none';
+        if (searchInput) searchInput.placeholder = 'Search your wanted list...';
     }
+
+    renderMainGrid();
 }
 
 // --- DEBOUNCE UTILITY ---
@@ -810,6 +1624,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMainGrid();
     renderMyParts();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
+    updateInboxBadge();        // update badge from mock notifications
+    const remembered = loadRememberedUser();
+    if (remembered && remembered.name) {
+        signIn(remembered.name, remembered.tier || 'standard', true, remembered.email || '');
+    }
     renderAccountState();      // sets pill label/colour, hides pro toggle, sizes the grid offset
 
     // Wire up the carousel scroll → active-dot sync once
@@ -832,4 +1651,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterBtn) {
         filterBtn.onclick = applyFiltersAndRender;
     }
+
+    // Prepare the sell form preview boxes
+    renderSellImagePreviews();
 });
