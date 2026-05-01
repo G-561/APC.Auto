@@ -882,6 +882,26 @@ function openStorefront(partId) {
 }
 
 // --- MESSAGING ---
+function closeChatDrawer() {
+    const el = document.getElementById('chatDrawer');
+    if (el) el.classList.remove('active');
+}
+
+function closeStorefrontDrawer() {
+    const el = document.getElementById('storefrontDrawer');
+    if (el) el.classList.remove('active');
+}
+
+function closeAddVehicleDrawer() {
+    const el = document.getElementById('addVehicleDrawer');
+    if (el) el.classList.remove('active');
+}
+
+function closeMessageDetailDrawer() {
+    const el = document.getElementById('messageDetailDrawer');
+    if (el) el.classList.remove('active');
+}
+
 function handleMessageSeller() {
     if (!userIsSignedIn) {
         openAuthDrawer();
@@ -1024,7 +1044,9 @@ function submitAddVehicle() {
     });
     saveVehicles();
     renderGarage();
-    toggleDrawer('addVehicleDrawer');  // close the add drawer; garage stays open
+    // Close only the add drawer — don't use toggleDrawer() here as it would nuke the garage underneath
+    const addVehEl = document.getElementById('addVehicleDrawer');
+    if (addVehEl) addVehEl.classList.remove('active');
 }
 
 // Remove a vehicle (used later from vehicle detail/edit)
@@ -1182,6 +1204,11 @@ function wantedMatchesPart(wanted, part) {
 }
 
 // Placeholder for Add Wanted from search
+function closeAddWantedDrawer() {
+    const el = document.getElementById('addWantedDrawer');
+    if (el) el.classList.remove('active');
+}
+
 function onAddWantedFromSearch() {
     document.getElementById('wantedPartName').value = activeFilters.search;
     document.getElementById('wantedMaxPrice').value = '';
@@ -1215,7 +1242,7 @@ function openAddWantedForVehicle(vehicleId) {
     if (vehicleSelect && vehicleId !== null) {
         vehicleSelect.value = vehicleId;
     }
-    toggleDrawer('addWantedDrawer');
+    toggleDrawer('addWantedDrawer', true);  // stack — keeps vehicle detail open underneath
 }
 
 // Submit Add Wanted
@@ -1234,8 +1261,14 @@ function submitAddWanted() {
 
     addWanted(partName, vehicleId, maxPrice);
     showToast('Added to wanted list');
-    toggleDrawer('addWantedDrawer');
-    // If in vehicle detail, refresh the wanted tab
+
+    // Stay on the drawer so the user can add more — just clear the part name and price.
+    // Vehicle selection is kept so rapid multi-add for the same car is frictionless.
+    document.getElementById('wantedPartName').value = '';
+    document.getElementById('wantedMaxPrice').value = '';
+    document.getElementById('wantedPartName').focus();
+
+    // If vehicle detail's wanted tab is open behind this drawer, keep it fresh
     if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
 }
 
@@ -1569,7 +1602,7 @@ function openMessageDetail(id) {
                 </div>
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <button onclick="openVehicleDetail(currentVehicleId); toggleDrawer('messageDetailDrawer')" style="background: var(--apc-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; cursor: pointer;">
+                <button onclick="openVehicleDetail(currentVehicleId); closeMessageDetailDrawer()" style="background: var(--apc-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 800; cursor: pointer;">
                     VIEW MATCHES
                 </button>
             </div>
@@ -1592,11 +1625,11 @@ function openMessageDetail(id) {
     if (deleteBtn) {
         deleteBtn.onclick = () => {
             deleteInboxItem(id);
-            toggleDrawer('messageDetailDrawer');
+            closeMessageDetailDrawer();
         };
     }
 
-    toggleDrawer('messageDetailDrawer');
+    toggleDrawer('messageDetailDrawer', true);  // stack on top of inbox
 }
 
 // Generate mock notifications for prototype
