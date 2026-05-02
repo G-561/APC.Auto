@@ -474,21 +474,23 @@ function setRadiusFilter(el) {
 }
 
 function setSortOrder(el, order) {
-    // Tap active price sort again to deselect it
     if (sortOrder === order) {
         sortOrder = 'none';
         document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+        renderMainGrid();
         return;
     }
     sortOrder = order;
     document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
+    renderMainGrid();
 }
 
 function setSortDate(el, order) {
     sortDate = order;
     document.querySelectorAll('#sortDateSegControl .radius-seg').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
+    renderMainGrid();
 }
 
 function applyFiltersAndRender() {
@@ -554,7 +556,6 @@ function buildCardHTML(part) {
                 <div class="item-title">${part.title}</div>
                 <div class="item-loc">${locationHTML}</div>
             </div>
-            <button class="card-hover-btn" onclick="openItemDetail(${part.id})">VIEW PART →</button>
         </div>`;
 }
 
@@ -2430,16 +2431,27 @@ function renderAccountState() {
 
 // Keep the results-grid pushed below the fixed header — replaces the old hardcoded margin-top: 155px
 function updateHeaderOffset() {
-    const header = document.getElementById('mainHeader');
-    const grid   = document.getElementById('mainGrid');
-    const topBar = document.getElementById('desktopTopBar');
+    const header       = document.getElementById('mainHeader');
+    const grid         = document.getElementById('mainGrid');
+    const topBar       = document.getElementById('desktopTopBar');
+    const rightPanel   = document.getElementById('desktopRightPanel');
+    const filterDrawer = document.getElementById('filterDrawer');
     if (header && grid) {
-        const topBarH = (topBar && topBar.offsetParent !== null) ? topBar.offsetHeight : 0;
-        grid.style.marginTop = (header.offsetHeight + topBarH) + 'px';
+        // offsetParent is null for fixed elements regardless of visibility — use offsetHeight directly (0 when display:none)
+        const topBarH = topBar ? topBar.offsetHeight : 0;
+        const totalH  = header.offsetHeight + topBarH;
+        grid.style.marginTop = totalH + 'px';
+        if (window.innerWidth >= 900) {
+            // Both sidebars use top (not padding-top) so their backgrounds don't bleed behind the header
+            if (rightPanel)   rightPanel.style.top   = totalH + 'px';
+            if (filterDrawer) filterDrawer.style.top = totalH + 'px';
+        }
     }
 }
 
 window.addEventListener('resize', updateHeaderOffset);
+// Re-run after images load — logo height affects the header height calculation
+window.addEventListener('load', updateHeaderOffset);
 
 // --- SEARCH MODE TOGGLE ---
 function setSearchMode(mode) {
@@ -2535,6 +2547,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filterBtn) {
         filterBtn.onclick = applyFiltersAndRender;
     }
+
+    // Live filters on desktop — re-render instantly on any filter input change
+    document.querySelectorAll('#filterDrawer select, #filterDrawer input[type="checkbox"], #filterDrawer input[type="text"], #filterDrawer input[type="number"]').forEach(el => {
+        const evt = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
+        el.addEventListener(evt, () => {
+            if (window.innerWidth >= 900) applyFiltersAndRender();
+        });
+    });
 
     // Prepare the sell form preview boxes
     renderSellImagePreviews();
