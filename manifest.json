@@ -1,0 +1,24 @@
+{
+  "name": "Auto Parts Connection",
+  "short_name": "APC",
+  "description": "Australia's specialised auto parts marketplace",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F4F4F4",
+  "theme_color": "#F7941D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "images/APC.logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/APC.logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

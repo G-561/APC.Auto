@@ -748,8 +748,7 @@ function renderSellImagePreviews() {
     const maxPhotos = 5;
     for (let index = 0; index < maxPhotos; index++) {
         const box = document.createElement('div');
-        box.style.cssText = 'aspect-ratio: 1/1; border: 2px dashed var(--apc-orange); border-radius: 12px; background: #fafafa; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; overflow: hidden;';
-        box.onclick = () => document.getElementById('sellImageInput')?.click();
+        box.style.cssText = 'aspect-ratio: 1/1; border: 2px dashed var(--apc-orange); border-radius: 12px; background: #fafafa; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;';
 
         if (sellListingImages[index]) {
             const img = document.createElement('img');
@@ -759,14 +758,35 @@ function renderSellImagePreviews() {
 
             const remove = document.createElement('button');
             remove.textContent = '×';
-            remove.style.cssText = 'position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border: none; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; cursor: pointer;';
+            remove.style.cssText = 'position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: none; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; cursor: pointer; font-size: 16px; line-height: 1;';
             remove.onclick = (e) => {
                 e.stopPropagation();
                 sellListingImages.splice(index, 1);
                 renderSellImagePreviews();
             };
             box.appendChild(remove);
+
+            if (index === 0) {
+                const mainBadge = document.createElement('div');
+                mainBadge.textContent = '★ MAIN';
+                mainBadge.style.cssText = 'position: absolute; bottom: 6px; left: 6px; background: var(--apc-orange); color: white; font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.3px;';
+                box.appendChild(mainBadge);
+            } else {
+                const starBtn = document.createElement('button');
+                starBtn.textContent = '☆ MAIN';
+                starBtn.title = 'Set as main photo';
+                starBtn.style.cssText = 'position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.55); color: white; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; border: none; cursor: pointer; letter-spacing: 0.3px;';
+                starBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const [chosen] = sellListingImages.splice(index, 1);
+                    sellListingImages.unshift(chosen);
+                    renderSellImagePreviews();
+                };
+                box.appendChild(starBtn);
+            }
         } else {
+            box.style.cursor = 'pointer';
+            box.onclick = () => document.getElementById('sellImageInput')?.click();
             const label = document.createElement('div');
             label.style.cssText = 'text-align: center; color: #888; font-size: 10px; font-weight: 700;';
             label.innerHTML = '<span style="font-size: 22px; display: block;">📷</span><span style="display:block; margin-top: 6px;">Add photo</span>';

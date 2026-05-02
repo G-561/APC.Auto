@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#F7941D">
+    <!-- iOS home screen support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="APC">
+    <link rel="apple-touch-icon" href="images/APC.logo.png">
 </head>
 <body id="body">
 
@@ -71,7 +78,7 @@
     <div class="nav-item" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
     <div class="nav-item" id="inboxNavItem" onclick="setActiveNav(this); onOpenInbox()">
         Inbox
-        <span id="inboxBadge" style="display:none; position:absolute; top:6px; right:calc(50% - 18px); background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px;"></span>
+        <span id="inboxBadge" style="display:none; position:absolute; top:4px; right:6px; background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center;"></span>
     </div>
 </nav>
 
@@ -272,8 +279,11 @@
                 <div class="input-group"><label>Max $</label><input type="number" placeholder="500+"></div>
             </div>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" checked> New</label>
+                <label class="choice-item"><input type="checkbox" checked> New OEM</label>
+                <label class="choice-item"><input type="checkbox" checked> New Aftermarket</label>
                 <label class="choice-item"><input type="checkbox" checked> Used</label>
+                <label class="choice-item"><input type="checkbox" checked> Refurbished</label>
+                <label class="choice-item"><input type="checkbox" checked> For Parts</label>
             </div>
         </div>
 
@@ -820,5 +830,10 @@
 </div>
 
 <script src="script.js"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+</script>
 </body>
 </html>
