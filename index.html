@@ -45,7 +45,7 @@
             <button class="account-menu-item" onclick="onMenuOpenSettings()"><span class="ico">⚙️</span> Settings</button>
             <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services</button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings</button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Saved Parts')"><span class="ico">❤️</span> Saved Parts</button>
+            <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico">❤️</span> Saved Parts</button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages</button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')"><span class="ico">❓</span> Help &amp; Support</button>
             <div class="menu-divider"></div>
@@ -805,6 +805,17 @@
             <button id="messageDetailFlagBtn" class="message-detail-action-btn" style="display: none;">⚑</button>
             <button id="messageDetailDeleteBtn" class="message-detail-action-btn delete">🗑️ Delete</button>
         </div>
+    </div>
+</div>
+
+<!-- SAVED PARTS — from account menu -->
+<div id="savedPartsDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>SAVED PARTS</span>
+        <div onclick="closeSavedPartsDrawer()" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 0;">
+        <div id="savedPartsContent"></div>
     </div>
 </div>
 

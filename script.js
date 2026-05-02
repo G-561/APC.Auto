@@ -30,14 +30,14 @@ let activeFilters = {
 // `images` is an array so the carousel can show real photos per part.
 // `fits` = which vehicles a part suits. Empty array = universal (fits anything).
 const partDatabase = [
-    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }] },
-    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }] },
-    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }] },
-    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [] },
-    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }] },
-    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }] },
-    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }] },
-    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [] }
+    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14 },
+    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22 },
+    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8 },
+    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31 },
+    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6 },
+    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18 },
+    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9 },
+    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27 }
 ];
 
 // Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
@@ -631,6 +631,13 @@ function renderMyParts() {
         info.appendChild(title);
         info.appendChild(meta);
 
+        if (currentUserTier === 'pro') {
+            const saves = document.createElement('div');
+            saves.className = 'my-part-saves';
+            saves.textContent = `♥ ${part.saves || 0} save${(part.saves || 0) === 1 ? '' : 's'}`;
+            info.appendChild(saves);
+        }
+
         const editBtn = document.createElement('button');
         editBtn.className = 'my-part-edit-btn';
         editBtn.textContent = 'EDIT';
@@ -854,10 +861,10 @@ function submitSellListing() {
             Object.assign(existing, listingPayload);
             message = 'Listing updated';
         } else {
-            userListings.push({ id: nextPartId(), ...listingPayload });
+            userListings.push({ id: nextPartId(), saves: 0, ...listingPayload });
         }
     } else {
-        userListings.push({ id: nextPartId(), ...listingPayload });
+        userListings.push({ id: nextPartId(), saves: 0, ...listingPayload });
     }
 
     saveUserListings();
@@ -1286,17 +1293,68 @@ function persistSavedParts() {
 // Toggle the saved state of a part — wired to the heart on the detail overlay
 function toggleSavedPart(partId) {
     if (!partId) return;
-    if (savedParts.has(partId)) {
+    const wasSaved = savedParts.has(partId);
+    if (wasSaved) {
         savedParts.delete(partId);
         showToast('Removed from saved');
     } else {
         savedParts.add(partId);
         showToast('Saved');
     }
+    // Keep saves count live on user-created listings
+    const listing = userListings.find(l => l.id === partId);
+    if (listing) {
+        listing.saves = Math.max(0, (listing.saves || 0) + (wasSaved ? -1 : 1));
+        saveUserListings();
+        renderMyParts();
+    }
     persistSavedParts();
     syncDetailSaveButton(partId);
-    // Vehicle Saved tab needs to update if the user is currently on it
     if (currentVehicleId && currentVehicleTab === 'saved') renderVehicleTab();
+    if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
+}
+
+function closeSavedPartsDrawer() {
+    const el = document.getElementById('savedPartsDrawer');
+    if (el) el.classList.remove('active');
+}
+function onMenuOpenSavedParts() {
+    closeAccountMenu();
+    renderSavedParts();
+    toggleDrawer('savedPartsDrawer');
+}
+function renderSavedParts() {
+    const content = document.getElementById('savedPartsContent');
+    if (!content) return;
+
+    const parts = [...savedParts].map(id => getPartById(id)).filter(Boolean);
+    if (!parts.length) {
+        content.innerHTML = `
+            <div style="text-align:center; padding: 60px 20px; color: #aaa;">
+                <div style="font-size: 40px; margin-bottom: 12px;">♡</div>
+                <div style="font-weight: 800; font-size: 15px; margin-bottom: 8px; color: #888;">No saved parts yet</div>
+                <div style="font-size: 13px;">Tap the heart on any listing to save it here.</div>
+            </div>`;
+        return;
+    }
+
+    content.innerHTML = `
+        <div class="rv-drawer-header">
+            <span class="rv-drawer-count">${parts.length} part${parts.length === 1 ? '' : 's'} saved</span>
+        </div>
+        ${parts.map(part => `
+            <div class="rv-drawer-row" onclick="openItemDetail(${part.id})">
+                <img src="${part.images[0]}" alt="" class="rv-drawer-img">
+                <div class="rv-drawer-info">
+                    <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
+                    <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+                    <div class="rv-drawer-price">$${part.price}</div>
+                    <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">♥</button>
+                </div>
+            </div>
+        `).join('')}`;
 }
 
 // --- WANTED PARTS: data model + persistence ---
