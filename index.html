@@ -41,8 +41,8 @@
                     <div class="account-menu-status" id="accountMenuStatus"></div>
                 </div>
             </div>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Profile')"><span class="ico">👤</span> Profile</button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Settings')"><span class="ico">⚙️</span> Settings</button>
+            <button class="account-menu-item" onclick="onMenuOpenProfile()"><span class="ico">👤</span> Profile</button>
+            <button class="account-menu-item" onclick="onMenuOpenSettings()"><span class="ico">⚙️</span> Settings</button>
             <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services</button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings</button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Saved Parts')"><span class="ico">❤️</span> Saved Parts</button>
@@ -65,12 +65,13 @@
 <div class="results-grid" id="mainGrid"></div>
 
 <nav class="bottom-nav" id="bottomNav">
-    <div class="nav-item active" onclick="location.reload()"><span>🏠</span>Home</div>
-    <div class="nav-item" onclick="onOpenGarage()"><span>🚗</span>Garage</div>
-    <div class="nav-item nav-sell" onclick="openSellOverlay()"><span>✚</span>Sell</div>
-    <div class="nav-item" id="inboxNavItem" onclick="onOpenInbox()">
-        <span>💬</span>Inbox
-        <span id="inboxBadge" style="display:none; position:absolute; top:8px; right:calc(50% - 22px); background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px;"></span>
+    <div class="nav-item active" onclick="setActiveNav(this); location.reload()">Home</div>
+    <div class="nav-item" onclick="setActiveNav(this); onOpenGarage()">Garage</div>
+    <div class="nav-item nav-sell" onclick="openSellOverlay()">Sell</div>
+    <div class="nav-item" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
+    <div class="nav-item" id="inboxNavItem" onclick="setActiveNav(this); onOpenInbox()">
+        Inbox
+        <span id="inboxBadge" style="display:none; position:absolute; top:6px; right:calc(50% - 18px); background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px;"></span>
     </div>
 </nav>
 
@@ -253,6 +254,15 @@
                     <option value="TAS">Tasmania (TAS)</option>
                 </select>
             </div>
+            <div class="input-group" style="margin-top: 10px;">
+                <label>Search Radius</label>
+                <div class="radius-seg-control">
+                    <div class="radius-seg active" data-radius="50">Within 50km</div>
+                    <div class="radius-seg" data-radius="100">Within 100km</div>
+                    <div class="radius-seg" data-radius="state">My State</div>
+                    <div class="radius-seg" data-radius="all">Australia</div>
+                </div>
+            </div>
         </div>
 
         <div class="filter-section">
@@ -400,6 +410,172 @@
         </div>
 
         <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
+    </div>
+</div>
+
+<div id="settingsDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>SETTINGS</span>
+        <div onclick="closeSettingsDrawer()" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 0; background: #f4f4f4;">
+
+        <!-- ACCOUNT -->
+        <div class="settings-section-label">Account</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <span class="settings-row-label">Display Name</span>
+                <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name" onblur="saveSettingsName()">
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">Location</span>
+                <input id="settingsLocation" class="settings-inline-input" type="text" placeholder="e.g. Adelaide, SA" onblur="saveSettingsLocation()">
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Email')">
+                <span class="settings-row-label">Email</span>
+                <span class="settings-row-value">gary@example.com</span>
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Change Password')">
+                <span class="settings-row-label">Change Password</span>
+                <span class="settings-chevron">›</span>
+            </div>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div class="settings-section-label">Notifications</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <span class="settings-row-label">Wanted match alerts</span>
+                <label class="settings-toggle"><input type="checkbox" id="settingNotifyWanted" onchange="saveSettingsToggle('notifyWantedMatch', this.checked)"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">New messages</span>
+                <label class="settings-toggle"><input type="checkbox" id="settingNotifyMessages" onchange="saveSettingsToggle('notifyMessages', this.checked)"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">Price drops on saved parts</span>
+                <label class="settings-toggle"><input type="checkbox" id="settingNotifyPriceDrops" onchange="saveSettingsToggle('notifyPriceDrops', this.checked)"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">New listings for my vehicles</span>
+                <label class="settings-toggle"><input type="checkbox" id="settingNotifyNewListings" onchange="saveSettingsToggle('notifyNewListings', this.checked)"><span class="settings-toggle-track"></span></label>
+            </div>
+        </div>
+
+        <!-- PRO FEATURES — only shown when user is Pro -->
+        <div id="settingsProSection" style="display:none;">
+            <div class="settings-section-label">Pro Features</div>
+            <div class="settings-section">
+                <div class="settings-row">
+                    <span class="settings-row-label">Pro Search (Find Wanted)</span>
+                    <label class="settings-toggle"><input type="checkbox" id="settingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); onMenuOpenWorkshops()">
+                    <span class="settings-row-label">Workshop Profile</span>
+                    <span class="settings-chevron">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRIVACY -->
+        <div class="settings-section-label">Privacy</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Show suburb only to buyers</div>
+                    <div class="settings-row-sub">Hides your exact address from listings</div>
+                </div>
+                <label class="settings-toggle"><input type="checkbox" id="settingPrivacySuburb" onchange="saveSettingsToggle('privacySuburbOnly', this.checked)"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">Public profile</span>
+                <label class="settings-toggle"><input type="checkbox" id="settingPrivacyPublic" onchange="saveSettingsToggle('privacyPublicProfile', this.checked)"><span class="settings-toggle-track"></span></label>
+            </div>
+        </div>
+
+        <!-- HELP & LEGAL -->
+        <div class="settings-section-label">Help &amp; Legal</div>
+        <div class="settings-section">
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Help & Support')">
+                <span class="settings-row-label">Help &amp; Support</span>
+                <span class="settings-chevron">›</span>
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Terms of Service')">
+                <span class="settings-row-label">Terms of Service</span>
+                <span class="settings-chevron">›</span>
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Privacy Policy')">
+                <span class="settings-row-label">Privacy Policy</span>
+                <span class="settings-chevron">›</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">Version</span>
+                <span class="settings-row-value">0.1.0 (prototype)</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="profileDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>MY PROFILE</span>
+        <div onclick="closeProfileDrawer()" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 0;">
+
+        <!-- Hero banner -->
+        <div id="profileHero" class="profile-hero">
+            <div id="profileAvatar" class="profile-avatar">G</div>
+            <div class="profile-hero-name-row">
+                <div id="profileName" class="profile-name">Gary S.</div>
+                <span id="profileTierBadge" class="profile-tier-badge pro">APC Pro</span>
+            </div>
+            <div id="profileLocation" class="profile-location">📍 Adelaide, SA</div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="profile-stats-row">
+            <div class="profile-stat">
+                <div id="profileStatListings" class="profile-stat-value">0</div>
+                <div class="profile-stat-label">Listings</div>
+            </div>
+            <div class="profile-stat-divider"></div>
+            <div class="profile-stat">
+                <div id="profileStatSaved" class="profile-stat-value">0</div>
+                <div class="profile-stat-label">Saved</div>
+            </div>
+            <div class="profile-stat-divider"></div>
+            <div class="profile-stat">
+                <div id="profileStatWanted" class="profile-stat-value">0</div>
+                <div class="profile-stat-label">Wanted</div>
+            </div>
+        </div>
+
+        <!-- Rating + member since -->
+        <div class="profile-meta-row">
+            <div class="profile-meta-item">
+                <span class="profile-meta-icon">★</span>
+                <span id="profileRating" class="profile-meta-text">4.9 rating</span>
+            </div>
+            <div class="profile-meta-item">
+                <span class="profile-meta-icon">🗓</span>
+                <span id="profileMemberSince" class="profile-meta-text">Member since May 2026</span>
+            </div>
+        </div>
+
+        <!-- About -->
+        <div class="profile-section">
+            <div class="profile-section-title">About</div>
+            <div id="profileAbout" class="profile-about-text">Auto enthusiast based in Adelaide. Specialising in Toyota Hiace and Lotus Elise parts.</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="profile-section">
+            <button class="profile-action-btn primary" onclick="openMyStorefront()">VIEW MY STOREFRONT</button>
+            <button class="profile-action-btn secondary" onclick="onMenuPlaceholder('Edit Profile')">EDIT PROFILE</button>
+        </div>
+
     </div>
 </div>
 
@@ -581,6 +757,17 @@
             </select>
         </div>
         <div class="action-container"><button class="btn-full-action" onclick="submitAddWanted()">ADD TO WANTED</button></div>
+    </div>
+</div>
+
+<!-- RECENTLY VIEWED — bottom nav drawer -->
+<div id="recentlyViewedDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>RECENTLY VIEWED</span>
+        <div onclick="toggleDrawer('recentlyViewedDrawer')" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 0;">
+        <div id="rvDrawerContent"></div>
     </div>
 </div>
 

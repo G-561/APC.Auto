@@ -90,6 +90,149 @@ function getDefaultWorkshopProfile() {
     };
 }
 
+const RECENTLY_VIEWED_KEY = 'apc.recentlyViewed.v1';
+const RECENTLY_VIEWED_MAX = 8;
+let recentlyViewed = loadRecentlyViewed();
+
+function loadRecentlyViewed() {
+    try {
+        const raw = localStorage.getItem(RECENTLY_VIEWED_KEY);
+        return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+}
+function saveRecentlyViewed() {
+    try { localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(recentlyViewed)); } catch (e) {}
+}
+function setActiveNav(el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+}
+
+function clearRecentlyViewed() {
+    recentlyViewed = [];
+    saveRecentlyViewed();
+    renderRecentlyViewed();
+}
+function addToRecentlyViewed(partId) {
+    recentlyViewed = [partId, ...recentlyViewed.filter(id => id !== partId)].slice(0, RECENTLY_VIEWED_MAX);
+    saveRecentlyViewed();
+    renderRecentlyViewed();
+}
+function onOpenRecentlyViewed() {
+    renderRecentlyViewed();
+    toggleDrawer('recentlyViewedDrawer');
+}
+
+function renderRecentlyViewed() {
+    const content = document.getElementById('rvDrawerContent');
+    if (!content) return;
+
+    if (!recentlyViewed.length) {
+        content.innerHTML = `
+            <div style="text-align:center; padding: 60px 20px; color: #aaa;">
+                <div style="font-size: 40px; margin-bottom: 12px;">🕐</div>
+                <div style="font-weight: 800; font-size: 15px; margin-bottom: 8px; color: #888;">Nothing here yet</div>
+                <div style="font-size: 13px;">Parts you view will appear here so you can find them again easily.</div>
+            </div>`;
+        return;
+    }
+
+    const parts = recentlyViewed.map(id => getPartById(id)).filter(Boolean);
+    content.innerHTML = `
+        <div class="rv-drawer-header">
+            <span class="rv-drawer-count">${parts.length} part${parts.length === 1 ? '' : 's'}</span>
+            <span class="rv-drawer-clear" onclick="clearRecentlyViewed()">Clear all</span>
+        </div>
+        ${parts.map(part => `
+            <div class="rv-drawer-row" onclick="toggleDrawer('recentlyViewedDrawer'); openItemDetail(${part.id})">
+                <img src="${part.images[0]}" alt="" class="rv-drawer-img">
+                <div class="rv-drawer-info">
+                    <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
+                    <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
+                </div>
+                <div class="rv-drawer-price">$${part.price}</div>
+            </div>
+        `).join('')}`;
+}
+
+const SETTINGS_STORAGE_KEY = 'apc.settings.v1';
+let userSettings = loadUserSettings();
+
+function loadUserSettings() {
+    try {
+        const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : getDefaultSettings();
+    } catch (e) { return getDefaultSettings(); }
+}
+function getDefaultSettings() {
+    return {
+        location: '',
+        notifyWantedMatch:    true,
+        notifyMessages:       true,
+        notifyPriceDrops:     true,
+        notifyNewListings:    true,
+        privacySuburbOnly:    true,
+        privacyPublicProfile: true
+    };
+}
+function saveUserSettings() {
+    try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(userSettings)); } catch (e) {}
+}
+function saveSettingsName() {
+    const val = document.getElementById('settingsDisplayName')?.value.trim();
+    if (val && val !== currentUserName) {
+        currentUserName = val;
+        renderAccountState();
+        renderProfile();
+        showToast('Name updated');
+    }
+}
+function saveSettingsLocation() {
+    const val = document.getElementById('settingsLocation')?.value.trim();
+    if (val !== undefined) {
+        userSettings.location = val;
+        saveUserSettings();
+    }
+}
+function saveSettingsToggle(key, value) {
+    userSettings[key] = value;
+    saveUserSettings();
+}
+function closeSettingsDrawer() {
+    const el = document.getElementById('settingsDrawer');
+    if (el) el.classList.remove('active');
+}
+function onMenuOpenSettings() {
+    closeAccountMenu();
+    renderSettingsDrawer();
+    toggleDrawer('settingsDrawer');
+}
+function renderSettingsDrawer() {
+    const nameEl     = document.getElementById('settingsDisplayName');
+    const locEl      = document.getElementById('settingsLocation');
+    const proSection = document.getElementById('settingsProSection');
+    const proToggle  = document.getElementById('settingProSearch');
+
+    if (nameEl) nameEl.value = currentUserName || '';
+    if (locEl)  locEl.value  = userSettings.location || '';
+
+    if (proSection) proSection.style.display = currentUserTier === 'pro' ? 'block' : 'none';
+    if (proToggle)  proToggle.checked = proSearchOn;
+
+    const toggleMap = {
+        settingNotifyWanted:    'notifyWantedMatch',
+        settingNotifyMessages:  'notifyMessages',
+        settingNotifyPriceDrops:'notifyPriceDrops',
+        settingNotifyNewListings:'notifyNewListings',
+        settingPrivacySuburb:   'privacySuburbOnly',
+        settingPrivacyPublic:   'privacyPublicProfile'
+    };
+    Object.entries(toggleMap).forEach(([elId, key]) => {
+        const el = document.getElementById(elId);
+        if (el) el.checked = userSettings[key];
+    });
+}
+
 const LISTINGS_STORAGE_KEY = 'apc.listings.v1';
 const REMEMBER_ME_KEY = 'apc.rememberMe.v1';
 let userListings = loadUserListings();
@@ -190,10 +333,11 @@ function buildWorkshopCardHTML(workshop) {
                 <div class="workshop-card-distance">${workshop.distance}</div>
             </div>
             <div class="workshop-card-specialty">${workshop.specialty}</div>
-            <div class="workshop-card-meta">
-                Expert in ${workshop.vehicleTypes.join(', ')}${stars ? ' &nbsp;' + stars : ''}
+            <div class="workshop-card-meta">Expert in ${workshop.vehicleTypes.join(', ')}</div>
+            <div class="workshop-card-footer">
+                ${stars}
+                <button class="workshop-card-button" onclick="contactWorkshop(${workshop.id})">Contact</button>
             </div>
-            <button class="workshop-card-button" onclick="contactWorkshop(${workshop.id})">CONTACT WORKSHOP</button>
         </div>
     `;
 }
@@ -728,7 +872,8 @@ function submitSellListing() {
 function openItemDetail(partId) {
     const part = getPartById(partId);
     if (!part) return;
-    currentOpenPartId = partId;  // keeps the seller header link up to date
+    currentOpenPartId = partId;
+    addToRecentlyViewed(partId);
 
     // 1. Carousel — only show images this part actually has, plus dot indicators
     const carousel = document.getElementById('imageCarousel');
@@ -1816,6 +1961,64 @@ function closeAccountMenu() {
 }
 
 // Menu-item helpers — placeholders until each screen is built
+function closeProfileDrawer() {
+    const el = document.getElementById('profileDrawer');
+    if (el) el.classList.remove('active');
+}
+
+function onMenuOpenProfile() {
+    closeAccountMenu();
+    renderProfile();
+    toggleDrawer('profileDrawer');
+}
+
+function openMyStorefront() {
+    closeProfileDrawer();
+    const sellerName = currentUserName || 'Me';
+    safeText(document.getElementById('displaySellerName'), sellerName);
+    const badgeEl = document.getElementById('proBadge');
+    if (badgeEl) badgeEl.style.display = currentUserTier === 'pro' ? 'inline-block' : 'none';
+    const sellerGrid = document.getElementById('sellerPartsGrid');
+    if (sellerGrid) {
+        sellerGrid.innerHTML = '';
+        getAllParts()
+            .filter(p => p.seller === sellerName)
+            .forEach(p => { sellerGrid.innerHTML += buildCardHTML(p); });
+    }
+    toggleDrawer('storefrontDrawer');
+}
+
+function renderProfile() {
+    if (!userIsSignedIn) return;
+
+    const avatarEl        = document.getElementById('profileAvatar');
+    const nameEl          = document.getElementById('profileName');
+    const badgeEl         = document.getElementById('profileTierBadge');
+    const heroEl          = document.getElementById('profileHero');
+    const listingsEl      = document.getElementById('profileStatListings');
+    const savedEl         = document.getElementById('profileStatSaved');
+    const wantedEl        = document.getElementById('profileStatWanted');
+
+    if (avatarEl) avatarEl.textContent = (currentUserName || 'U').charAt(0).toUpperCase();
+    if (nameEl)   nameEl.textContent   = currentUserName || 'User';
+
+    const isPro = currentUserTier === 'pro';
+    if (badgeEl) {
+        badgeEl.textContent = isPro ? 'APC Pro' : 'APC Standard';
+        badgeEl.className   = 'profile-tier-badge ' + (isPro ? 'pro' : 'standard');
+    }
+    if (heroEl) {
+        heroEl.style.background = isPro
+            ? 'linear-gradient(135deg, #007AFF 0%, #0055cc 100%)'
+            : 'linear-gradient(135deg, var(--apc-orange) 0%, #e07b00 100%)';
+    }
+
+    const myListingCount = getAllParts().filter(p => p.seller === currentUserName).length;
+    if (listingsEl) listingsEl.textContent = myListingCount;
+    if (savedEl)    savedEl.textContent    = savedParts.size;
+    if (wantedEl)   wantedEl.textContent   = myWanted.length;
+}
+
 function onMenuPlaceholder(label) {
     closeAccountMenu();
     showToast(label + ' — coming soon.');
@@ -2117,4 +2320,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Prepare the sell form preview boxes
     renderSellImagePreviews();
+
+    // Wire up search radius segmented control in filters
+    document.querySelectorAll('.radius-seg').forEach(seg => {
+        seg.addEventListener('click', () => {
+            document.querySelectorAll('.radius-seg').forEach(s => s.classList.remove('active'));
+            seg.classList.add('active');
+        });
+    });
 });
