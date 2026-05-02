@@ -139,70 +139,80 @@
     </div>
 
     <div class="drawer-content" id="detailScrollArea" style="background:#fff; height: calc(100% - 60px); overflow-y: auto; padding-bottom: 40px; position: relative;">
-        
-        <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
-            <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
-            </div>
-            <button id="detailSaveBtn" class="detail-save-btn" onclick="toggleSavedPart(currentOpenPartId)" aria-label="Save listing">♡</button>
-            <div id="carouselDots" class="carousel-dots"></div>
+
+        <!-- Desktop left column: large image + thumbnails (hidden on mobile) -->
+        <div id="desktopDetailImages" class="desktop-detail-images">
+            <img id="desktopMainImage" class="desktop-main-img" src="" alt="Part photo">
+            <div id="desktopThumbnails" class="desktop-thumbnails"></div>
         </div>
 
-        <div style="padding: 20px 15px 5px 15px; display: flex; align-items: center; justify-content: space-between;">
-            <div id="detailPrice" style="font-size: 28px; font-weight: 900; color: #007AFF;">$0.00</div>
-            <div onclick="handleMessageSeller()" style="background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                <span style="font-size: 12px;">🛠️</span>
-                <span style="font-size: 10px; font-weight: 800; color: #007AFF; text-transform: uppercase; letter-spacing: 0.5px;">Fitting Available</span>
-            </div>
-        </div>
+        <!-- Info column: mobile = full width scroll, desktop = right column -->
+        <div class="detail-info-col">
 
-        <div id="detailTitle" style="padding: 0 15px; font-weight: 800; font-size: 17px; line-height: 1.3; color: #333;">
-            Part Title
-        </div>
-
-        <div style="padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 15px;">
-            <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
-                <span>📦</span> Postage Available
-            </div>
-            <div id="detailLocationSection" class="detail-locked-group" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
-                <span>📍</span> Pickup: <span id="detailLoc" style="color: #333;">Location</span>
-            </div>
-        </div>
-
-        <div id="detailDescriptionSection" class="detail-locked-group" style="padding: 15px 15px 20px 15px; border-top: 1px solid #f9f9f9; margin-top: 10px;">
-            <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #aaa; letter-spacing: 0.5px;">Description</h4>
-            <p id="detailDescription" style="font-size: 14px; line-height: 1.5; color: #444; margin: 0;">
-                Fully functional part. Tested and ready for installation.
-            </p>
-        </div>
-
-        <div style="padding: 0 15px 25px 15px;">
-            <button onclick="handleMessageSeller()" style="width: 100%; padding: 16px; background: var(--apc-orange); color: white; border: none; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
-                ✉️ MESSAGE SELLER
-            </button>
-        </div>
-
-        <div id="detailWorkshopSection" style="display: none; padding: 15px 15px 0 15px; margin-top: 0;">
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
-                <div>
-                    <div style="font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Need this fitted?</div>
-                    <div id="detailWorkshopHeadline" style="font-size: 14px; font-weight: 800; color: #333; margin-top: 5px; line-height: 1.3;">Local fitters near you</div>
+            <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
+                <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
                 </div>
-                <div class="workshop-sponsored-badge">Sponsored</div>
+                <button id="detailSaveBtn" class="detail-save-btn" onclick="toggleSavedPart(currentOpenPartId)" aria-label="Save listing">♡</button>
+                <div id="carouselDots" class="carousel-dots"></div>
             </div>
-            <div id="detailWorkshopCards" style="display: grid; gap: 12px;"></div>
-        </div>
 
-        <div id="detailSignInPrompt" class="detail-signin-prompt" style="display:none; margin: 0 15px 20px 15px; padding: 18px; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; background: rgba(255,255,255,0.95); text-align: center;">
-            <div style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color:#333;">Sign in to view the seller details, location and full description.</div>
-            <button onclick="openAuthDrawer()" style="width: 100%; padding: 14px; background: var(--apc-orange); color:white; border:none; border-radius: 10px; font-weight:800; cursor:pointer;">SIGN IN TO VIEW DETAILS</button>
-        </div>
+            <div style="padding: 20px 15px 5px 15px; display: flex; align-items: center; justify-content: space-between;">
+                <div id="detailPrice" style="font-size: 28px; font-weight: 900; color: #007AFF;">$0.00</div>
+                <div onclick="handleMessageSeller()" style="background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                    <span style="font-size: 12px;">🛠️</span>
+                    <span style="font-size: 10px; font-weight: 800; color: #007AFF; text-transform: uppercase; letter-spacing: 0.5px;">Fitting Available</span>
+                </div>
+            </div>
 
-        <div style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
-            <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 12px;">Have a part like this?</div>
-            <button onclick="toggleDrawer('sellOverlay')" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
-        </div>
+            <div id="detailTitle" style="padding: 0 15px; font-weight: 800; font-size: 17px; line-height: 1.3; color: #333;">
+                Part Title
+            </div>
 
-        <div id="dynamicDetailFooter"></div>
+            <div style="padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
+                    <span>📦</span> Postage Available
+                </div>
+                <div id="detailLocationSection" class="detail-locked-group" style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
+                    <span>📍</span> Pickup: <span id="detailLoc" style="color: #333;">Location</span>
+                </div>
+            </div>
+
+            <div id="detailDescriptionSection" class="detail-locked-group" style="padding: 15px 15px 20px 15px; border-top: 1px solid #f9f9f9; margin-top: 10px;">
+                <h4 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #aaa; letter-spacing: 0.5px;">Description</h4>
+                <p id="detailDescription" style="font-size: 14px; line-height: 1.5; color: #444; margin: 0;">
+                    Fully functional part. Tested and ready for installation.
+                </p>
+            </div>
+
+            <div style="padding: 0 15px 25px 15px;">
+                <button onclick="handleMessageSeller()" style="width: 100%; padding: 16px; background: var(--apc-orange); color: white; border: none; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
+                    ✉️ MESSAGE SELLER
+                </button>
+            </div>
+
+            <div id="detailWorkshopSection" style="display: none; padding: 15px 15px 0 15px; margin-top: 0;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+                    <div>
+                        <div style="font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 0.5px;">Need this fitted?</div>
+                        <div id="detailWorkshopHeadline" style="font-size: 14px; font-weight: 800; color: #333; margin-top: 5px; line-height: 1.3;">Local fitters near you</div>
+                    </div>
+                    <div class="workshop-sponsored-badge">Sponsored</div>
+                </div>
+                <div id="detailWorkshopCards" style="display: grid; gap: 12px;"></div>
+            </div>
+
+            <div id="detailSignInPrompt" class="detail-signin-prompt" style="display:none; margin: 0 15px 20px 15px; padding: 18px; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; background: rgba(255,255,255,0.95); text-align: center;">
+                <div style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color:#333;">Sign in to view the seller details, location and full description.</div>
+                <button onclick="openAuthDrawer()" style="width: 100%; padding: 14px; background: var(--apc-orange); color:white; border:none; border-radius: 10px; font-weight:800; cursor:pointer;">SIGN IN TO VIEW DETAILS</button>
+            </div>
+
+            <div style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
+                <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 12px;">Have a part like this?</div>
+                <button onclick="toggleDrawer('sellOverlay')" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
+            </div>
+
+            <div id="dynamicDetailFooter"></div>
+        </div>
     </div>
 </div>
 

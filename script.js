@@ -223,6 +223,7 @@ function saveSettingsToggle(key, value) {
 function closeSettingsDrawer() {
     const el = document.getElementById('settingsDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 function onMenuOpenSettings() {
     renderSettingsDrawer();
@@ -400,16 +401,20 @@ function toggleDrawer(id, allowStack = false) {
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
 }
 
-function closeTopDrawer() {
-    const openDrawers = Array.from(document.querySelectorAll('.drawer.active'))
-        .filter(d => !(d.id === 'filterDrawer' && window.innerWidth >= 900));
-    if (!openDrawers.length) return;
-    openDrawers[openDrawers.length - 1].classList.remove('active');
+function syncBackdrop() {
     const anyOpen = document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
         || (window.innerWidth < 900 && document.querySelectorAll('.drawer.active').length > 0);
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
+}
+
+function closeTopDrawer() {
+    const openDrawers = Array.from(document.querySelectorAll('.drawer.active'))
+        .filter(d => !(d.id === 'filterDrawer' && window.innerWidth >= 900));
+    if (!openDrawers.length) return;
+    openDrawers[openDrawers.length - 1].classList.remove('active');
+    syncBackdrop();
 }
 
 // --- FILTER HELPERS ---
@@ -1014,6 +1019,33 @@ function openItemDetail(partId) {
         }
     }
 
+    // 1b. Desktop: large main image + clickable thumbnails
+    const desktopMain  = document.getElementById('desktopMainImage');
+    const desktopThumbs = document.getElementById('desktopThumbnails');
+    if (desktopMain) {
+        desktopMain.src = part.images[0] || '';
+        desktopMain.alt = part.title;
+        desktopMain.onclick = () => openDetailImageViewer(part.images[0]);
+    }
+    if (desktopThumbs) {
+        desktopThumbs.innerHTML = '';
+        part.images.forEach((src, i) => {
+            const thumb = document.createElement('img');
+            thumb.src = src;
+            thumb.alt = part.title;
+            thumb.className = 'desktop-thumb' + (i === 0 ? ' active' : '');
+            thumb.onclick = () => {
+                if (desktopMain) {
+                    desktopMain.src = src;
+                    desktopMain.onclick = () => openDetailImageViewer(src);
+                }
+                document.querySelectorAll('.desktop-thumb').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+            };
+            desktopThumbs.appendChild(thumb);
+        });
+    }
+
     // 2. Update detail fields safely
     safeText(document.getElementById('detailPrice'), `$${part.price}`);
     safeText(document.getElementById('detailTitle'), part.title);
@@ -1159,21 +1191,25 @@ function openStorefront(partId) {
 function closeChatDrawer() {
     const el = document.getElementById('chatDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function closeStorefrontDrawer() {
     const el = document.getElementById('storefrontDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function closeAddVehicleDrawer() {
     const el = document.getElementById('addVehicleDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function closeMessageDetailDrawer() {
     const el = document.getElementById('messageDetailDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function handleMessageSeller() {
@@ -1439,6 +1475,7 @@ function toggleSavedPart(partId) {
 function closeSavedPartsDrawer() {
     const el = document.getElementById('savedPartsDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 function onMenuOpenSavedParts() {
     renderSavedParts();
@@ -1531,6 +1568,7 @@ function wantedMatchesPart(wanted, part) {
 function closeAddWantedDrawer() {
     const el = document.getElementById('addWantedDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function onAddWantedFromSearch() {
@@ -2138,12 +2176,14 @@ function onAccountPillClick(e) {
 function closeAccountMenu() {
     const m = document.getElementById('accountMenuDrawer');
     if (m) m.classList.remove('active');
+    syncBackdrop();
 }
 
 // Menu-item helpers — placeholders until each screen is built
 function closeProfileDrawer() {
     const el = document.getElementById('profileDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function onMenuOpenProfile() {
@@ -2365,6 +2405,7 @@ function openWorkshopDetail(workshopId) {
 function closeWorkshopDetailDrawer() {
     const el = document.getElementById('workshopDetailDrawer');
     if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 function onMenuOpenMyListings() {
     toggleDrawer('myPartsDrawer', true);
@@ -2431,20 +2472,21 @@ function renderAccountState() {
 
 // Keep the results-grid pushed below the fixed header — replaces the old hardcoded margin-top: 155px
 function updateHeaderOffset() {
-    const header       = document.getElementById('mainHeader');
-    const grid         = document.getElementById('mainGrid');
-    const topBar       = document.getElementById('desktopTopBar');
-    const rightPanel   = document.getElementById('desktopRightPanel');
-    const filterDrawer = document.getElementById('filterDrawer');
+    const header        = document.getElementById('mainHeader');
+    const grid          = document.getElementById('mainGrid');
+    const topBar        = document.getElementById('desktopTopBar');
+    const rightPanel    = document.getElementById('desktopRightPanel');
+    const filterDrawer  = document.getElementById('filterDrawer');
+    const detailOverlay = document.getElementById('detailOverlay');
     if (header && grid) {
         // offsetParent is null for fixed elements regardless of visibility — use offsetHeight directly (0 when display:none)
         const topBarH = topBar ? topBar.offsetHeight : 0;
         const totalH  = header.offsetHeight + topBarH;
         grid.style.marginTop = totalH + 'px';
         if (window.innerWidth >= 900) {
-            // Both sidebars use top (not padding-top) so their backgrounds don't bleed behind the header
-            if (rightPanel)   rightPanel.style.top   = totalH + 'px';
-            if (filterDrawer) filterDrawer.style.top = totalH + 'px';
+            if (rightPanel)    rightPanel.style.top    = totalH + 'px';
+            if (filterDrawer)  filterDrawer.style.top  = totalH + 'px';
+            if (detailOverlay) detailOverlay.style.top = totalH + 'px';
         }
     }
 }
