@@ -39,7 +39,27 @@ const partDatabase = [
     { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000 },
     { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000 },
     { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000 },
-    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 }
+    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 },
+    { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000 },
+    { id: 10, title: "Lotus Elise S2 Carbon Rear Diffuser", price: 480, images: ["images/elise.diffuser.jpg", "images/elise.exhaust.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 11, date: 1737590400000 },
+    { id: 11, title: "Toyota Hiace Tow Bar Heavy Duty", price: 220, images: ["images/hiace.towbar.webp", "images/hiace.bumper.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Jason M.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 7, date: 1738108800000 },
+    { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000 },
+    { id: 13, title: "Lotus Elise S2 Left Headlight", price: 380, images: ["images/elise.headlight.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 15, date: 1740009600000 },
+    { id: 14, title: "Toyota Hiace Steering Rack Reconditioned", price: 295, images: ["images/hiace.steeringrack.jpg", "images/1KD.engine.webp"], loc: "SYDNEY, NSW", fit: true, seller: "Tom K.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 5, date: 1740528000000 },
+    { id: 15, title: "Lotus Elise S2 Soft Top Hood", price: 550, images: ["images/elise.soft.top.jpg", "images/elise.seat.jpg"], loc: "PERTH, WA", fit: false, seller: "Chris B.", isPro: true, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 21, date: 1741219200000 },
+    { id: 16, title: "Toyota Hiace 80A Alternator", price: 180, images: ["images/hiace.alternator.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 9, date: 1741910400000 },
+    { id: 17, title: "Holden Commodore VE 18\" Wheels Set of 4", price: 620, images: ["images/commodore.wheels.webp", "images/elise.rims.jpg"], loc: "MELBOURNE, VIC", fit: false, seller: "Dave R.", isPro: false, category: "wheels", fits: [{ make: 'Holden', model: 'Commodore' }], saves: 16, date: 1742601600000 },
+    { id: 18, title: "Toyota Hiace 1KD Injector Set (4 cyl)", price: 750, images: ["images/hiace.injector.webp", "images/1KD.engine.webp", "images/hiace.turbo.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 12, date: 1743292800000 },
+    { id: 19, title: "Toyota Hiace Front Grille 2014+", price: 95, images: ["images/hiace.grille.jpg", "images/hiace.bumper.jpg", "images/hiace.mirror.jpg"], loc: "BRISBANE, QLD", fit: false, seller: "Sam T.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 4, date: 1743897600000 },
+    { id: 20, title: "Toyota Hiace Front Bumper Bar", price: 185, images: ["images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1744329600000 },
+    { id: 21, title: "Lotus Elise S2 Recaro Racing Seat", price: 420, images: ["images/elise.seat.jpg", "images/elise.steering.wheel.jpeg", "images/elise.rims.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Lee P.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 17, date: 1744761600000 },
+    { id: 22, title: "Universal Garrett-Style Performance Turbo", price: 890, images: ["images/turbo.webp", "images/Elise.scoops.webp", "images/1KD.engine.webp"], loc: "SYDNEY, NSW", fit: true, seller: "Alex T.", isPro: true, category: "engine", fits: [], saves: 28, date: 1745366400000 },
+    { id: 23, title: "Toyota Hiace Cargo Barrier (Van)", price: 110, images: ["images/hiace.cargo.barrier.webp", "images/hiace.floormats.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "interior", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1745625600000 },
+    { id: 24, title: "Toyota Hiace Floor Mats Full Set", price: 55, images: ["images/hiace.floormats.webp", "images/hiace.cargo.barrier.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: false, category: "interior", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 3, date: 1745884800000 },
+    { id: 25, title: "Toyota Hiace Oil & Fuel Filter Service Kit", price: 45, images: ["images/hiace.oilfilter.jpg", "images/hiace.fuel.filter.jpg", "images/hiace.filter.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 3, date: 1745971200000 },
+    { id: 26, title: "Lotus Elise S2 Exhaust System", price: 680, images: ["images/elise.exhaust.jpg", "images/elise.diffuser.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "engine", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 23, date: 1745798400000 },
+    { id: 27, title: "Lotus Elise S2 Alloy Wheels (Set of 4)", price: 1100, images: ["images/elise.rims.jpg", "images/elise.wheel.jpg", "images/commodore.wheels.webp"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "wheels", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 29, date: 1745193600000 },
+    { id: 28, title: "Toyota Hiace Fuel Injector (Single)", price: 130, images: ["images/hiace.fuel.filter.jpg", "images/hiace.injector.webp"], loc: "PERTH, WA", fit: false, seller: "Mick O.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 2, date: 1744070400000 }
 ];
 
 // Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
@@ -1082,6 +1102,9 @@ function openDetailImageViewer(src) {
     if (!lightbox || !image) return;
     image.src = src;
     lightbox.classList.add('active');
+    // Allow pinch-to-zoom on the lightbox image
+    document.querySelector('meta[name=viewport]').setAttribute('content',
+        'width=device-width, initial-scale=1.0');
 }
 
 function closeDetailImageViewer() {
@@ -1090,6 +1113,9 @@ function closeDetailImageViewer() {
     if (!lightbox || !image) return;
     lightbox.classList.remove('active');
     image.src = '';
+    // Restore zoom lock for the rest of the app
+    document.querySelector('meta[name=viewport]').setAttribute('content',
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
 }
 
 function shareCurrentListing() {
@@ -2293,14 +2319,51 @@ function buildSponsoredWorkshopCardHTML(workshop) {
                 <div class="workshop-card-distance">${workshop.distance}</div>
             </div>
             <div class="workshop-card-specialty">${workshop.specialty}</div>
-            <div class="workshop-card-meta">${workshop.services.join(', ')}</div>
-            <div class="workshop-card-footer" style="margin-top: 10px;">
-                <div class="workshop-card-meta" style="color: #666;">${workshop.loc}</div>
+            <div class="workshop-card-footer">
                 ${stars}
-                <button class="workshop-card-button" onclick="showToast('Contacting ${workshop.name}...')">View sponsor</button>
+                <button class="workshop-card-button" onclick="openWorkshopDetail(${workshop.id})">View →</button>
             </div>
         </div>
     `;
+}
+
+function openWorkshopDetail(workshopId) {
+    const w = workshopDatabase.find(w => w.id === workshopId);
+    if (!w) return;
+    const content = document.getElementById('workshopDetailContent');
+    if (!content) return;
+    const stars = w.rating ? `★ ${w.rating}` : '';
+    const serviceChips = w.services.map(s => `<span class="wsd-chip">${s}</span>`).join('');
+    const vehicleChips = w.vehicleTypes.map(v => `<span class="wsd-chip">${v}</span>`).join('');
+    content.innerHTML = `
+        <div class="wsd-hero">
+            <div class="wsd-name">${w.name}</div>
+            <div class="wsd-loc">📍 ${w.loc}</div>
+            <div class="wsd-meta-row">
+                <span class="wsd-rating">${stars}</span>
+                <span class="wsd-distance">${w.distance} away</span>
+            </div>
+        </div>
+        <div class="wsd-section">
+            <h4>Speciality</h4>
+            <div class="wsd-specialty">${w.specialty}</div>
+        </div>
+        <div class="wsd-section">
+            <h4>Services</h4>
+            <div class="wsd-chips">${serviceChips}</div>
+        </div>
+        <div class="wsd-section">
+            <h4>Vehicles we work on</h4>
+            <div class="wsd-chips">${vehicleChips}</div>
+        </div>
+        <button class="wsd-contact-btn" onclick="contactWorkshop(${w.id}); closeWorkshopDetailDrawer();">Contact this workshop</button>
+    `;
+    toggleDrawer('workshopDetailDrawer', true);
+}
+
+function closeWorkshopDetailDrawer() {
+    const el = document.getElementById('workshopDetailDrawer');
+    if (el) el.classList.remove('active');
 }
 function onMenuOpenMyListings() {
     toggleDrawer('myPartsDrawer', true);
