@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="APC">
-    <link rel="apple-touch-icon" href="images/APC.logo.png">
+    <link rel="apple-touch-icon" href="images/apc_icon_512_centered.png">
 </head>
 <body id="body">
 
@@ -39,35 +39,30 @@
             </div>
         </div>
 
-        <!-- Account dropdown — opens from the pill when signed in -->
-        <div class="account-menu" id="accountMenu" style="display:none;">
-            <div class="account-menu-header">
-                <div class="account-menu-avatar" id="accountMenuAvatar">G</div>
-                <div>
-                    <div class="account-menu-name" id="accountMenuName">Guest</div>
-                    <div class="account-menu-status" id="accountMenuStatus"></div>
-                </div>
-            </div>
-            <button class="account-menu-item" onclick="onMenuOpenProfile()"><span class="ico">👤</span> Profile</button>
-            <button class="account-menu-item" onclick="onMenuOpenSettings()"><span class="ico">⚙️</span> Settings</button>
-            <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services</button>
-            <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings</button>
-            <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico">❤️</span> Saved Parts</button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages</button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')"><span class="ico">❓</span> Help &amp; Support</button>
-            <div class="menu-divider"></div>
-            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">
-                <span class="ico">⭐</span> Upgrade to APC Pro
-            </button>
-            <button class="account-menu-item activate-search" id="accountMenuActivate" style="display:none;" onclick="onToggleProSearch(event)">
-                <span class="ico">🔍</span> Activate Pro Search
-                <span class="switch" id="proSearchSwitch"></span>
-            </button>
-            <div class="menu-divider"></div>
-            <button class="account-menu-item logout" onclick="onSignOut()"><span class="ico">↩</span> Log Out</button>
-        </div>
     </header>
 </div>
+
+<!-- DESKTOP SIDEBAR — hidden on mobile via CSS -->
+<nav class="desktop-sidebar" id="desktopSidebar">
+    <div class="dsb-brand">
+        <img src="images/APC.logo.png" alt="APC">
+    </div>
+    <div class="dsb-nav">
+        <div class="dsb-item active" onclick="setActiveNav(this); renderMainGrid(); window.scrollTo(0,0);">Home</div>
+        <div class="dsb-item" onclick="setActiveNav(this); onOpenGarage()">Garage</div>
+        <div class="dsb-item" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
+        <div class="dsb-item" id="desktopInboxItem" onclick="setActiveNav(this); onOpenInbox()">
+            Inbox
+            <span id="inboxBadgeDesktop" class="dsb-inbox-badge" style="display:none;"></span>
+        </div>
+    </div>
+    <div class="dsb-sell-wrap">
+        <div class="dsb-sell" onclick="openSellOverlay()">+ SELL A PART</div>
+    </div>
+</nav>
+
+<!-- DRAWER BACKDROP — only visible on desktop when a drawer is open -->
+<div id="drawerBackdrop" onclick="closeTopDrawer()"></div>
 
 <div class="results-grid" id="mainGrid"></div>
 
@@ -95,7 +90,10 @@
                 <div id="detailSellerSub" class="detail-seller-sub">View seller's other items →</div>
             </div>
         </div>
-        <div onclick="toggleDrawer('detailOverlay')" style="font-size: 34px; color: #888; cursor: pointer; padding-left: 10px; line-height: 1;">×</div>
+        <div style="display:flex; align-items:center; gap:4px;">
+            <button onclick="shareCurrentListing()" class="detail-share-btn" aria-label="Share listing">📤</button>
+            <div onclick="toggleDrawer('detailOverlay')" style="font-size: 34px; color: #888; cursor: pointer; padding-left: 6px; line-height: 1;">×</div>
+        </div>
     </div>
 
     <div class="drawer-content" id="detailScrollArea" style="background:#fff; height: calc(100% - 60px); overflow-y: auto; padding-bottom: 40px; position: relative;">
@@ -251,33 +249,52 @@
         <div class="filter-section">
             <h4>Search Location</h4>
             <div class="input-group">
-                <select>
+                <select id="filterStateSelect" onchange="onStateChange(this)">
                     <option value="all">All Australia</option>
-                    <option value="SA">South Australia (SA)</option>
-                    <option value="VIC">Victoria (VIC)</option>
                     <option value="NSW">New South Wales (NSW)</option>
+                    <option value="VIC">Victoria (VIC)</option>
                     <option value="QLD">Queensland (QLD)</option>
                     <option value="WA">Western Australia (WA)</option>
+                    <option value="SA">South Australia (SA)</option>
                     <option value="TAS">Tasmania (TAS)</option>
+                    <option value="ACT">Australian Capital Territory (ACT)</option>
+                    <option value="NT">Northern Territory (NT)</option>
                 </select>
             </div>
             <div class="input-group" style="margin-top: 10px;">
+                <label>Postcode <span style="font-weight:400; color:#aaa;">(required for radius search)</span></label>
+                <input id="filterPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000" oninput="onPostcodeInput(this)">
+            </div>
+            <div class="input-group" style="margin-top: 10px;">
                 <label>Search Radius</label>
-                <div class="radius-seg-control">
-                    <div class="radius-seg active" data-radius="50">Within 50km</div>
-                    <div class="radius-seg" data-radius="100">Within 100km</div>
-                    <div class="radius-seg" data-radius="state">My State</div>
-                    <div class="radius-seg" data-radius="all">Australia</div>
+                <div class="radius-seg-control radius-seg-disabled" id="radiusSegControl">
+                    <div class="radius-seg active" data-radius="50" onclick="setRadiusFilter(this)">50km</div>
+                    <div class="radius-seg" data-radius="100" onclick="setRadiusFilter(this)">100km</div>
+                    <div class="radius-seg" data-radius="250" onclick="setRadiusFilter(this)">250km</div>
+                    <div class="radius-seg" data-radius="500" onclick="setRadiusFilter(this)">500km</div>
                 </div>
+                <div id="radiusHint" class="filter-radius-hint">Enter a postcode above to enable radius search</div>
             </div>
         </div>
 
         <div class="filter-section">
-            <h4>Price & Condition</h4>
-            <div class="input-row-flex" style="margin-bottom:10px;">
-                <div class="input-group"><label>Min $</label><input type="number" placeholder="0"></div>
-                <div class="input-group"><label>Max $</label><input type="number" placeholder="500+"></div>
+            <h4>Sort by Price</h4>
+            <div class="radius-seg-control" id="sortSegControl">
+                <div class="radius-seg" onclick="setSortOrder(this, 'asc')">Low → High</div>
+                <div class="radius-seg" onclick="setSortOrder(this, 'desc')">High → Low</div>
             </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Sort by Date</h4>
+            <div class="radius-seg-control" id="sortDateSegControl">
+                <div class="radius-seg active" onclick="setSortDate(this, 'newest')">Newest first</div>
+                <div class="radius-seg" onclick="setSortDate(this, 'oldest')">Oldest first</div>
+            </div>
+        </div>
+
+        <div class="filter-section">
+            <h4>Condition</h4>
             <div class="shared-choice-box">
                 <label class="choice-item"><input type="checkbox" checked> New OEM</label>
                 <label class="choice-item"><input type="checkbox" checked> New Aftermarket</label>
@@ -612,6 +629,11 @@
     <div class="drawer-content">
         <div id="workshopBrowseSection" style="display:none;">
             <div class="filter-section">
+                <div class="search-bar" style="margin-bottom: 0;">
+                    <input id="workshopSearchInput" type="text" placeholder="Search by name, suburb or vehicle type…" oninput="renderWorkshopBrowseView()" style="width:100%; box-sizing:border-box;">
+                </div>
+            </div>
+            <div class="filter-section">
                 <h4>Filter by service</h4>
                 <div class="shared-choice-box" style="margin-top: 8px;">
                     <label class="choice-item"><input type="checkbox" id="workshopFilterMechanical" onclick="renderWorkshopBrowseView()"> Mechanical</label>
@@ -661,18 +683,20 @@
                 <div class="shared-choice-box" style="margin-top: 8px;">
                     <label class="choice-item"><input type="checkbox" id="workshopServicePanel"> Panel & body repair</label>
                     <label class="choice-item"><input type="checkbox" id="workshopServiceFitment"> Part fitting</label>
+                </div>
+                <div class="shared-choice-box" style="margin-top: 8px;">
                     <label class="choice-item"><input type="checkbox" id="workshopServiceMechanical"> Mechanical repair</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopServiceTyres"> Wheels and Tyres</label>
                 </div>
                 <div class="shared-choice-box" style="margin-top: 8px;">
                     <label class="choice-item"><input type="checkbox" id="workshopServiceElectrical"> Electrical & lighting</label>
                     <label class="choice-item"><input type="checkbox" id="workshopServiceAlignment"> Wheel alignment</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopServiceTyres"> Tyres</label>
                 </div>
             </div>
 
             <div class="filter-section">
                 <h4>About your workshop</h4>
-                <textarea id="workshopDescription" rows="4" placeholder="Tell buyers what you specialise in and the vehicles you want to attract."></textarea>
+                <textarea id="workshopDescription" class="apc-textarea" rows="4" placeholder="Tell buyers what you specialise in and the vehicles you want to attract."></textarea>
             </div>
 
             <div class="action-container">
@@ -814,6 +838,42 @@
         <div style="padding: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
             <button id="messageDetailFlagBtn" class="message-detail-action-btn" style="display: none;">⚑</button>
             <button id="messageDetailDeleteBtn" class="message-detail-action-btn delete">🗑️ Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ACCOUNT MENU — full drawer replacing the old dropdown -->
+<div id="accountMenuDrawer" class="drawer">
+    <div class="drawer-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <div class="account-menu-avatar" id="accountMenuAvatar">G</div>
+            <div>
+                <div class="account-menu-name" id="accountMenuName">Gary</div>
+                <div class="account-menu-status" id="accountMenuStatus"></div>
+            </div>
+        </div>
+        <div onclick="closeAccountMenu()" style="font-size:30px; cursor:pointer">×</div>
+    </div>
+    <div class="drawer-content" style="padding: 0; background: #f4f4f4;">
+        <div class="amenu-section">
+            <button class="account-menu-item" onclick="onMenuOpenProfile()"><span class="ico">👤</span> Profile <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenSettings()"><span class="ico">⚙️</span> Settings <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services <span class="account-menu-chevron">›</span></button>
+        </div>
+        <div class="amenu-section">
+            <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico">❤️</span> Saved Parts <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages <span class="account-menu-chevron">›</span></button>
+        </div>
+        <div class="amenu-section">
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')"><span class="ico">❓</span> Help &amp; Support <span class="account-menu-chevron">›</span></button>
+        </div>
+        <div class="amenu-section">
+            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()"><span class="ico">⭐</span> Upgrade to APC Pro</button>
+            <button class="account-menu-item activate-search" id="accountMenuActivate" style="display:none;" onclick="onToggleProSearch(event)"><span class="ico">🔍</span> Activate Pro Search <span class="switch" id="proSearchSwitch"></span></button>
+        </div>
+        <div class="amenu-section">
+            <button class="account-menu-item logout" onclick="onSignOut()"><span class="ico">↩</span> Log Out</button>
         </div>
     </div>
 </div>

@@ -73,29 +73,18 @@ header {
     font-family: inherit;
 }
 .account-pill:active { transform: scale(0.97); }
-.account-pill.signed-out    { background: var(--apc-orange); }
-.account-pill.tier-standard { background: var(--apc-orange); }
-.account-pill.tier-pro      { background: var(--apc-blue); }
-.account-pill .caret { font-size: 9px; opacity: 0.85; }
-
-/* === ACCOUNT DROPDOWN MENU === */
-.account-menu {
-    position: absolute;
-    top: calc(100% - 5px);
-    right: 12px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-    min-width: 250px;
-    overflow: hidden;
-    z-index: 1200;
-    transform-origin: top right;
-    animation: account-menu-pop 0.14s ease-out;
+.account-pill.signed-out { background: var(--apc-orange); }
+.account-pill.signed-in  {
+    background: none;
+    box-shadow: none;
+    color: var(--apc-charcoal);
+    font-size: 13px;
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 6px 4px;
 }
-@keyframes account-menu-pop {
-    from { opacity: 0; transform: translateY(-4px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
+.account-pill .caret { font-size: 9px; opacity: 0.6; }
+.pill-pro-label { color: var(--apc-blue); font-weight: 900; }
 .account-menu-header {
     padding: 12px 14px;
     background: #FAFAFA;
@@ -117,6 +106,57 @@ header {
 .account-menu-name   { font-weight: 700; font-size: 13px; }
 .account-menu-status { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
 .account-menu-status.pro { color: var(--apc-blue); font-weight: 800; }
+
+/* ACCOUNT MENU DRAWER — sits behind sub-drawers so they stack on top */
+#accountMenuDrawer { z-index: 1999; }
+.amenu-section {
+    background: white;
+    margin-bottom: 10px;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+.account-menu-chevron {
+    margin-left: auto;
+    color: #ccc;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1;
+}
+.account-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 16px 20px;
+    border: none;
+    border-bottom: 1px solid #f4f4f4;
+    background: white;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--apc-charcoal);
+    font-family: inherit;
+}
+.account-menu-item:last-child { border-bottom: none; }
+.account-menu-item:active { background: #fafafa; }
+.account-menu-item .ico { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+.account-menu-item.upgrade { color: var(--apc-blue); font-weight: 700; }
+.account-menu-item.activate-search { font-weight: 700; }
+.account-menu-item.activate-search.on { color: var(--apc-blue); }
+.account-menu-item.logout { color: #c0392b; }
+
+/* DETAIL OVERLAY SHARE BUTTON */
+.detail-share-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 6px;
+    opacity: 0.65;
+    line-height: 1;
+}
+.detail-share-btn:active { opacity: 1; transform: scale(0.9); }
 
 .auth-tab {
     flex: 1;
@@ -246,27 +286,6 @@ header {
 .storefront-seller-card .seller-card-name {
     font-size: 15px;
 }
-
-.account-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 14px;
-    font-size: 13px;
-    cursor: pointer;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-    color: var(--apc-charcoal);
-    font-family: inherit;
-}
-.account-menu-item:hover { background: #F8F8F8; }
-.account-menu-item .ico { width: 20px; text-align: center; font-size: 14px; }
-.account-menu-item.upgrade { color: var(--apc-blue); font-weight: 700; }
-.account-menu-item.activate-search { font-weight: 700; }
-.account-menu-item.activate-search.on { color: var(--apc-blue); }
-.account-menu-item.logout { color: #c0392b; }
 
 .menu-divider { height: 1px; background: #eee; margin: 4px 0; }
 
@@ -952,6 +971,25 @@ header {
     background: var(--apc-orange);
     color: white;
 }
+.radius-seg-disabled .radius-seg {
+    opacity: 0.35;
+    pointer-events: none;
+    cursor: default;
+}
+.radius-seg-disabled .radius-seg.active {
+    background: #ccc;
+    color: #fff;
+}
+.filter-radius-hint {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 6px;
+    font-style: italic;
+}
+.filter-input-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
 
 /* PROFILE */
 .profile-hero {
@@ -1206,6 +1244,7 @@ header {
     position: fixed;
     bottom: 95px;
     left: 50%;
+    z-index: 9999;
     transform: translateX(-50%) translateY(8px);
     background: #333;
     color: white;
@@ -1251,6 +1290,23 @@ header {
 .input-group textarea { min-height: 110px; }
 .input-row-flex { display: flex; gap: 10px; }
 .input-row-flex .input-group { flex: 1; }
+.apc-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    box-sizing: border-box;
+    background: #f9f9f9;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #222;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.apc-textarea:focus { border-color: var(--apc-orange); background: #fff; }
+.apc-textarea::placeholder { color: #aaa; }
 .shared-choice-box { display: flex; gap: 10px; flex-wrap: wrap; }
 .choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
 .action-container { padding: 10px 0 20px 0; }
@@ -1425,4 +1481,141 @@ header {
 
 .chat-attach-btn:hover {
     background: #fff7ef;
+}
+
+/* ============================================================
+   DESKTOP SIDEBAR (base styles — display:none on mobile)
+   ============================================================ */
+.desktop-sidebar {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0;
+    width: 220px;
+    height: 100vh;
+    background: white;
+    border-right: 1px solid #eee;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+    z-index: 1200;
+    overflow-y: auto;
+}
+.dsb-brand {
+    padding: 14px 18px;
+    border-bottom: 5px solid var(--apc-orange);
+    flex-shrink: 0;
+}
+.dsb-brand img { height: 46px; width: auto; display: block; }
+.dsb-nav { flex: 1; padding: 8px 0; }
+.dsb-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--apc-charcoal);
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: background 0.1s, color 0.1s;
+    position: relative;
+}
+.dsb-item:hover { background: #f7f7f7; }
+.dsb-item.active { color: var(--apc-orange); background: #fff6ec; }
+.dsb-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--apc-orange);
+    border-radius: 0 3px 3px 0;
+}
+.dsb-inbox-badge {
+    background: #FF3B30;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+    margin-left: auto;
+}
+.dsb-sell-wrap { padding: 16px; border-top: 1px solid #eee; flex-shrink: 0; }
+.dsb-sell {
+    background: var(--apc-orange);
+    color: white;
+    text-align: center;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 10px rgba(247,148,29,0.35);
+    transition: background 0.15s;
+}
+.dsb-sell:hover { background: #e07b00; }
+
+/* DRAWER BACKDROP — desktop only */
+#drawerBackdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1998;
+}
+
+/* ============================================================
+   DESKTOP LAYOUT — 900px+
+   ============================================================ */
+@media (min-width: 900px) {
+    /* Show sidebar, hide bottom nav */
+    .desktop-sidebar { display: flex; }
+    .bottom-nav { display: none !important; }
+
+    /* Body: no bottom padding, left gap for sidebar */
+    body { padding-bottom: 0; padding-left: 220px; }
+
+    /* Header shifts right of sidebar */
+    .top-nav-container { left: 220px; width: calc(100% - 220px); }
+
+    /* Single-row header: search fills middle, pill on right, logo hidden (it's in sidebar) */
+    header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 20px;
+        flex-wrap: nowrap;
+    }
+    .header-top {
+        margin-bottom: 0;
+        flex-shrink: 0;
+        order: 2;
+    }
+    .header-top .logo-main { display: none; }
+    .search-group { flex: 1; order: 1; margin: 0; }
+
+    /* Wider grid — 4 columns */
+    .results-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        padding: 5px 12px;
+    }
+
+    /* Drawers become right-side panels instead of full-screen */
+    .drawer {
+        left: auto;
+        right: 0;
+        width: 500px;
+    }
+    .drawer.active {
+        box-shadow: -4px 0 40px rgba(0,0,0,0.18);
+    }
+    #detailOverlay  { width: 680px; }
+    #accountMenuDrawer { width: 360px; }
+
+    /* Show backdrop when a drawer is open */
+    #drawerBackdrop.active { display: block; }
+
+    /* Cards — slightly larger title text at desktop sizes */
+    .item-title { font-size: 13px; }
 }

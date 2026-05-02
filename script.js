@@ -8,6 +8,8 @@ let currentOpenPartId = null;  // tracks which part detail is open
 let currentEditingListingId = null; // edit mode for Sell form
 let authReturnAction = null; // optional callback after sign-in
 let authMode = 'signin';
+let sortOrder = 'none';     // 'none' | 'asc' | 'desc'
+let sortDate  = 'newest';  // 'newest' | 'oldest'
 let activeFilters = {
     search: '',
     category: 'all',
@@ -30,14 +32,14 @@ let activeFilters = {
 // `images` is an array so the carousel can show real photos per part.
 // `fits` = which vehicles a part suits. Empty array = universal (fits anything).
 const partDatabase = [
-    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14 },
-    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22 },
-    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8 },
-    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31 },
-    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6 },
-    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18 },
-    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9 },
-    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27 }
+    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14, date: 1738540800000 },
+    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000 },
+    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1742688000000 },
+    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31, date: 1743724800000 },
+    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000 },
+    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000 },
+    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000 },
+    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 }
 ];
 
 // Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
@@ -104,7 +106,7 @@ function saveRecentlyViewed() {
     try { localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(recentlyViewed)); } catch (e) {}
 }
 function setActiveNav(el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.nav-item, .dsb-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
 }
 
@@ -203,9 +205,8 @@ function closeSettingsDrawer() {
     if (el) el.classList.remove('active');
 }
 function onMenuOpenSettings() {
-    closeAccountMenu();
     renderSettingsDrawer();
-    toggleDrawer('settingsDrawer');
+    toggleDrawer('settingsDrawer', true);
 }
 function renderSettingsDrawer() {
     const nameEl     = document.getElementById('settingsDisplayName');
@@ -360,25 +361,33 @@ function toggleDrawer(id, allowStack = false) {
     const drawer = document.getElementById(id);
     if (!drawer) return;
 
-    const isOpen = drawer.classList.contains('active');
-
     if (!allowStack) {
-        // Close every other drawer first
         document.querySelectorAll('.drawer.active').forEach(d => {
             if (d.id !== id) d.classList.remove('active');
         });
     }
 
     drawer.classList.toggle('active');
-    document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : 'auto';
 
-    // Reset scroll position to top when opening drawer
     if (drawer.classList.contains('active')) {
         const content = drawer.querySelector('.drawer-content');
-        if (content) {
-            content.scrollTop = 0;
-        }
+        if (content) content.scrollTop = 0;
     }
+
+    const anyOpen = document.querySelectorAll('.drawer.active').length > 0;
+    document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
+    const backdrop = document.getElementById('drawerBackdrop');
+    if (backdrop) backdrop.classList.toggle('active', anyOpen);
+}
+
+function closeTopDrawer() {
+    const openDrawers = Array.from(document.querySelectorAll('.drawer.active'));
+    if (!openDrawers.length) return;
+    openDrawers[openDrawers.length - 1].classList.remove('active');
+    const anyOpen = document.querySelectorAll('.drawer.active').length > 0;
+    document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
+    const backdrop = document.getElementById('drawerBackdrop');
+    if (backdrop) backdrop.classList.toggle('active', anyOpen);
 }
 
 // --- FILTER HELPERS ---
@@ -393,24 +402,71 @@ function getFilterValues() {
         activeFilters.year  = makeModelYear[2].value.trim();
     }
 
-    const locationSelect = document.querySelectorAll('#filterDrawer select')[1];
-    activeFilters.location = locationSelect?.value || 'all';
+    activeFilters.location = document.getElementById('filterStateSelect')?.value || 'all';
 
-    const priceInputs = document.querySelectorAll('#filterDrawer input[type="number"]');
-    if (priceInputs.length >= 2) {
-        activeFilters.minPrice = priceInputs[0].value;
-        activeFilters.maxPrice = priceInputs[1].value;
-    }
+    activeFilters.postcode = document.getElementById('filterPostcode')?.value.trim() || '';
+    const activeRadius = document.querySelector('#radiusSegControl .radius-seg.active');
+    activeFilters.radius = activeFilters.postcode ? (activeRadius?.dataset.radius || '50') : null;
 
+    // Checkboxes: 0-4 = condition, 5-6 = logistics, 7-8 = seller
     const checkboxes = document.querySelectorAll('#filterDrawer input[type="checkbox"]');
-    if (checkboxes.length >= 6) {
-        activeFilters.conditionNew   = checkboxes[0].checked;
-        activeFilters.conditionUsed  = checkboxes[1].checked;
-        activeFilters.postage        = checkboxes[2].checked;
-        activeFilters.pickup         = checkboxes[3].checked;
-        activeFilters.sellerPrivate  = checkboxes[4].checked;
-        activeFilters.sellerPro      = checkboxes[5].checked;
+    if (checkboxes.length >= 9) {
+        activeFilters.postage       = checkboxes[5].checked;
+        activeFilters.pickup        = checkboxes[6].checked;
+        activeFilters.sellerPrivate = checkboxes[7].checked;
+        activeFilters.sellerPro     = checkboxes[8].checked;
     }
+}
+
+function onPostcodeInput(input) {
+    const hasPostcode = input.value.trim().length > 0;
+    const control = document.getElementById('radiusSegControl');
+    const hint = document.getElementById('radiusHint');
+    const stateSelect = document.getElementById('filterStateSelect');
+    if (control) control.classList.toggle('radius-seg-disabled', !hasPostcode);
+    if (hint) hint.style.display = hasPostcode ? 'none' : 'block';
+    if (stateSelect) {
+        stateSelect.disabled = hasPostcode;
+        stateSelect.classList.toggle('filter-input-disabled', hasPostcode);
+        if (hasPostcode) stateSelect.value = 'all';
+    }
+}
+
+function onStateChange(select) {
+    const hasState = select.value !== 'all';
+    const postcodeInput = document.getElementById('filterPostcode');
+    const control = document.getElementById('radiusSegControl');
+    const hint = document.getElementById('radiusHint');
+    if (hasState && postcodeInput) {
+        postcodeInput.value = '';
+        if (control) control.classList.add('radius-seg-disabled');
+        if (hint) hint.style.display = 'block';
+    }
+}
+
+function setRadiusFilter(el) {
+    const control = document.getElementById('radiusSegControl');
+    if (control && control.classList.contains('radius-seg-disabled')) return;
+    document.querySelectorAll('#radiusSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+}
+
+function setSortOrder(el, order) {
+    // Tap active price sort again to deselect it
+    if (sortOrder === order) {
+        sortOrder = 'none';
+        document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+        return;
+    }
+    sortOrder = order;
+    document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+}
+
+function setSortDate(el, order) {
+    sortDate = order;
+    document.querySelectorAll('#sortDateSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+    if (el) el.classList.add('active');
 }
 
 function applyFiltersAndRender() {
@@ -421,19 +477,22 @@ function applyFiltersAndRender() {
 
 function getFilteredParts() {
     const search = activeFilters.search.toLowerCase();
-    return getAllParts().filter(part => {
+    const results = getAllParts().filter(part => {
         if (search && !part.title.toLowerCase().includes(search) && !part.loc.toLowerCase().includes(search)) return false;
         if (activeFilters.category !== 'all' && part.category !== activeFilters.category) return false;
         if (activeFilters.location !== 'all') {
             const stateCode = part.loc.split(',')[1]?.trim();
             if (stateCode !== activeFilters.location) return false;
         }
-        if (activeFilters.minPrice !== '' && part.price < Number(activeFilters.minPrice)) return false;
-        if (activeFilters.maxPrice !== '' && part.price > Number(activeFilters.maxPrice)) return false;
         if (!activeFilters.sellerPro && part.isPro) return false;
         if (!activeFilters.sellerPrivate && !part.isPro) return false;
         return true;
     });
+    if (sortOrder === 'asc')    results.sort((a, b) => a.price - b.price);
+    if (sortOrder === 'desc')   results.sort((a, b) => b.price - a.price);
+    if (sortDate === 'newest')  results.sort((a, b) => (b.date || 0) - (a.date || 0));
+    if (sortDate === 'oldest')  results.sort((a, b) => (a.date || 0) - (b.date || 0));
+    return results;
 }
 
 // --- RENDER HELPERS ---
@@ -881,10 +940,10 @@ function submitSellListing() {
             Object.assign(existing, listingPayload);
             message = 'Listing updated';
         } else {
-            userListings.push({ id: nextPartId(), saves: 0, ...listingPayload });
+            userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), ...listingPayload });
         }
     } else {
-        userListings.push({ id: nextPartId(), saves: 0, ...listingPayload });
+        userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), ...listingPayload });
     }
 
     saveUserListings();
@@ -1028,6 +1087,19 @@ function closeDetailImageViewer() {
     if (!lightbox || !image) return;
     lightbox.classList.remove('active');
     image.src = '';
+}
+
+function shareCurrentListing() {
+    const part = getPartById(currentOpenPartId);
+    if (!part) return;
+    const text = `${part.title} — $${part.price} | Auto Parts Connection`;
+    if (navigator.share) {
+        navigator.share({ title: part.title, text, url: window.location.href }).catch(() => {});
+    } else {
+        navigator.clipboard?.writeText(text)
+            .then(() => showToast('Link copied!'))
+            .catch(() => showToast('Share not available on this browser'));
+    }
 }
 
 // --- SELLER STOREFRONT ---
@@ -1339,9 +1411,8 @@ function closeSavedPartsDrawer() {
     if (el) el.classList.remove('active');
 }
 function onMenuOpenSavedParts() {
-    closeAccountMenu();
     renderSavedParts();
-    toggleDrawer('savedPartsDrawer');
+    toggleDrawer('savedPartsDrawer', true);
 }
 function renderSavedParts() {
     const content = document.getElementById('savedPartsContent');
@@ -1681,11 +1752,11 @@ function onOpenInbox() {
 
 function updateInboxBadge() {
     const unreadCount = inboxItems.filter(item => item.unread).length;
-    const badge = document.getElementById('inboxBadge');
-    if (badge) {
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        badge.style.display = unreadCount > 0 ? 'block' : 'none';
-    }
+    const text = unreadCount > 99 ? '99+' : String(unreadCount);
+    const mobile = document.getElementById('inboxBadge');
+    const desktop = document.getElementById('inboxBadgeDesktop');
+    if (mobile)  { mobile.textContent  = text; mobile.style.display  = unreadCount > 0 ? 'block' : 'none'; }
+    if (desktop) { desktop.textContent = text; desktop.style.display = unreadCount > 0 ? 'inline-block' : 'none'; }
 }
 
 function setInboxTab(tab) {
@@ -2028,14 +2099,12 @@ function onAccountPillClick(e) {
         openAuthDrawer();
         return;
     }
-    const m = document.getElementById('accountMenu');
-    if (!m) return;
-    m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+    toggleDrawer('accountMenuDrawer');
 }
 
 function closeAccountMenu() {
-    const m = document.getElementById('accountMenu');
-    if (m) m.style.display = 'none';
+    const m = document.getElementById('accountMenuDrawer');
+    if (m) m.classList.remove('active');
 }
 
 // Menu-item helpers — placeholders until each screen is built
@@ -2045,9 +2114,8 @@ function closeProfileDrawer() {
 }
 
 function onMenuOpenProfile() {
-    closeAccountMenu();
     renderProfile();
-    toggleDrawer('profileDrawer');
+    toggleDrawer('profileDrawer', true);
 }
 
 function openMyStorefront() {
@@ -2102,7 +2170,6 @@ function onMenuPlaceholder(label) {
     showToast(label + ' — coming soon.');
 }
 function onMenuOpenWorkshops() {
-    closeAccountMenu();
     if (!userIsSignedIn) {
         openAuthDrawer(onMenuOpenWorkshops);
         return;
@@ -2111,7 +2178,7 @@ function onMenuOpenWorkshops() {
     if (currentUserTier !== 'pro') {
         renderWorkshopBrowseView();
     }
-    toggleDrawer('workshopDrawer');
+    toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {
     if (!userIsSignedIn) {
@@ -2186,8 +2253,14 @@ function renderWorkshopBrowseView() {
     const sponsoredList = document.getElementById('workshopSponsoredList');
     if (!sponsoredList) return;
 
+    const query = (document.getElementById('workshopSearchInput')?.value || '').trim().toLowerCase();
+
     const activeFilters = Object.entries(filters).filter(([, value]) => value).map(([key]) => key);
     const matches = workshopDatabase.filter(w => {
+        if (query) {
+            const haystack = [w.name, w.loc, ...w.vehicleTypes, ...w.services].join(' ').toLowerCase();
+            if (!haystack.includes(query)) return false;
+        }
         if (!activeFilters.length) return true;
         return activeFilters.some(filter => {
             if (filter === 'mechanical') return w.services.includes('mechanical');
@@ -2199,13 +2272,14 @@ function renderWorkshopBrowseView() {
     });
 
     if (!matches.length) {
-        sponsoredList.innerHTML = '<div class="workshop-card"><div class="workshop-card-name">No sponsored workshops match those filters yet.</div></div>';
+        sponsoredList.innerHTML = '<div class="workshop-card"><div class="workshop-card-name">No workshops match your search.</div></div>';
         return;
     }
 
     sponsoredList.innerHTML = matches.map(buildSponsoredWorkshopCardHTML).join('');
 }
 function buildSponsoredWorkshopCardHTML(workshop) {
+    const stars = workshop.rating ? `<span class="workshop-rating">★ ${workshop.rating}</span>` : '';
     return `
         <div class="workshop-card workshop-sponsor-card">
             <div class="workshop-card-header">
@@ -2214,14 +2288,16 @@ function buildSponsoredWorkshopCardHTML(workshop) {
             </div>
             <div class="workshop-card-specialty">${workshop.specialty}</div>
             <div class="workshop-card-meta">${workshop.services.join(', ')}</div>
-            <div class="workshop-card-meta" style="margin-top: 6px; color: #666;">${workshop.loc}</div>
-            <button class="workshop-card-button" onclick="showToast('Contacting ${workshop.name}...')">View sponsor</button>
+            <div class="workshop-card-footer" style="margin-top: 10px;">
+                <div class="workshop-card-meta" style="color: #666;">${workshop.loc}</div>
+                ${stars}
+                <button class="workshop-card-button" onclick="showToast('Contacting ${workshop.name}...')">View sponsor</button>
+            </div>
         </div>
     `;
 }
 function onMenuOpenMyListings() {
-    closeAccountMenu();
-    toggleDrawer('myPartsDrawer');
+    toggleDrawer('myPartsDrawer', true);
 }
 
 // Re-render the pill, menu, and pro-toggle visibility based on current state
@@ -2237,19 +2313,19 @@ function renderAccountState() {
 
     if (!pill) return;
 
-    pill.classList.remove('signed-out','tier-standard','tier-pro');
+    pill.classList.remove('signed-out', 'signed-in', 'tier-standard', 'tier-pro');
 
     if (!userIsSignedIn) {
         pill.classList.add('signed-out');
         pill.innerHTML = 'Sign In';
         if (proToggle) proToggle.style.display = 'none';
     } else if (currentUserTier === 'pro') {
-        pill.classList.add('tier-pro');
-        pill.innerHTML = 'APC Pro <span class="caret">▾</span>';
+        pill.classList.add('signed-in');
+        pill.innerHTML = escapeHtml(currentUserName || 'Account') + ' <span class="pill-pro-label">Pro</span> <span class="caret">▾</span>';
         if (proToggle) proToggle.style.display = proSearchOn ? 'flex' : 'none';
     } else {
-        pill.classList.add('tier-standard');
-        pill.innerHTML = 'APC Standard <span class="caret">▾</span>';
+        pill.classList.add('signed-in');
+        pill.innerHTML = escapeHtml(currentUserName || 'Account') + ' <span class="caret">▾</span>';
         if (proToggle) proToggle.style.display = 'none';
     }
 
@@ -2289,15 +2365,6 @@ function updateHeaderOffset() {
     const grid   = document.getElementById('mainGrid');
     if (header && grid) grid.style.marginTop = header.offsetHeight + 'px';
 }
-
-// Click anywhere outside the menu/pill → close the menu
-document.addEventListener('click', (e) => {
-    const menu = document.getElementById('accountMenu');
-    const pill = document.getElementById('accountPill');
-    if (!menu || !pill) return;
-    if (menu.style.display !== 'block') return;
-    if (!menu.contains(e.target) && !pill.contains(e.target)) closeAccountMenu();
-});
 
 window.addEventListener('resize', updateHeaderOffset);
 
