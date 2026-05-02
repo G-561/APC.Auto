@@ -133,7 +133,6 @@
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:4px;">
-            <button onclick="shareCurrentListing()" class="detail-share-btn" aria-label="Share listing">📤</button>
             <div onclick="toggleDrawer('detailOverlay')" style="font-size: 34px; color: #888; cursor: pointer; padding-left: 6px; line-height: 1;">×</div>
         </div>
     </div>
@@ -148,6 +147,18 @@
 
         <!-- Info column: mobile = full width scroll, desktop = right column -->
         <div class="detail-info-col">
+
+            <!-- Seller card — desktop: shown here; mobile: shown in amber header above -->
+            <div id="detailSellerColCard" class="detail-seller-col-card detail-locked-group" onclick="openStorefront(currentOpenPartId)">
+                <div id="detailSellerColAvatar" class="seller-avatar">G</div>
+                <div class="seller-card-meta">
+                    <div class="detail-seller-name-row">
+                        <span id="detailSellerColName" class="detail-seller-name">Seller</span>
+                        <span id="detailProBadgeCol" class="seller-pro-badge" style="display:none;">✔ PRO</span>
+                    </div>
+                    <div class="detail-seller-sub">View seller's other items →</div>
+                </div>
+            </div>
 
             <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
                 <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
@@ -182,6 +193,21 @@
                 <p id="detailDescription" style="font-size: 14px; line-height: 1.5; color: #444; margin: 0;">
                     Fully functional part. Tested and ready for installation.
                 </p>
+            </div>
+
+            <div class="detail-actions-row">
+                <button class="detail-icon-btn" onclick="shareCurrentListing()" aria-label="Share listing">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                        <polyline points="16 6 12 2 8 6"/>
+                        <line x1="12" y1="2" x2="12" y2="15"/>
+                    </svg>
+                </button>
+                <button id="detailSaveBtnInfo" class="detail-icon-btn" onclick="toggleSavedPart(currentOpenPartId)" aria-label="Save listing">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                </button>
             </div>
 
             <div style="padding: 0 15px 25px 15px;">

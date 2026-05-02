@@ -564,14 +564,24 @@ function buildCardHTML(part) {
         </div>`;
 }
 
-// Reflect the current saved state on the detail-overlay heart button
+// Reflect the current saved state on both heart buttons in the detail overlay
 function syncDetailSaveButton(partId) {
-    const btn = document.getElementById('detailSaveBtn');
-    if (!btn) return;
     const isSaved = savedParts.has(partId);
-    btn.classList.toggle('saved', isSaved);
-    btn.textContent = isSaved ? '♥' : '♡';
-    btn.setAttribute('aria-label', isSaved ? 'Remove from saved' : 'Save listing');
+
+    // Mobile: floating heart on carousel image
+    const btn = document.getElementById('detailSaveBtn');
+    if (btn) {
+        btn.classList.toggle('saved', isSaved);
+        btn.textContent = isSaved ? '♥' : '♡';
+        btn.setAttribute('aria-label', isSaved ? 'Remove from saved' : 'Save listing');
+    }
+
+    // Desktop + mobile: SVG heart in info col actions row
+    const btnInfo = document.getElementById('detailSaveBtnInfo');
+    if (btnInfo) {
+        btnInfo.classList.toggle('saved', isSaved);
+        btnInfo.setAttribute('aria-label', isSaved ? 'Remove from saved' : 'Save listing');
+    }
 }
 
 // --- RENDER MAIN HOME GRID ---
@@ -1069,6 +1079,7 @@ function openItemDetail(partId) {
     }
 
     // 3. Update the seller header in the overlay (was hardcoded to Gary)
+    // Amber header seller card (mobile)
     const sellerHeaderName = document.getElementById('detailSellerName');
     const sellerHeaderSub  = document.getElementById('detailSellerSub');
     const sellerAvatar     = document.getElementById('detailSellerAvatar');
@@ -1077,6 +1088,18 @@ function openItemDetail(partId) {
     if (sellerAvatar)     sellerAvatar.textContent      = part.seller.charAt(0).toUpperCase();
     const detailProBadge = document.getElementById('detailProBadge');
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
+
+    // Info col seller card (desktop — shown via CSS)
+    const colAvatar  = document.getElementById('detailSellerColAvatar');
+    const colName    = document.getElementById('detailSellerColName');
+    const colProBadge = document.getElementById('detailProBadgeCol');
+    if (colAvatar) colAvatar.textContent = part.seller.charAt(0).toUpperCase();
+    if (colName)   colName.textContent   = part.seller;
+    if (colProBadge) colProBadge.style.display = part.isPro ? 'inline-block' : 'none';
+
+    // Apply blur lock to col seller card same as header seller card
+    const detailSellerColCard = document.getElementById('detailSellerColCard');
+    if (detailSellerColCard) detailSellerColCard.classList.toggle('blurred-detail', !userIsSignedIn);
 
     const workshopSection = document.getElementById('detailWorkshopSection');
     const workshopHeadline = document.getElementById('detailWorkshopHeadline');

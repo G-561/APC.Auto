@@ -147,17 +147,41 @@ header {
 .account-menu-item.activate-search.on { color: var(--apc-blue); }
 .account-menu-item.logout { color: #c0392b; }
 
-/* DETAIL OVERLAY SHARE BUTTON */
-.detail-share-btn {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 4px 6px;
-    opacity: 0.65;
-    line-height: 1;
+/* DETAIL OVERLAY — icon action buttons (share + save) */
+.detail-actions-row {
+    display: flex;
+    gap: 10px;
+    padding: 0 15px 16px 15px;
 }
-.detail-share-btn:active { opacity: 1; transform: scale(0.9); }
+.detail-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--apc-orange);
+    background: white;
+    color: var(--apc-orange);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+.detail-icon-btn:hover { background: var(--apc-orange); color: white; }
+.detail-icon-btn svg { display: block; }
+.detail-icon-btn.saved svg { fill: currentColor; }
+.detail-icon-btn.saved { background: var(--apc-orange); color: white; }
+
+/* Seller card in info col — hidden on mobile (shown in amber header instead) */
+.detail-seller-col-card {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 15px 14px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    background: #fafafa;
+}
 
 .auth-tab {
     flex: 1;
@@ -1857,4 +1881,8 @@ header {
 
     /* Apply button redundant on desktop — live filters handle it */
     #filterDrawer .action-container { display: none; }
+
+    /* Detail overlay: seller card moves into info col on desktop */
+    .detail-seller-col-card { display: flex !important; }
+    #detailSellerSection { display: none !important; }
 }
