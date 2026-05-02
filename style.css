@@ -1885,4 +1885,6 @@ header {
     /* Detail overlay: seller card moves into info col on desktop */
     .detail-seller-col-card { display: flex !important; }
     #detailSellerSection { display: none !important; }
+    /* With seller section hidden, push × to the right — !important overrides inline style */
+    #detailOverlay .drawer-header { justify-content: flex-end !important; }
 }
