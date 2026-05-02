@@ -381,10 +381,12 @@ function toggleDrawer(id, allowStack = false) {
 }
 
 function closeTopDrawer() {
-    const openDrawers = Array.from(document.querySelectorAll('.drawer.active'));
+    const openDrawers = Array.from(document.querySelectorAll('.drawer.active'))
+        .filter(d => !(d.id === 'filterDrawer' && window.innerWidth >= 900));
     if (!openDrawers.length) return;
     openDrawers[openDrawers.length - 1].classList.remove('active');
-    const anyOpen = document.querySelectorAll('.drawer.active').length > 0;
+    const anyOpen = document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
+        || (window.innerWidth < 900 && document.querySelectorAll('.drawer.active').length > 0);
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
@@ -472,7 +474,7 @@ function setSortDate(el, order) {
 function applyFiltersAndRender() {
     getFilterValues();
     renderMainGrid();
-    toggleDrawer('filterDrawer');
+    if (window.innerWidth < 900) toggleDrawer('filterDrawer');
 }
 
 function getFilteredParts() {
@@ -532,6 +534,7 @@ function buildCardHTML(part) {
                 <div class="item-title">${part.title}</div>
                 <div class="item-loc">${locationHTML}</div>
             </div>
+            <button class="card-hover-btn" onclick="openItemDetail(${part.id})">VIEW PART →</button>
         </div>`;
 }
 
@@ -1753,10 +1756,13 @@ function onOpenInbox() {
 function updateInboxBadge() {
     const unreadCount = inboxItems.filter(item => item.unread).length;
     const text = unreadCount > 99 ? '99+' : String(unreadCount);
-    const mobile = document.getElementById('inboxBadge');
-    const desktop = document.getElementById('inboxBadgeDesktop');
-    if (mobile)  { mobile.textContent  = text; mobile.style.display  = unreadCount > 0 ? 'block' : 'none'; }
-    if (desktop) { desktop.textContent = text; desktop.style.display = unreadCount > 0 ? 'inline-block' : 'none'; }
+    const show = unreadCount > 0;
+    const mobile  = document.getElementById('inboxBadge');
+    const sidebar = document.getElementById('inboxBadgeDesktop');
+    const topBar  = document.getElementById('inboxBadgeTopBar');
+    if (mobile)  { mobile.textContent  = text; mobile.style.display  = show ? 'block' : 'none'; }
+    if (sidebar) { sidebar.textContent = text; sidebar.style.display = show ? 'inline-block' : 'none'; }
+    if (topBar)  { topBar.textContent  = text; topBar.style.display  = show ? 'inline-block' : 'none'; }
 }
 
 function setInboxTab(tab) {
@@ -2363,7 +2369,11 @@ function renderAccountState() {
 function updateHeaderOffset() {
     const header = document.getElementById('mainHeader');
     const grid   = document.getElementById('mainGrid');
-    if (header && grid) grid.style.marginTop = header.offsetHeight + 'px';
+    const topBar = document.getElementById('desktopTopBar');
+    if (header && grid) {
+        const topBarH = (topBar && topBar.offsetParent !== null) ? topBar.offsetHeight : 0;
+        grid.style.marginTop = (header.offsetHeight + topBarH) + 'px';
+    }
 }
 
 window.addEventListener('resize', updateHeaderOffset);

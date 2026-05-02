@@ -8,6 +8,7 @@
     --apc-green: #28a745;       /* active badge colour */
     --apc-green-bg: #e6f4ea;
     --apc-amber: #FFF9F2;
+    --apc-orange-light: #FFF4E6;
     --bg: #F4F4F4; 
     --white: #ffffff; 
 }
@@ -1565,20 +1566,116 @@ header {
 }
 
 /* ============================================================
+   DESKTOP UTILITY BAR + RIGHT PANEL (base — hidden on mobile)
+   ============================================================ */
+.desktop-top-bar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 36px;
+    background: #fdfdfd;
+    border-bottom: 1px solid #eee;
+    padding: 0 20px 0 260px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 1150;
+    box-sizing: border-box;
+}
+.dtb-left, .dtb-right { display: flex; align-items: center; gap: 4px; }
+.dtb-link {
+    padding: 0 12px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #555;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    transition: color 0.1s, background 0.1s;
+    text-decoration: none;
+}
+.dtb-link:hover { color: var(--apc-orange); background: var(--apc-orange-light, #fff4e6); }
+.dtb-active { color: var(--apc-orange) !important; }
+.dtb-sell { color: var(--apc-orange) !important; font-weight: 900; }
+.dtb-badge {
+    background: #FF3B30;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 1px 5px;
+    min-width: 14px;
+    text-align: center;
+}
+
+.desktop-right-panel {
+    display: none;
+    position: fixed;
+    right: 0;
+    width: 220px;
+    overflow-y: auto;
+    padding: 12px;
+    box-sizing: border-box;
+    background: var(--bg);
+    border-left: 1px solid #e8e8e8;
+}
+.drp-box {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+.drp-box h4 {
+    margin: 0 0 10px 0;
+    font-size: 10px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--apc-orange);
+    display: inline-block;
+    padding-bottom: 2px;
+}
+.drp-featured { background: #fff8f0; border-color: var(--apc-orange); }
+.drp-ws-name { font-weight: 800; font-size: 12px; margin-bottom: 4px; }
+.drp-ws-desc { font-size: 10px; color: #666; margin: 4px 0 8px; line-height: 1.4; }
+.drp-ws-link { font-size: 10px; font-weight: 900; color: var(--apc-orange); cursor: pointer; }
+.drp-sp-item {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f4f4f4;
+    cursor: pointer;
+    transition: background 0.1s;
+    align-items: center;
+}
+.drp-sp-item:last-child { border-bottom: none; }
+.drp-sp-item:hover { background: #fafafa; }
+.drp-sp-img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: #eee; }
+.drp-sp-title { font-size: 11px; font-weight: 700; color: var(--apc-blue); line-height: 1.3; }
+.drp-sp-seller { font-size: 9px; color: #888; margin-top: 2px; }
+
+/* CARD HOVER BUTTON — hidden on mobile */
+.card-hover-btn { display: none; }
+
+/* ============================================================
    DESKTOP LAYOUT — 900px+
    ============================================================ */
 @media (min-width: 900px) {
-    /* Show sidebar, hide bottom nav */
-    .desktop-sidebar { display: flex; }
+    /* Show utility bar, right panel. Hide nav sidebar and bottom nav */
+    .desktop-top-bar { display: flex; }
+    .desktop-right-panel { display: block; }
+    .desktop-sidebar { display: none !important; }
     .bottom-nav { display: none !important; }
 
-    /* Body: no bottom padding, left gap for sidebar */
-    body { padding-bottom: 0; padding-left: 220px; }
+    /* Body: no bottom padding, gap for filter sidebar (left) and right panel */
+    body { padding-bottom: 0; padding-left: 240px; padding-right: 220px; }
 
-    /* Header shifts right of sidebar */
-    .top-nav-container { left: 220px; width: calc(100% - 220px); }
+    /* Header: below top bar, right of filter sidebar */
+    .top-nav-container { top: 36px; left: 240px; width: calc(100% - 240px); }
 
-    /* Single-row header: search fills middle, pill on right, logo hidden (it's in sidebar) */
+    /* Single-row header: logo stays visible, search fills middle, pill right */
     header {
         display: flex;
         align-items: center;
@@ -1586,36 +1683,84 @@ header {
         padding: 10px 20px;
         flex-wrap: nowrap;
     }
-    .header-top {
-        margin-bottom: 0;
-        flex-shrink: 0;
-        order: 2;
-    }
-    .header-top .logo-main { display: none; }
+    .header-top { margin-bottom: 0; flex-shrink: 0; order: 2; }
     .search-group { flex: 1; order: 1; margin: 0; }
+    .logo-main img { height: 72px; }
 
-    /* Wider grid — 4 columns */
+    /* Right panel: below top bar + header */
+    .desktop-right-panel { top: 36px; bottom: 0; }
+
+    /* Filter drawer: always visible as left sidebar on desktop */
+    #filterDrawer {
+        display: flex !important;
+        position: fixed;
+        left: 0; top: 0;
+        width: 240px;
+        height: 100vh;
+        padding-top: 112px;
+        z-index: 600;
+        border-right: 1px solid #eee;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.04);
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+    #filterDrawer .drawer-header { display: none; }
+    .btn-search-filters { display: none; }
+
+    /* 5-column grid */
     .results-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-        padding: 5px 12px;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        padding: 8px 14px;
     }
 
-    /* Drawers become right-side panels instead of full-screen */
-    .drawer {
-        left: auto;
-        right: 0;
-        width: 500px;
+    /* Card hover effect */
+    .item-card {
+        height: 240px;
+        border-radius: 10px;
+        border: 1px solid #eee;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        transition: transform 0.2s, border-color 0.2s;
     }
-    .drawer.active {
-        box-shadow: -4px 0 40px rgba(0,0,0,0.18);
+    .item-card:hover { transform: translateY(-2px); border-color: var(--apc-orange); }
+    .item-img { aspect-ratio: unset; height: 100%; }
+    .item-info {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(255,255,255,0.94);
+        backdrop-filter: blur(6px);
+        padding: 10px 12px;
+        transition: transform 0.3s, opacity 0.3s;
     }
-    #detailOverlay  { width: 680px; }
+    .item-card:hover .item-info { transform: translateY(105%); opacity: 0; }
+    .card-hover-btn {
+        display: block;
+        position: absolute;
+        bottom: -52px; left: 0; right: 0;
+        background: var(--apc-orange);
+        color: white;
+        border: none;
+        padding: 15px;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: bottom 0.3s;
+        z-index: 10;
+        font-family: inherit;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .item-card:hover .card-hover-btn { bottom: 0; }
+
+    /* Drawers become right-side panels */
+    .drawer { left: auto; right: 0; width: 500px; }
+    .drawer.active { box-shadow: -4px 0 40px rgba(0,0,0,0.18); }
+    #detailOverlay { width: 680px; }
     #accountMenuDrawer { width: 360px; }
+    #filterDrawer { right: auto; width: 240px; box-shadow: none; }
 
-    /* Show backdrop when a drawer is open */
+    /* Show backdrop when a non-filter drawer is open */
     #drawerBackdrop.active { display: block; }
-
-    /* Cards — slightly larger title text at desktop sizes */
-    .item-title { font-size: 13px; }
 }

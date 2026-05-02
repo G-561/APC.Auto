@@ -15,6 +15,19 @@
 </head>
 <body id="body">
 
+<!-- DESKTOP UTILITY BAR — hidden on mobile -->
+<div id="desktopTopBar" class="desktop-top-bar">
+    <div class="dtb-left">
+        <span class="dtb-link dtb-active" onclick="renderMainGrid(); window.scrollTo(0,0);">Marketplace</span>
+        <span class="dtb-link" onclick="onMenuOpenWorkshops()">Workshops</span>
+    </div>
+    <div class="dtb-right">
+        <span class="dtb-link" onclick="onOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
+        <span class="dtb-link" onclick="onOpenGarage()">My Garage</span>
+        <span class="dtb-link dtb-sell" onclick="openSellOverlay()">+ Sell a Part</span>
+    </div>
+</div>
+
 <div class="top-nav-container" id="mainHeader">
     <header style="padding-bottom: 10px; position: relative;">
         <div class="header-top">
@@ -60,6 +73,35 @@
         <div class="dsb-sell" onclick="openSellOverlay()">+ SELL A PART</div>
     </div>
 </nav>
+
+<!-- DESKTOP RIGHT PANEL — hidden on mobile -->
+<aside id="desktopRightPanel" class="desktop-right-panel">
+    <div class="drp-box drp-featured">
+        <h4>Featured Workshop</h4>
+        <div class="drp-ws-name">Brighton Euro Tech</div>
+        <p class="drp-ws-desc">Lotus S2 &amp; performance specialists. Elise, Exige, Evora.</p>
+        <span class="drp-ws-link" onclick="onMenuOpenWorkshops()">VIEW WORKSHOPS →</span>
+    </div>
+    <div class="drp-box">
+        <h4>Sponsored Spares</h4>
+        <div class="drp-sp-item" onclick="openItemDetail(4)">
+            <img src="images/elise.wheel.jpg" class="drp-sp-img" alt="">
+            <div class="drp-sp-info"><div class="drp-sp-title">3D Racing Caps</div><div class="drp-sp-seller">Func3D Design</div></div>
+        </div>
+        <div class="drp-sp-item" onclick="openItemDetail(8)">
+            <img src="images/Elise.scoops.webp" class="drp-sp-img" alt="">
+            <div class="drp-sp-info"><div class="drp-sp-title">Cold Air Intake</div><div class="drp-sp-seller">Alex T.</div></div>
+        </div>
+        <div class="drp-sp-item" onclick="openItemDetail(7)">
+            <img src="images/elise.brake.pads.jpg" class="drp-sp-img" alt="">
+            <div class="drp-sp-info"><div class="drp-sp-title">Brake Calipers</div><div class="drp-sp-seller">Mike D.</div></div>
+        </div>
+        <div class="drp-sp-item" onclick="openItemDetail(2)">
+            <img src="images/elise.wing.jpg" class="drp-sp-img" alt="">
+            <div class="drp-sp-info"><div class="drp-sp-title">GT Track Spoiler</div><div class="drp-sp-seller">Gary S.</div></div>
+        </div>
+    </div>
+</aside>
 
 <!-- DRAWER BACKDROP — only visible on desktop when a drawer is open -->
 <div id="drawerBackdrop" onclick="closeTopDrawer()"></div>
