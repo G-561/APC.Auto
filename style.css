@@ -167,10 +167,15 @@ header {
     flex-shrink: 0;
     transition: background 0.15s, color 0.15s;
 }
-.detail-icon-btn:hover { background: var(--apc-orange); color: white; }
+/* hover tint only on real pointer devices — prevents stuck highlight after tap on mobile */
+@media (hover: hover) {
+    .detail-icon-btn:hover { background: #fff7ef; }
+}
+.detail-icon-btn:active { background: #fff7ef; }
 .detail-icon-btn svg { display: block; }
-.detail-icon-btn.saved svg { fill: currentColor; }
 .detail-icon-btn.saved { background: var(--apc-orange); color: white; }
+.detail-icon-btn.saved svg { fill: currentColor; }
+.detail-icon-btn:focus { outline: none; background: inherit; }
 
 /* Seller card in info col — hidden on mobile (shown in amber header instead) */
 .detail-seller-col-card {
@@ -366,15 +371,28 @@ header {
 }
 
 /* ITEM CARD */
-.item-card { 
-    background: white; 
-    overflow: hidden; 
-    position: relative; 
-    border-radius: 0px; 
+.item-card {
+    background: white;
+    overflow: hidden;
+    position: relative;
+    border-radius: 0px;
     border: 0px solid #ddd;
     display: flex;
     flex-direction: column;
     cursor: pointer;
+}
+
+/* Saved indicator — orange heart top-right of saved cards, non-interactive */
+.card-saved-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+    color: var(--apc-orange);
+    font-size: 22px;
+    line-height: 1;
+    pointer-events: none;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 
 .item-img { 
@@ -919,13 +937,20 @@ header {
 }
 .sp-unsave-btn {
     background: none;
-    border: none;
+    border: 1.5px solid #ddd;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
     font-size: 18px;
-    color: #FF3B30;
+    color: #aaa;
     cursor: pointer;
-    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
+    transition: border-color 0.15s, color 0.15s;
 }
+.sp-unsave-btn:hover { border-color: #FF3B30; color: #FF3B30; }
 .sp-unsave-btn:active { transform: scale(0.85); }
 
 /* SETTINGS */
@@ -1887,4 +1912,19 @@ header {
     #detailSellerSection { display: none !important; }
     /* With seller section hidden, push × to the right — !important overrides inline style */
     #detailOverlay .drawer-header { justify-content: flex-end !important; }
+
+    /* Storefront: same centre-panel positioning as detail overlay */
+    #storefrontDrawer {
+        left: 240px !important;
+        right: 220px !important;
+        width: auto !important;
+        height: auto !important;
+        top: 140px; /* overridden by updateHeaderOffset() */
+        bottom: 0;
+        box-shadow: none !important;
+        border-left: 1px solid #e8e8e8;
+        border-right: 1px solid #e8e8e8;
+    }
+    /* 3-col grid inside storefront — 5-col would be too tight */
+    #sellerPartsGrid { grid-template-columns: repeat(3, 1fr) !important; }
 }

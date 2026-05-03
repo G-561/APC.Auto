@@ -1473,8 +1473,9 @@ function persistSavedParts() {
 }
 
 // Toggle the saved state of a part — wired to the heart on the detail overlay
-function toggleSavedPart(partId) {
+function toggleSavedPart(partId, btn) {
     if (!partId) return;
+    if (btn) btn.blur(); // clear focus/active so button doesn't stay highlighted on mobile
     const wasSaved = savedParts.has(partId);
     if (wasSaved) {
         savedParts.delete(partId);
