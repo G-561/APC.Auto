@@ -290,6 +290,12 @@
                 </p>
             </div>
 
+            <div id="detailOfferSection" style="display:none; padding: 0 15px 10px 15px;">
+                <button class="offer-make-btn" onclick="openOfferSheet(currentOpenPartId)">
+                    💸 Like this? Make an Offer
+                </button>
+            </div>
+
             <div class="detail-actions-row">
                 <button class="detail-icon-btn" onclick="shareCurrentListing(this)" aria-label="Share listing">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -655,6 +661,17 @@
                 <label>Description</label>
                 <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
             </div>
+        </div>
+
+        <div class="sell-toggle-row">
+            <div>
+                <div class="sell-toggle-label">Open to Offers</div>
+                <div class="sell-toggle-sub">Allow buyers to submit offers below your listed price</div>
+            </div>
+            <label class="sell-switch-wrap">
+                <input type="checkbox" id="sellOpenToOffers" style="display:none;" onchange="this.nextElementSibling.classList.toggle('on', this.checked)">
+                <span class="switch"></span>
+            </label>
         </div>
 
         <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
@@ -1119,6 +1136,28 @@
     </div>
     <div class="drawer-content" style="padding: 0;">
         <div id="savedPartsContent"></div>
+    </div>
+</div>
+
+<!-- OFFER BOTTOM SHEET -->
+<div id="offerSheetBackdrop" onclick="closeOfferSheet()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2999;"></div>
+<div id="offerSheet" class="offer-sheet">
+    <div class="offer-sheet-handle"></div>
+    <div class="offer-sheet-header">
+        <div class="offer-sheet-title">Make an Offer</div>
+        <button class="offer-sheet-close" onclick="closeOfferSheet()">×</button>
+    </div>
+    <div id="offerSheetPartInfo" class="offer-sheet-part-info"></div>
+    <div class="offer-sheet-body">
+        <div class="input-group">
+            <label>Your Offer (AUD $)</label>
+            <input id="offerPriceInput" type="number" placeholder="Enter your offer..." min="1" style="font-size:18px; font-weight:800;">
+        </div>
+        <div class="input-group">
+            <label>Add a note <span style="font-weight:400; color:#aaa;">(optional)</span></label>
+            <textarea id="offerNoteInput" rows="3" placeholder="e.g. Does this include postage? Happy to pick up in Adelaide..."></textarea>
+        </div>
+        <button class="btn-full-action" onclick="submitOffer()">SUBMIT OFFER</button>
     </div>
 </div>
 

@@ -35,12 +35,12 @@ let activeFilters = {
 // `images` is an array so the carousel can show real photos per part.
 // `fits` = which vehicles a part suits. Empty array = universal (fits anything).
 const partDatabase = [
-    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14, date: 1738540800000 },
-    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000 },
+    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14, date: 1738540800000, openToOffers: true },
+    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000, openToOffers: true },
     { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1742688000000 },
     { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31, date: 1743724800000 },
     { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000 },
-    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000 },
+    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000, openToOffers: true },
     { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000 },
     { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 },
     { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000 },
@@ -64,6 +64,20 @@ const partDatabase = [
     { id: 27, title: "Lotus Elise S2 Alloy Wheels (Set of 4)", price: 1100, images: ["images/elise.rims.jpg", "images/elise.wheel.jpg", "images/commodore.wheels.webp"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "wheels", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 29, date: 1745193600000 },
     { id: 28, title: "Toyota Hiace Fuel Injector (Single)", price: 130, images: ["images/hiace.fuel.filter.jpg", "images/hiace.injector.webp"], loc: "PERTH, WA", fit: false, seller: "Mick O.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 2, date: 1744070400000 }
 ];
+
+// --- OFFERS ---
+const OFFERS_KEY = 'apc.offers.v1';
+let offersDb = loadOffers();
+
+function loadOffers() {
+    try { return JSON.parse(localStorage.getItem(OFFERS_KEY) || '[]'); } catch { return []; }
+}
+function saveOffers() {
+    try { localStorage.setItem(OFFERS_KEY, JSON.stringify(offersDb)); } catch {}
+}
+function nextOfferId() {
+    return offersDb.length ? Math.max(...offersDb.map(o => o.id)) + 1 : 1;
+}
 
 // Mock analytics data for Pro Dashboard — replaced by Supabase queries at go-live
 const dashMockData = {
@@ -835,6 +849,11 @@ function openEditListing(listingId) {
     if (document.getElementById('sellFittingAvailable')) {
         document.getElementById('sellFittingAvailable').checked = !!listing.fit;
     }
+    const offersToggle = document.getElementById('sellOpenToOffers');
+    if (offersToggle) {
+        offersToggle.checked = !!listing.openToOffers;
+        offersToggle.nextElementSibling.classList.toggle('on', !!listing.openToOffers);
+    }
 
     renderSellImagePreviews();
 
@@ -949,6 +968,8 @@ function resetSellForm() {
     if (pickup) pickup.checked = true;
     if (postage) postage.checked = false;
     if (fitting) fitting.checked = false;
+    const offersToggle = document.getElementById('sellOpenToOffers');
+    if (offersToggle) { offersToggle.checked = false; offersToggle.nextElementSibling.classList.remove('on'); }
     renderSellImagePreviews();
     updateSellFittingToggleVisibility();
 }
@@ -990,6 +1011,7 @@ function submitSellListing() {
 
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
+    const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
     const listingPayload = {
         title,
         price: numericPrice,
@@ -1005,7 +1027,8 @@ function submitSellListing() {
         description,
         pickup,
         postage,
-        condition: condition || 'used'
+        condition: condition || 'used',
+        openToOffers
     };
 
     let message = 'Listing created';
@@ -1098,7 +1121,14 @@ function openItemDetail(partId) {
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
     safeText(document.getElementById('detailDescription'), part.description || 'Fully functional part. Tested and ready for installation.');
-    syncDetailSaveButton(part.id);   // heart reflects current saved state
+    syncDetailSaveButton(part.id);
+
+    // Show "Make an Offer" button only when the part has offers enabled and the viewer isn't the seller
+    const offerSection = document.getElementById('detailOfferSection');
+    if (offerSection) {
+        const isOwnListing = userIsSignedIn && part.seller === getCurrentSellerName();
+        offerSection.style.display = (part.openToOffers && !isOwnListing) ? 'block' : 'none';
+    }
 
     const detailSellerSection = document.getElementById('detailSellerSection');
     const detailLocationSection = document.getElementById('detailLocationSection');
@@ -2629,6 +2659,87 @@ function updateCarouselActiveDot() {
     dots.forEach((d, i) => d.classList.toggle('active', i === idx));
 }
 
+// --- OFFER SHEET ---
+
+function openOfferSheet(partId) {
+    const part = getPartById(partId);
+    if (!part) return;
+    if (!userIsSignedIn) { openAuthDrawer(() => openOfferSheet(partId)); return; }
+    const info = document.getElementById('offerSheetPartInfo');
+    if (info) {
+        info.innerHTML = `<div class="offer-sheet-part-title">${escapeHtml(part.title)}</div>
+            <div class="offer-sheet-listed-price">Listed price: <strong>$${part.price}</strong> — your offer can be below this</div>`;
+    }
+    document.getElementById('offerPriceInput').value = '';
+    document.getElementById('offerNoteInput').value  = '';
+    document.getElementById('offerSheetBackdrop').style.display = 'block';
+    document.getElementById('offerSheet').classList.add('active');
+}
+
+function closeOfferSheet() {
+    document.getElementById('offerSheet').classList.remove('active');
+    document.getElementById('offerSheetBackdrop').style.display = 'none';
+}
+
+function submitOffer() {
+    const part  = getPartById(currentOpenPartId);
+    if (!part) return;
+    const price = parseFloat(document.getElementById('offerPriceInput').value);
+    if (!price || price <= 0) { showToast('Please enter a valid offer amount'); return; }
+    const note  = document.getElementById('offerNoteInput').value.trim();
+    const offer = {
+        id:           nextOfferId(),
+        partId:       part.id,
+        partTitle:    part.title,
+        partImg:      part.images[0],
+        listedPrice:  part.price,
+        offerPrice:   price,
+        buyerNote:    note,
+        buyer:        currentUserName || 'Buyer',
+        date:         new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status:       'pending',
+        counterPrice: null
+    };
+    offersDb.push(offer);
+    saveOffers();
+    closeOfferSheet();
+    showToast(`Offer of $${price} submitted!`);
+}
+
+function acceptOffer(offerId) {
+    const o = offersDb.find(x => x.id === offerId);
+    if (!o) return;
+    o.status = 'accepted';
+    saveOffers();
+    showToast(`Offer accepted — congrats on the sale!`);
+    renderDashListings('pending');
+}
+
+function declineOffer(offerId) {
+    offersDb = offersDb.filter(x => x.id !== offerId);
+    saveOffers();
+    showToast('Offer declined');
+    renderDashListings('pending');
+}
+
+function showCounterInput(offerId) {
+    const row = document.getElementById('counter-row-' + offerId);
+    if (row) row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+}
+
+function submitCounterOffer(offerId) {
+    const input = document.getElementById('counter-input-' + offerId);
+    const price = parseFloat(input?.value);
+    if (!price || price <= 0) { showToast('Enter a valid counter price'); return; }
+    const o = offersDb.find(x => x.id === offerId);
+    if (!o) return;
+    o.status       = 'countered';
+    o.counterPrice = price;
+    saveOffers();
+    showToast(`Counter offer of $${price} sent to ${o.buyer}`);
+    renderDashListings('pending');
+}
+
 // --- PRO DASHBOARD ---
 
 function openDashboard() {
@@ -2796,19 +2907,52 @@ function renderDashListings(tab, btn) {
                 <button class="dash-action-btn dash-btn-danger" onclick="deleteListing(${p.id});renderDashboard();">Delete</button>
             </td></tr>`).join('');
     } else if (tab === 'pending') {
-        let items = dashMockData.pendingSales;
-        if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || s.buyer.toLowerCase().includes(q));
-        if (countEl) countEl.textContent = `${items.length} listing${items.length !== 1 ? 's' : ''}`;
-        rows = items.map(s => `<tr>
-            <td><img class="dash-thumb" src="${s.img}" alt=""></td>
-            <td><div class="dash-part-name">${escapeHtml(s.title)}</div><div class="dash-part-sub">Offer from ${escapeHtml(s.buyer)}</div></td>
-            <td class="dash-td-price">$${s.price}</td>
-            <td></td>
-            <td class="dash-td-date">${s.offered}</td>
+        const sellerName = getCurrentSellerName();
+        // Real offers on seller's parts, plus mock data for demo
+        const realOffers = offersDb.filter(o => {
+            const part = getPartById(o.partId);
+            return part && part.seller === sellerName && o.status === 'pending';
+        });
+        const mockOffers = dashMockData.pendingSales.map((s, i) => ({
+            id: -1 - i, partTitle: s.title, partImg: s.img,
+            listedPrice: s.price + 50, offerPrice: s.price,
+            buyerNote: 'Can you include postage to Melbourne?',
+            buyer: s.buyer, date: s.offered, status: 'pending', counterPrice: null
+        }));
+        let items = [...realOffers, ...mockOffers];
+        if (q) items = items.filter(o => o.partTitle.toLowerCase().includes(q) || o.buyer.toLowerCase().includes(q));
+        if (countEl) countEl.textContent = `${items.length} offer${items.length !== 1 ? 's' : ''}`;
+        rows = items.map(o => {
+            const isMock = o.id < 0;
+            const counterRowId = `counter-row-${o.id}`;
+            const counterInputId = `counter-input-${o.id}`;
+            return `<tr>
+            <td><img class="dash-thumb" src="${o.partImg}" alt=""></td>
             <td>
-                <button class="dash-action-btn dash-btn-primary" onclick="showToast('Accept offer — coming soon')">Accept</button>
-                <button class="dash-action-btn dash-btn-danger" onclick="showToast('Decline offer — coming soon')">Decline</button>
-            </td></tr>`).join('');
+                <div class="dash-part-name">${escapeHtml(o.partTitle)}</div>
+                <div class="dash-part-sub">From ${escapeHtml(o.buyer)}</div>
+                ${o.buyerNote ? `<div class="dash-offer-note">"${escapeHtml(o.buyerNote)}"</div>` : ''}
+            </td>
+            <td>
+                <span class="dash-offered-price">$${o.offerPrice}</span>
+                <span class="dash-listed-price">$${o.listedPrice}</span>
+            </td>
+            <td class="dash-td-date">${o.date}</td>
+            <td>
+                ${isMock
+                    ? `<button class="dash-action-btn dash-btn-primary" onclick="showToast('Accept — coming soon')">Accept</button>
+                       <button class="dash-action-btn dash-btn-danger" onclick="showToast('Decline — coming soon')">Decline</button>
+                       <button class="dash-action-btn" onclick="showToast('Counter — coming soon')">Counter</button>`
+                    : `<button class="dash-action-btn dash-btn-primary" onclick="acceptOffer(${o.id})">Accept</button>
+                       <button class="dash-action-btn dash-btn-danger" onclick="declineOffer(${o.id})">Decline</button>
+                       <button class="dash-action-btn" onclick="showCounterInput(${o.id})">Counter</button>
+                       <div class="dash-counter-row" id="${counterRowId}" style="display:none;">
+                           <input id="${counterInputId}" type="number" class="dash-counter-input" placeholder="$">
+                           <button class="dash-action-btn dash-btn-primary" onclick="submitCounterOffer(${o.id})">Send</button>
+                       </div>`
+                }
+            </td></tr>`;
+        }).join('');
     } else {
         let items = dashMockData.closedSales;
         if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || s.buyer.toLowerCase().includes(q));
@@ -2831,7 +2975,7 @@ function renderDashListings(tab, btn) {
     const hdrs = tab === 'active'
         ? ['', 'Part', 'Price', 'Saves', 'Listed', 'Actions']
         : tab === 'pending'
-        ? ['', 'Part', 'Offered', '', 'Date', 'Actions']
+        ? ['', 'Part', 'Offer vs Listed', 'Date', 'Actions']
         : ['', 'Part', 'Sale Price', '', 'Sale Date', 'Actions'];
 
     body.innerHTML = `<table class="dash-table">

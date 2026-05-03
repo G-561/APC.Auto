@@ -2230,3 +2230,97 @@ header {
     font-weight: 700;
     font-size: 14px;
 }
+.dash-offered-price { font-size: 18px; font-weight: 900; color: var(--apc-orange); }
+.dash-listed-price  { font-size: 11px; color: #aaa; text-decoration: line-through; margin-left: 4px; }
+.dash-offer-note    { font-size: 12px; color: #888; font-style: italic; margin-top: 4px; }
+.dash-counter-row   { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.dash-counter-input {
+    width: 110px; padding: 6px 10px; border: 1.5px solid var(--apc-orange);
+    border-radius: 7px; font-size: 13px; font-weight: 700; outline: none;
+}
+
+/* Sell form — Open to Offers toggle row */
+.sell-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #fafafa;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1.5px solid #eee;
+}
+.sell-toggle-label { font-size: 14px; font-weight: 700; color: #222; }
+.sell-toggle-sub   { font-size: 11px; color: #aaa; margin-top: 3px; }
+.sell-switch-wrap  { cursor: pointer; }
+
+/* Make an Offer button — on detail page */
+.offer-make-btn {
+    width: 100%;
+    padding: 14px;
+    background: white;
+    border: 2px solid var(--apc-orange);
+    border-radius: 8px;
+    color: var(--apc-orange);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.offer-make-btn:hover { background: var(--apc-orange); color: white; }
+@media (hover: none) {
+    .offer-make-btn:active { background: var(--apc-orange); color: white; }
+}
+
+/* Offer bottom sheet */
+.offer-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    z-index: 3000;
+    transform: translateY(100%);
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
+}
+.offer-sheet.active { transform: translateY(0); }
+.offer-sheet-handle {
+    width: 40px; height: 4px;
+    background: #ddd; border-radius: 999px;
+    margin: 12px auto 0;
+}
+.offer-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 8px;
+}
+.offer-sheet-title  { font-size: 17px; font-weight: 900; }
+.offer-sheet-close  {
+    background: none; border: none; font-size: 28px;
+    color: #aaa; cursor: pointer; line-height: 1; padding: 0;
+}
+.offer-sheet-part-info {
+    padding: 10px 20px 14px;
+    background: #fff9f2;
+    margin: 0 16px 4px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+.offer-sheet-part-title { font-weight: 700; color: #222; margin-bottom: 3px; }
+.offer-sheet-listed-price { font-size: 12px; color: #888; }
+.offer-sheet-listed-price strong { color: var(--apc-orange); }
+.offer-sheet-body { padding: 10px 20px 20px; }
+
+@media (min-width: 900px) {
+    .offer-sheet {
+        left: 50%; right: auto;
+        width: 520px;
+        transform: translateX(-50%) translateY(100%);
+        border-radius: 20px 20px 0 0;
+    }
+    .offer-sheet.active { transform: translateX(-50%) translateY(0); }
+}
