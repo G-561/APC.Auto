@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="APC">
     <link rel="apple-touch-icon" href="images/apc_icon_512_orange.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body id="body">
 
@@ -24,6 +25,7 @@
     <div class="dtb-right">
         <span class="dtb-link" onclick="onOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
         <span class="dtb-link" onclick="onOpenGarage()">My Garage</span>
+        <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="openDashboard()" style="display:none;">📊 Dashboard</span>
         <span class="dtb-link dtb-sell" onclick="openSellOverlay()">+ Sell a Part</span>
     </div>
 </div>
@@ -107,6 +109,100 @@
 <div id="drawerBackdrop" onclick="closeTopDrawer()"></div>
 
 <div class="results-grid" id="mainGrid"></div>
+
+<!-- PRO DASHBOARD — desktop only, shown for Pro members -->
+<div id="dashboardView" style="display:none; position:fixed; left:0; right:0; bottom:0; overflow-y:auto; background:#f2f2f7; z-index:1100;">
+    <div class="dash-inner">
+
+        <div class="dash-page-hdr">
+            <div class="dash-page-hdr-left">
+                <button class="dash-back-btn" onclick="closeDashboard()">← Marketplace</button>
+                <div>
+                    <div class="dash-page-title">Pro Dashboard</div>
+                    <div class="dash-page-sub" id="dashWelcome">Your business at a glance</div>
+                </div>
+            </div>
+            <span class="dash-pro-pill">● APC PRO</span>
+        </div>
+
+        <div class="dash-stats-row">
+            <div class="dash-stat-card dash-stat-primary">
+                <div class="dash-stat-ico">📦</div>
+                <div class="dash-stat-val" id="dashStatListings">—</div>
+                <div class="dash-stat-lbl">Active Listings</div>
+            </div>
+            <div class="dash-stat-card">
+                <div class="dash-stat-ico dash-heart-ico">&#x2665;&#xFE0E;</div>
+                <div class="dash-stat-val" id="dashStatSaves">—</div>
+                <div class="dash-stat-lbl">Total Saves</div>
+            </div>
+            <div class="dash-stat-card">
+                <div class="dash-stat-ico">💬</div>
+                <div class="dash-stat-val" id="dashStatMessages">—</div>
+                <div class="dash-stat-lbl">Unread Messages</div>
+            </div>
+            <div class="dash-stat-card">
+                <div class="dash-stat-ico">✅</div>
+                <div class="dash-stat-val" id="dashStatSales">—</div>
+                <div class="dash-stat-lbl">Closed Sales</div>
+            </div>
+            <div class="dash-stat-card dash-stat-green">
+                <div class="dash-stat-ico">💰</div>
+                <div class="dash-stat-val" id="dashStatRevenue">—</div>
+                <div class="dash-stat-lbl">Revenue (30 days)</div>
+            </div>
+        </div>
+
+        <div class="dash-mid-row">
+            <div class="dash-card dash-chart-main">
+                <div class="dash-card-hdr">
+                    <span class="dash-card-title">Listing Views</span>
+                    <span class="dash-card-meta">Last 7 days</span>
+                </div>
+                <div class="dash-chart-wrap"><canvas id="dashViewsChart"></canvas></div>
+            </div>
+            <div class="dash-card dash-chart-cat">
+                <div class="dash-card-hdr">
+                    <span class="dash-card-title">By Category</span>
+                </div>
+                <div class="dash-chart-wrap"><canvas id="dashCategoryChart"></canvas></div>
+            </div>
+            <div class="dash-card dash-activity-col">
+                <div class="dash-card-hdr">
+                    <span class="dash-card-title">Recent Activity</span>
+                </div>
+                <div id="dashActivityFeed" class="dash-activity-list"></div>
+            </div>
+        </div>
+
+        <div class="dash-card" style="margin-bottom:20px;">
+            <div class="dash-card-hdr">
+                <span class="dash-card-title">My Listings</span>
+                <div class="dash-tabs">
+                    <button class="dash-tab active" onclick="renderDashListings('active',this)">Active <span id="dashActiveCount" class="dash-tab-badge"></span></button>
+                    <button class="dash-tab" onclick="renderDashListings('pending',this)">Pending <span class="dash-tab-badge">2</span></button>
+                    <button class="dash-tab" onclick="renderDashListings('sold',this)">Sold <span class="dash-tab-badge">3</span></button>
+                </div>
+            </div>
+            <div class="dash-search-row">
+                <input type="text" id="dashListingsSearch" class="dash-search-input" placeholder="Search by title, category, location..." oninput="filterDashListings()">
+                <select id="dashListingsCatFilter" class="dash-search-select" onchange="filterDashListings()">
+                    <option value="">All Categories</option>
+                    <option value="body">Body &amp; Exterior</option>
+                    <option value="lighting">Lighting &amp; Electrical</option>
+                    <option value="engine">Engine &amp; Drivetrain</option>
+                    <option value="wheels">Wheels &amp; Tyres</option>
+                    <option value="interior">Interior</option>
+                    <option value="brakes">Brakes</option>
+                    <option value="cooling">Cooling &amp; Heating</option>
+                </select>
+                <span id="dashListingsCount" class="dash-results-count"></span>
+            </div>
+            <div id="dashListingsBody"></div>
+        </div>
+
+    </div>
+</div>
 
 <nav class="bottom-nav" id="bottomNav">
     <div class="nav-item active" onclick="setActiveNav(this); location.reload()">Home</div>
@@ -997,6 +1093,7 @@
             <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
+            <button id="amenuDashboard" class="account-menu-item" onclick="openDashboard()" style="display:none;"><span class="ico">📊</span> My Dashboard <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico" style="color:var(--apc-orange);">♥</span> Saved Parts <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages <span class="account-menu-chevron">›</span></button>

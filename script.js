@@ -10,6 +10,9 @@ let authReturnAction = null; // optional callback after sign-in
 let authMode = 'signin';
 let sortOrder = 'none';     // 'none' | 'asc' | 'desc'
 let sortDate  = 'newest';  // 'newest' | 'oldest'
+let _dashViewsChart  = null;
+let _dashCatChart    = null;
+let _dashCurrentTab  = 'active';
 let activeFilters = {
     search: '',
     category: 'all',
@@ -61,6 +64,31 @@ const partDatabase = [
     { id: 27, title: "Lotus Elise S2 Alloy Wheels (Set of 4)", price: 1100, images: ["images/elise.rims.jpg", "images/elise.wheel.jpg", "images/commodore.wheels.webp"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "wheels", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 29, date: 1745193600000 },
     { id: 28, title: "Toyota Hiace Fuel Injector (Single)", price: 130, images: ["images/hiace.fuel.filter.jpg", "images/hiace.injector.webp"], loc: "PERTH, WA", fit: false, seller: "Mick O.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 2, date: 1744070400000 }
 ];
+
+// Mock analytics data for Pro Dashboard — replaced by Supabase queries at go-live
+const dashMockData = {
+    weekLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    weekViews:  [18, 24, 31, 22, 45, 38, 56],
+    weekSaves:  [3,   5,   7,  4,   9,  8,  12],
+    closedSales: [
+        { title: 'Lotus Elise S2 GT Track Spoiler',      price: 850, buyer: 'Sarah M.', date: '28 Apr 2026', img: 'images/elise.wing.jpg' },
+        { title: 'Toyota Hiace Left Side Mirror (2019+)', price: 85,  buyer: 'John T.',  date: '22 Apr 2026', img: 'images/hiace.mirror.jpg' },
+        { title: 'Toyota Hiace Tail Light Assembly',      price: 145, buyer: 'Pete K.',  date: '15 Apr 2026', img: 'images/hiace.taillight.webp' },
+    ],
+    pendingSales: [
+        { title: 'Toyota Hiace Sliding Door Handle',     price: 35,  buyer: 'Mike R.',  offered: '1 May 2026',  img: 'images/hiace.handle.jpg' },
+        { title: 'Lotus Elise Sport Steering Wheel',     price: 320, buyer: 'Chris B.', offered: '30 Apr 2026', img: 'images/elise.steering.wheel.jpeg' },
+    ],
+    activity: [
+        { type: 'save',    text: 'Sarah M. saved your Elise Spoiler',              time: '2 min ago'  },
+        { type: 'message', text: 'New message from John T.',                        time: '18 min ago' },
+        { type: 'view',    text: 'Your Hiace Mirror got 12 views today',            time: '1 hr ago'   },
+        { type: 'save',    text: 'Mike R. saved your Door Handle',                  time: '2 hr ago'   },
+        { type: 'message', text: 'Chris B. made an offer on your Steering Wheel',  time: '3 hr ago'   },
+        { type: 'trend',   text: '1KD Engine listing is trending in Adelaide',      time: '5 hr ago'   },
+        { type: 'save',    text: 'Pete K. saved your Tail Light Assembly',          time: '6 hr ago'   },
+    ]
+};
 
 // Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
 const publicWantedDatabase = [
@@ -2494,6 +2522,12 @@ function renderAccountState() {
         const proToggle = document.getElementById('proSearchToggle');
         if (proToggle) proToggle.style.display = 'flex';
     }
+    const isPro = userIsSignedIn && currentUserTier === 'pro';
+    const dtbDash   = document.getElementById('dtbDashboard');
+    const amenuDash = document.getElementById('amenuDashboard');
+    if (dtbDash)   dtbDash.style.display   = isPro ? 'inline' : 'none';
+    if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
+
     updateSellFittingToggleVisibility();
     if (!userIsSignedIn || currentUserTier !== 'pro' || !proSearchOn) {
         currentSearchMode = 'parts';
@@ -2523,6 +2557,8 @@ function updateHeaderOffset() {
             if (filterDrawer)      filterDrawer.style.top      = totalH + 'px';
             if (detailOverlay)     detailOverlay.style.top     = totalH + 'px';
             if (storefrontDrawer)  storefrontDrawer.style.top  = totalH + 'px';
+            const dashView = document.getElementById('dashboardView');
+            if (dashView)          dashView.style.top          = totalH + 'px';
         }
     }
 }
@@ -2591,6 +2627,222 @@ function updateCarouselActiveDot() {
     if (!carousel || !dots.length) return;
     const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
     dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+// --- PRO DASHBOARD ---
+
+function openDashboard() {
+    if (window.innerWidth < 900) return;
+    const fd = document.getElementById('filterDrawer');
+    const rp = document.querySelector('.desktop-right-panel');
+    if (fd) fd.style.setProperty('display', 'none', 'important');
+    if (rp) rp.style.display = 'none';
+    document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
+    syncBackdrop();
+    const dv = document.getElementById('dashboardView');
+    if (dv) {
+        const topBar = document.getElementById('desktopTopBar');
+        const hdr    = document.getElementById('mainHeader');
+        dv.style.top     = ((topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0)) + 'px';
+        dv.style.display = 'block';
+    }
+    closeAccountMenu();
+    renderDashboard();
+}
+
+function closeDashboard() {
+    const dv = document.getElementById('dashboardView');
+    if (dv) dv.style.display = 'none';
+    if (window.innerWidth >= 900) {
+        const fd = document.getElementById('filterDrawer');
+        const rp = document.querySelector('.desktop-right-panel');
+        if (fd) fd.style.removeProperty('display');
+        if (rp) rp.style.removeProperty('display');
+    }
+    updateHeaderOffset();
+}
+
+function renderDashboard() {
+    const sellerName = getCurrentSellerName();
+    const myListings = getAllParts().filter(p => p.seller === sellerName);
+    const totalSaves = myListings.reduce((s, p) => s + (p.saves || 0), 0);
+    const revenue    = dashMockData.closedSales.reduce((s, p) => s + p.price, 0);
+    const unread     = parseInt(document.getElementById('inboxBadgeTopBar')?.textContent || '0') || 2;
+
+    const welcome = document.getElementById('dashWelcome');
+    if (welcome) welcome.textContent = `Welcome back, ${currentUserName || 'Pro'} — here\'s your business overview`;
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('dashStatListings', myListings.length);
+    set('dashStatSaves',    totalSaves);
+    set('dashStatMessages', unread);
+    set('dashStatSales',    dashMockData.closedSales.length);
+    set('dashStatRevenue',  '$' + revenue.toLocaleString());
+
+    const countBadge = document.getElementById('dashActiveCount');
+    if (countBadge) countBadge.textContent = myListings.length;
+
+    renderDashboardCharts(myListings);
+    renderDashActivity();
+    renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
+}
+
+function renderDashboardCharts(myListings) {
+    if (_dashViewsChart) { _dashViewsChart.destroy(); _dashViewsChart = null; }
+    if (_dashCatChart)   { _dashCatChart.destroy();   _dashCatChart   = null; }
+    if (!window.Chart) return;
+
+    const vCtx = document.getElementById('dashViewsChart');
+    if (vCtx) {
+        _dashViewsChart = new Chart(vCtx, {
+            type: 'line',
+            data: {
+                labels: dashMockData.weekLabels,
+                datasets: [
+                    { label: 'Views', data: dashMockData.weekViews, borderColor: '#F7941D', backgroundColor: 'rgba(247,148,29,0.08)', borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#F7941D', fill: true, tension: 0.4 },
+                    { label: 'Saves', data: dashMockData.weekSaves, borderColor: '#007AFF', backgroundColor: 'rgba(0,122,255,0.05)',   borderWidth: 2,   pointRadius: 3, pointBackgroundColor: '#007AFF', fill: true, tension: 0.4 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 11, weight: '600' }, boxWidth: 12, padding: 14 } } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f5f5f5' }, ticks: { font: { size: 11 } } },
+                    x: { grid: { display: false },                       ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    const catCounts = {};
+    myListings.forEach(p => { const c = p.category || 'other'; catCounts[c] = (catCounts[c] || 0) + 1; });
+    const catLabels = Object.keys(catCounts).map(c => c.charAt(0).toUpperCase() + c.slice(1));
+    const catData   = Object.values(catCounts);
+
+    const cCtx = document.getElementById('dashCategoryChart');
+    if (cCtx) {
+        _dashCatChart = new Chart(cCtx, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [{ label: 'Listings', data: catData, backgroundColor: 'rgba(247,148,29,0.8)', borderColor: '#F7941D', borderWidth: 0, borderRadius: 6 }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: '#f5f5f5' }, ticks: { font: { size: 11 }, stepSize: 1 } },
+                    y: { grid: { display: false },                       ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+}
+
+function renderDashActivity() {
+    const feed = document.getElementById('dashActivityFeed');
+    if (!feed) return;
+    const ico   = { save: '&#x2665;&#xFE0E;', message: '💬', view: '👁', trend: '📈' };
+    const bg    = { save: '#fff3e5', message: '#e8f3ff', view: '#f4f4f4', trend: '#eafaf0' };
+    feed.innerHTML = dashMockData.activity.map(a => `
+        <div class="dash-activity-item">
+            <div class="dash-act-ico" style="background:${bg[a.type] || '#f5f5f5'}">${ico[a.type] || '●'}</div>
+            <div class="dash-act-text">${a.text}<span class="dash-act-time">${a.time}</span></div>
+        </div>`).join('');
+}
+
+function filterDashListings() {
+    renderDashListings(_dashCurrentTab);
+}
+
+function renderDashListings(tab, btn) {
+    _dashCurrentTab = tab;
+    if (btn) {
+        document.querySelectorAll('#dashboardView .dash-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    const q   = (document.getElementById('dashListingsSearch')?.value || '').trim().toLowerCase();
+    const cat = (document.getElementById('dashListingsCatFilter')?.value || '');
+    const countEl = document.getElementById('dashListingsCount');
+    const sellerName = getCurrentSellerName();
+    const body = document.getElementById('dashListingsBody');
+    if (!body) return;
+
+    let rows = '';
+    if (tab === 'active') {
+        let items = getAllParts().filter(p => p.seller === sellerName);
+        const total = items.length;
+        if (q)   items = items.filter(p => p.title.toLowerCase().includes(q) || (p.category || '').includes(q) || p.loc.toLowerCase().includes(q));
+        if (cat) items = items.filter(p => p.category === cat);
+        if (countEl) countEl.textContent = items.length < total ? `${items.length} of ${total} listings` : `${total} listing${total !== 1 ? 's' : ''}`;
+        if (!total) {
+            body.innerHTML = '<div class="dash-empty-state">No active listings yet. <a href="#" onclick="openSellOverlay();return false;" style="color:var(--apc-orange);">List your first part →</a></div>';
+            return;
+        }
+        if (!items.length) {
+            body.innerHTML = '<div class="dash-empty-state">No listings match your search.</div>';
+            return;
+        }
+        rows = items.map(p => `<tr>
+            <td><img class="dash-thumb" src="${p.images[0]}" alt=""></td>
+            <td><div class="dash-part-name">${escapeHtml(p.title)}</div></td>
+            <td class="dash-td-price">$${p.price}</td>
+            <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
+            <td class="dash-td-date">${dashFmtDate(p.date)}</td>
+            <td>
+                <button class="dash-action-btn" onclick="openEditListing(${p.id});closeDashboard();">Edit</button>
+                <button class="dash-action-btn dash-btn-primary" onclick="showToast('Mark as sold — coming soon')">Mark Sold</button>
+                <button class="dash-action-btn dash-btn-danger" onclick="deleteListing(${p.id});renderDashboard();">Delete</button>
+            </td></tr>`).join('');
+    } else if (tab === 'pending') {
+        let items = dashMockData.pendingSales;
+        if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || s.buyer.toLowerCase().includes(q));
+        if (countEl) countEl.textContent = `${items.length} listing${items.length !== 1 ? 's' : ''}`;
+        rows = items.map(s => `<tr>
+            <td><img class="dash-thumb" src="${s.img}" alt=""></td>
+            <td><div class="dash-part-name">${escapeHtml(s.title)}</div><div class="dash-part-sub">Offer from ${escapeHtml(s.buyer)}</div></td>
+            <td class="dash-td-price">$${s.price}</td>
+            <td></td>
+            <td class="dash-td-date">${s.offered}</td>
+            <td>
+                <button class="dash-action-btn dash-btn-primary" onclick="showToast('Accept offer — coming soon')">Accept</button>
+                <button class="dash-action-btn dash-btn-danger" onclick="showToast('Decline offer — coming soon')">Decline</button>
+            </td></tr>`).join('');
+    } else {
+        let items = dashMockData.closedSales;
+        if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || s.buyer.toLowerCase().includes(q));
+        if (countEl) countEl.textContent = `${items.length} listing${items.length !== 1 ? 's' : ''}`;
+        rows = items.map(s => `<tr>
+            <td><img class="dash-thumb" src="${s.img}" alt=""></td>
+            <td><div class="dash-part-name">${escapeHtml(s.title)}</div><div class="dash-part-sub">Sold to ${escapeHtml(s.buyer)}</div></td>
+            <td class="dash-td-price">$${s.price}</td>
+            <td></td>
+            <td class="dash-td-date">${s.date}</td>
+            <td><button class="dash-action-btn" onclick="showToast('Relist — coming soon')">Relist</button></td>
+        </tr>`).join('');
+    }
+
+    if (!rows) {
+        body.innerHTML = '<div class="dash-empty-state">No listings match your search.</div>';
+        return;
+    }
+
+    const hdrs = tab === 'active'
+        ? ['', 'Part', 'Price', 'Saves', 'Listed', 'Actions']
+        : tab === 'pending'
+        ? ['', 'Part', 'Offered', '', 'Date', 'Actions']
+        : ['', 'Part', 'Sale Price', '', 'Sale Date', 'Actions'];
+
+    body.innerHTML = `<table class="dash-table">
+        <thead><tr>${hdrs.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function dashFmtDate(ts) {
+    if (!ts) return '—';
+    return new Date(ts).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // --- INIT ---
