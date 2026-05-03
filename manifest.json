@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "images/apc_icon_512_centered.png",
+      "src": "images/apc_icon_512_orange.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "images/apc_icon_512_centered.png",
+      "src": "images/apc_icon_512_orange.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
