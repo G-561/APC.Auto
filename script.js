@@ -2931,11 +2931,11 @@ function renderDashListings(tab, btn) {
             <td>
                 <div class="dash-part-name">${escapeHtml(o.partTitle)}</div>
                 <div class="dash-part-sub">From ${escapeHtml(o.buyer)}</div>
-                ${o.buyerNote ? `<div class="dash-offer-note">"${escapeHtml(o.buyerNote)}"</div>` : ''}
             </td>
             <td>
                 <span class="dash-offered-price">$${o.offerPrice}</span>
-                <span class="dash-listed-price">$${o.listedPrice}</span>
+                <span class="dash-listed-price">Listed: $${o.listedPrice}</span>
+                ${o.buyerNote ? `<div class="dash-offer-note">"${escapeHtml(o.buyerNote)}"</div>` : ''}
             </td>
             <td class="dash-td-date">${o.date}</td>
             <td>
