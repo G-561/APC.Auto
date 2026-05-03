@@ -13,6 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="APC">
     <link rel="apple-touch-icon" href="images/apc_icon_512_orange.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body id="body">
 
@@ -33,10 +34,11 @@
 <div class="top-nav-container" id="mainHeader">
     <header style="padding-bottom: 10px; position: relative;">
         <div class="header-top">
-            <div class="logo-main"><img src="images/APC.logo.png" alt="APC Logo"></div>
+            <div class="logo-main" onclick="closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);" style="cursor:pointer;"><img src="images/APC.logo.png" alt="APC Logo"></div>
             <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
         </div>
 
+        <div class="search-col">
         <div class="search-group">
             <input type="text" id="mainSearchInput" placeholder="Search parts for sale...">
             <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
@@ -53,6 +55,7 @@
                  FIND WANTED <span style="margin-left:4px; font-size:8px; background:var(--apc-orange); color:white; padding:1px 4px; border-radius:4px;">PRO</span>
             </div>
         </div>
+        </div><!-- /.search-col -->
 
     </header>
 </div>
@@ -657,6 +660,12 @@
                     </select>
                 </div>
             </div>
+            <div id="sellQuantitySection" style="display:none;">
+                <div class="input-group">
+                    <label>Quantity in Stock</label>
+                    <input id="sellQuantity" type="number" min="1" max="9999" placeholder="1">
+                </div>
+            </div>
             <div class="input-group">
                 <label>Description</label>
                 <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
@@ -668,10 +677,18 @@
                 <div class="sell-toggle-label">Open to Offers</div>
                 <div class="sell-toggle-sub">Allow buyers to submit offers below your listed price</div>
             </div>
-            <label class="sell-switch-wrap">
-                <input type="checkbox" id="sellOpenToOffers" style="display:none;" onchange="this.nextElementSibling.classList.toggle('on', this.checked)">
-                <span class="switch"></span>
+            <label class="settings-toggle">
+                <input type="checkbox" id="sellOpenToOffers">
+                <span class="settings-toggle-track"></span>
             </label>
+        </div>
+
+        <div id="sellWarehouseBinSection" style="display:none;">
+            <div class="sell-warehouse-hdr">Warehouse Location</div>
+            <div class="input-group">
+                <label>Rack / Bin Reference</label>
+                <input id="sellWarehouseBin" type="text" placeholder="e.g. A3-B7 or SHELF-12" maxlength="30">
+            </div>
         </div>
 
         <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
@@ -734,6 +751,13 @@
                 <div class="settings-row">
                     <span class="settings-row-label">Pro Search (Find Wanted)</span>
                     <label class="settings-toggle"><input type="checkbox" id="settingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-row-label">Warehouse Management</div>
+                        <div class="settings-row-sub">Rack/bin locations &amp; QR labels for your listings</div>
+                    </div>
+                    <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
                 </div>
                 <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); onMenuOpenWorkshops()">
                     <span class="settings-row-label">Workshop Profile</span>
@@ -1158,6 +1182,27 @@
             <textarea id="offerNoteInput" rows="3" placeholder="e.g. Does this include postage? Happy to pick up in Adelaide..."></textarea>
         </div>
         <button class="btn-full-action" onclick="submitOffer()">SUBMIT OFFER</button>
+    </div>
+</div>
+
+<!-- QR LABEL PRINT MODAL -->
+<div id="labelModalBackdrop" onclick="closeLabelModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:3999;"></div>
+<div id="labelModal" class="label-modal" style="display:none;">
+    <div class="label-modal-inner">
+        <div class="label-modal-hdr">
+            <span class="label-modal-title">QR Label</span>
+            <button class="label-modal-close" onclick="closeLabelModal()">&#215;</button>
+        </div>
+        <div id="labelPrintArea" class="label-print-area">
+            <div class="label-brand-line">
+                <img src="images/APC.logo.png" class="label-logo" alt="APC">
+            </div>
+            <div id="labelQrCode" class="label-qr"></div>
+            <div id="labelPartName" class="label-part-name"></div>
+            <div id="labelBinRef" class="label-bin-ref"></div>
+            <div id="labelPrice" class="label-price"></div>
+        </div>
+        <button class="btn-full-action" onclick="window.print()" style="margin-top:16px;">&#128438; PRINT LABEL</button>
     </div>
 </div>
 

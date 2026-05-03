@@ -35,18 +35,18 @@ let activeFilters = {
 // `images` is an array so the carousel can show real photos per part.
 // `fits` = which vehicles a part suits. Empty array = universal (fits anything).
 const partDatabase = [
-    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14, date: 1738540800000, openToOffers: true },
-    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000, openToOffers: true },
-    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1742688000000 },
+    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14, date: 1738540800000, openToOffers: true, warehouseBin: 'A1-S3' },
+    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000, openToOffers: true, warehouseBin: 'B2-S1' },
+    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1742688000000, warehouseBin: 'A1-S4' },
     { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31, date: 1743724800000 },
     { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000 },
     { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000, openToOffers: true },
     { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000 },
     { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 },
-    { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000 },
+    { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000, warehouseBin: 'C3-S2' },
     { id: 10, title: "Lotus Elise S2 Carbon Rear Diffuser", price: 480, images: ["images/elise.diffuser.jpg", "images/elise.exhaust.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 11, date: 1737590400000 },
     { id: 11, title: "Toyota Hiace Tow Bar Heavy Duty", price: 220, images: ["images/hiace.towbar.webp", "images/hiace.bumper.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Jason M.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 7, date: 1738108800000 },
-    { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000 },
+    { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000, warehouseBin: 'C1-S1' },
     { id: 13, title: "Lotus Elise S2 Left Headlight", price: 380, images: ["images/elise.headlight.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 15, date: 1740009600000 },
     { id: 14, title: "Toyota Hiace Steering Rack Reconditioned", price: 295, images: ["images/hiace.steeringrack.jpg", "images/1KD.engine.webp"], loc: "SYDNEY, NSW", fit: true, seller: "Tom K.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 5, date: 1740528000000 },
     { id: 15, title: "Lotus Elise S2 Soft Top Hood", price: 550, images: ["images/elise.soft.top.jpg", "images/elise.seat.jpg"], loc: "PERTH, WA", fit: false, seller: "Chris B.", isPro: true, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 21, date: 1741219200000 },
@@ -236,7 +236,8 @@ function getDefaultSettings() {
         notifyPriceDrops:     true,
         notifyNewListings:    true,
         privacySuburbOnly:    true,
-        privacyPublicProfile: true
+        privacyPublicProfile: true,
+        warehouseManagement:  false
     };
 }
 function saveUserSettings() {
@@ -284,12 +285,13 @@ function renderSettingsDrawer() {
     if (proToggle)  proToggle.checked = proSearchOn;
 
     const toggleMap = {
-        settingNotifyWanted:    'notifyWantedMatch',
-        settingNotifyMessages:  'notifyMessages',
-        settingNotifyPriceDrops:'notifyPriceDrops',
-        settingNotifyNewListings:'notifyNewListings',
-        settingPrivacySuburb:   'privacySuburbOnly',
-        settingPrivacyPublic:   'privacyPublicProfile'
+        settingNotifyWanted:        'notifyWantedMatch',
+        settingNotifyMessages:      'notifyMessages',
+        settingNotifyPriceDrops:    'notifyPriceDrops',
+        settingNotifyNewListings:   'notifyNewListings',
+        settingPrivacySuburb:       'privacySuburbOnly',
+        settingPrivacyPublic:       'privacyPublicProfile',
+        settingWarehouseManagement: 'warehouseManagement'
     };
     Object.entries(toggleMap).forEach(([elId, key]) => {
         const el = document.getElementById(elId);
@@ -683,55 +685,39 @@ function renderWantedSearchResults(mainGrid) {
         const safeSearch = escapeHtml(activeFilters.search);
         mainGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
-                <div style="font-weight: 700; margin-bottom: 10px;">No buyers looking for "${safeSearch}" right now</div>
+                <div style="font-weight: 700; margin-bottom: 10px;">No members looking for "${safeSearch}" right now</div>
                 <div style="font-size: 13px;">Try a broader search — make, model, or part type.</div>
             </div>`;
         return;
     }
 
-    const header = document.createElement('div');
-    header.style.cssText = 'grid-column: 1/-1; display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;';
-    header.innerHTML = `
-        <div style="font-size:14px; font-weight:700; color:#333;">${matching.length} buyer${matching.length === 1 ? '' : 's'} looking</div>
-    `;
-    mainGrid.appendChild(header);
+    const wrap = document.createElement('div');
+    wrap.className = 'wanted-results-wrap';
 
-    const list = document.createElement('div');
-    list.className = 'wanted-list';
+    const hdr = document.createElement('div');
+    hdr.className = 'wanted-results-hdr';
+    hdr.textContent = `${matching.length} member${matching.length === 1 ? '' : 's'} looking`;
+    wrap.appendChild(hdr);
+
     matching.forEach(w => {
-        const card = document.createElement('div');
-        card.className = 'wanted-card';
-
-        const info = document.createElement('div');
-        info.className = 'wanted-info';
-
-        const name = document.createElement('div');
-        name.className = 'wanted-name';
-        name.textContent = w.partName;
-
-        const meta = document.createElement('div');
-        meta.className = 'wanted-meta';
-        const metaParts = [`${w.make} ${w.model} ${w.year}`, w.loc];
-        if (w.maxPrice) metaParts.push(`Budget $${w.maxPrice}`);
-        metaParts.push(w.posted);
-        meta.textContent = metaParts.join(' · ');
-
-        info.appendChild(name);
-        info.appendChild(meta);
-        card.appendChild(info);
-
-        const contactBtn = document.createElement('button');
-        contactBtn.className = 'wanted-contact-btn';
-        contactBtn.textContent = 'I HAVE THIS';
-        contactBtn.onclick = (e) => {
-            e.stopPropagation();
-            showToast(`Contact request sent to ${w.buyer}`);
-        };
-        card.appendChild(contactBtn);
-        list.appendChild(card);
+        const initials = w.buyer.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        const row = document.createElement('div');
+        row.className = 'wanted-row';
+        row.innerHTML = `
+            <div class="wanted-row-avatar">${initials}</div>
+            <div class="wanted-row-name">${escapeHtml(w.partName)}</div>
+            <div class="wanted-row-chips">
+                <span class="wanted-chip">${escapeHtml(w.make)} ${escapeHtml(w.model)} ${escapeHtml(w.year)}</span>
+                <span class="wanted-chip">${escapeHtml(w.loc)}</span>
+                ${w.maxPrice ? `<span class="wanted-chip wanted-chip-budget">Max $${w.maxPrice}</span>` : ''}
+                <span class="wanted-chip wanted-chip-time">${escapeHtml(w.posted)}</span>
+            </div>
+            <button class="wanted-have-btn" onclick="listFromWanted(${JSON.stringify(escapeHtml(w.make))},${JSON.stringify(escapeHtml(w.model))},${JSON.stringify(escapeHtml(w.year))})">LIST THIS PART ›</button>
+        `;
+        wrap.appendChild(row);
     });
 
-    mainGrid.appendChild(list);
+    mainGrid.appendChild(wrap);
 }
 
 // --- RENDER MY PARTS ---
@@ -828,6 +814,17 @@ function openSellOverlay() {
     toggleDrawer('sellOverlay');
 }
 
+function listFromWanted(make, model, year) {
+    openSellOverlay();
+    // Pre-fill vehicle fitment so the seller only needs to add photos, price and description
+    const makeEl  = document.getElementById('sellMake');
+    const modelEl = document.getElementById('sellModel');
+    const yearEl  = document.getElementById('sellYear');
+    if (makeEl)  makeEl.value  = make;
+    if (modelEl) modelEl.value = model;
+    if (yearEl)  yearEl.value  = year;
+}
+
 function openEditListing(listingId) {
     const listing = userListings.find(l => l.id === listingId);
     if (!listing) return;
@@ -850,10 +847,11 @@ function openEditListing(listingId) {
         document.getElementById('sellFittingAvailable').checked = !!listing.fit;
     }
     const offersToggle = document.getElementById('sellOpenToOffers');
-    if (offersToggle) {
-        offersToggle.checked = !!listing.openToOffers;
-        offersToggle.nextElementSibling.classList.toggle('on', !!listing.openToOffers);
-    }
+    if (offersToggle) offersToggle.checked = !!listing.openToOffers;
+    const qtyInput = document.getElementById('sellQuantity');
+    if (qtyInput) qtyInput.value = listing.quantity > 1 ? listing.quantity : '';
+    const binInput = document.getElementById('sellWarehouseBin');
+    if (binInput) binInput.value = listing.warehouseBin || '';
 
     renderSellImagePreviews();
 
@@ -969,15 +967,39 @@ function resetSellForm() {
     if (postage) postage.checked = false;
     if (fitting) fitting.checked = false;
     const offersToggle = document.getElementById('sellOpenToOffers');
-    if (offersToggle) { offersToggle.checked = false; offersToggle.nextElementSibling.classList.remove('on'); }
+    if (offersToggle) offersToggle.checked = false;
+    const qtyInput = document.getElementById('sellQuantity');
+    if (qtyInput) qtyInput.value = '';
+    const binInput = document.getElementById('sellWarehouseBin');
+    if (binInput) binInput.value = '';
     renderSellImagePreviews();
     updateSellFittingToggleVisibility();
+    updateSellQuantityVisibility();
+    updateWarehouseBinVisibility();
 }
 
 function updateSellFittingToggleVisibility() {
     const section = document.getElementById('sellFittingToggleSection');
     if (!section) return;
     section.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'block' : 'none';
+}
+
+function updateSellQuantityVisibility() {
+    const section = document.getElementById('sellQuantitySection');
+    if (section) section.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'block' : 'none';
+}
+
+function updateWarehouseBinVisibility() {
+    const section = document.getElementById('sellWarehouseBinSection');
+    if (!section) return;
+    const warehouseOn = userIsSignedIn && currentUserTier === 'pro' && !!userSettings.warehouseManagement;
+    section.style.display = warehouseOn ? 'block' : 'none';
+}
+
+function onToggleWarehouseManagement() {
+    const el = document.getElementById('settingWarehouseManagement');
+    if (el) saveSettingsToggle('warehouseManagement', el.checked);
+    updateWarehouseBinVisibility();
 }
 
 function submitSellListing() {
@@ -1012,6 +1034,12 @@ function submitSellListing() {
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
     const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
+    const warehouseBin = (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement)
+        ? (document.getElementById('sellWarehouseBin')?.value.trim() || null)
+        : null;
+    const quantity = (userIsSignedIn && currentUserTier === 'pro')
+        ? (Math.max(1, parseInt(document.getElementById('sellQuantity')?.value, 10) || 1))
+        : 1;
     const listingPayload = {
         title,
         price: numericPrice,
@@ -1028,7 +1056,9 @@ function submitSellListing() {
         pickup,
         postage,
         condition: condition || 'used',
-        openToOffers
+        openToOffers,
+        warehouseBin,
+        quantity
     };
 
     let message = 'Listing created';
@@ -2559,6 +2589,8 @@ function renderAccountState() {
     if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
 
     updateSellFittingToggleVisibility();
+    updateSellQuantityVisibility();
+    updateWarehouseBinVisibility();
     if (!userIsSignedIn || currentUserTier !== 'pro' || !proSearchOn) {
         currentSearchMode = 'parts';
         setSearchMode('parts');
@@ -2586,6 +2618,8 @@ function updateHeaderOffset() {
             if (rightPanel)        rightPanel.style.top        = totalH + 'px';
             if (filterDrawer)      filterDrawer.style.top      = totalH + 'px';
             if (detailOverlay)     detailOverlay.style.top     = totalH + 'px';
+            const sellOverlay = document.getElementById('sellOverlay');
+            if (sellOverlay)       sellOverlay.style.top       = totalH + 'px';
             if (storefrontDrawer)  storefrontDrawer.style.top  = totalH + 'px';
             const dashView = document.getElementById('dashboardView');
             if (dashView)          dashView.style.top          = totalH + 'px';
@@ -2621,7 +2655,7 @@ function setSearchMode(mode) {
         partBtn.style.background   = 'none';
         partBtn.style.color        = '#888';
         partBtn.style.boxShadow    = 'none';
-        if (searchInput) searchInput.placeholder = 'Search your wanted list...';
+        if (searchInput) searchInput.placeholder = "Search members' wanted lists...";
     }
 
     renderMainGrid();
@@ -2657,6 +2691,38 @@ function updateCarouselActiveDot() {
     if (!carousel || !dots.length) return;
     const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
     dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
+// --- QR LABEL ---
+
+function printPartLabel(partId) {
+    const part = getPartById(partId);
+    if (!part) return;
+
+    const nameEl  = document.getElementById('labelPartName');
+    const binEl   = document.getElementById('labelBinRef');
+    const priceEl = document.getElementById('labelPrice');
+    const qrEl    = document.getElementById('labelQrCode');
+
+    if (nameEl)  nameEl.textContent  = part.title;
+    if (binEl)   binEl.textContent   = part.warehouseBin || '';
+    if (priceEl) priceEl.textContent = '$' + part.price;
+
+    if (qrEl) {
+        qrEl.innerHTML = '';
+        const qrText = 'APC-' + part.id + '\n' + part.title + '\nBin: ' + (part.warehouseBin || 'N/A') + '\nPrice: $' + part.price;
+        new QRCode(qrEl, { text: qrText, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
+    }
+
+    document.getElementById('labelModalBackdrop').style.display = 'block';
+    document.getElementById('labelModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLabelModal() {
+    document.getElementById('labelModalBackdrop').style.display = 'none';
+    document.getElementById('labelModal').style.display = 'none';
+    document.body.style.overflow = '';
 }
 
 // --- OFFER SHEET ---
@@ -2897,11 +2963,12 @@ function renderDashListings(tab, btn) {
         }
         rows = items.map(p => `<tr>
             <td><img class="dash-thumb" src="${p.images[0]}" alt=""></td>
-            <td><div class="dash-part-name">${escapeHtml(p.title)}</div></td>
+            <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
+                ${p.warehouseBin ? `<button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>` : ''}
                 <button class="dash-action-btn" onclick="openEditListing(${p.id});closeDashboard();">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="showToast('Mark as sold — coming soon')">Mark Sold</button>
                 <button class="dash-action-btn dash-btn-danger" onclick="deleteListing(${p.id});renderDashboard();">Delete</button>

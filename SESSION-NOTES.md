@@ -125,6 +125,21 @@ location.reload();
 
 ## Sessions completed
 
+### Session 7 (4 May 2026) — Warehouse/QR, sell form polish, 1400px max-width, wanted list redesign
+
+- **Warehouse Management (Pro):** Settings toggle (`warehouseManagement`). Rack/Bin field on sell form (Pro + warehouse toggle gated). QR label modal (`#labelModal`) — qrcodejs CDN, `printPartLabel(partId)`, `closeLabelModal()`. `@media print` isolates label area. Dashboard active tab shows `🏷️ Label` button for parts with `warehouseBin`. 5 demo parts in `partDatabase` have `warehouseBin` values (`A1-S3` etc.).
+- **Open to Offers toggle fix:** Replaced broken `.sell-switch-wrap` / `.switch` pattern with `.settings-toggle` / `.settings-toggle-track`. CSS `:checked` drives visual — no more manual `.on` class toggling in JS.
+- **Quantity field (Pro):** `#sellQuantitySection` in Pricing section, Pro-only via `updateSellQuantityVisibility()`. Saved as `quantity` on listing. Dashboard shows "Qty: N" under part name when > 1.
+- **No spinners on number inputs:** `#sellQuantity` (25% width), `#sellPrice`, `#sellPostcode`, `#sellYear` — WebKit + Firefox spinner suppression CSS.
+- **Sell overlay desktop treatment:** Fills centre column (`left: 240px → right: 220px`), `background: transparent` so backdrop tint shows around the 560px white form card. `align-items: center` centres card horizontally.
+- **1400px max-width page constraint:** `body { max-width: 1400px; margin: 0 auto; box-sizing: border-box; }` on desktop. All fixed elements use `left/right: max(0px, calc(50vw - 700px))`. Detail/sell/storefront overlays use `calc(max(0px, 50vw - 700px) + 240/220px)`. Dashboard uses `!important` override. `html { background: #e0e0e0; }` for side gutters.
+- **Search col wrapper:** `<div class="search-col">` wraps `.search-group` + `#proSearchToggle`. On desktop: `order: 2; flex: 1; flex-direction: column; gap: 6px` — toggle sits neatly below search bar, no longer jammed at far left.
+- **Compact wanted rows:** `renderWantedSearchResults()` rebuilt — avatar initials circle, part name, vehicle/location/budget/time chips, "LIST THIS PART ›" button. Old card layout kept for personal wanted drawer.
+- **listFromWanted(make, model, year):** "LIST THIS PART ›" opens sell form pre-filled with vehicle fitment. Privacy-first: no direct buyer contact. Seller uses demand signal to list, buyer gets notified on match.
+- **Wanted search placeholder:** Switches to `"Search members' wanted lists..."` in Find Wanted mode.
+- **Logo → home button:** `onclick="closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);"` + `cursor: pointer`.
+- **Tagline candidate:** *"More than a classified site. A powerful workshop tool."*
+
 ### Session 6 (3 May 2026) — Desktop layout, filter UX overhaul, workshop polish
 
 - **Account menu → proper drawer:** `#accountMenuDrawer` replaces old dropdown. Sub-drawers (Settings, Profile, etc.) open with `allowStack: true` and return to account menu on close. `z-index: 1999` so sub-drawers stack on top.
@@ -158,23 +173,22 @@ location.reload();
 
 ## What's next
 
-1. **Desktop polish** — many things to fix/tune after first look on PC. Logo now left-aligned. Still needed: overall spacing, right panel positioning, filter sidebar scroll, card grid proportions, top bar styling.
-2. **Desktop live filters** — on desktop, filter changes should re-render grid instantly (no Apply button needed). `oninput` on all filter inputs calling `applyFiltersAndRender()` without closing sidebar.
-3. **Edit vehicle** — tap vehicle card in garage to open Add Vehicle drawer pre-populated; save updates by id.
-4. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
-5. **Mute notifications per Wanted item** — toggle on Wanted card (`mutedNotifications` field already exists).
-6. **Settings placeholders** — wire up Email, Change Password, Edit Profile, Help & Support rows.
-7. **`.gitignore`** — add `mockups/`, `snapshots/`, `300426.claude/`.
-8. **Wanted List** — add to desktop top utility bar (currently only Marketplace + Workshops).
+1. **Desktop live filters** — filter changes should re-render grid instantly on desktop (no Apply button). `oninput` on all filter inputs calling `applyFiltersAndRender()` without closing sidebar.
+2. **Edit vehicle** — tap vehicle card in garage to open Add Vehicle drawer pre-populated; save updates by id.
+3. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
+4. **Mute notifications per Wanted item** — toggle on Wanted card (`mutedNotifications` field already exists).
+5. **Settings placeholders** — wire up Email, Change Password, Edit Profile, Help & Support rows.
+6. **`.gitignore`** — add `mockups/`, `snapshots/`, `300426.claude/`.
+7. **Wanted List** — add to desktop top utility bar (currently Marketplace + Workshops only).
+8. **Wanted → listing match notifications** — when a new listing is created, check `publicWantedDatabase` for matches and trigger in-app notification to buyer.
 
 ---
 
 ## Last commit / push
 
-Session 6 changes pushed incrementally during session.
-Final changes (logo left fix + session notes) — push from Git Bash:
+Session 7 — push from Git Bash:
 ```
 git add index.html style.css script.js SESSION-NOTES.md
-git commit -m "Session 6 final — logo left on desktop, session notes updated"
+git commit -m "Session 7 — Warehouse/QR labels, sell form polish, 1400px layout, wanted list redesign"
 git push
 ```
