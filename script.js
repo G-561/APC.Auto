@@ -547,7 +547,7 @@ function buildCardHTML(part) {
         ? `📍 ${part.loc}`
         : `<span class="blurred-location">📍 ${part.loc}</span>`;
 
-    const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">♥</div>' : '';
+    const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
 
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
