@@ -506,6 +506,14 @@ function getFilteredParts() {
     const results = getAllParts().filter(part => {
         if (search && !part.title.toLowerCase().includes(search) && !part.loc.toLowerCase().includes(search)) return false;
         if (activeFilters.category !== 'all' && part.category !== activeFilters.category) return false;
+        if (activeFilters.make && part.fits.length > 0) {
+            const mk = activeFilters.make;
+            if (!part.fits.some(f => f.toLowerCase().includes(mk)) && !part.title.toLowerCase().includes(mk)) return false;
+        }
+        if (activeFilters.model && part.fits.length > 0) {
+            const mdl = activeFilters.model;
+            if (!part.fits.some(f => f.toLowerCase().includes(mdl)) && !part.title.toLowerCase().includes(mdl)) return false;
+        }
         if (activeFilters.location !== 'all') {
             const stateCode = part.loc.split(',')[1]?.trim();
             if (stateCode !== activeFilters.location) return false;
