@@ -508,11 +508,11 @@ function getFilteredParts() {
         if (activeFilters.category !== 'all' && part.category !== activeFilters.category) return false;
         if (activeFilters.make && part.fits.length > 0) {
             const mk = activeFilters.make;
-            if (!part.fits.some(f => f.toLowerCase().includes(mk)) && !part.title.toLowerCase().includes(mk)) return false;
+            if (!part.fits.some(f => f.make?.toLowerCase().includes(mk)) && !part.title.toLowerCase().includes(mk)) return false;
         }
         if (activeFilters.model && part.fits.length > 0) {
             const mdl = activeFilters.model;
-            if (!part.fits.some(f => f.toLowerCase().includes(mdl)) && !part.title.toLowerCase().includes(mdl)) return false;
+            if (!part.fits.some(f => f.model?.toLowerCase().includes(mdl)) && !part.title.toLowerCase().includes(mdl)) return false;
         }
         if (activeFilters.location !== 'all') {
             const stateCode = part.loc.split(',')[1]?.trim();
