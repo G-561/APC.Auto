@@ -6,68 +6,79 @@ If you're a fresh Claude session reading this: **read this file first**, then as
 
 ## What this project is
 
-`APC.mobile.github` — mobile-first marketplace web app for **Auto Parts Connection (APC)**. Plain HTML/CSS/JS, no framework. Three core files at the project root:
+`APC.mobile.github` — mobile-first (now responsive) marketplace web app for **Auto Parts Connection (APC)**. Plain HTML/CSS/JS, no framework. Three core files at the project root:
 
 - `index.html` — all markup. Drawers in DOM order (later = renders on top at equal z-index):
-  `filterDrawer` → `authDrawer` → `sellOverlay` → `settingsDrawer` → `profileDrawer` → `myPartsDrawer` → `workshopDrawer` → `garageDrawer` → `addVehicleDrawer` → `vehicleDetailDrawer` → `addWantedDrawer` → `recentlyViewedDrawer` → `inboxDrawer` → `messageDetailDrawer` → `savedPartsDrawer` → `detailOverlay` → `storefrontDrawer` → `chatDrawer`
+  `filterDrawer` → `authDrawer` → `sellOverlay` → `settingsDrawer` → `profileDrawer` → `myPartsDrawer` → `workshopDrawer` → `garageDrawer` → `addVehicleDrawer` → `vehicleDetailDrawer` → `addWantedDrawer` → `recentlyViewedDrawer` → `inboxDrawer` → `messageDetailDrawer` → `savedPartsDrawer` → `detailOverlay` → `storefrontDrawer` → `chatDrawer` → `accountMenuDrawer`
 - `style.css` — all styles. CSS variables at top (`--apc-orange: #F7941D`, `--apc-blue: #007AFF`, etc.). **Never introduce a new colour without checking these first.**
-- `script.js` — all state, render functions, drawer logic, auth, CRUD. ~2350 lines.
+- `script.js` — all state, render functions, drawer logic, auth, CRUD. ~2500+ lines.
 
 Other files/folders:
-- `manifest.json` + `sw.js` — PWA setup (added Session 5).
-- `images/` — 35+ part photos (Hiace, Lotus Elise, misc).
+- `manifest.json` + `sw.js` — PWA setup.
+- `images/` — 35+ part photos + `apc_icon_512_centered.png` (PWA icon).
 - `mockups/`, `snapshots/`, `300426.claude/` — workspace clutter, **not tracked in git**.
 
 ---
 
 ## Design decisions — do not second-guess these
 
-- **Pill colour:** orange = signed-out or Standard; `#007AFF` blue = Pro. Same blue as PRO badges in detail overlay.
-- **Pill label:** shows tier only ("APC Standard" / "APC Pro"). Username is inside the dropdown, not on the pill.
-- **"APC Standard"** is the deliberate label for free members.
+- **Pill colour:** orange = signed-out; after sign-in, pill shows username + "Pro" label in blue for Pro users. No tier pill when signed in.
+- **"APC Standard"** is the deliberate label for free members (used in profile badge, not pill).
 - **Heart save on detail page only** — never on result cards. Cards are the hook; saving happens at commitment point (detail).
-- **Bottom nav: 5 text-only items** — Home | Garage | Sell | Recent | Inbox. Sell is centred orange tile. No emoji icons.
-- **FILTER is a text button** in the search bar — not a gear (looks like settings) or funnel (Gary tried both).
+- **Bottom nav: 5 text-only items** — Home | Garage | Sell | Recent | Inbox. Sell is centred orange tile. No emoji icons. Hidden on desktop (≥900px).
+- **FILTER is a text button** in the search bar on mobile — hidden on desktop (filter sidebar always visible).
 - **`fits: []` = universal** in `partDatabase`. No separate `universal: true` flag.
 - **Drawer pattern everywhere** — no router. All screens are drawers using `toggleDrawer(id, allowStack)`.
-- **Stacked drawers** use `allowStack: true` to open on top. × buttons on stacked drawers use **dedicated close functions** (`closeAddVehicleDrawer()` etc.) — never bare `toggleDrawer()` which would close everything underneath.
+- **Stacked drawers** use `allowStack: true` to open on top. × buttons on stacked drawers use **dedicated close functions** (`closeAddVehicleDrawer()` etc.) — never bare `toggleDrawer()`.
 - **`getAllParts()`** = `[...partDatabase, ...userListings]`. Always use this, never `partDatabase` directly.
 - **Pro Search defaults ON** when a user upgrades.
 - **Saves metric** (♥ X saves on My Listings) is **Pro-only**.
-- **Wrecking / whole car**: decided NOT to build a separate category. Wreckers describe it in the listing description. Build it only if real wrecking yards ask for it.
+- **Sort by Date defaults to "Newest first"** — no "Default" option. Price sort has no default; tap to activate, tap again to deselect.
+- **Postcode + radius are mutually exclusive with state filter** — typing a postcode disables state dropdown; selecting a state clears postcode and locks radius chips.
+- **`#accountMenuDrawer` z-index: 1999** — all other drawers at 2000 so sub-drawers stack on top of account menu.
+- **Sub-drawers from account menu** use `allowStack: true` so closing them returns to account menu.
 
 ---
 
-## Key code locations (post-Session 5)
+## Desktop layout (≥900px) — Session 6
 
-`script.js` ~2350 lines. Key sections top-to-bottom:
+Three-column layout:
 
-- **Global state:** `userIsSignedIn`, `currentUserName`, `currentUserTier`, `proSearchOn`, `currentSearchMode`, `activeFilters`.
-- **`partDatabase`:** 8 parts, each with `fits`, `saves` fields. Hiace x3, Elise x3, universal x2.
-- **`publicWantedDatabase`:** 8 mock buyer wanted listings (searched in FIND WANTED / Pro mode by sellers).
+- **Top utility bar** (`#desktopTopBar`, 36px, full-width fixed): Marketplace | Workshops [left] · Messages | My Garage | + Sell a Part [right]
+- **Left sidebar** = `#filterDrawer` always visible as filter panel (240px wide, `display: flex !important`). Drawer header hidden. Apply button stays but doesn't close sidebar.
+- **Header** (single row below top bar): Logo left (72px) | Search bar (flex:1) | Account pill right. Achieved via `display: contents` on `.header-top`.
+- **Main grid**: 5 columns, card hover effect — glass overlay slides away, orange "VIEW PART →" button slides up.
+- **Right sidebar** (`#desktopRightPanel`, 220px fixed): Featured Workshop (orange box) + Sponsored Spares thumbnails.
+- **Drawers** open as right-side panels (500px), `#detailOverlay` 680px, `#accountMenuDrawer` 360px. `#drawerBackdrop` dims the rest of the page.
+- **Desktop nav sidebar** (`.desktop-sidebar`) is hidden on desktop — navigation is in the top utility bar.
+- **`updateHeaderOffset()`** accounts for both top bar height + header height when setting grid margin-top.
+- **`closeTopDrawer()`** excludes `#filterDrawer` when on desktop.
+- **Desktop still needs polish** — Gary confirmed it's a work-in-progress. Logo position (left) fixed in Session 6 end.
+
+---
+
+## Key code locations (post-Session 6)
+
+`script.js` ~2500 lines. Key sections top-to-bottom:
+
+- **Global state:** `userIsSignedIn`, `currentUserName`, `currentUserTier`, `proSearchOn`, `currentSearchMode`, `activeFilters`, `sortOrder` ('none'|'asc'|'desc'), `sortDate` ('newest'|'oldest').
+- **`partDatabase`:** 8 parts, each with `fits`, `saves`, `date` fields. Hiace x3, Elise x3, universal x2.
+- **`publicWantedDatabase`:** 8 mock buyer wanted listings.
 - **`workshopDatabase`:** 4 mock workshops with `vehicleTypes`, `services`, `rating`, `distance`.
-- **Workshop profile CRUD:** `loadWorkshopProfile`, `saveWorkshopProfile`, `getDefaultWorkshopProfile`.
+- **Sort:** `setSortOrder()` (price, toggleable), `setSortDate()` (date, always one active). Applied in `getFilteredParts()`.
+- **Location filter:** `onPostcodeInput()` disables state dropdown when postcode entered; `onStateChange()` clears postcode when state selected. Mutually exclusive.
+- **Workshop browse:** `renderWorkshopBrowseView()` filters by text search (`#workshopSearchInput`) + service checkboxes. `buildSponsoredWorkshopCardHTML()` includes star ratings.
+- **Workshop profile:** Service checkboxes reordered — Row 1: Panel & body | Part fitting; Row 2: Mechanical repair | Wheels and Tyres; Row 3: Electrical & lighting | Wheel alignment. Textarea uses `.apc-textarea` class.
 - **Recently Viewed:** `loadRecentlyViewed`, `saveRecentlyViewed`, `addToRecentlyViewed`, `renderRecentlyViewed`, `onOpenRecentlyViewed`, `clearRecentlyViewed`.
-- **Settings:** `loadUserSettings`, `getDefaultSettings`, `saveUserSettings`, `saveSettingsName`, `saveSettingsLocation`, `saveSettingsToggle`, `renderSettingsDrawer`, `onMenuOpenSettings`, `closeSettingsDrawer`.
-- **`buildCardHTML`:** card markup. NO heart on cards (deliberate).
-- **Render / search:** `renderMainGrid`, `applyFilters`, `buildCardHTML`, `renderWantedSearchResults`.
-- **Sell form:** `openSellOverlay`, `handleSellImageFiles`, `renderSellImagePreviews`, `submitSellListing`, `resetSellForm`, `openEditListing`, `deleteListing`.
-- **Garage:** `loadVehicles`, `saveVehicles`, `nextVehicleId`, `onOpenGarage`, `onAddVehicleClick`, `submitAddVehicle`, `closeAddVehicleDrawer`, `deleteVehicle` (cascades wanted), `renderGarage`.
-- **Vehicle Detail:** `partFitsVehicle`, `openVehicleDetail`, `setVehicleTab`, `renderVehicleTab`, `buildPartsGrid`, `buildWantedGrid`, `buildVehicleEmpty`.
-- **Wanted:** `loadWanted`, `saveWanted`, `addWanted`, `deleteWanted`, `wantedMatchesPart`, `onAddWantedFromSearch`, `openAddWantedForVehicle`, `submitAddWanted`, `closeAddWantedDrawer`.
-- **Saved Parts:** `loadSavedParts`, `persistSavedParts`, `toggleSavedPart` (tracks live saves on userListings), `syncDetailSaveButton`, `renderSavedParts`, `onMenuOpenSavedParts`, `closeSavedPartsDrawer`.
-- **Inbox:** `loadInboxItems`, `saveInboxItems`, `onOpenInbox`, `updateInboxBadge`, `setInboxTab`, `renderInboxContent`, `buildInboxItemNode`, `toggleInboxFlag`, `deleteInboxItem`, `openMessageDetail`, `closeMessageDetailDrawer`.
-- **Workshop UI:** `getRecommendedWorkshops`, `buildWorkshopCardHTML`, `contactWorkshop`, `onMenuOpenWorkshops`, `submitWorkshopProfile`, `renderWorkshopProfile`, `renderWorkshopBrowseView`, `buildSponsoredWorkshopCardHTML`.
-- **Detail overlay:** `openItemDetail`, `openDetailImageViewer`, `closeDetailImageViewer`, `handleMessageSeller`.
-- **Storefront:** `openStorefront`, `openMyStorefront`, `closeStorefrontDrawer`.
-- **Chat:** `openChat`, `closeChatDrawer`, `sendChatMessage`, `sendChatImage`, `appendChatBubble`.
-- **Profile:** `renderProfile`, `onMenuOpenProfile`, `closeProfileDrawer`.
-- **Auth/menu:** `signIn`, `handleSignInSubmit`, `handleSignUpSubmit`, `onSignOut`, `onUpgradeToPro`, `onToggleProSearch`, `onAccountPillClick`, `closeAccountMenu`, `renderAccountState`, `updateHeaderOffset`.
-- **My Listings menu:** `onMenuOpenMyListings`.
-- **Utility:** `showToast`, `escapeHtml`, `safeText`, `debounce`, `getPartById`, `getAllParts`, `setActiveNav`, `onMenuPlaceholder`.
-- **Init (`DOMContentLoaded`):** wires chat Enter key; calls `renderMainGrid`, `renderMyParts`, `renderGarage`, `renderAccountState`, `updateInboxBadge`.
-
-`index.html` — drawer DOM order matters for stacking (see above). Account menu is inside `<header>`, not a drawer.
+- **Settings:** `loadUserSettings`, `getDefaultSettings`, `saveUserSettings`, etc., `renderSettingsDrawer`.
+- **`buildCardHTML`:** card markup. NO heart on cards. Includes `.card-hover-btn` (hidden mobile, slides up on desktop hover).
+- **`applyFiltersAndRender()`:** closes filter drawer only on mobile (`window.innerWidth < 900`).
+- **`updateHeaderOffset()`:** accounts for `#desktopTopBar` height on desktop.
+- **`updateInboxBadge()`:** updates 3 badges — `#inboxBadge` (mobile nav), `#inboxBadgeDesktop` (hidden sidebar), `#inboxBadgeTopBar` (desktop top bar).
+- **Sell form:** `openSellOverlay`, `handleSellImageFiles`, `renderSellImagePreviews`, `submitSellListing` (stamps `date: Date.now()` + `saves: 0`), `resetSellForm`, `openEditListing`, `deleteListing`.
+- **Garage / Vehicle Detail / Wanted / Saved Parts / Inbox / Workshop UI / Detail / Storefront / Chat / Profile / Auth** — see Session 5 notes for details, unchanged in Session 6.
+- **`closeTopDrawer()`:** excludes `#filterDrawer` on desktop.
+- **`setActiveNav()`:** handles both `.nav-item` (mobile) and `.dsb-item` (desktop sidebar, currently hidden).
 
 ---
 
@@ -97,77 +108,73 @@ location.reload();
 
 ## Quirks to know
 
-- **OneDrive sync delay:** This folder is in OneDrive. The Windows-side file (what the browser loads) updates correctly via Read/Write/Edit tools. The bash sandbox mount can show stale content. **Trust the Read tool, not `bash cat`.**
-- **Git from Windows only:** Claude can't run git from the bash sandbox (lock file permissions). All commits/pushes happen from Gary's Git Bash on Windows.
-- **Curly/smart quotes:** editing JS can introduce U+2018/2019 (`'`/`'`) causing "Invalid character" syntax errors. Run this PowerShell check after any session that edits script.js:
+- **OneDrive sync delay:** Trust the Read tool, not `bash cat`.
+- **Git from Windows only:** Claude can't run git from the bash sandbox. All commits/pushes happen from Gary's Git Bash on Windows.
+- **Curly/smart quotes:** editing JS can introduce U+2018/2019 causing syntax errors. Run PowerShell check after JS edits:
   ```powershell
   $p = "...\script.js"; $c = Get-Content $p -Raw -Encoding UTF8
   $c = $c -replace [char]0x2018,"'" -replace [char]0x2019,"'"
   Set-Content $p $c -Encoding UTF8 -NoNewline
   ```
-- **Heart characters:** save button uses `♡` / `♥` (Unicode dingbats), not `❤️` emoji — takes CSS `color` cleanly.
+- **Heart characters:** save button uses `♡` / `♥` (Unicode dingbats), not `❤️` emoji.
 - **Mockup-first:** Gary likes seeing an interactive HTML mockup before committing to a structural UI change.
+- **Geocoding:** radius filter UI is built; actual distance filtering needs a geocoding API at go-live (postcode → lat/lng → `ST_DWithin` query).
+- **Backend plans:** Supabase is the preferred stack when going live — Postgres, built-in auth, storage, realtime. localStorage is the current stand-in.
 
 ---
 
 ## Sessions completed
 
+### Session 6 (3 May 2026) — Desktop layout, filter UX overhaul, workshop polish
+
+- **Account menu → proper drawer:** `#accountMenuDrawer` replaces old dropdown. Sub-drawers (Settings, Profile, etc.) open with `allowStack: true` and return to account menu on close. `z-index: 1999` so sub-drawers stack on top.
+- **Account pill redesign:** signed-in shows username + blue "Pro" label. No more tier pill. `signed-in` class, no background/shadow.
+- **Price filter → sort:** removed min/max price inputs. "Sort by Price" segmented control (Low→High / High→Low, tap to deselect). "Sort by Date" (Newest first default / Oldest first). `sortOrder` + `sortDate` globals. `date` field added to all `partDatabase` entries. New listings get `date: Date.now()`.
+- **Location filter overhaul:** state dropdown (all 9 AU jurisdictions), postcode input, radius chips (50/100/250/500km). Postcode + state mutually exclusive — `onPostcodeInput()` / `onStateChange()`. Radius disabled until postcode entered.
+- **Share button:** `shareCurrentListing()` on detail overlay — Web Share API with clipboard fallback.
+- **Wanted list toast:** `z-index: 9999` on `.app-toast` fixes visibility behind all drawers.
+- **Workshop browse:** text search box added (`#workshopSearchInput`, searches name/loc/vehicleTypes/services). Star ratings added to sponsored cards. `renderWorkshopBrowseView()` updated.
+- **Workshop profile:** "Tyres" → "Wheels and Tyres". Checkboxes reordered into 3 rows of 2. Textarea styled with `.apc-textarea` (orange focus border, rounded).
+- **Saved Parts drawer:** `#savedPartsDrawer` from account menu. Live unsave. Empty state.
+- **PWA icon:** `apc_icon_512_centered.png` wired into `manifest.json` + `apple-touch-icon`.
+- **Desktop layout v2:** 3-column (filter sidebar 240px | 5-col grid | right panel 220px). Top utility bar (Marketplace/Workshops/Messages/Garage/Sell). Card hover effect (glass overlay slides away, VIEW PART slides up). Drawers as right-side panels (500px). `#drawerBackdrop` for dimming. Logo left (72px) via `display: contents` on `.header-top`. **Desktop needs further polish — work in progress.**
+- **`buildCardHTML`:** added `.card-hover-btn` (hidden mobile).
+- **`updateHeaderOffset()`:** accounts for top bar height on desktop.
+- **`updateInboxBadge()`:** 3 badge targets (mobile, sidebar, top bar).
+
 ### Session 5 (2 May 2026) — Profile, Settings, Recently Viewed, Saved Parts, PWA, polish
 
-- **Copilot fixes:** Inbox Activity tab removed; FIND WANTED rewritten to search `publicWantedDatabase`; drawer stacking bugs fixed; `openMyStorefront()` fixed; vehicle detail tabs fixed to use `getAllParts()`.
-- **Profile drawer:** hero banner, stats (Listings/Saved/Wanted), rating/member-since, about, storefront + edit buttons. `renderProfile()` / `onMenuOpenProfile()`.
-- **Settings drawer:** 5 sections with iOS toggles. `userSettings` → `apc.settings.v1`. Search Radius segmented control added to filter drawer.
-- **Workshop card:** Contact button replaced with small ghost pill (`workshop-card-button`).
-- **Recently Viewed:** max-8 list, persisted `apc.recentlyViewed.v1`. Bottom nav "Recent" slot opens drawer. All-text bottom nav (no emoji), font-size 13px.
-- **Saved Parts drawer:** `#savedPartsDrawer` wired from account menu. Shows all hearted parts with live unsave button. Empty state included.
-- **Saves metric:** `saves` field on all parts (mock 6–31). New listings default `saves:0`. `toggleSavedPart()` tracks live count on userListings. My Listings shows "♥ X saves" — **Pro only**.
-- **Sell form main photo:** `renderSellImagePreviews()` rewritten. First photo: orange ★ MAIN badge. Others: ☆ MAIN button to promote. Empty slots open picker; filled slots don't.
-- **Bug fixes:** Inbox badge moved to top-right corner of nav item (was overlapping "Inbox" text). Filter drawer Condition expanded to 5 options matching sell form.
-- **PWA:** `manifest.json` + `sw.js` added. `index.html` updated with manifest link, theme-color, iOS meta tags, apple-touch-icon, SW registration. **Pending: Gary to make a 512×512 square PNG icon → drop in `images/` → tell Claude filename → update manifest + apple-touch-icon.**
+- Profile drawer, Settings drawer, Recently Viewed, Saved Parts, saves metric, sell form photo picker, PWA manifest+SW, inbox badge fix, filter conditions expanded to 5.
 
 ### Session 4 (2 May 2026) — Workshops/Services, Inbox, Wanted CRUD, Garage delete
 
-- **Workshops:** `workshopDatabase` (4 workshops). `getRecommendedWorkshops()` scoring. "Need this fitted?" section in detail overlay (hidden for universal parts). `#workshopDrawer` dual-mode (Standard=browse, Pro=profile editor). Profile → `apc.workshopProfile.v1`.
-- **Inbox:** `#inboxDrawer` with All/Messages/Matches tabs. `getInitialInboxItems()` mock data → `apc.inbox.v1`. `#messageDetailDrawer` stacked. Unread badge via `updateInboxBadge()`. Items marked read only on individual open.
-- **Chat:** Photo attachment (📷) added. `appendChatBubble()` helper extracted.
-- **Wanted CRUD:** `myWanted` → `apc.wanted.v1`. `addWanted`, `deleteWanted`, `wantedMatchesPart`. `#addWantedDrawer` with part/vehicle/price fields. Zero-results search state → "ADD TO WANTED LIST" CTA. Vehicle detail Wanted + Matches tabs populated.
-- **Garage delete:** Trash icon on vehicle cards. `deleteVehicle()` cascades to remove that vehicle's wanted entries.
-
 ### Session 3 (1 May 2026) — Auth remember-me + detail image zoom
-
-- **Remember me fix:** `onSignOut()` no longer calls `clearRememberedUser()`. Remembered email persists across logout.
-- **Image lightbox:** `#imageLightbox` overlay with blur backdrop. Carousel images get `cursor:zoom-in` + click handler. `openDetailImageViewer()` / `closeDetailImageViewer()`.
 
 ### Session 2 (1 May 2026) — Garage phase 1
 
-- Bottom nav restructured: Home/Garage/Sell/Inbox (4 items at the time). FILTER text button in search bar.
-- `#garageDrawer`, `#addVehicleDrawer`, `#vehicleDetailDrawer` built. `fits` field added to all `partDatabase` entries. `partFitsVehicle()` added.
-- Saved parts heart on detail overlay only. `savedParts` Set → `apc.saved.v1`. Toast system (`showToast`).
-
 ### Session 1 (30 April 2026) — Header redesign + carousel
-
-- Logo left-aligned. Contextual account pill (Sign In / APC Standard / APC Pro). Pro FIND PARTS/FIND WANTED toggle. Account dropdown menu. Carousel scroll-snap + dot indicators.
 
 ---
 
 ## What's next
 
-1. **PWA icon** — Gary making a 512×512 square PNG (orange bg, logo centred). Drop in `images/`, tell Claude filename.
-2. **Desktop responsive layout** — CSS breakpoint ~900px: bottom nav hides, left sidebar appears, 4-5 col grid, drawers become centred modals. Gary has a PC homepage design as reference (pasted in session 5 chat).
+1. **Desktop polish** — many things to fix/tune after first look on PC. Logo now left-aligned. Still needed: overall spacing, right panel positioning, filter sidebar scroll, card grid proportions, top bar styling.
+2. **Desktop live filters** — on desktop, filter changes should re-render grid instantly (no Apply button needed). `oninput` on all filter inputs calling `applyFiltersAndRender()` without closing sidebar.
 3. **Edit vehicle** — tap vehicle card in garage to open Add Vehicle drawer pre-populated; save updates by id.
-4. **Primary vehicle toggle** — flag one vehicle as primary; used as default in Add-to-Wanted prefill.
-5. **Mute notifications per Wanted item** — toggle on Wanted card (`mutedNotifications` field already exists in data model).
+4. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
+5. **Mute notifications per Wanted item** — toggle on Wanted card (`mutedNotifications` field already exists).
 6. **Settings placeholders** — wire up Email, Change Password, Edit Profile, Help & Support rows.
 7. **`.gitignore`** — add `mockups/`, `snapshots/`, `300426.claude/`.
+8. **Wanted List** — add to desktop top utility bar (currently only Marketplace + Workshops).
 
 ---
 
 ## Last commit / push
 
-Sessions 1–4 pushed. Last pushed commit: `6c83ff4 Updated claude 010526`.
-**Session 5 is uncommitted.** Push from Git Bash when ready.
-
-Suggested commit message:
+Session 6 changes pushed incrementally during session.
+Final changes (logo left fix + session notes) — push from Git Bash:
 ```
-Session 5 — Profile, Settings, Recently Viewed, Saved Parts, PWA, saves metric, photo picker, polish
+git add index.html style.css script.js SESSION-NOTES.md
+git commit -m "Session 6 final — logo left on desktop, session notes updated"
+git push
 ```
