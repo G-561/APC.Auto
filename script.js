@@ -422,12 +422,9 @@ function closeTopDrawer() {
 function getFilterValues() {
     activeFilters.category = document.querySelector('#filterDrawer select')?.value || 'all';
 
-    const makeModelYear = document.querySelectorAll('#filterDrawer .input-row-flex input');
-    if (makeModelYear.length >= 3) {
-        activeFilters.make  = makeModelYear[0].value.trim().toLowerCase();
-        activeFilters.model = makeModelYear[1].value.trim().toLowerCase();
-        activeFilters.year  = makeModelYear[2].value.trim();
-    }
+    activeFilters.make  = (document.getElementById('filterMake')?.value  || '').trim().toLowerCase();
+    activeFilters.model = (document.getElementById('filterModel')?.value || '').trim().toLowerCase();
+    activeFilters.year  = (document.getElementById('filterYear')?.value  || '').trim();
 
     activeFilters.location = document.getElementById('filterStateSelect')?.value || 'all';
 
@@ -550,6 +547,8 @@ function buildCardHTML(part) {
         ? `📍 ${part.loc}`
         : `<span class="blurred-location">📍 ${part.loc}</span>`;
 
+    const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">♥</div>' : '';
+
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="lazy">
@@ -561,6 +560,7 @@ function buildCardHTML(part) {
                 <div class="item-title">${part.title}</div>
                 <div class="item-loc">${locationHTML}</div>
             </div>
+            ${savedDot}
         </div>`;
 }
 
@@ -1174,7 +1174,8 @@ function closeDetailImageViewer() {
         'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
 }
 
-function shareCurrentListing() {
+function shareCurrentListing(btn) {
+    if (btn) btn.blur(); // clear focus/active state so button doesn't stay highlighted
     const part = getPartById(currentOpenPartId);
     if (!part) return;
     const text = `${part.title} — $${part.price} | Auto Parts Connection`;
@@ -1491,6 +1492,7 @@ function toggleSavedPart(partId) {
     }
     persistSavedParts();
     syncDetailSaveButton(partId);
+    renderMainGrid(); // refresh saved indicators on cards
     if (currentVehicleId && currentVehicleTab === 'saved') renderVehicleTab();
     if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
 }
@@ -1532,7 +1534,7 @@ function renderSavedParts() {
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
                     <div class="rv-drawer-price">$${part.price}</div>
-                    <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">♥</button>
+                    <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
                 </div>
             </div>
         `).join('')}`;
@@ -2495,21 +2497,23 @@ function renderAccountState() {
 
 // Keep the results-grid pushed below the fixed header — replaces the old hardcoded margin-top: 155px
 function updateHeaderOffset() {
-    const header        = document.getElementById('mainHeader');
-    const grid          = document.getElementById('mainGrid');
-    const topBar        = document.getElementById('desktopTopBar');
-    const rightPanel    = document.getElementById('desktopRightPanel');
-    const filterDrawer  = document.getElementById('filterDrawer');
-    const detailOverlay = document.getElementById('detailOverlay');
+    const header           = document.getElementById('mainHeader');
+    const grid             = document.getElementById('mainGrid');
+    const topBar           = document.getElementById('desktopTopBar');
+    const rightPanel       = document.getElementById('desktopRightPanel');
+    const filterDrawer     = document.getElementById('filterDrawer');
+    const detailOverlay    = document.getElementById('detailOverlay');
+    const storefrontDrawer = document.getElementById('storefrontDrawer');
     if (header && grid) {
         // offsetParent is null for fixed elements regardless of visibility — use offsetHeight directly (0 when display:none)
         const topBarH = topBar ? topBar.offsetHeight : 0;
         const totalH  = header.offsetHeight + topBarH;
         grid.style.marginTop = totalH + 'px';
         if (window.innerWidth >= 900) {
-            if (rightPanel)    rightPanel.style.top    = totalH + 'px';
-            if (filterDrawer)  filterDrawer.style.top  = totalH + 'px';
-            if (detailOverlay) detailOverlay.style.top = totalH + 'px';
+            if (rightPanel)        rightPanel.style.top        = totalH + 'px';
+            if (filterDrawer)      filterDrawer.style.top      = totalH + 'px';
+            if (detailOverlay)     detailOverlay.style.top     = totalH + 'px';
+            if (storefrontDrawer)  storefrontDrawer.style.top  = totalH + 'px';
         }
     }
 }

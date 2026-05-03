@@ -163,7 +163,6 @@
             <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
                 <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
                 </div>
-                <button id="detailSaveBtn" class="detail-save-btn" onclick="toggleSavedPart(currentOpenPartId)" aria-label="Save listing">♡</button>
                 <div id="carouselDots" class="carousel-dots"></div>
             </div>
 
@@ -196,7 +195,7 @@
             </div>
 
             <div class="detail-actions-row">
-                <button class="detail-icon-btn" onclick="shareCurrentListing()" aria-label="Share listing">
+                <button class="detail-icon-btn" onclick="shareCurrentListing(this)" aria-label="Share listing">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
                         <polyline points="16 6 12 2 8 6"/>
@@ -322,10 +321,53 @@
 
         <div class="filter-section">
             <h4>Vehicle Details</h4>
-            <div class="input-row-flex">
-                <div class="input-group"><label>Make</label><input type="text" placeholder="e.g. Toyota"></div>
-                <div class="input-group"><label>Model</label><input type="text" placeholder="e.g. Hiace"></div>
-                <div class="input-group"><label>Year</label><input type="number" placeholder="2020"></div>
+            <div class="input-group">
+                <label>Make</label>
+                <input id="filterMake" type="text" placeholder="e.g. Toyota" list="makeOptions" autocomplete="off">
+                <datalist id="makeOptions">
+                    <option value="Alfa Romeo"><option value="Aston Martin"><option value="Audi">
+                    <option value="Bentley"><option value="BMW"><option value="BYD">
+                    <option value="Cadillac"><option value="Chevrolet"><option value="Chrysler">
+                    <option value="Citroen"><option value="Daihatsu"><option value="Dodge">
+                    <option value="Ferrari"><option value="Fiat"><option value="Ford">
+                    <option value="Great Wall"><option value="Holden"><option value="Honda">
+                    <option value="Hyundai"><option value="Infiniti"><option value="Isuzu">
+                    <option value="Jaguar"><option value="Jeep"><option value="Kia">
+                    <option value="Lamborghini"><option value="Land Rover"><option value="LDV">
+                    <option value="Lexus"><option value="Lotus"><option value="Maserati">
+                    <option value="Mazda"><option value="McLaren"><option value="Mercedes-Benz">
+                    <option value="MG"><option value="Mini"><option value="Mitsubishi">
+                    <option value="Nissan"><option value="Opel"><option value="Peugeot">
+                    <option value="Pontiac"><option value="Porsche"><option value="Range Rover">
+                    <option value="Renault"><option value="Rolls-Royce"><option value="Saab">
+                    <option value="Skoda"><option value="Ssangyong"><option value="Subaru">
+                    <option value="Suzuki"><option value="Toyota"><option value="Triumph">
+                    <option value="Volkswagen"><option value="Volvo">
+                </datalist>
+            </div>
+            <div class="input-group">
+                <label>Model</label>
+                <input id="filterModel" type="text" placeholder="e.g. Hiace">
+            </div>
+            <div class="input-group">
+                <label>Year</label>
+                <select id="filterYear">
+                    <option value="">Any Year</option>
+                    <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
+                    <option>2022</option><option>2021</option><option>2020</option><option>2019</option>
+                    <option>2018</option><option>2017</option><option>2016</option><option>2015</option>
+                    <option>2014</option><option>2013</option><option>2012</option><option>2011</option>
+                    <option>2010</option><option>2009</option><option>2008</option><option>2007</option>
+                    <option>2006</option><option>2005</option><option>2004</option><option>2003</option>
+                    <option>2002</option><option>2001</option><option>2000</option><option>1999</option>
+                    <option>1998</option><option>1997</option><option>1996</option><option>1995</option>
+                    <option>1994</option><option>1993</option><option>1992</option><option>1991</option>
+                    <option>1990</option><option>1989</option><option>1988</option><option>1987</option>
+                    <option>1986</option><option>1985</option><option>1984</option><option>1983</option>
+                    <option>1982</option><option>1981</option><option>1980</option><option>1975</option>
+                    <option>1970</option><option>1965</option><option>1960</option><option>1955</option>
+                    <option>1950</option>
+                </select>
             </div>
         </div>
 
@@ -956,7 +998,7 @@
         </div>
         <div class="amenu-section">
             <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico">❤️</span> Saved Parts <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico" style="color:var(--apc-orange);">♥</span> Saved Parts <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
