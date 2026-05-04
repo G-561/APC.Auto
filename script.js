@@ -357,6 +357,268 @@ function clearRememberedUser() {
 const INBOX_STORAGE_KEY = 'apc.inbox.v1';
 let inboxItems = loadInboxItems();
 
+// ── CONVERSATIONS (Message Centre) ───────────────────────────
+const CONVS_KEY = 'apc.conversations.v1';
+let conversations = loadConversations();
+let activeConvId  = null;
+let inboxCurrentTab = 'chats';
+
+function loadConversations() {
+    try { const s = localStorage.getItem(CONVS_KEY); if (s) return JSON.parse(s); } catch(e) {}
+    return getInitialConversations();
+}
+function saveConversations() {
+    try { localStorage.setItem(CONVS_KEY, JSON.stringify(conversations)); } catch(e) {}
+}
+function getInitialConversations() {
+    return [
+        { id:1, with:'Dave R.',            isPro:false, unread:true,  partId:1,  msgs:[
+            {id:1,sent:false,text:'Hey, is the Hiace mirror still available?',          time:'Mon',       clock:'9:14 am'},
+            {id:2,sent:true, text:'Yes still available — good condition, no cracks.',   time:'Mon',       clock:'9:32 am'},
+            {id:3,sent:false,text:'Would you take $70 for it?',                         time:'Mon',       clock:'9:45 am'},
+            {id:4,sent:true, text:'Best I can do is $75 — fits 2019+ perfectly.',       time:'Mon',       clock:'10:02 am'},
+            {id:5,sent:false,text:'Done! Can I pick up Saturday morning?',              time:'Today',     clock:'8:03 am'},
+        ]},
+        { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:2,  msgs:[
+            {id:1,sent:false,text:'Hi! Is the Lotus spoiler still for sale?',           time:'Yesterday', clock:'2:11 pm'},
+            {id:2,sent:true, text:'Yes — genuine factory item, excellent condition.',   time:'Yesterday', clock:'2:45 pm'},
+            {id:3,sent:false,text:'Does it come with the mounting hardware?',           time:'Yesterday', clock:'3:02 pm'},
+        ]},
+        { id:3, with:'Tom K.',             isPro:false, unread:false, partId:12, msgs:[
+            {id:1,sent:false,text:'Interested in the 1KD engine — km reading?',        time:'Wed',       clock:'11:20 am'},
+            {id:2,sent:true, text:'156,000km, ran perfectly when pulled. Fully tested.',time:'Wed',       clock:'11:55 am'},
+            {id:3,sent:false,text:'Can you do $2,600?',                                 time:'Wed',       clock:'12:10 pm'},
+            {id:4,sent:true, text:"Best is $2,700 — includes the turbo.",               time:'Wed',       clock:'12:18 pm'},
+            {id:5,sent:false,text:'Fair enough! Can you arrange freight from Adelaide?',time:'Wed',       clock:'1:30 pm'},
+        ]},
+        { id:4, with:'Brett (Parts Plus)', isPro:true,  unread:true,  partId:9,  msgs:[
+            {id:1,sent:false,text:"Do you have more Hiace turbos? We'd buy 3 if available.", time:'Thu', clock:'8:50 am'},
+            {id:2,sent:true, text:"2 in stock now. Can source more — what's your timeline?", time:'Thu', clock:'9:15 am'},
+            {id:3,sent:false,text:'No rush, within a month. Price firm on $650 each?',       time:'Thu', clock:'9:28 am'},
+        ]},
+        { id:5, with:'Lee P.',             isPro:false, unread:false, partId:13, msgs:[
+            {id:1,sent:false,text:'Is the Elise headlight driver or passenger side?',   time:'Tue',      clock:'4:45 pm'},
+            {id:2,sent:true, text:"Left (driver's side). Fits S2 models 2001–2011.",    time:'Tue',      clock:'5:10 pm'},
+            {id:3,sent:false,text:"Perfect — exactly what I need. I'll be in touch!",   time:'Tue',      clock:'5:22 pm'},
+        ]},
+    ];
+}
+function nextConvId() { return conversations.length ? Math.max(...conversations.map(c=>c.id))+1 : 1; }
+function nextMsgId(conv) { return conv.msgs.length ? Math.max(...conv.msgs.map(m=>m.id))+1 : 1; }
+function nowClock() {
+    const d=new Date(); let h=d.getHours(),m=d.getMinutes();
+    const ap=h>=12?'pm':'am'; h=h%12||12;
+    return `${h}:${String(m).padStart(2,'0')} ${ap}`;
+}
+function getConvPartTitle(conv) {
+    const p = findPartAnywhere(conv.partId);
+    return p ? p.title : (conv.partTitle || 'Part');
+}
+
+function switchInboxTab(tab) {
+    inboxCurrentTab = tab;
+    const chatsBtn  = document.getElementById('itabChats');
+    const notifsBtn = document.getElementById('itabNotifs');
+    if (chatsBtn)  chatsBtn.classList.toggle('active',  tab === 'chats');
+    if (notifsBtn) notifsBtn.classList.toggle('active', tab === 'notifications');
+    const chatsPanel  = document.getElementById('inboxChatsPanel');
+    const notifsPanel = document.getElementById('inboxNotifsPanel');
+    if (chatsPanel)  chatsPanel.style.display  = tab === 'chats' ? 'flex' : 'none';
+    if (notifsPanel) notifsPanel.style.display = tab === 'notifications' ? 'flex' : 'none';
+    if (tab === 'chats')         renderInboxConvList();
+    if (tab === 'notifications') renderInboxContent();
+}
+
+function renderInboxConvList(filter) {
+    const list = document.getElementById('inboxConvList');
+    if (!list) return;
+    const q = (filter || '').toLowerCase();
+    const filtered = q
+        ? conversations.filter(c => c.with.toLowerCase().includes(q) || getConvPartTitle(c).toLowerCase().includes(q))
+        : conversations;
+    if (!filtered.length) {
+        list.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;font-weight:600;">No conversations yet</div>';
+        return;
+    }
+    list.innerHTML = filtered.map(c => {
+        const last    = c.msgs[c.msgs.length - 1];
+        const preview = last ? ((last.sent ? 'You: ' : '') + (last.photo ? '📷 Photo' : last.text)) : '';
+        return `
+            <div class="inbox-conv-item${c.unread?' unread':''}${activeConvId===c.id?' active':''}" onclick="openInboxConv(${c.id})">
+                <div class="inbox-conv-name-row">
+                    <span class="inbox-conv-name">${escapeHtml(c.with)}</span>
+                    <span class="inbox-conv-time">${last?last.time:''}</span>
+                    ${c.unread?'<div class="inbox-unread-dot"></div>':''}
+                </div>
+                <div class="inbox-conv-part">${escapeHtml(getConvPartTitle(c))}</div>
+                <div class="inbox-conv-preview">${escapeHtml(preview)}</div>
+            </div>`;
+    }).join('');
+}
+
+function openInboxConv(id) {
+    activeConvId = id;
+    const conv = conversations.find(c => c.id === id);
+    if (!conv) return;
+    conv.unread = false;
+    saveConversations();
+    updateInboxBadge();
+    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+    const part  = findPartAnywhere(conv.partId);
+    const thumb = document.getElementById('inboxThreadThumb');
+    if (thumb) thumb.src = part?.images?.[0] || '';
+    const withEl  = document.getElementById('inboxThreadWith');
+    const titleEl = document.getElementById('inboxThreadTitle');
+    const priceEl = document.getElementById('inboxThreadPrice');
+    if (withEl)  withEl.textContent  = conv.with;
+    if (titleEl) titleEl.textContent = part ? part.title : (conv.partTitle || '');
+    if (priceEl) priceEl.textContent = part ? '$' + part.price : '';
+    renderInboxMsgs(conv);
+    document.getElementById('inboxThreadEmpty').style.display = 'none';
+    const tc = document.getElementById('inboxThreadContent');
+    tc.style.display = 'flex';
+    document.getElementById('inboxConvCol').classList.add('slide-away');
+    document.getElementById('inboxThreadCol').classList.add('slide-in');
+    setTimeout(() => document.getElementById('inboxReplyInput')?.focus(), 300);
+}
+
+function renderInboxMsgs(conv) {
+    const box = document.getElementById('inboxMsgList');
+    if (!box) return;
+    const me = currentUserName || 'You';
+    let lastDay = '';
+    box.innerHTML = conv.msgs.map((m, idx) => {
+        let divider = '';
+        if (m.time !== lastDay) { lastDay = m.time; divider = `<div class="inbox-date-divider">${m.time}</div>`; }
+        const content = m.photo ? `<img src="${m.photo}" alt="Photo">` : escapeHtml(m.text);
+        const delBtn  = `<button class="inbox-msg-del" onclick="deleteInboxMsg(${conv.id},${idx})" title="Delete">×</button>`;
+        const initial = m.sent ? me.charAt(0).toUpperCase() : conv.with.charAt(0).toUpperCase();
+        return `${divider}
+            <div class="inbox-msg-row ${m.sent?'sent':'received'}" ontouchstart="this.classList.toggle('del-visible')">
+                ${!m.sent ? delBtn : ''}
+                <div class="inbox-msg-avatar">${initial}</div>
+                <div class="inbox-msg-col">
+                    <div class="inbox-msg-bubble">${content}</div>
+                    <div class="inbox-msg-time">${m.clock}</div>
+                </div>
+                ${m.sent ? delBtn : ''}
+            </div>`;
+    }).join('');
+    box.scrollTop = box.scrollHeight;
+}
+
+function closeInboxThread() {
+    document.getElementById('inboxConvCol').classList.remove('slide-away');
+    document.getElementById('inboxThreadCol').classList.remove('slide-in');
+}
+
+function sendInboxMessage() {
+    const input = document.getElementById('inboxReplyInput');
+    const text  = input?.value.trim();
+    if (!text || activeConvId === null) return;
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) return;
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, text, time: 'Today', clock: nowClock() });
+    input.value = ''; input.style.height = 'auto';
+    saveConversations();
+    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+    renderInboxMsgs(conv);
+}
+
+function sendInboxPhoto(event) {
+    const file = event.target.files[0];
+    if (!file || activeConvId === null) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const conv = conversations.find(c => c.id === activeConvId);
+        if (!conv) return;
+        conv.msgs.push({ id: nextMsgId(conv), sent: true, text: '', photo: e.target.result, time: 'Today', clock: nowClock() });
+        saveConversations();
+        renderInboxConvList();
+        renderInboxMsgs(conv);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+
+function deleteInboxMsg(convId, msgIdx) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    conv.msgs.splice(msgIdx, 1);
+    saveConversations();
+    renderInboxConvList();
+    renderInboxMsgs(conv);
+}
+
+function viewConvListing() {
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) return;
+    const part = findPartAnywhere(conv.partId);
+    if (!part) { showToast('Listing no longer available'); return; }
+    openItemPreview(part);
+}
+
+function openItemPreview(part) {
+    const body = document.getElementById('iipBody');
+    if (!body) return;
+
+    const images = part.images && part.images.length ? part.images : ['images/placeholder.png'];
+
+    const thumbsHtml = images.length > 1
+        ? `<div class="iip-thumbs">${images.map((src, i) =>
+            `<img class="iip-thumb${i===0?' active':''}" src="${src}" alt=""
+             onclick="iipSelectPhoto(this,'${src}')">`).join('')}</div>`
+        : '';
+
+    const deliveryBadges = [
+        part.pickup  !== false ? '<div class="iip-delivery-badge">📍 Pickup Available</div>' : '',
+        part.postage || part.postage === true ? '<div class="iip-delivery-badge">📦 Postage Available</div>' : '',
+        part.fit ? '<div class="iip-delivery-badge">🔧 Fitting Available</div>' : '',
+    ].filter(Boolean).join('');
+
+    const fitmentHtml = part.fits && part.fits.length
+        ? `<div class="iip-section-label">Vehicle Fitment</div>
+           <div class="iip-fitment">${part.fits.map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ')}</div>`
+        : '';
+
+    const locHtml = part.loc
+        ? `<div class="iip-delivery-badge">📍 ${escapeHtml(part.loc)}</div>` : '';
+
+    body.innerHTML = `
+        <div class="iip-photos">
+            <img class="iip-main-photo" id="iipMainPhoto" src="${images[0]}" alt="${escapeHtml(part.title)}"
+                 onclick="openDetailImageViewer('${images[0]}')">
+            ${thumbsHtml}
+        </div>
+        <div class="iip-price-row">
+            <div class="iip-price">$${part.price}</div>
+            ${part.condition ? `<div class="iip-condition">${escapeHtml(part.condition)}</div>` : ''}
+        </div>
+        <div class="iip-title">${escapeHtml(part.title)}</div>
+        <div class="iip-delivery">${deliveryBadges}${locHtml}</div>
+        ${fitmentHtml}
+        <div class="iip-section-label">Description</div>
+        <div class="iip-description">${escapeHtml(part.description || 'Fully functional part. Tested and ready for installation.')}</div>
+        ${part.apcId ? `<div class="iip-apc-id">Item ID: ${part.apcId}</div>` : ''}
+    `;
+
+    document.getElementById('inboxItemPreview').classList.add('open');
+}
+
+function closeItemPreview() {
+    document.getElementById('inboxItemPreview').classList.remove('open');
+}
+
+function iipSelectPhoto(thumb, src) {
+    document.getElementById('iipMainPhoto').src = src;
+    document.querySelectorAll('.iip-thumb').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
+}
+
+function filterInboxConvs(val) { renderInboxConvList(val); }
+function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+function inboxHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendInboxMessage();} }
+
 function loadInboxItems() {
     try {
         const raw = localStorage.getItem(INBOX_STORAGE_KEY);
@@ -1452,11 +1714,18 @@ function closeMessageDetailDrawer() {
 }
 
 function handleMessageSeller() {
-    if (!userIsSignedIn) {
-        openAuthDrawer();
-    } else {
-        toggleDrawer('chatDrawer', true);
+    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    const part = getPartById(currentOpenPartId);
+    if (!part) return;
+    let conv = conversations.find(c => c.partId === currentOpenPartId);
+    if (!conv) {
+        conv = { id: nextConvId(), with: part.seller, isPro: !!part.isPro, unread: false, partId: currentOpenPartId, msgs: [] };
+        conversations.unshift(conv);
+        saveConversations();
     }
+    toggleDrawer('inboxDrawer', true);
+    switchInboxTab('chats');
+    openInboxConv(conv.id);
 }
 
 // XSS-safe chat: build message node with textContent, never innerHTML
@@ -2153,21 +2422,27 @@ function showToast(msg) {
 let currentInboxTab = 'all';
 
 function onOpenInbox() {
-    renderInbox();
     updateInboxBadge();
     toggleDrawer('inboxDrawer');
+    switchInboxTab('chats');
 }
 
 function updateInboxBadge() {
-    const unreadCount = inboxItems.filter(item => item.unread).length;
-    const text = unreadCount > 99 ? '99+' : String(unreadCount);
-    const show = unreadCount > 0;
+    const unreadConvs  = conversations.filter(c => c.unread).length;
+    const unreadNotifs = inboxItems.filter(i => i.unread).length;
+    const total = unreadConvs + unreadNotifs;
+    const text  = total > 99 ? '99+' : String(total);
+    const show  = total > 0;
     const mobile  = document.getElementById('inboxBadge');
     const sidebar = document.getElementById('inboxBadgeDesktop');
     const topBar  = document.getElementById('inboxBadgeTopBar');
     if (mobile)  { mobile.textContent  = text; mobile.style.display  = show ? 'block' : 'none'; }
     if (sidebar) { sidebar.textContent = text; sidebar.style.display = show ? 'inline-block' : 'none'; }
     if (topBar)  { topBar.textContent  = text; topBar.style.display  = show ? 'inline-block' : 'none'; }
+    const chatsBadge  = document.getElementById('inboxChatsBadge');
+    const notifsBadge = document.getElementById('inboxNotifsBadge');
+    if (chatsBadge)  { chatsBadge.textContent  = unreadConvs;  chatsBadge.style.display  = unreadConvs  > 0 ? 'inline' : 'none'; }
+    if (notifsBadge) { notifsBadge.textContent = unreadNotifs; notifsBadge.style.display = unreadNotifs > 0 ? 'inline' : 'none'; }
 }
 
 function setInboxTab(tab) {

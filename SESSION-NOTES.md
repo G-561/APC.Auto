@@ -139,6 +139,17 @@ location.reload();
 
 ## Sessions completed
 
+### Session 10 (6 May 2026) — Message centre wired in, item preview panel, workshops mobile fix
+
+- **Message centre — full two-panel inbox:** replaced `inboxDrawer` with two-panel layout. Chats tab (conversation list + thread) + Notifications tab (existing match/alert items). Desktop: 270px conv list + flex thread column. Mobile: full-width slide animation (list → thread).
+- **Conversations data:** `conversations` array, `CONVS_KEY = 'apc.conversations.v1'`. 5 seeded mock conversations referencing real partDatabase parts (IDs 1, 2, 9, 12, 13). Each message: `{ id, sent, text, photo, time, clock }`.
+- **`openInboxConv(id)`:** marks unread false, populates thread header via `findPartAnywhere`, renders bubbles, slides panels on mobile.
+- **`renderInboxMsgs(conv)`:** date dividers, sent (orange right) / received (grey left) bubbles, × delete on hover/tap.
+- **`handleMessageSeller()`:** finds or creates conversation for `currentOpenPartId`, opens inbox Chats tab, opens conversation directly.
+- **`updateInboxBadge()`:** counts unread convs + notifications. Updates 3 badge targets + tab badges (`#inboxChatsBadge`, `#inboxNotifsBadge`).
+- **Item preview panel (`#inboxItemPreview`):** absolutely positioned in `.inbox-thread-col`, slides in from right. Shows photo carousel (main + thumbs), price + condition, title, delivery badges, fitment, description (with fallback), APC ID. Header: "Item Details" left, "Back to chat →" right.
+- **Workshops mobile fix:** "Workshops & Services" re-added to mobile account drawer with `amenu-mobile-only` class, hidden on desktop via `@media (min-width: 900px)`.
+
 ### Session 9 (5 May 2026) — Sell form polish, APC Item ID, stock number, message centre mockup
 
 - **Sell form — Vehicle Details:** renamed "Vehicle Fitment" → "Vehicle Details" h4.
@@ -195,7 +206,7 @@ location.reload();
 
 ## What's next
 
-1. **Message centre — wire into app** — replace `inboxDrawer` + `messageDetailDrawer` with the two-panel layout from `mockup-messages.html`. Hook into `handleMessageSeller()` so conversations open from detail page.
+1. **Message centre — polish** — delete entire conversation, unread/read toggle, empty state when no conversations.
 2. **Edit vehicle** — tap a garage card to open Add Vehicle drawer pre-populated; save updates by ID.
 3. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
 4. **Wanted List view** — standalone view accessible from account menu.
@@ -207,9 +218,9 @@ location.reload();
 
 ## Last commit / push
 
-Session 9 — push from Git Bash:
+Session 10 — push from Git Bash:
 ```
 git add index.html style.css script.js SESSION-NOTES.md
-git commit -m "Session 9 — APC Item ID, stock number search, sell form polish, load more, message centre mockup"
+git commit -m "Session 10 — Message centre wired in, item preview panel, workshops mobile fix"
 git push
 ```

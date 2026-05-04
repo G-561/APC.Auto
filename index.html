@@ -1111,16 +1111,80 @@
 <!-- INBOX — bottom nav stub becomes real screen -->
 <div id="inboxDrawer" class="drawer">
     <div class="drawer-header">
-        <span>INBOX</span>
+        <span>Messages</span>
         <div onclick="toggleDrawer('inboxDrawer')" style="font-size:30px; cursor:pointer">×</div>
     </div>
-    <div class="drawer-content">
-        <div class="inbox-tabs">
-            <div class="inbox-tab active" data-tab="all" onclick="setInboxTab('all')">All</div>
-            <div class="inbox-tab" data-tab="messages" onclick="setInboxTab('messages')">Messages</div>
-            <div class="inbox-tab" data-tab="matches" onclick="setInboxTab('matches')">Matches</div>
+    <div class="drawer-content inbox-drawer-content">
+
+        <!-- Tab bar: Chats | Notifications -->
+        <div class="inbox-tab-bar">
+            <button class="itab active" id="itabChats" onclick="switchInboxTab('chats')">Chats <span id="inboxChatsBadge" class="itab-badge" style="display:none;"></span></button>
+            <button class="itab" id="itabNotifs" onclick="switchInboxTab('notifications')">Notifications <span id="inboxNotifsBadge" class="itab-badge" style="display:none;"></span></button>
         </div>
-        <div id="inboxContent"></div>
+
+        <!-- Chats: two-panel (list + thread) -->
+        <div id="inboxChatsPanel" class="inbox-two-panel">
+
+            <!-- Left: conversation list -->
+            <div class="inbox-conv-col" id="inboxConvCol">
+                <div class="inbox-conv-search">
+                    <input type="text" id="inboxSearchInput" placeholder="Search messages..." oninput="filterInboxConvs(this.value)">
+                </div>
+                <div id="inboxConvList" class="inbox-conv-list"></div>
+            </div>
+
+            <!-- Right: thread view -->
+            <div class="inbox-thread-col" id="inboxThreadCol">
+                <div id="inboxThreadEmpty" class="inbox-thread-empty">
+                    <div style="font-size:40px; margin-bottom:8px;">💬</div>
+                    <div>Select a conversation</div>
+                </div>
+                <!-- Item preview — slides in over thread when "View" is tapped -->
+                <div id="inboxItemPreview" class="inbox-item-preview">
+                    <div class="iip-header">
+                        <span class="iip-header-label">Item Details</span>
+                        <button class="iip-back-btn" onclick="closeItemPreview()">Back to chat →</button>
+                    </div>
+                    <div class="iip-body" id="iipBody"></div>
+                </div>
+
+                <div id="inboxThreadContent" style="display:none; flex-direction:column; height:100%; overflow:hidden;">
+                    <div class="inbox-thread-hdr">
+                        <button class="inbox-back-btn" onclick="closeInboxThread()">←</button>
+                        <img id="inboxThreadThumb" class="inbox-thread-thumb" src="" alt="">
+                        <div class="inbox-thread-meta">
+                            <div id="inboxThreadWith" class="inbox-thread-with"></div>
+                            <div id="inboxThreadTitle" class="inbox-thread-title"></div>
+                            <div id="inboxThreadPrice" class="inbox-thread-price"></div>
+                        </div>
+                        <button class="inbox-view-btn" onclick="viewConvListing()">View</button>
+                    </div>
+                    <div id="inboxMsgList" class="inbox-msg-list"></div>
+                    <div class="inbox-reply-bar">
+                        <input type="file" id="inboxPhotoInput" accept="image/*" style="display:none;" onchange="sendInboxPhoto(event)">
+                        <button class="inbox-photo-btn" onclick="document.getElementById('inboxPhotoInput').click()" title="Send photo">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        </button>
+                        <textarea id="inboxReplyInput" class="inbox-reply-input" rows="1" placeholder="Type a message…"
+                            oninput="inboxAutoResize(this)" onkeydown="inboxHandleKey(event)"></textarea>
+                        <button class="inbox-send-btn" onclick="sendInboxMessage()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications: existing inbox items (matches, alerts) -->
+        <div id="inboxNotifsPanel" style="display:none; flex:1; overflow-y:auto; flex-direction:column;">
+            <div class="inbox-tabs">
+                <div class="inbox-tab active" data-tab="all" onclick="setInboxTab('all')">All</div>
+                <div class="inbox-tab" data-tab="messages" onclick="setInboxTab('messages')">Messages</div>
+                <div class="inbox-tab" data-tab="matches" onclick="setInboxTab('matches')">Matches</div>
+            </div>
+            <div id="inboxContent"></div>
+        </div>
+
     </div>
 </div>
 
@@ -1166,6 +1230,7 @@
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Wanted List')">Wanted List <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')">Messages <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item amenu-mobile-only" onclick="dtbOpenWorkshops(); closeAccountMenu()">Workshops &amp; Services <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
             <button class="account-menu-item" onclick="onMenuOpenProfile()">Profile <span class="account-menu-chevron">›</span></button>
