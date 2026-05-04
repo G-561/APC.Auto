@@ -39,12 +39,12 @@ const partDatabase = [
     { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000, openToOffers: true, warehouseBin: 'B2-S1' },
     { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1742688000000, warehouseBin: 'A1-S4' },
     { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31, date: 1743724800000 },
-    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000 },
+    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000, status: 'sold' },
     { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000, openToOffers: true },
     { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000 },
     { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 },
     { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000, warehouseBin: 'C3-S2' },
-    { id: 10, title: "Lotus Elise S2 Carbon Rear Diffuser", price: 480, images: ["images/elise.diffuser.jpg", "images/elise.exhaust.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 11, date: 1737590400000 },
+    { id: 10, title: "Lotus Elise S2 Carbon Rear Diffuser", price: 480, images: ["images/elise.diffuser.jpg", "images/elise.exhaust.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 11, date: 1737590400000, status: 'sold' },
     { id: 11, title: "Toyota Hiace Tow Bar Heavy Duty", price: 220, images: ["images/hiace.towbar.webp", "images/hiace.bumper.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Jason M.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 7, date: 1738108800000 },
     { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000, warehouseBin: 'C1-S1' },
     { id: 13, title: "Lotus Elise S2 Left Headlight", price: 380, images: ["images/elise.headlight.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 15, date: 1740009600000 },
@@ -117,11 +117,16 @@ const publicWantedDatabase = [
 ];
 
 const workshopDatabase = [
-    { id: 1, name: 'Eastside Toyota Repairs', specialty: 'Camry bonnet, body panels & crash repair', distance: '3.4km', loc: 'ADELAIDE, SA', rating: 4.9, vehicleTypes: ['Toyota', 'Camry', 'Hiace'], services: ['panel', 'crash repair', 'fitting'] },
-    { id: 2, name: 'City Crash Workshop', specialty: 'Volkswagen and general panel fitment', distance: '5.1km', loc: 'ADELAIDE, SA', rating: 4.8, vehicleTypes: ['Volkswagen', 'Golf', 'Passat'], services: ['panel', 'alignment', 'fitment', 'electrical'] },
-    { id: 3, name: 'Suburban Auto Fitters', specialty: 'Suspension, brakes and body fitment for Japanese sedans', distance: '6.8km', loc: 'ADELAIDE, SA', rating: 4.7, vehicleTypes: ['Toyota', 'Mazda', 'Nissan'], services: ['mechanical', 'fitting', 'inspection', 'tyres'] },
-    { id: 4, name: 'Crash & Panel Pros', specialty: 'Full repair, repaint and fitting service', distance: '8.4km', loc: 'ADELAIDE, SA', rating: 4.6, vehicleTypes: ['Toyota', 'Volkswagen', 'Ford'], services: ['panel', 'body', 'fitment'] }
+    { id: 1, name: 'Eastside Toyota Repairs', specialty: 'Camry bonnet, body panels & crash repair', distance: '3.4km', loc: 'ADELAIDE, SA', rating: 4.9, approvedClub: 'RAA', vehicleTypes: ['Toyota', 'Camry', 'Hiace'], services: ['panel', 'crash repair', 'fitting', 'radiator', 'cooling'] },
+    { id: 2, name: 'City Crash Workshop', specialty: 'Volkswagen and general panel fitment', distance: '5.1km', loc: 'ADELAIDE, SA', rating: 4.8, approvedClub: 'RAA', vehicleTypes: ['Volkswagen', 'Golf', 'Passat'], services: ['panel', 'alignment', 'fitment', 'electrical', 'air conditioning'] },
+    { id: 3, name: 'Suburban Auto Fitters', specialty: 'Suspension, brakes and body fitment for Japanese sedans', distance: '6.8km', loc: 'ADELAIDE, SA', rating: 4.7, vehicleTypes: ['Toyota', 'Mazda', 'Nissan'], services: ['mechanical', 'fitting', 'inspection', 'tyres', 'air conditioning'] },
+    { id: 4, name: 'Crash & Panel Pros', specialty: 'Full repair, repaint and fitting service', distance: '8.4km', loc: 'ADELAIDE, SA', rating: 4.6, vehicleTypes: ['Toyota', 'Volkswagen', 'Ford'], services: ['panel', 'body', 'fitment', 'upholstery', 'trimmer'] },
+    { id: 5, name: 'Hills Auto Trimmers', specialty: 'Custom upholstery, seat repairs and interior restoration', distance: '24km', loc: 'STIRLING, SA', rating: 4.8, vehicleTypes: ['All makes'], services: ['upholstery', 'trimmer'] },
+    { id: 6, name: 'Southern Auto Electrics & Air', specialty: 'Auto electrical, A/C regas and fault diagnosis', distance: '38km', loc: 'NOARLUNGA, SA', rating: 4.7, vehicleTypes: ['All makes'], services: ['electrical', 'air conditioning'] },
+    { id: 7, name: 'Barossa Mechanical & Cooling', specialty: 'Radiator repairs, engine cooling and general mechanical', distance: '62km', loc: 'NURIOOTPA, SA', rating: 4.5, vehicleTypes: ['Toyota', 'Ford', 'Holden'], services: ['mechanical', 'radiator', 'cooling'] }
 ];
+
+let workshopRadiusKm = null;
 
 const WORKSHOP_PROFILE_KEY = 'apc.workshopProfile.v1';
 let workshopProfile = loadWorkshopProfile();
@@ -170,6 +175,24 @@ function saveRecentlyViewed() {
 function setActiveNav(el) {
     document.querySelectorAll('.nav-item, .dsb-item').forEach(n => n.classList.remove('active'));
     if (el) el.classList.add('active');
+}
+
+function setDtbActive(id) {
+    document.querySelectorAll('.dtb-link').forEach(el => el.classList.remove('dtb-active'));
+    if (id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('dtb-active');
+    }
+}
+
+// Top-bar nav wrappers — set active state then open the section
+function dtbOpenWorkshops() {
+    setDtbActive('dtbWorkshops');
+    onMenuOpenWorkshops();
+}
+function dtbOpenInbox() {
+    setDtbActive('dtbMessages');
+    onOpenInbox();
 }
 
 function clearRecentlyViewed() {
@@ -360,10 +383,22 @@ function nextPartId() {
     return ids.length ? Math.max(...ids) + 1 : 1;
 }
 function getAllParts() {
-    return [...partDatabase, ...userListings];
+    return [...partDatabase, ...userListings].filter(p => p.status !== 'sold' && p.status !== 'removed');
+}
+function findPartAnywhere(id) {
+    return [...partDatabase, ...userListings].find(p => p.id === id);
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
+}
+
+function findSimilarActiveParts(stalePart) {
+    return getAllParts().filter(p => {
+        if (p.category !== stalePart.category) return false;
+        if (!stalePart.fits || stalePart.fits.length === 0) return true;
+        if (!p.fits || p.fits.length === 0) return true;
+        return p.fits.some(pf => stalePart.fits.some(sf => sf.make?.toLowerCase() === pf.make?.toLowerCase()));
+    });
 }
 
 function getDetailVehicleLabel(part) {
@@ -498,6 +533,7 @@ function onPostcodeInput(input) {
         stateSelect.classList.toggle('filter-input-disabled', hasPostcode);
         if (hasPostcode) stateSelect.value = 'all';
     }
+    applyFiltersAndRender();
 }
 
 function onStateChange(select) {
@@ -510,6 +546,7 @@ function onStateChange(select) {
         if (control) control.classList.add('radius-seg-disabled');
         if (hint) hint.style.display = 'block';
     }
+    applyFiltersAndRender();
 }
 
 function setRadiusFilter(el) {
@@ -517,6 +554,7 @@ function setRadiusFilter(el) {
     if (control && control.classList.contains('radius-seg-disabled')) return;
     document.querySelectorAll('#radiusSegControl .radius-seg').forEach(s => s.classList.remove('active'));
     if (el) el.classList.add('active');
+    applyFiltersAndRender();
 }
 
 function setSortOrder(el, order) {
@@ -543,6 +581,38 @@ function applyFiltersAndRender() {
     getFilterValues();
     renderMainGrid();
     if (window.innerWidth < 900) toggleDrawer('filterDrawer');
+}
+
+function clearAllFilters() {
+    // Reset DOM
+    const categorySelect = document.querySelector('#filterDrawer select');
+    if (categorySelect) categorySelect.value = 'all';
+    const makeInput = document.getElementById('filterMake');
+    if (makeInput) makeInput.value = '';
+    const modelInput = document.getElementById('filterModel');
+    if (modelInput) modelInput.value = '';
+    const yearSelect = document.getElementById('filterYear');
+    if (yearSelect) yearSelect.value = '';
+    const stateSelect = document.getElementById('filterStateSelect');
+    if (stateSelect) { stateSelect.value = 'all'; stateSelect.disabled = false; stateSelect.classList.remove('filter-input-disabled'); }
+    const postcodeInput = document.getElementById('filterPostcode');
+    if (postcodeInput) postcodeInput.value = '';
+    const radiusControl = document.getElementById('radiusSegControl');
+    if (radiusControl) {
+        radiusControl.classList.add('radius-seg-disabled');
+        radiusControl.querySelectorAll('.radius-seg').forEach((s, i) => s.classList.toggle('active', i === 0));
+    }
+    const radiusHint = document.getElementById('radiusHint');
+    if (radiusHint) radiusHint.style.display = 'block';
+    document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#sortDateSegControl .radius-seg').forEach((s, i) => s.classList.toggle('active', i === 0));
+    document.querySelectorAll('#filterDrawer input[type="checkbox"]').forEach(cb => cb.checked = true);
+    // Reset globals
+    sortOrder = 'none';
+    sortDate = 'newest';
+    // Re-render (getFilterValues reads fresh DOM state)
+    getFilterValues();
+    renderMainGrid();
 }
 
 function getFilteredParts() {
@@ -644,8 +714,10 @@ function renderMainGrid() {
     mainGrid.innerHTML = '';
 
     if (currentSearchMode === 'wanted') {
+        setDtbActive(null);
         return renderWantedSearchResults(mainGrid);
     }
+    setDtbActive(null);
 
     const filtered = getFilteredParts();
     mainGrid.innerHTML = '';
@@ -1557,6 +1629,7 @@ function renderGarage() {
 // --- SAVED PARTS: data model + persistence ---
 const SAVED_STORAGE_KEY = 'apc.saved.v1';
 let savedParts = loadSavedParts();   // Set<partId>
+let savedPartsTab = 'all';           // 'all' | 'active' | 'ended'
 
 function loadSavedParts() {
     try {
@@ -1600,15 +1673,32 @@ function closeSavedPartsDrawer() {
     syncBackdrop();
 }
 function onMenuOpenSavedParts() {
+    savedPartsTab = 'all';
     renderSavedParts();
     toggleDrawer('savedPartsDrawer', true);
+}
+
+function setSavedPartsTab(tab) {
+    savedPartsTab = tab;
+    renderSavedParts();
 }
 function renderSavedParts() {
     const content = document.getElementById('savedPartsContent');
     if (!content) return;
 
-    const parts = [...savedParts].map(id => getPartById(id)).filter(Boolean);
-    if (!parts.length) {
+    const activeParts = [];
+    const staleParts = [];
+    [...savedParts].forEach(id => {
+        const active = getPartById(id);
+        if (active) {
+            activeParts.push(active);
+        } else {
+            const anywhere = findPartAnywhere(id);
+            if (anywhere) staleParts.push(anywhere);
+        }
+    });
+
+    if (!activeParts.length && !staleParts.length) {
         content.innerHTML = `
             <div style="text-align:center; padding: 60px 20px; color: #aaa;">
                 <div style="font-size: 40px; margin-bottom: 12px;">♡</div>
@@ -1618,23 +1708,104 @@ function renderSavedParts() {
         return;
     }
 
-    content.innerHTML = `
-        <div class="rv-drawer-header">
-            <span class="rv-drawer-count">${parts.length} part${parts.length === 1 ? '' : 's'} saved</span>
-        </div>
-        ${parts.map(part => `
-            <div class="rv-drawer-row" onclick="openItemDetail(${part.id})">
-                <img src="${part.images[0]}" alt="" class="rv-drawer-img">
-                <div class="rv-drawer-info">
-                    <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
-                    <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
-                </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-                    <div class="rv-drawer-price">$${part.price}</div>
-                    <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
+    const totalCount = activeParts.length + staleParts.length;
+
+    const tabsHTML = `
+        <div class="sp-tabs">
+            <button class="sp-tab ${savedPartsTab === 'all' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('all')">All <span class="sp-tab-count">${totalCount}</span></button>
+            <button class="sp-tab ${savedPartsTab === 'active' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('active')">Active <span class="sp-tab-count">${activeParts.length}</span></button>
+            <button class="sp-tab ${savedPartsTab === 'ended' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('ended')">Ended <span class="sp-tab-count sp-tab-count-ended">${staleParts.length}</span></button>
+        </div>`;
+
+    const buildStaleHTML = (parts) => parts.map(part => {
+        const similar = findSimilarActiveParts(part);
+        const badge = part.status === 'sold' ? 'SOLD' : 'REMOVED';
+        return `
+        <div class="stale-row">
+            <div class="stale-img-wrap">
+                <img src="${part.images[0]}" alt="" class="rv-drawer-img stale-img">
+                <div class="stale-badge">${badge}</div>
+            </div>
+            <div class="rv-drawer-info">
+                <div class="stale-title">${escapeHtml(part.title)}</div>
+                <div class="stale-meta">This listing is no longer available</div>
+                <div class="stale-actions">
+                    ${similar.length ? `<button class="stale-action-btn stale-similar-btn" onclick="viewSimilarToStale(${part.id})">SEE SIMILAR ›</button>` : ''}
+                    <button class="stale-action-btn stale-wanted-btn" onclick="openAddWantedFromStale(${part.id})">ADD TO WANTED ›</button>
+                    <button class="stale-dismiss-btn" onclick="dismissStalePart(${part.id})">DISMISS</button>
                 </div>
             </div>
-        `).join('')}`;
+        </div>`;
+    }).join('');
+
+    const buildActiveHTML = (parts) => parts.map(part => `
+        <div class="rv-drawer-row" onclick="openItemDetail(${part.id})">
+            <img src="${part.images[0]}" alt="" class="rv-drawer-img">
+            <div class="rv-drawer-info">
+                <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
+                <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+                <div class="rv-drawer-price">$${part.price}</div>
+                <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
+            </div>
+        </div>
+    `).join('');
+
+    let bodyHTML = '';
+    if (savedPartsTab === 'all') {
+        bodyHTML = buildActiveHTML(activeParts);
+        if (staleParts.length) bodyHTML += `<div class="stale-section-hdr">No longer available</div>${buildStaleHTML(staleParts)}`;
+    } else if (savedPartsTab === 'active') {
+        bodyHTML = activeParts.length
+            ? buildActiveHTML(activeParts)
+            : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">All your saved listings have ended.</div>`;
+    } else {
+        bodyHTML = staleParts.length
+            ? buildStaleHTML(staleParts)
+            : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No ended listings — all your saves are still live.</div>`;
+    }
+
+    content.innerHTML = `
+        <div class="rv-drawer-header">${tabsHTML}</div>
+        ${bodyHTML}`;
+}
+
+function dismissStalePart(partId) {
+    savedParts.delete(partId);
+    persistSavedParts();
+    renderSavedParts();
+}
+
+function viewSimilarToStale(partId) {
+    const part = findPartAnywhere(partId);
+    if (!part) return;
+    activeFilters.category = part.category;
+    activeFilters.make = part.fits && part.fits.length ? part.fits[0].make.toLowerCase() : '';
+    activeFilters.model = '';
+    const catSelect = document.querySelector('#filterDrawer select');
+    if (catSelect) catSelect.value = part.category;
+    const makeInput = document.getElementById('filterMake');
+    if (makeInput) makeInput.value = part.fits && part.fits.length ? part.fits[0].make : '';
+    const modelInput = document.getElementById('filterModel');
+    if (modelInput) modelInput.value = '';
+    closeSavedPartsDrawer();
+    renderMainGrid();
+    window.scrollTo(0, 0);
+}
+
+function openAddWantedFromStale(partId) {
+    const part = findPartAnywhere(partId);
+    if (!part) return;
+    document.getElementById('wantedPartName').value = part.title;
+    document.getElementById('wantedMaxPrice').value = part.price || '';
+    populateWantedVehicleSelect();
+    if (part.fits && part.fits.length) {
+        const match = myVehicles.find(v => v.make?.toLowerCase() === part.fits[0].make?.toLowerCase());
+        if (match) document.getElementById('wantedVehicleSelect').value = match.id;
+    }
+    closeSavedPartsDrawer();
+    toggleDrawer('addWantedDrawer', true);
 }
 
 // --- WANTED PARTS: data model + persistence ---
@@ -2292,7 +2463,17 @@ function onAccountPillClick(e) {
         openAuthDrawer();
         return;
     }
-    toggleDrawer('accountMenuDrawer');
+    if (window.innerWidth >= 900) {
+        const dd = document.getElementById('accountDropdown');
+        if (dd) dd.classList.toggle('active');
+    } else {
+        toggleDrawer('accountMenuDrawer');
+    }
+}
+
+function closeAccountDropdown() {
+    const dd = document.getElementById('accountDropdown');
+    if (dd) dd.classList.remove('active');
 }
 
 function closeAccountMenu() {
@@ -2300,6 +2481,14 @@ function closeAccountMenu() {
     if (m) m.classList.remove('active');
     syncBackdrop();
 }
+
+document.addEventListener('click', function(e) {
+    const dd   = document.getElementById('accountDropdown');
+    const pill = document.getElementById('accountPill');
+    if (dd && dd.classList.contains('active') && !dd.contains(e.target) && !(pill && pill.contains(e.target))) {
+        closeAccountDropdown();
+    }
+});
 
 // Menu-item helpers — placeholders until each screen is built
 function closeProfileDrawer() {
@@ -2369,10 +2558,12 @@ function onMenuOpenWorkshops() {
         openAuthDrawer(onMenuOpenWorkshops);
         return;
     }
+    workshopRadiusKm = null;
+    document.querySelectorAll('#workshopRadiusControl .radius-seg').forEach((s, i, arr) => {
+        s.classList.toggle('active', i === arr.length - 1);
+    });
     renderWorkshopProfile();
-    if (currentUserTier !== 'pro') {
-        renderWorkshopBrowseView();
-    }
+    renderWorkshopBrowseView();
     toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {
@@ -2410,11 +2601,10 @@ function renderWorkshopProfile() {
     const saveBtn = document.querySelector('#workshopDrawer .btn-full-action');
     const isPro = currentUserTier === 'pro';
 
-    if (notice) notice.style.display = isPro ? 'none' : 'block';
-    if (profileFields) profileFields.style.display = isPro ? 'block' : 'none';
-    if (browseSection) browseSection.style.display = isPro ? 'none' : 'block';
-    if (drawerTitle) drawerTitle.textContent = isPro ? 'APC Pro Workshops' : 'Find workshops & services';
-    if (saveBtn) saveBtn.disabled = !isPro;
+    if (notice) notice.style.display = 'none';
+    if (browseSection) browseSection.style.display = 'block';
+    if (profileFields) profileFields.style.display = 'none';
+    if (drawerTitle) drawerTitle.textContent = 'Workshops & Services';
 
     const nameField = document.getElementById('workshopName');
     const locationField = document.getElementById('workshopLocation');
@@ -2438,30 +2628,71 @@ function renderWorkshopProfile() {
     if (serviceAlignment) serviceAlignment.checked = workshopProfile.services.alignment;
     if (serviceTyres) serviceTyres.checked = workshopProfile.services.tyres;
 }
+function setWorkshopRadius(el, km) {
+    workshopRadiusKm = km;
+    document.querySelectorAll('#workshopRadiusControl .radius-seg').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    renderWorkshopBrowseView();
+}
+
+function getApprovedClubInfo() {
+    const state = (document.getElementById('filterStateSelect')?.value || '').toUpperCase();
+    const map = {
+        SA:  { abbr: 'RAA',  full: 'RAA Approved Repairer' },
+        NSW: { abbr: 'NRMA', full: 'NRMA Approved Repairer' },
+        ACT: { abbr: 'NRMA', full: 'NRMA Approved Repairer' },
+        VIC: { abbr: 'RACV', full: 'RACV Approved Repairer' },
+        QLD: { abbr: 'RACQ', full: 'RACQ Approved Repairer' },
+        WA:  { abbr: 'RAC',  full: 'RAC Approved Repairer' },
+        TAS: { abbr: 'RACT', full: 'RACT Approved Repairer' },
+        NT:  { abbr: 'AANT', full: 'AANT Approved Repairer' },
+    };
+    return map[state] || { abbr: 'Club', full: 'Motoring Club Approved Repairer' };
+}
+
 function renderWorkshopBrowseView() {
     const filters = {
-        mechanical: document.getElementById('workshopFilterMechanical')?.checked,
-        crash: document.getElementById('workshopFilterCrash')?.checked,
+        mechanical:  document.getElementById('workshopFilterMechanical')?.checked,
+        crash:       document.getElementById('workshopFilterCrash')?.checked,
         electrician: document.getElementById('workshopFilterElectrician')?.checked,
-        tyres: document.getElementById('workshopFilterTyres')?.checked
+        tyres:       document.getElementById('workshopFilterTyres')?.checked,
+        trimmer:     document.getElementById('workshopFilterTrimmer')?.checked,
+        aircon:      document.getElementById('workshopFilterAircon')?.checked,
+        radiator:    document.getElementById('workshopFilterRadiator')?.checked
     };
     const sponsoredList = document.getElementById('workshopSponsoredList');
     if (!sponsoredList) return;
 
+    // Sync approved repairer label to current state selection
+    const clubInfo = getApprovedClubInfo();
+    const badge = document.getElementById('workshopApprovedBadge');
+    const text  = document.getElementById('workshopApprovedText');
+    if (badge) badge.textContent = clubInfo.abbr;
+    if (text)  text.textContent  = clubInfo.full;
+
+    const filterApproved = document.getElementById('workshopFilterApproved')?.checked;
     const query = (document.getElementById('workshopSearchInput')?.value || '').trim().toLowerCase();
 
     const activeFilters = Object.entries(filters).filter(([, value]) => value).map(([key]) => key);
     const matches = workshopDatabase.filter(w => {
+        if (filterApproved && !w.approvedClub) return false;
+        if (workshopRadiusKm !== null) {
+            const dist = parseFloat(w.distance);
+            if (isNaN(dist) || dist > workshopRadiusKm) return false;
+        }
         if (query) {
             const haystack = [w.name, w.loc, ...w.vehicleTypes, ...w.services].join(' ').toLowerCase();
             if (!haystack.includes(query)) return false;
         }
         if (!activeFilters.length) return true;
         return activeFilters.some(filter => {
-            if (filter === 'mechanical') return w.services.includes('mechanical');
-            if (filter === 'crash') return w.services.includes('crash repair') || w.services.includes('panel');
+            if (filter === 'mechanical')  return w.services.includes('mechanical');
+            if (filter === 'crash')       return w.services.includes('crash repair') || w.services.includes('panel');
             if (filter === 'electrician') return w.services.includes('electrical');
-            if (filter === 'tyres') return w.services.includes('tyres');
+            if (filter === 'tyres')       return w.services.includes('tyres');
+            if (filter === 'trimmer')     return w.services.includes('upholstery') || w.services.includes('trimmer');
+            if (filter === 'aircon')      return w.services.includes('air conditioning') || w.services.includes('aircon');
+            if (filter === 'radiator')    return w.services.includes('radiator') || w.services.includes('cooling');
             return false;
         });
     });
@@ -2475,10 +2706,13 @@ function renderWorkshopBrowseView() {
 }
 function buildSponsoredWorkshopCardHTML(workshop) {
     const stars = workshop.rating ? `<span class="workshop-rating">★ ${workshop.rating}</span>` : '';
+    const approvedBadge = workshop.approvedClub
+        ? `<span class="card-approved-badge">${workshop.approvedClub} Approved</span>`
+        : '';
     return `
         <div class="workshop-card workshop-sponsor-card">
             <div class="workshop-card-header">
-                <div class="workshop-card-name">${workshop.name}</div>
+                <div class="workshop-card-name">${workshop.name} ${approvedBadge}</div>
                 <div class="workshop-card-distance">${workshop.distance}</div>
             </div>
             <div class="workshop-card-specialty">${workshop.specialty}</div>
@@ -2548,17 +2782,23 @@ function renderAccountState() {
 
     pill.classList.remove('signed-out', 'signed-in', 'tier-standard', 'tier-pro');
 
+    const initial = (currentUserName || 'G').charAt(0).toUpperCase();
+    const isPillDesktop = window.innerWidth >= 900;
+    const avatarHTML = isPillDesktop
+        ? `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${initial}</span>`
+        : '';
+
     if (!userIsSignedIn) {
         pill.classList.add('signed-out');
         pill.innerHTML = 'Sign In';
         if (proToggle) proToggle.style.display = 'none';
     } else if (currentUserTier === 'pro') {
         pill.classList.add('signed-in');
-        pill.innerHTML = escapeHtml(currentUserName || 'Account') + ' <span class="pill-pro-label">Pro</span> <span class="caret">▾</span>';
+        pill.innerHTML = avatarHTML + escapeHtml(currentUserName || 'Account') + ' <span class="pill-pro-label">Pro</span> <span class="caret">▾</span>';
         if (proToggle) proToggle.style.display = proSearchOn ? 'flex' : 'none';
     } else {
         pill.classList.add('signed-in');
-        pill.innerHTML = escapeHtml(currentUserName || 'Account') + ' <span class="caret">▾</span>';
+        pill.innerHTML = avatarHTML + escapeHtml(currentUserName || 'Account') + ' <span class="caret">▾</span>';
         if (proToggle) proToggle.style.display = 'none';
     }
 
@@ -2585,8 +2825,30 @@ function renderAccountState() {
     const isPro = userIsSignedIn && currentUserTier === 'pro';
     const dtbDash   = document.getElementById('dtbDashboard');
     const amenuDash = document.getElementById('amenuDashboard');
-    if (dtbDash)   dtbDash.style.display   = isPro ? 'inline' : 'none';
+    if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
     if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
+
+    // Sync desktop dropdown
+    const ddAvatar  = document.getElementById('acctDdAvatar');
+    const ddName    = document.getElementById('acctDdName');
+    const ddTier    = document.getElementById('acctDdTier');
+    const ddUpgrade = document.getElementById('acctDdUpgrade');
+    const ddActivate= document.getElementById('acctDdActivate');
+    const ddDash    = document.getElementById('acctDdDashboard');
+    const ddSwitch  = document.getElementById('proSearchSwitchDd');
+    if (ddAvatar) {
+        ddAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
+        ddAvatar.style.background = isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
+    }
+    if (ddName)    ddName.textContent = currentUserName || 'Guest';
+    if (ddTier) {
+        ddTier.textContent  = isPro ? 'APC Pro' : (currentUserTier === 'standard' ? 'APC Standard' : '');
+        ddTier.classList.toggle('pro', isPro);
+    }
+    if (ddUpgrade)  ddUpgrade.style.display  = (currentUserTier === 'standard') ? 'flex' : 'none';
+    if (ddActivate) { ddActivate.style.display = isPro ? 'flex' : 'none'; ddActivate.classList.toggle('on', proSearchOn); }
+    if (ddDash)     ddDash.style.display      = isPro ? 'flex' : 'none';
+    if (ddSwitch)   ddSwitch.classList.toggle('on', proSearchOn);
 
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
@@ -2609,20 +2871,47 @@ function updateHeaderOffset() {
     const filterDrawer     = document.getElementById('filterDrawer');
     const detailOverlay    = document.getElementById('detailOverlay');
     const storefrontDrawer = document.getElementById('storefrontDrawer');
+    const garageDrawer        = document.getElementById('garageDrawer');
+    const vehicleDetailDrawer = document.getElementById('vehicleDetailDrawer');
+    const addVehicleDrawer    = document.getElementById('addVehicleDrawer');
+    const addWantedDrawer     = document.getElementById('addWantedDrawer');
+    const savedPartsDrawer    = document.getElementById('savedPartsDrawer');
+    const settingsDrawer      = document.getElementById('settingsDrawer');
+    const profileDrawer       = document.getElementById('profileDrawer');
+    const myPartsDrawer       = document.getElementById('myPartsDrawer');
+    const workshopDrawer      = document.getElementById('workshopDrawer');
+    const recentlyViewedDrawer= document.getElementById('recentlyViewedDrawer');
+    const inboxDrawer         = document.getElementById('inboxDrawer');
+    const messageDetailDrawer = document.getElementById('messageDetailDrawer');
+    const chatDrawer          = document.getElementById('chatDrawer');
+    const accountDropdown     = document.getElementById('accountDropdown');
     if (header && grid) {
-        // offsetParent is null for fixed elements regardless of visibility — use offsetHeight directly (0 when display:none)
         const topBarH = topBar ? topBar.offsetHeight : 0;
         const totalH  = header.offsetHeight + topBarH;
         grid.style.marginTop = totalH + 'px';
         if (window.innerWidth >= 900) {
-            if (rightPanel)        rightPanel.style.top        = totalH + 'px';
-            if (filterDrawer)      filterDrawer.style.top      = totalH + 'px';
-            if (detailOverlay)     detailOverlay.style.top     = totalH + 'px';
+            if (rightPanel)           rightPanel.style.top           = totalH + 'px';
+            if (filterDrawer)         filterDrawer.style.top         = totalH + 'px';
+            if (detailOverlay)        detailOverlay.style.top        = totalH + 'px';
             const sellOverlay = document.getElementById('sellOverlay');
-            if (sellOverlay)       sellOverlay.style.top       = totalH + 'px';
-            if (storefrontDrawer)  storefrontDrawer.style.top  = totalH + 'px';
+            if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
+            if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
+            if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
+            if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
+            if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
+            if (addWantedDrawer)      addWantedDrawer.style.top      = totalH + 'px';
+            if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
+            if (settingsDrawer)        settingsDrawer.style.top        = totalH + 'px';
+            if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';
+            if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
+            if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
+            if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
+            if (inboxDrawer)           inboxDrawer.style.top           = totalH + 'px';
+            if (messageDetailDrawer)   messageDetailDrawer.style.top   = totalH + 'px';
+            if (chatDrawer)            chatDrawer.style.top            = totalH + 'px';
+            if (accountDropdown)       accountDropdown.style.top       = (totalH + 8) + 'px';
             const dashView = document.getElementById('dashboardView');
-            if (dashView)          dashView.style.top          = totalH + 'px';
+            if (dashView)             dashView.style.top             = totalH + 'px';
         }
     }
 }
@@ -2810,6 +3099,7 @@ function submitCounterOffer(offerId) {
 
 function openDashboard() {
     if (window.innerWidth < 900) return;
+    setDtbActive('dtbDashboard');
     const fd = document.getElementById('filterDrawer');
     const rp = document.querySelector('.desktop-right-panel');
     if (fd) fd.style.setProperty('display', 'none', 'important');
@@ -2829,7 +3119,9 @@ function openDashboard() {
 
 function closeDashboard() {
     const dv = document.getElementById('dashboardView');
-    if (dv) dv.style.display = 'none';
+    if (!dv || dv.style.display === 'none') return;
+    dv.style.display = 'none';
+    setDtbActive(null);
     if (window.innerWidth >= 900) {
         const fd = document.getElementById('filterDrawer');
         const rp = document.querySelector('.desktop-right-panel');

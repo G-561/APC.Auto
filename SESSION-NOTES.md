@@ -11,11 +11,11 @@ If you're a fresh Claude session reading this: **read this file first**, then as
 - `index.html` — all markup. Drawers in DOM order (later = renders on top at equal z-index):
   `filterDrawer` → `authDrawer` → `sellOverlay` → `settingsDrawer` → `profileDrawer` → `myPartsDrawer` → `workshopDrawer` → `garageDrawer` → `addVehicleDrawer` → `vehicleDetailDrawer` → `addWantedDrawer` → `recentlyViewedDrawer` → `inboxDrawer` → `messageDetailDrawer` → `savedPartsDrawer` → `detailOverlay` → `storefrontDrawer` → `chatDrawer` → `accountMenuDrawer`
 - `style.css` — all styles. CSS variables at top (`--apc-orange: #F7941D`, `--apc-blue: #007AFF`, etc.). **Never introduce a new colour without checking these first.**
-- `script.js` — all state, render functions, drawer logic, auth, CRUD. ~2500+ lines.
+- `script.js` — all state, render functions, drawer logic, auth, CRUD. ~3000+ lines.
 
 Other files/folders:
 - `manifest.json` + `sw.js` — PWA setup.
-- `images/` — 35+ part photos + `apc_icon_512_centered.png` (PWA icon).
+- `images/` — 35+ part photos, `apc_icon_512_centered.png` (PWA icon), `croppedmotorclub.png` (motoring club logos banner).
 - `mockups/`, `snapshots/`, `300426.claude/` — workspace clutter, **not tracked in git**.
 
 ---
@@ -30,55 +30,69 @@ Other files/folders:
 - **`fits: []` = universal** in `partDatabase`. No separate `universal: true` flag.
 - **Drawer pattern everywhere** — no router. All screens are drawers using `toggleDrawer(id, allowStack)`.
 - **Stacked drawers** use `allowStack: true` to open on top. × buttons on stacked drawers use **dedicated close functions** (`closeAddVehicleDrawer()` etc.) — never bare `toggleDrawer()`.
-- **`getAllParts()`** = `[...partDatabase, ...userListings]`. Always use this, never `partDatabase` directly.
+- **`getAllParts()`** = `[...partDatabase, ...userListings]` filtered to exclude `status: 'sold'/'removed'`. Always use this, never `partDatabase` directly.
+- **`findPartAnywhere(id)`** — searches full array including sold/removed parts (used for stale saved card rendering).
 - **Pro Search defaults ON** when a user upgrades.
 - **Saves metric** (♥ X saves on My Listings) is **Pro-only**.
 - **Sort by Date defaults to "Newest first"** — no "Default" option. Price sort has no default; tap to activate, tap again to deselect.
 - **Postcode + radius are mutually exclusive with state filter** — typing a postcode disables state dropdown; selecting a state clears postcode and locks radius chips.
 - **`#accountMenuDrawer` z-index: 1999** — all other drawers at 2000 so sub-drawers stack on top of account menu.
 - **Sub-drawers from account menu** use `allowStack: true` so closing them returns to account menu.
+- **Workshops drawer = pure browse** — profile management is in Settings (account menu), not in the workshops drawer.
+- **`border-radius: 10px`** on `.account-pill` globally — matches site aesthetic, not 999px.
 
 ---
 
-## Desktop layout (≥900px) — Session 6
+## Desktop layout (≥900px) — Sessions 6–8
 
 Three-column layout:
 
-- **Top utility bar** (`#desktopTopBar`, 36px, full-width fixed): Marketplace | Workshops [left] · Messages | My Garage | + Sell a Part [right]
-- **Left sidebar** = `#filterDrawer` always visible as filter panel (240px wide, `display: flex !important`). Drawer header hidden. Apply button stays but doesn't close sidebar.
-- **Header** (single row below top bar): Logo left (72px) | Search bar (flex:1) | Account pill right. Achieved via `display: contents` on `.header-top`.
-- **Main grid**: 5 columns, card hover effect — glass overlay slides away, orange "VIEW PART →" button slides up.
-- **Right sidebar** (`#desktopRightPanel`, 220px fixed): Featured Workshop (orange box) + Sponsored Spares thumbnails.
-- **Drawers** open as right-side panels (500px), `#detailOverlay` 680px, `#accountMenuDrawer` 360px. `#drawerBackdrop` dims the rest of the page.
-- **Desktop nav sidebar** (`.desktop-sidebar`) is hidden on desktop — navigation is in the top utility bar.
-- **`updateHeaderOffset()`** accounts for both top bar height + header height when setting grid margin-top.
-- **`closeTopDrawer()`** excludes `#filterDrawer` when on desktop.
-- **Desktop still needs polish** — Gary confirmed it's a work-in-progress. Logo position (left) fixed in Session 6 end.
+- **Top utility bar** (`#desktopTopBar`, 36px, fixed): all links right-aligned — Dashboard (Pro only, `display:flex/none`) | + Sell a Part | Messages (with `#inboxBadgeTopBar`) | Workshops.
+- **Left sidebar** = `#filterDrawer` always visible (240px wide, `display: flex !important`). Drawer header hidden. Apply button hidden (`#filterDrawer .action-container { display: none }`). All filter inputs have `oninput/onchange="applyFiltersAndRender()"` — live filtering, no Apply needed.
+- **Clear All Filters** button — `.filter-clear-row` inside `drawer-content` (not drawer-header). `clearAllFilters()` resets DOM + globals + re-renders.
+- **Header** (single row below top bar): three-zone layout — `.logo-main` (order:1, 240px) | `.search-col` (order:2, flex:1) | `#accountPillZone` (order:3, 220px). Achieved via `display: contents` on `.header-top`. Logo fills zone: `width: 100%; height: auto; max-height: 64px`. `#accountPillZone` is a wrapper div — the `#accountPill` button inside is content-width (auto), not 220px wide.
+- **`scrollbar-gutter: stable`** on `html` inside desktop media query — prevents layout shift when scrollbar appears/disappears.
+- **Main grid**: 5 columns, card hover effect — glass overlay slides away, orange "VIEW PART →" slides up.
+- **Right sidebar** (`#desktopRightPanel`, 220px fixed): Featured Workshop + Sponsored Spares.
+- **Centre-column drawers** — Garage, vehicleDetail, addVehicle, addWanted, savedParts, settings, profile, myParts, workshop, recentlyViewed, inbox, messageDetail, chat all use: `left: calc(max(0px, 50vw - 700px) + 240px) !important; right: calc(max(0px, 50vw - 700px) + 220px) !important; width: auto !important; height: auto !important; top: [dynamic]; bottom: 0;`
+- **`#dashboardView`** z-index: 1090 (header is 1100, top bar is 1150) — header always clickable when dashboard open. `closeDashboard()` called from logo click, search focus, and top bar navigation.
+- **Account pill (desktop)** — signed-in: white card, `border: 1.5px solid #e8e8e8`, `border-radius: 10px`, `.pill-avatar` circle (26px, orange=standard, blue=pro). Signed-out: compact orange button. Desktop dropdown (`#accountDropdown`, z-index 2001) replaces mobile drawer on ≥900px. Click-outside closes it.
+- **`updateHeaderOffset()`** accounts for top bar + header height, sets `style.top` on all centre-column drawers.
+- **`setDtbActive(id)`** — manages orange active state on top bar links. `null` clears all.
 
 ---
 
-## Key code locations (post-Session 6)
+## Key code locations (post-Session 8)
 
-`script.js` ~2500 lines. Key sections top-to-bottom:
+`script.js` ~3000 lines. Key sections top-to-bottom:
 
-- **Global state:** `userIsSignedIn`, `currentUserName`, `currentUserTier`, `proSearchOn`, `currentSearchMode`, `activeFilters`, `sortOrder` ('none'|'asc'|'desc'), `sortDate` ('newest'|'oldest').
-- **`partDatabase`:** 8 parts, each with `fits`, `saves`, `date` fields. Hiace x3, Elise x3, universal x2.
+- **Global state:** `userIsSignedIn`, `currentUserName`, `currentUserTier`, `proSearchOn`, `currentSearchMode`, `activeFilters`, `sortOrder`, `sortDate`, `savedPartsTab`, `workshopRadiusKm`.
+- **`partDatabase`:** 8 parts with `fits`, `saves`, `date` fields. Parts id 5 and 10 have `status: 'sold'` for stale saved demo.
 - **`publicWantedDatabase`:** 8 mock buyer wanted listings.
-- **`workshopDatabase`:** 4 mock workshops with `vehicleTypes`, `services`, `rating`, `distance`.
-- **Sort:** `setSortOrder()` (price, toggleable), `setSortDate()` (date, always one active). Applied in `getFilteredParts()`.
-- **Location filter:** `onPostcodeInput()` disables state dropdown when postcode entered; `onStateChange()` clears postcode when state selected. Mutually exclusive.
-- **Workshop browse:** `renderWorkshopBrowseView()` filters by text search (`#workshopSearchInput`) + service checkboxes. `buildSponsoredWorkshopCardHTML()` includes star ratings.
-- **Workshop profile:** Service checkboxes reordered — Row 1: Panel & body | Part fitting; Row 2: Mechanical repair | Wheels and Tyres; Row 3: Electrical & lighting | Wheel alignment. Textarea uses `.apc-textarea` class.
-- **Recently Viewed:** `loadRecentlyViewed`, `saveRecentlyViewed`, `addToRecentlyViewed`, `renderRecentlyViewed`, `onOpenRecentlyViewed`, `clearRecentlyViewed`.
-- **Settings:** `loadUserSettings`, `getDefaultSettings`, `saveUserSettings`, etc., `renderSettingsDrawer`.
-- **`buildCardHTML`:** card markup. NO heart on cards. Includes `.card-hover-btn` (hidden mobile, slides up on desktop hover).
-- **`applyFiltersAndRender()`:** closes filter drawer only on mobile (`window.innerWidth < 900`).
-- **`updateHeaderOffset()`:** accounts for `#desktopTopBar` height on desktop.
-- **`updateInboxBadge()`:** updates 3 badges — `#inboxBadge` (mobile nav), `#inboxBadgeDesktop` (hidden sidebar), `#inboxBadgeTopBar` (desktop top bar).
-- **Sell form:** `openSellOverlay`, `handleSellImageFiles`, `renderSellImagePreviews`, `submitSellListing` (stamps `date: Date.now()` + `saves: 0`), `resetSellForm`, `openEditListing`, `deleteListing`.
-- **Garage / Vehicle Detail / Wanted / Saved Parts / Inbox / Workshop UI / Detail / Storefront / Chat / Profile / Auth** — see Session 5 notes for details, unchanged in Session 6.
-- **`closeTopDrawer()`:** excludes `#filterDrawer` on desktop.
-- **`setActiveNav()`:** handles both `.nav-item` (mobile) and `.dsb-item` (desktop sidebar, currently hidden).
+- **`workshopDatabase`:** 7 mock workshops — 4 in Adelaide inner suburbs (3–8km), plus Hills Auto Trimmers (24km), Southern Auto Electrics & Air (38km), Barossa Mechanical & Cooling (62km). Workshops 1 & 2 have `approvedClub: 'RAA'`.
+- **Stale saved parts:** `findPartAnywhere(id)` retrieves sold parts. `renderSavedParts()` splits active/stale, renders tabs (All | Active | Ended). `.stale-row` UI with SOLD badge + SEE SIMILAR / ADD TO WANTED / DISMISS actions.
+- **Workshop browse:** `renderWorkshopBrowseView()` — distance filter (`workshopRadiusKm`), approved filter, text search, 7 service checkboxes. `getApprovedClubInfo()` reads `#filterStateSelect` → returns state-specific club (RAA/NRMA/RACV/RACQ/RAC/RACT/AANT). `setWorkshopRadius(el, km)` — sets active chip, re-renders. `buildSponsoredWorkshopCardHTML()` shows `card-approved-badge` for approved workshops.
+- **`clearAllFilters()`:** resets all filter DOM + globals + re-renders.
+- **`onAccountPillClick()`:** desktop → dropdown toggle, mobile → drawer.
+- **`renderAccountState()`:** syncs pill, drawer, dropdown. Sets `dtbDashboard.style.display = isPro ? 'flex' : 'none'`.
+- **`closeDashboard()`:** early-return guard if already hidden. Clears `setDtbActive(null)`. Restores sidebar/right panel.
+- **`updateInboxBadge()`:** 3 badge targets — `#inboxBadge` (mobile nav), `#inboxBadgeDesktop` (sidebar), `#inboxBadgeTopBar` (top bar).
+- **Sort / Location / Sell / Garage / Wanted / Saved / Inbox / Profile / Auth** — see Sessions 5–7 notes, largely unchanged in Session 8.
+
+---
+
+## Workshop distance filter — RAA tie-in
+
+Distance chips: **10km | 20km | 50km | State-wide** — deliberately matching RAA towing distances by membership tier. When the Motoring Club Approved filter is combined with a distance chip, users can find accredited workshops within their towing range. At go-live, `workshop.distance` will be replaced by real geocoded distance (postcode → lat/lng → `ST_DWithin`).
+
+---
+
+## Motoring Club Approved Repairer
+
+- `approvedClub: 'RAA'` field on workshop entries.
+- Filter badge and label update dynamically based on `#filterStateSelect`: SA→RAA, VIC→RACV, NSW/ACT→NRMA, QLD→RACQ, WA→RAC, TAS→RACT, NT→AANT. No state → "Motoring Club Approved Repairer".
+- Logos banner: `images/croppedmotorclub.png` — `mix-blend-mode: multiply` blends white background into the blue filter box. `height: auto; max-height: 50px`.
+- **Not yet pitched to clubs** — placeholder for future official accreditation program.
 
 ---
 
@@ -118,48 +132,40 @@ location.reload();
   ```
 - **Heart characters:** save button uses `♡` / `♥` (Unicode dingbats), not `❤️` emoji.
 - **Mockup-first:** Gary likes seeing an interactive HTML mockup before committing to a structural UI change.
-- **Geocoding:** radius filter UI is built; actual distance filtering needs a geocoding API at go-live (postcode → lat/lng → `ST_DWithin` query).
+- **Geocoding:** radius filters (parts + workshops) are UI-only at demo stage. Go-live needs postcode → lat/lng → `ST_DWithin` query.
 - **Backend plans:** Supabase is the preferred stack when going live — Postgres, built-in auth, storage, realtime. localStorage is the current stand-in.
 
 ---
 
 ## Sessions completed
 
+### Session 8 (4 May 2026) — Desktop nav overhaul, stale saved parts, workshop rebuild
+
+- **Desktop live filters:** all filter inputs have `oninput/onchange="applyFiltersAndRender()"`. Apply button hidden on desktop. Clear All Filters button in `drawer-content` (`.filter-clear-row`), `clearAllFilters()`.
+- **Centre-column drawers:** all account sub-drawers (Garage, Settings, Profile, My Listings, Saved Parts, Workshop, Inbox, etc.) open in the centre column on desktop, not the right panel. `updateHeaderOffset()` sets `style.top` dynamically.
+- **Three-zone header:** `.logo-main` (240px) | `.search-col` (flex:1) | `#accountPillZone` (220px). Search bar width = grid width. `scrollbar-gutter: stable` prevents layout shift.
+- **Logo:** fills 240px zone — `width: 100%; height: auto; max-height: 64px`.
+- **`#accountPillZone` wrapper div:** pill button is content-width inside the 220px zone. `border-radius: 10px` globally. Desktop signed-in pill: white card with avatar circle.
+- **Account dropdown (desktop):** `#accountDropdown` popover (z-index 2001), click-outside close. Mobile keeps drawer. `onAccountPillClick()` routes by viewport width.
+- **Top bar cleanup:** removed Marketplace/Garage/Wanted from top bar. Final order: Dashboard (Pro) | + Sell a Part | Messages | Workshops. `dtbDashboard` fixed from `display: inline` → `display: flex` (was breaking alignment).
+- **`#dashboardView` z-index:** 1090 (below header 1100). `closeDashboard()` called from search focus + logo click. Clears active top bar state.
+- **Stale saved parts:** `status: 'sold'` on demo parts 5 & 10. `findPartAnywhere()` retrieves them. Tabs: All | Active | Ended. Stale UI: greyed image, SOLD badge, SEE SIMILAR / ADD TO WANTED / DISMISS actions.
+- **Workshops drawer = pure browse:** profile management stays in Settings. Drawer title "Workshops & Services" for all users.
+- **Workshop search bar:** upgraded from unstyled `.search-bar` to `.search-group` — matches main search aesthetic.
+- **New service types:** Auto trimmer, Air conditioning, Radiator & cooling added to browse filters.
+- **`#workshopServiceGrid`:** CSS grid, `grid-template-columns: 1fr 1fr` — 7 services in even 2-column layout.
+- **Motoring Club Approved Repairer filter:** state-aware club badge (RAA/NRMA/RACV/RACQ/RAC/RACT/AANT). `getApprovedClubInfo()`. Logo banner `images/croppedmotorclub.png` with `mix-blend-mode: multiply`. `card-approved-badge` on workshop cards.
+- **Workshop distance filter:** 10km | 20km | 50km | State-wide chips (RAA towing distance tiers). `workshopRadiusKm` global, `setWorkshopRadius()`. Resets to State-wide on open. 3 new demo workshops at 24km, 38km, 62km.
+
 ### Session 7 (4 May 2026) — Warehouse/QR, sell form polish, 1400px max-width, wanted list redesign
 
-- **Warehouse Management (Pro):** Settings toggle (`warehouseManagement`). Rack/Bin field on sell form (Pro + warehouse toggle gated). QR label modal (`#labelModal`) — qrcodejs CDN, `printPartLabel(partId)`, `closeLabelModal()`. `@media print` isolates label area. Dashboard active tab shows `🏷️ Label` button for parts with `warehouseBin`. 5 demo parts in `partDatabase` have `warehouseBin` values (`A1-S3` etc.).
-- **Open to Offers toggle fix:** Replaced broken `.sell-switch-wrap` / `.switch` pattern with `.settings-toggle` / `.settings-toggle-track`. CSS `:checked` drives visual — no more manual `.on` class toggling in JS.
-- **Quantity field (Pro):** `#sellQuantitySection` in Pricing section, Pro-only via `updateSellQuantityVisibility()`. Saved as `quantity` on listing. Dashboard shows "Qty: N" under part name when > 1.
-- **No spinners on number inputs:** `#sellQuantity` (25% width), `#sellPrice`, `#sellPostcode`, `#sellYear` — WebKit + Firefox spinner suppression CSS.
-- **Sell overlay desktop treatment:** Fills centre column (`left: 240px → right: 220px`), `background: transparent` so backdrop tint shows around the 560px white form card. `align-items: center` centres card horizontally.
-- **1400px max-width page constraint:** `body { max-width: 1400px; margin: 0 auto; box-sizing: border-box; }` on desktop. All fixed elements use `left/right: max(0px, calc(50vw - 700px))`. Detail/sell/storefront overlays use `calc(max(0px, 50vw - 700px) + 240/220px)`. Dashboard uses `!important` override. `html { background: #e0e0e0; }` for side gutters.
-- **Search col wrapper:** `<div class="search-col">` wraps `.search-group` + `#proSearchToggle`. On desktop: `order: 2; flex: 1; flex-direction: column; gap: 6px` — toggle sits neatly below search bar, no longer jammed at far left.
-- **Compact wanted rows:** `renderWantedSearchResults()` rebuilt — avatar initials circle, part name, vehicle/location/budget/time chips, "LIST THIS PART ›" button. Old card layout kept for personal wanted drawer.
-- **listFromWanted(make, model, year):** "LIST THIS PART ›" opens sell form pre-filled with vehicle fitment. Privacy-first: no direct buyer contact. Seller uses demand signal to list, buyer gets notified on match.
-- **Wanted search placeholder:** Switches to `"Search members' wanted lists..."` in Find Wanted mode.
-- **Logo → home button:** `onclick="closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);"` + `cursor: pointer`.
-- **Tagline candidate:** *"More than a classified site. A powerful workshop tool."*
+- Warehouse Management (Pro), QR label modal, Quantity field (Pro), sell overlay desktop treatment, 1400px max-width constraint, compact wanted rows, listFromWanted(), logo → home button.
 
 ### Session 6 (3 May 2026) — Desktop layout, filter UX overhaul, workshop polish
 
-- **Account menu → proper drawer:** `#accountMenuDrawer` replaces old dropdown. Sub-drawers (Settings, Profile, etc.) open with `allowStack: true` and return to account menu on close. `z-index: 1999` so sub-drawers stack on top.
-- **Account pill redesign:** signed-in shows username + blue "Pro" label. No more tier pill. `signed-in` class, no background/shadow.
-- **Price filter → sort:** removed min/max price inputs. "Sort by Price" segmented control (Low→High / High→Low, tap to deselect). "Sort by Date" (Newest first default / Oldest first). `sortOrder` + `sortDate` globals. `date` field added to all `partDatabase` entries. New listings get `date: Date.now()`.
-- **Location filter overhaul:** state dropdown (all 9 AU jurisdictions), postcode input, radius chips (50/100/250/500km). Postcode + state mutually exclusive — `onPostcodeInput()` / `onStateChange()`. Radius disabled until postcode entered.
-- **Share button:** `shareCurrentListing()` on detail overlay — Web Share API with clipboard fallback.
-- **Wanted list toast:** `z-index: 9999` on `.app-toast` fixes visibility behind all drawers.
-- **Workshop browse:** text search box added (`#workshopSearchInput`, searches name/loc/vehicleTypes/services). Star ratings added to sponsored cards. `renderWorkshopBrowseView()` updated.
-- **Workshop profile:** "Tyres" → "Wheels and Tyres". Checkboxes reordered into 3 rows of 2. Textarea styled with `.apc-textarea` (orange focus border, rounded).
-- **Saved Parts drawer:** `#savedPartsDrawer` from account menu. Live unsave. Empty state.
-- **PWA icon:** `apc_icon_512_centered.png` wired into `manifest.json` + `apple-touch-icon`.
-- **Desktop layout v2:** 3-column (filter sidebar 240px | 5-col grid | right panel 220px). Top utility bar (Marketplace/Workshops/Messages/Garage/Sell). Card hover effect (glass overlay slides away, VIEW PART slides up). Drawers as right-side panels (500px). `#drawerBackdrop` for dimming. Logo left (72px) via `display: contents` on `.header-top`. **Desktop needs further polish — work in progress.**
-- **`buildCardHTML`:** added `.card-hover-btn` (hidden mobile).
-- **`updateHeaderOffset()`:** accounts for top bar height on desktop.
-- **`updateInboxBadge()`:** 3 badge targets (mobile, sidebar, top bar).
+- Account menu drawer, account pill redesign, price/date sort, location filter overhaul, share button, workshop browse + profile polish, saved parts drawer, desktop 3-column layout v1.
 
 ### Session 5 (2 May 2026) — Profile, Settings, Recently Viewed, Saved Parts, PWA, polish
-
-- Profile drawer, Settings drawer, Recently Viewed, Saved Parts, saves metric, sell form photo picker, PWA manifest+SW, inbox badge fix, filter conditions expanded to 5.
 
 ### Session 4 (2 May 2026) — Workshops/Services, Inbox, Wanted CRUD, Garage delete
 
@@ -173,22 +179,21 @@ location.reload();
 
 ## What's next
 
-1. **Desktop live filters** — filter changes should re-render grid instantly on desktop (no Apply button). `oninput` on all filter inputs calling `applyFiltersAndRender()` without closing sidebar.
-2. **Edit vehicle** — tap vehicle card in garage to open Add Vehicle drawer pre-populated; save updates by id.
-3. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
-4. **Mute notifications per Wanted item** — toggle on Wanted card (`mutedNotifications` field already exists).
-5. **Settings placeholders** — wire up Email, Change Password, Edit Profile, Help & Support rows.
-6. **`.gitignore`** — add `mockups/`, `snapshots/`, `300426.claude/`.
-7. **Wanted List** — add to desktop top utility bar (currently Marketplace + Workshops only).
-8. **Wanted → listing match notifications** — when a new listing is created, check `publicWantedDatabase` for matches and trigger in-app notification to buyer.
+1. **Edit vehicle** — tap a garage card to open Add Vehicle drawer pre-populated; save updates by ID.
+2. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
+3. **Message centre** — proper two-panel inbox (conversation list + thread view).
+4. **Wanted List view** — standalone view accessible from account menu.
+5. **Settings placeholders** — wire up Email, Change Password, Help & Support rows.
+6. **Wanted → listing match notifications** — when a new listing is created, check `publicWantedDatabase` for matches and trigger in-app notification to buyer.
+7. **Motoring club outreach** — pitch RAA (SA) first for official Approved Repairer program integration.
 
 ---
 
 ## Last commit / push
 
-Session 7 — push from Git Bash:
+Session 8 — push from Git Bash:
 ```
 git add index.html style.css script.js SESSION-NOTES.md
-git commit -m "Session 7 — Warehouse/QR labels, sell form polish, 1400px layout, wanted list redesign"
+git commit -m "Session 8 — Desktop nav overhaul, stale saved parts, workshop rebuild with approved repairer + distance filter"
 git push
 ```

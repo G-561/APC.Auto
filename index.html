@@ -19,28 +19,26 @@
 
 <!-- DESKTOP UTILITY BAR — hidden on mobile -->
 <div id="desktopTopBar" class="desktop-top-bar">
-    <div class="dtb-left">
-        <span class="dtb-link dtb-active" onclick="renderMainGrid(); window.scrollTo(0,0);">Marketplace</span>
-        <span class="dtb-link" onclick="onMenuOpenWorkshops()">Workshops</span>
-    </div>
-    <div class="dtb-right">
-        <span class="dtb-link" onclick="onOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
-        <span class="dtb-link" onclick="onOpenGarage()">My Garage</span>
-        <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="openDashboard()" style="display:none;">📊 Dashboard</span>
+    <div class="dtb-right" style="margin-left:auto;">
+        <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="openDashboard()" style="display:none;">Dashboard</span>
         <span class="dtb-link dtb-sell" onclick="openSellOverlay()">+ Sell a Part</span>
+        <span id="dtbMessages"  class="dtb-link" onclick="dtbOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
+        <span id="dtbWorkshops" class="dtb-link" onclick="dtbOpenWorkshops()">Workshops</span>
     </div>
 </div>
 
 <div class="top-nav-container" id="mainHeader">
     <header style="padding-bottom: 10px; position: relative;">
         <div class="header-top">
-            <div class="logo-main" onclick="closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);" style="cursor:pointer;"><img src="images/APC.logo.png" alt="APC Logo"></div>
-            <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
+            <div class="logo-main" onclick="closeDashboard(); closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);" style="cursor:pointer;"><img src="images/APC.logo.png" alt="APC Logo"></div>
+            <div id="accountPillZone">
+                <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
+            </div>
         </div>
 
         <div class="search-col">
         <div class="search-group">
-            <input type="text" id="mainSearchInput" placeholder="Search parts for sale...">
+            <input type="text" id="mainSearchInput" placeholder="Search parts for sale..." onfocus="closeDashboard()">
             <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
         </div>
 
@@ -114,7 +112,7 @@
 <div class="results-grid" id="mainGrid"></div>
 
 <!-- PRO DASHBOARD — desktop only, shown for Pro members -->
-<div id="dashboardView" style="display:none; position:fixed; left:0; right:0; bottom:0; overflow-y:auto; background:#f2f2f7; z-index:1100;">
+<div id="dashboardView" style="display:none; position:fixed; left:0; right:0; bottom:0; overflow-y:auto; background:#f2f2f7; z-index:1090;">
     <div class="dash-inner">
 
         <div class="dash-page-hdr">
@@ -408,10 +406,12 @@
     <div class="drawer-header"><span>FILTER RESULTS</span><div onclick="toggleDrawer('filterDrawer')" style="font-size:30px; cursor:pointer">×</div></div>
     <div class="drawer-content">
 
+        <div class="filter-clear-row"><button onclick="clearAllFilters()" class="filter-clear-btn">CLEAR ALL</button></div>
+
         <div class="filter-section">
             <h4>Part Category</h4>
             <div class="input-group">
-                <select>
+                <select onchange="applyFiltersAndRender()">
                     <option value="all">All Categories</option>
                     <option value="body">Body & Exterior (Mirrors, Bumpers, Panels)</option>
                     <option value="lighting">Lighting & Electrical (Headlights, ECUs)</option>
@@ -428,7 +428,7 @@
             <h4>Vehicle Details</h4>
             <div class="input-group">
                 <label>Make</label>
-                <input id="filterMake" type="text" placeholder="e.g. Toyota" list="makeOptions" autocomplete="off">
+                <input id="filterMake" type="text" placeholder="e.g. Toyota" list="makeOptions" autocomplete="off" oninput="applyFiltersAndRender()">
                 <datalist id="makeOptions">
                     <option value="Alfa Romeo"><option value="Aston Martin"><option value="Audi">
                     <option value="Bentley"><option value="BMW"><option value="BYD">
@@ -452,11 +452,11 @@
             </div>
             <div class="input-group">
                 <label>Model</label>
-                <input id="filterModel" type="text" placeholder="e.g. Hiace">
+                <input id="filterModel" type="text" placeholder="e.g. Hiace" oninput="applyFiltersAndRender()">
             </div>
             <div class="input-group">
                 <label>Year</label>
-                <select id="filterYear">
+                <select id="filterYear" onchange="applyFiltersAndRender()">
                     <option value="">Any Year</option>
                     <option>2026</option><option>2025</option><option>2024</option><option>2023</option>
                     <option>2022</option><option>2021</option><option>2020</option><option>2019</option>
@@ -526,23 +526,23 @@
         <div class="filter-section">
             <h4>Condition</h4>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" checked> New OEM</label>
-                <label class="choice-item"><input type="checkbox" checked> New Aftermarket</label>
-                <label class="choice-item"><input type="checkbox" checked> Used</label>
-                <label class="choice-item"><input type="checkbox" checked> Refurbished</label>
-                <label class="choice-item"><input type="checkbox" checked> For Parts</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> New OEM</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> New Aftermarket</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Used</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Refurbished</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> For Parts</label>
             </div>
         </div>
 
         <div class="filter-section">
             <h4>Logistics & Seller</h4>
             <div class="shared-choice-box" style="margin-bottom: 8px;">
-                <label class="choice-item"><input type="checkbox" checked> Postage</label>
-                <label class="choice-item"><input type="checkbox" checked> Pickup</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Postage</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Pickup</label>
             </div>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" checked> Private</label>
-                <label class="choice-item"><input type="checkbox" checked> APC Pro</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Private</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> APC Pro</label>
             </div>
         </div>
 
@@ -891,19 +891,38 @@
     <div class="drawer-content">
         <div id="workshopBrowseSection" style="display:none;">
             <div class="filter-section">
-                <div class="search-bar" style="margin-bottom: 0;">
-                    <input id="workshopSearchInput" type="text" placeholder="Search by name, suburb or vehicle type…" oninput="renderWorkshopBrowseView()" style="width:100%; box-sizing:border-box;">
+                <div class="search-group" style="margin-bottom: 0;">
+                    <input id="workshopSearchInput" type="text" placeholder="Search by name, suburb or vehicle…" oninput="renderWorkshopBrowseView()">
+                </div>
+            </div>
+            <div class="filter-section">
+                <h4>Distance</h4>
+                <div class="radius-seg-control" id="workshopRadiusControl">
+                    <div class="radius-seg" onclick="setWorkshopRadius(this, 10)">10km</div>
+                    <div class="radius-seg" onclick="setWorkshopRadius(this, 20)">20km</div>
+                    <div class="radius-seg" onclick="setWorkshopRadius(this, 50)">50km</div>
+                    <div class="radius-seg active" onclick="setWorkshopRadius(this, null)">State-wide</div>
                 </div>
             </div>
             <div class="filter-section">
                 <h4>Filter by service</h4>
-                <div class="shared-choice-box" style="margin-top: 8px;">
+                <div id="workshopServiceGrid">
                     <label class="choice-item"><input type="checkbox" id="workshopFilterMechanical" onclick="renderWorkshopBrowseView()"> Mechanical</label>
                     <label class="choice-item"><input type="checkbox" id="workshopFilterCrash" onclick="renderWorkshopBrowseView()"> Crash repair</label>
                     <label class="choice-item"><input type="checkbox" id="workshopFilterElectrician" onclick="renderWorkshopBrowseView()"> Auto electrician</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterTyres" onclick="renderWorkshopBrowseView()"> Tyres & wheels</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterTrimmer" onclick="renderWorkshopBrowseView()"> Auto trimmer</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterAircon" onclick="renderWorkshopBrowseView()"> Air conditioning</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterRadiator" onclick="renderWorkshopBrowseView()"> Radiator & cooling</label>
                 </div>
-                <div class="shared-choice-box" style="margin-top: 8px;">
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterTyres" onclick="renderWorkshopBrowseView()"> Tyres</label>
+                <div class="workshop-approved-section">
+                    <label class="workshop-approved-label">
+                        <input type="checkbox" id="workshopFilterApproved" onclick="renderWorkshopBrowseView()">
+                        <span id="workshopApprovedBadge" class="approved-club-badge">Club</span>
+                        <span id="workshopApprovedText">Motoring Club Approved</span>
+                    </label>
+                    <div id="workshopApprovedSubtext" class="workshop-approved-subtext">Filter to accredited repairers recognised by your state motoring club.</div>
+                    <img src="images/croppedmotorclub.png" alt="RAA RACV NRMA RACQ AANT RAC RACT" class="motoring-clubs-banner">
                 </div>
             </div>
 
@@ -914,7 +933,7 @@
         </div>
 
         <div id="workshopProfileFields" style="display:none;">
-            <div id="workshopProNotice" style="display:none; padding: 18px; margin-bottom: 18px; border: 1px solid #f0d7b1; border-radius: 16px; background: #fff7eb; color: #7a4b0d; font-size: 13px;">
+<div id="workshopProNotice" style="display:none; padding: 18px; margin-bottom: 18px; border: 1px solid #f0d7b1; border-radius: 16px; background: #fff7eb; color: #7a4b0d; font-size: 13px;">
                 <div>This feature is for APC Pro accounts. Upgrade now to list the types of vehicles and fitment services your workshop can handle.</div>
                 <button onclick="onUpgradeToPro()" style="margin-top: 12px; width: 100%; background: var(--apc-blue); color: white; border: none; border-radius: 12px; padding: 12px 0; font-weight: 700; cursor: pointer;">Upgrade to APC Pro</button>
             </div>
@@ -1116,6 +1135,7 @@
 </div>
 
 <!-- ACCOUNT MENU — full drawer replacing the old dropdown -->
+<!-- ACCOUNT MENU — mobile drawer (≤899px) -->
 <div id="accountMenuDrawer" class="drawer">
     <div class="drawer-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -1127,28 +1147,62 @@
         </div>
         <div onclick="closeAccountMenu()" style="font-size:30px; cursor:pointer">×</div>
     </div>
-    <div class="drawer-content" style="padding: 0; background: #f4f4f4;">
+    <div class="drawer-content" style="padding: 0;">
         <div class="amenu-section">
-            <button class="account-menu-item" onclick="onMenuOpenProfile()"><span class="ico">👤</span> Profile <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuOpenSettings()"><span class="ico">⚙️</span> Settings <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuOpenWorkshops()"><span class="ico">🛠️</span> Workshops / Services <span class="account-menu-chevron">›</span></button>
+            <button id="amenuDashboard" class="account-menu-item" onclick="openDashboard()" style="display:none;">My Dashboard <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onOpenGarage(); closeAccountMenu()">My Garage <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Wanted List')">Wanted List <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')">Messages <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
-            <button id="amenuDashboard" class="account-menu-item" onclick="openDashboard()" style="display:none;"><span class="ico">📊</span> My Dashboard <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuOpenMyListings()"><span class="ico">📦</span> My Listings <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuOpenSavedParts()"><span class="ico" style="color:var(--apc-orange);">♥</span> Saved Parts <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')"><span class="ico">💬</span> Messages <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenProfile()">Profile <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenSettings()">Settings <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')"><span class="ico">❓</span> Help &amp; Support <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">Upgrade to APC Pro ›</button>
+            <button class="account-menu-item activate-search" id="accountMenuActivate" style="display:none;" onclick="onToggleProSearch(event)">Pro Search <span class="switch" id="proSearchSwitch"></span></button>
         </div>
         <div class="amenu-section">
-            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()"><span class="ico">⭐</span> Upgrade to APC Pro</button>
-            <button class="account-menu-item activate-search" id="accountMenuActivate" style="display:none;" onclick="onToggleProSearch(event)"><span class="ico">🔍</span> Activate Pro Search <span class="switch" id="proSearchSwitch"></span></button>
+            <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')">Help &amp; Support <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item logout" onclick="onSignOut()">Sign Out</button>
         </div>
-        <div class="amenu-section">
-            <button class="account-menu-item logout" onclick="onSignOut()"><span class="ico">↩</span> Log Out</button>
+    </div>
+</div>
+
+<!-- ACCOUNT DROPDOWN — desktop only (≥900px), appears below account pill -->
+<div id="accountDropdown" class="acct-dropdown">
+    <div class="acct-dd-profile">
+        <div class="account-menu-avatar acct-dd-avatar" id="acctDdAvatar">G</div>
+        <div>
+            <div class="acct-dd-name" id="acctDdName">Gary</div>
+            <div class="acct-dd-tier" id="acctDdTier"></div>
         </div>
+    </div>
+    <div class="acct-dd-divider"></div>
+    <div class="acct-dd-group">
+        <button class="acct-dd-item" id="acctDdDashboard" style="display:none;" onclick="openDashboard(); closeAccountDropdown()">My Dashboard <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onOpenGarage(); closeAccountDropdown()">My Garage <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onMenuOpenMyListings(); closeAccountDropdown()">My Listings <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onMenuOpenSavedParts(); closeAccountDropdown()">Saved Parts <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onMenuPlaceholder('Wanted List'); closeAccountDropdown()">Wanted List <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onMenuPlaceholder('Messages'); closeAccountDropdown()">Messages <span class="acct-dd-chevron">›</span></button>
+    </div>
+    <div class="acct-dd-divider"></div>
+    <div class="acct-dd-group">
+        <button class="acct-dd-item" onclick="onMenuOpenProfile(); closeAccountDropdown()">Profile <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onMenuOpenSettings(); closeAccountDropdown()">Settings <span class="acct-dd-chevron">›</span></button>
+    </div>
+    <div class="acct-dd-divider"></div>
+    <div class="acct-dd-group">
+        <button class="acct-dd-item acct-dd-upgrade" id="acctDdUpgrade" onclick="onUpgradeToPro(); closeAccountDropdown()">Upgrade to APC Pro ›</button>
+        <button class="acct-dd-item acct-dd-activate" id="acctDdActivate" style="display:none;" onclick="onToggleProSearch(event)">Pro Search <span class="switch" id="proSearchSwitchDd"></span></button>
+    </div>
+    <div class="acct-dd-divider"></div>
+    <div class="acct-dd-group">
+        <button class="acct-dd-item" onclick="onMenuPlaceholder('Help & Support'); closeAccountDropdown()">Help &amp; Support <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item acct-dd-signout" onclick="onSignOut(); closeAccountDropdown()">Sign Out</button>
     </div>
 </div>
 

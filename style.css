@@ -60,7 +60,7 @@ header {
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    border-radius: 999px;
+    border-radius: 10px;
     font-weight: 800;
     font-size: 12px;
     letter-spacing: 0.5px;
@@ -86,49 +86,36 @@ header {
 }
 .account-pill .caret { font-size: 9px; opacity: 0.6; }
 .pill-pro-label { color: var(--apc-blue); font-weight: 900; }
-.account-menu-header {
-    padding: 12px 14px;
-    background: #FAFAFA;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+/* ACCOUNT MENU AVATAR — shared by drawer + dropdown */
 .account-menu-avatar {
-    width: 36px; height: 36px;
+    width: 40px; height: 40px;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
+    font-weight: 900;
+    font-size: 16px;
     background: var(--apc-orange);
+    flex-shrink: 0;
 }
-.account-menu-name   { font-weight: 700; font-size: 13px; }
-.account-menu-status { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; }
+.account-menu-name   { font-weight: 800; font-size: 14px; }
+.account-menu-status { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-top: 1px; }
 .account-menu-status.pro { color: var(--apc-blue); font-weight: 800; }
 
-/* ACCOUNT MENU DRAWER — sits behind sub-drawers so they stack on top */
+/* ACCOUNT MENU DRAWER — mobile */
 #accountMenuDrawer { z-index: 1999; }
 .amenu-section {
     background: white;
-    margin-bottom: 10px;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    border-bottom: 8px solid #f4f4f4;
 }
-.account-menu-chevron {
-    margin-left: auto;
-    color: #ccc;
-    font-size: 20px;
-    font-weight: 300;
-    line-height: 1;
-}
+.amenu-section:last-child { border-bottom: none; }
+.account-menu-chevron { margin-left: auto; color: #ddd; font-size: 18px; font-weight: 400; }
 .account-menu-item {
     display: flex;
     align-items: center;
-    gap: 14px;
     width: 100%;
-    padding: 16px 20px;
+    padding: 15px 20px;
     border: none;
     border-bottom: 1px solid #f4f4f4;
     background: white;
@@ -138,14 +125,66 @@ header {
     cursor: pointer;
     color: var(--apc-charcoal);
     font-family: inherit;
+    transition: background 0.12s;
 }
 .account-menu-item:last-child { border-bottom: none; }
-.account-menu-item:active { background: #fafafa; }
-.account-menu-item .ico { width: 22px; text-align: center; font-size: 16px; flex-shrink: 0; }
+.account-menu-item:hover { background: #fafafa; }
+.account-menu-item:active { background: #f4f4f4; }
 .account-menu-item.upgrade { color: var(--apc-blue); font-weight: 700; }
 .account-menu-item.activate-search { font-weight: 700; }
 .account-menu-item.activate-search.on { color: var(--apc-blue); }
 .account-menu-item.logout { color: #c0392b; }
+
+/* ACCOUNT DROPDOWN — desktop */
+.acct-dropdown {
+    display: none;
+    position: fixed;
+    right: max(0px, calc(50vw - 700px));
+    top: 140px;
+    width: 300px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid #e8e8e8;
+    z-index: 2001;
+    overflow: hidden;
+}
+.acct-dropdown.active { display: block; }
+.acct-dd-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    background: white;
+}
+.acct-dd-avatar { width: 44px !important; height: 44px !important; font-size: 18px !important; }
+.acct-dd-name { font-size: 15px; font-weight: 800; color: #222; }
+.acct-dd-tier { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-top: 2px; }
+.acct-dd-tier.pro { color: var(--apc-blue); }
+.acct-dd-divider { height: 1px; background: #f0f0f0; margin: 0; }
+.acct-dd-group { padding: 6px 0; }
+.acct-dd-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s, color 0.1s;
+}
+.acct-dd-item:hover { background: #fdf6ee; color: var(--apc-orange); }
+.acct-dd-chevron { margin-left: auto; color: #ddd; font-size: 16px; }
+.acct-dd-item:hover .acct-dd-chevron { color: var(--apc-orange); }
+.acct-dd-upgrade { color: var(--apc-blue); font-weight: 700; }
+.acct-dd-upgrade:hover { background: #eef4ff; color: var(--apc-blue); }
+.acct-dd-signout { color: #c0392b; }
+.acct-dd-signout:hover { background: #fff5f5; color: #c0392b; }
 
 /* DETAIL OVERLAY — icon action buttons (share + save) */
 .detail-actions-row {
@@ -1017,6 +1056,93 @@ header {
 .sp-unsave-btn:hover { border-color: #FF3B30; color: #FF3B30; }
 .sp-unsave-btn:active { transform: scale(0.85); }
 
+.sp-tabs { display: flex; gap: 6px; }
+.sp-tab {
+    flex: 1;
+    background: #f4f4f4;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 4px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #999;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.sp-tab:hover { background: #ebebeb; color: #666; }
+.sp-tab-active { background: var(--apc-orange) !important; color: white !important; }
+.sp-tab-count {
+    display: inline-block;
+    background: rgba(0,0,0,0.12);
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 1px 6px;
+    margin-left: 3px;
+}
+.sp-tab-active .sp-tab-count { background: rgba(255,255,255,0.25); }
+.sp-tab-count-ended { background: rgba(231,76,60,0.15); color: #e74c3c; }
+.sp-tab-active .sp-tab-count-ended { background: rgba(255,255,255,0.25); color: white; }
+
+/* STALE SAVED PARTS */
+.stale-section-hdr {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #bbb;
+    padding: 12px 16px 6px;
+}
+.stale-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 16px 12px;
+    border-bottom: 1px solid #f4f4f4;
+}
+.stale-img-wrap { position: relative; flex-shrink: 0; }
+.stale-img { opacity: 0.4; filter: grayscale(60%); }
+.stale-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: #e74c3c;
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+.stale-title { font-size: 13px; font-weight: 700; color: #aaa; margin-bottom: 2px; }
+.stale-meta { font-size: 11px; color: #ccc; margin-bottom: 8px; }
+.stale-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.stale-action-btn {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.stale-action-btn:hover { opacity: 0.85; }
+.stale-similar-btn { background: var(--apc-blue); color: white; }
+.stale-wanted-btn { background: var(--apc-orange); color: white; }
+.stale-dismiss-btn {
+    font-size: 11px;
+    font-weight: 700;
+    color: #bbb;
+    background: none;
+    border: 1px solid #e8e8e8;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.stale-dismiss-btn:hover { color: #888; border-color: #ccc; }
+
 /* SETTINGS */
 .settings-section-label {
     font-size: 11px;
@@ -1140,6 +1266,25 @@ header {
     background: #ccc;
     color: #fff;
 }
+.filter-clear-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 6px 4px 0;
+}
+.filter-clear-btn {
+    background: none;
+    border: none;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    color: #aaa;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+}
+.filter-clear-btn:hover { color: var(--apc-orange); background: var(--apc-orange-light); }
+
 .filter-radius-hint {
     font-size: 11px;
     color: #aaa;
@@ -1468,7 +1613,79 @@ header {
 .apc-textarea:focus { border-color: var(--apc-orange); background: #fff; }
 .apc-textarea::placeholder { color: #aaa; }
 .shared-choice-box { display: flex; gap: 10px; flex-wrap: wrap; }
-.choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
+.choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+/* Workshop service filter grid */
+#workshopServiceGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    margin-top: 8px;
+    margin-bottom: 14px;
+}
+
+/* Approved repairer filter */
+.workshop-approved-section {
+    margin-top: 4px;
+    padding: 10px 12px;
+    background: #eef4ff;
+    border: 1px solid #c5d9f7;
+    border-radius: 10px;
+}
+.workshop-approved-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--apc-charcoal);
+}
+.approved-club-badge {
+    background: #005eb8;
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.workshop-approved-subtext {
+    font-size: 11px;
+    color: #6a82a0;
+    margin-top: 5px;
+    margin-left: 22px;
+    line-height: 1.4;
+}
+.motoring-clubs-banner {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 50px;
+    object-fit: contain;
+    margin-top: 10px;
+    border-radius: 6px;
+    opacity: 0.88;
+    mix-blend-mode: multiply;
+}
+
+/* Approved badge on workshop cards */
+.card-approved-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #005eb8;
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
 .action-container { padding: 10px 0 20px 0; }
 .btn-full-action { width: 100%; background: var(--apc-orange); color: white; padding: 20px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; font-size: 14px; }
 .btn-full-action:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -1835,7 +2052,7 @@ header {
     .bottom-nav { display: none !important; }
 
     /* Constrain page to 1400px centred — sides show html background */
-    html { background: #e0e0e0; }
+    html { background: #e0e0e0; scrollbar-gutter: stable; }
     body {
         padding-bottom: 0;
         padding-left: 240px;
@@ -1860,21 +2077,53 @@ header {
         width: auto;
     }
 
-    /* Single-row header: logo left | search middle | pill right */
+    /* Single-row header — three zones matching the sidebar layout:
+       [240px logo zone] [flex:1 search = grid width] [220px pill zone] */
     header {
         display: flex;
         align-items: center;
-        gap: 14px;
-        padding: 10px 20px;
-        flex-wrap: nowrap;
+        padding: 8px 0;
+        gap: 0;
     }
     .header-top { display: contents; }
-    .logo-main { order: 1; flex-shrink: 0; }
-    .logo-main img { height: 72px; }
-    .search-col { order: 2; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .logo-main  { order: 1; flex-shrink: 0; width: 240px; display: flex; align-items: center; padding: 0 8px; }
+    .logo-main img { width: 100%; height: auto; max-height: 64px; object-fit: contain; }
+    .search-col { order: 2; flex: 1; display: flex; flex-direction: column; gap: 6px; max-width: none; padding: 0; }
     .search-col .search-group { margin: 0; }
     #proSearchToggle { margin-top: 0; }
-    #accountPill { order: 3; flex-shrink: 0; }
+    #accountPillZone { order: 3; flex-shrink: 0; width: 220px; display: flex; justify-content: center; align-items: center; padding: 0 8px; }
+    #accountPill    { width: auto; }
+    .account-pill.signed-out {
+        font-size: 12px;
+        padding: 7px 16px;
+    }
+    .account-pill.signed-in {
+        background: white;
+        border: 1.5px solid #e8e8e8;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-radius: 10px;
+        padding: 5px 12px 5px 5px;
+        color: var(--apc-charcoal);
+        font-size: 13px;
+        text-transform: none;
+        letter-spacing: 0;
+        gap: 8px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .account-pill.signed-in:hover { border-color: var(--apc-orange); box-shadow: 0 2px 8px rgba(247,148,29,0.15); }
+    .pill-avatar {
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: var(--apc-orange);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 900;
+        flex-shrink: 0;
+    }
+    .pill-avatar.pro { background: var(--apc-blue); }
 
     /* Right panel: below top bar + header */
     .desktop-right-panel { top: 140px; bottom: 0; } /* fallback — overridden by updateHeaderOffset() */
@@ -2047,6 +2296,34 @@ header {
     }
     /* 3-col grid inside storefront — 5-col would be too tight */
     #sellerPartsGrid { grid-template-columns: repeat(3, 1fr) !important; }
+
+    /* All full-screen drawers: centre column between sidebars */
+    #garageDrawer,
+    #vehicleDetailDrawer,
+    #addVehicleDrawer,
+    #addWantedDrawer,
+    #savedPartsDrawer,
+    #settingsDrawer,
+    #profileDrawer,
+    #myPartsDrawer,
+    #workshopDrawer,
+    #recentlyViewedDrawer,
+    #inboxDrawer,
+    #messageDetailDrawer,
+    #chatDrawer {
+        left: calc(max(0px, 50vw - 700px) + 240px) !important;
+        right: calc(max(0px, 50vw - 700px) + 220px) !important;
+        width: auto !important;
+        height: auto !important;
+        top: 140px;
+        bottom: 0;
+        box-shadow: none !important;
+        border-left: 1px solid #e8e8e8;
+        border-right: 1px solid #e8e8e8;
+    }
+
+    /* Live filters on desktop — Apply button not needed */
+    #filterDrawer .action-container { display: none; }
 
     /* Dashboard: constrained to 1400px zone */
     #dashboardView {
