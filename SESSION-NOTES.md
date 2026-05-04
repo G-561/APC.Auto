@@ -139,6 +139,22 @@ location.reload();
 
 ## Sessions completed
 
+### Session 9 (5 May 2026) — Sell form polish, APC Item ID, stock number, message centre mockup
+
+- **Sell form — Vehicle Details:** renamed "Vehicle Fitment" → "Vehicle Details" h4.
+- **Fitting Available checkbox:** moved into `.shared-choice-box` alongside Pickup/Postage. All 3 on one line, `justify-content: space-between`, `flex: 1` on each. Fitting uses `display: contents` wrapper (Pro only) so it slots inline without breaking flex layout.
+- **Stock Number field:** text input below Vehicle Details, `maxlength="20"`, `max-width: 22ch`. Saved to listing payload. Restored in `openEditListing()`, cleared in `resetSellForm()`.
+- **`generateApcId()`:** `'APC' + String(Date.now() % 10000000000).padStart(10, '0')` — stamped on new listings only, not edits.
+- **APC ID on detail page:** `#detailApcId` div below part title (13px, muted grey). Hidden when `part.apcId` absent (legacy mock parts unaffected).
+- **APC ID on My Listings:** `.my-part-apc-id` (12px) + `.my-part-stock-num` (12px) appended below saves count. Both conditional on data existing.
+- **Label modal:** `#labelApcId` element populated in `printPartLabel()`. QR code now encodes `part.apcId` as first line (falls back to `'APC-' + part.id` for legacy parts).
+- **Pro search — APC ID + stock number:** `getFilteredParts()` extended. APC ID matches any part (globally unique). Stock number matches only the current user's own listings (`userListings.some(l => l.id === part.id)`) — prevents cross-seller stock number collisions.
+- **Dashboard My Listings search:** placeholder updated; `filterDashListings()` filter extended to include `stockNumber`.
+- **Dashboard My Listings — load more:** `_dashListingsShown = 25` global. Unfiltered list shows 25 at a time with "Load more listings" button. Search/category filter active → shows all results immediately.
+- **Dashboard — removed "← Marketplace" button:** header now clean with just title + subtitle.
+- **Universal parts — workshop section:** was hidden (`display: none`). Now shows 3 randomly shuffled workshops from `workshopDatabase` with headline "Recommended workshops near you". Vehicle-specific parts unchanged.
+- **Message centre mockup:** `mockup-messages.html` — standalone interactive mockup. Two-panel desktop (300px conv list + thread), mobile slide animation. Features: clean email-style conv list (name, part title in orange, preview, timestamp, unread dot — no avatars/thumbnails), thread with date dividers + chat bubbles, photo sharing (camera button → file picker → image bubble), message delete (× on hover desktop / tap mobile), search filter, reply with Enter-to-send.
+
 ### Session 8 (4 May 2026) — Desktop nav overhaul, stale saved parts, workshop rebuild
 
 - **Desktop live filters:** all filter inputs have `oninput/onchange="applyFiltersAndRender()"`. Apply button hidden on desktop. Clear All Filters button in `drawer-content` (`.filter-clear-row`), `clearAllFilters()`.
@@ -179,9 +195,9 @@ location.reload();
 
 ## What's next
 
-1. **Edit vehicle** — tap a garage card to open Add Vehicle drawer pre-populated; save updates by ID.
-2. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
-3. **Message centre** — proper two-panel inbox (conversation list + thread view).
+1. **Message centre — wire into app** — replace `inboxDrawer` + `messageDetailDrawer` with the two-panel layout from `mockup-messages.html`. Hook into `handleMessageSeller()` so conversations open from detail page.
+2. **Edit vehicle** — tap a garage card to open Add Vehicle drawer pre-populated; save updates by ID.
+3. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
 4. **Wanted List view** — standalone view accessible from account menu.
 5. **Settings placeholders** — wire up Email, Change Password, Help & Support rows.
 6. **Wanted → listing match notifications** — when a new listing is created, check `publicWantedDatabase` for matches and trigger in-app notification to buyer.
@@ -191,9 +207,9 @@ location.reload();
 
 ## Last commit / push
 
-Session 8 — push from Git Bash:
+Session 9 — push from Git Bash:
 ```
 git add index.html style.css script.js SESSION-NOTES.md
-git commit -m "Session 8 — Desktop nav overhaul, stale saved parts, workshop rebuild with approved repairer + distance filter"
+git commit -m "Session 9 — APC Item ID, stock number search, sell form polish, load more, message centre mockup"
 git push
 ```

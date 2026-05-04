@@ -117,7 +117,6 @@
 
         <div class="dash-page-hdr">
             <div class="dash-page-hdr-left">
-                <button class="dash-back-btn" onclick="closeDashboard()">← Marketplace</button>
                 <div>
                     <div class="dash-page-title">Pro Dashboard</div>
                     <div class="dash-page-sub" id="dashWelcome">Your business at a glance</div>
@@ -186,7 +185,7 @@
                 </div>
             </div>
             <div class="dash-search-row">
-                <input type="text" id="dashListingsSearch" class="dash-search-input" placeholder="Search by title, category, location..." oninput="filterDashListings()">
+                <input type="text" id="dashListingsSearch" class="dash-search-input" placeholder="Search by title, category, location, stock number..." oninput="filterDashListings()">
                 <select id="dashListingsCatFilter" class="dash-search-select" onchange="filterDashListings()">
                     <option value="">All Categories</option>
                     <option value="body">Body &amp; Exterior</option>
@@ -240,6 +239,10 @@
         <div id="desktopDetailImages" class="desktop-detail-images">
             <img id="desktopMainImage" class="desktop-main-img" src="" alt="Part photo">
             <div id="desktopThumbnails" class="desktop-thumbnails"></div>
+            <div class="detail-sell-yours-block" onclick="openSellOverlay()">
+                <div class="detail-sell-yours-label">Have a part like this?</div>
+                <button class="detail-sell-yours-btn">+ Sell Yours</button>
+            </div>
         </div>
 
         <!-- Info column: mobile = full width scroll, desktop = right column -->
@@ -274,6 +277,7 @@
             <div id="detailTitle" style="padding: 0 15px; font-weight: 800; font-size: 17px; line-height: 1.3; color: #333;">
                 Part Title
             </div>
+            <div id="detailApcId" style="display:none; padding: 4px 15px 0 15px; font-size: 13px; font-weight: 600; color: #aaa; letter-spacing: 0.3px;"></div>
 
             <div style="padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
@@ -334,13 +338,16 @@
                 <button onclick="openAuthDrawer()" style="width: 100%; padding: 14px; background: var(--apc-orange); color:white; border:none; border-radius: 10px; font-weight:800; cursor:pointer;">SIGN IN TO VIEW DETAILS</button>
             </div>
 
-            <div style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
+            <div id="sellYoursMobile" style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
                 <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 12px;">Have a part like this?</div>
-                <button onclick="toggleDrawer('sellOverlay')" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
+                <button onclick="openSellOverlay()" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
             </div>
 
-            <div id="dynamicDetailFooter"></div>
         </div>
+        </div>
+
+        <!-- Full-width footer: spans both columns on desktop -->
+        <div id="dynamicDetailFooter"></div>
     </div>
 </div>
 
@@ -621,14 +628,15 @@
         </div>
 
         <div class="filter-section">
-            <h4>Vehicle Fitment</h4>
+            <h4>Vehicle Details</h4>
             <div class="input-row-flex">
                 <div class="input-group"><label>Make</label><input id="sellMake" type="text" placeholder="e.g. Lotus"></div>
                 <div class="input-group"><label>Model</label><input id="sellModel" type="text" placeholder="e.g. Elise"></div>
                 <div class="input-group"><label>Year</label><input id="sellYear" type="number" placeholder="2005"></div>
             </div>
-            <div id="sellFittingToggleSection" style="display:none; margin-top: 10px;">
-                <label class="choice-item"><input id="sellFittingAvailable" type="checkbox"> Fitting Available</label>
+            <div class="input-group" style="margin-top: 10px;">
+                <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · up to 20 digits</span></label>
+                <input id="sellStockNumber" type="text" inputmode="numeric" maxlength="20" placeholder="e.g. 12345678901234567890" style="max-width: 22ch;">
             </div>
         </div>
 
@@ -641,6 +649,9 @@
             <div class="shared-choice-box">
                 <label class="choice-item"><input id="sellPickup" type="checkbox" checked> Pickup Available</label>
                 <label class="choice-item"><input id="sellPostage" type="checkbox"> Willing to Post</label>
+                <div id="sellFittingToggleSection" style="display:none;">
+                    <label class="choice-item"><input id="sellFittingAvailable" type="checkbox"> Fitting Available</label>
+                </div>
             </div>
         </div>
 
@@ -1252,6 +1263,7 @@
                 <img src="images/APC.logo.png" class="label-logo" alt="APC">
             </div>
             <div id="labelQrCode" class="label-qr"></div>
+            <div id="labelApcId" class="label-apc-id"></div>
             <div id="labelPartName" class="label-part-name"></div>
             <div id="labelBinRef" class="label-bin-ref"></div>
             <div id="labelPrice" class="label-price"></div>

@@ -13,6 +13,7 @@ let sortDate  = 'newest';  // 'newest' | 'oldest'
 let _dashViewsChart  = null;
 let _dashCatChart    = null;
 let _dashCurrentTab  = 'active';
+let _dashListingsShown = 25;
 let activeFilters = {
     search: '',
     category: 'all',
@@ -618,7 +619,15 @@ function clearAllFilters() {
 function getFilteredParts() {
     const search = activeFilters.search.toLowerCase();
     const results = getAllParts().filter(part => {
-        if (search && !part.title.toLowerCase().includes(search) && !part.loc.toLowerCase().includes(search)) return false;
+        if (search) {
+            const isPro = userIsSignedIn && currentUserTier === 'pro';
+            const titleMatch = part.title.toLowerCase().includes(search);
+            const locMatch   = part.loc.toLowerCase().includes(search);
+            const apcIdMatch = isPro && part.apcId && part.apcId.toLowerCase().includes(search);
+            const isOwnListing = userListings.some(l => l.id === part.id);
+            const stockMatch = isPro && isOwnListing && part.stockNumber && String(part.stockNumber).includes(search);
+            if (!titleMatch && !locMatch && !apcIdMatch && !stockMatch) return false;
+        }
         if (activeFilters.category !== 'all' && part.category !== activeFilters.category) return false;
         if (activeFilters.make && part.fits.length > 0) {
             const mk = activeFilters.make;
@@ -844,6 +853,19 @@ function renderMyParts() {
             info.appendChild(saves);
         }
 
+        if (part.apcId) {
+            const apcIdEl = document.createElement('div');
+            apcIdEl.className = 'my-part-apc-id';
+            apcIdEl.textContent = 'Item ID: ' + part.apcId;
+            info.appendChild(apcIdEl);
+        }
+        if (part.stockNumber) {
+            const stockEl = document.createElement('div');
+            stockEl.className = 'my-part-stock-num';
+            stockEl.textContent = 'Stock #: ' + part.stockNumber;
+            info.appendChild(stockEl);
+        }
+
         const editBtn = document.createElement('button');
         editBtn.className = 'my-part-edit-btn';
         editBtn.textContent = 'EDIT';
@@ -924,6 +946,8 @@ function openEditListing(listingId) {
     if (qtyInput) qtyInput.value = listing.quantity > 1 ? listing.quantity : '';
     const binInput = document.getElementById('sellWarehouseBin');
     if (binInput) binInput.value = listing.warehouseBin || '';
+    const stockInput = document.getElementById('sellStockNumber');
+    if (stockInput) stockInput.value = listing.stockNumber || '';
 
     renderSellImagePreviews();
 
@@ -1044,16 +1068,22 @@ function resetSellForm() {
     if (qtyInput) qtyInput.value = '';
     const binInput = document.getElementById('sellWarehouseBin');
     if (binInput) binInput.value = '';
+    const stockInput = document.getElementById('sellStockNumber');
+    if (stockInput) stockInput.value = '';
     renderSellImagePreviews();
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
     updateWarehouseBinVisibility();
 }
 
+function generateApcId() {
+    return 'APC' + String(Date.now() % 10000000000).padStart(10, '0');
+}
+
 function updateSellFittingToggleVisibility() {
     const section = document.getElementById('sellFittingToggleSection');
     if (!section) return;
-    section.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'block' : 'none';
+    section.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'contents' : 'none';
 }
 
 function updateSellQuantityVisibility() {
@@ -1105,6 +1135,7 @@ function submitSellListing() {
 
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
+    const stockNumber = document.getElementById('sellStockNumber')?.value.trim() || null;
     const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
     const warehouseBin = (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement)
         ? (document.getElementById('sellWarehouseBin')?.value.trim() || null)
@@ -1130,7 +1161,8 @@ function submitSellListing() {
         condition: condition || 'used',
         openToOffers,
         warehouseBin,
-        quantity
+        quantity,
+        stockNumber
     };
 
     let message = 'Listing created';
@@ -1140,10 +1172,10 @@ function submitSellListing() {
             Object.assign(existing, listingPayload);
             message = 'Listing updated';
         } else {
-            userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), ...listingPayload });
+            userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload });
         }
     } else {
-        userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), ...listingPayload });
+        userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload });
     }
 
     saveUserListings();
@@ -1220,6 +1252,15 @@ function openItemDetail(partId) {
     // 2. Update detail fields safely
     safeText(document.getElementById('detailPrice'), `$${part.price}`);
     safeText(document.getElementById('detailTitle'), part.title);
+    const detailApcIdEl = document.getElementById('detailApcId');
+    if (detailApcIdEl) {
+        if (part.apcId) {
+            detailApcIdEl.textContent = 'Item ID: ' + part.apcId;
+            detailApcIdEl.style.display = 'block';
+        } else {
+            detailApcIdEl.style.display = 'none';
+        }
+    }
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
     safeText(document.getElementById('detailDescription'), part.description || 'Fully functional part. Tested and ready for installation.');
@@ -1275,7 +1316,10 @@ function openItemDetail(partId) {
     if (workshopSection && workshopHeadline && workshopCards) {
         const isUniversal = !part.fits || part.fits.length === 0;
         if (isUniversal) {
-            workshopSection.style.display = 'none';
+            const shuffled = [...workshopDatabase].sort(() => Math.random() - 0.5).slice(0, 3);
+            workshopHeadline.textContent = 'Recommended workshops near you';
+            workshopCards.innerHTML = shuffled.map(buildWorkshopCardHTML).join('');
+            workshopSection.style.display = 'block';
         } else {
             const workshops = getRecommendedWorkshops(part).slice(0, 3);
             const vehicleLabel = getDetailVehicleLabel(part);
@@ -1291,27 +1335,30 @@ function openItemDetail(partId) {
     const footer = document.getElementById('dynamicDetailFooter');
     if (!footer) return;
 
-    const relatedParts = partDatabase.filter(p => p.id !== part.id);
-    let miniGridHTML = '';
-    relatedParts.slice(0, 8).forEach(p => {
-        miniGridHTML += buildCardHTML(p);
-    });
+    const relatedParts = getAllParts().filter(p => p.id !== part.id);
+    const miniCards = relatedParts.slice(0, 5).map(p => {
+        const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
+        return `
+            <div class="detail-mini-card" onclick="openDetail(${p.id})">
+                <img class="detail-mini-img" src="${img}" alt="${escapeHtml(p.title)}">
+                <div class="detail-mini-info">
+                    <div class="detail-mini-title">${escapeHtml(p.title)}</div>
+                    <div class="detail-mini-price">$${p.price}</div>
+                </div>
+            </div>`;
+    }).join('');
 
     if (part.isPro) {
         footer.innerHTML = `
-            <div class="filter-section" style="margin-top: 20px;">
-                <h4 style="margin-bottom: 15px; font-size: 12px; color: #888; padding: 0 15px;">MORE FROM ${part.seller.toUpperCase()}</h4>
-                <div class="results-grid" style="margin-top: 0; padding-bottom: 15px;">${miniGridHTML}</div>
-                <div style="text-align: center; padding-bottom: 30px; padding-top: 10px;">
-                    <span onclick="openStorefront(${part.id})" style="color: var(--apc-orange); font-weight: 900; font-size: 12px; cursor: pointer; border-bottom: 2px solid var(--apc-orange);">VISIT STORE →</span>
-                </div>
-            </div>`;
+            <div class="detail-footer-label">
+                MORE FROM ${escapeHtml(part.seller.toUpperCase())}
+                <span onclick="openStorefront(${part.id})" style="color:var(--apc-orange);font-weight:900;cursor:pointer;font-size:10px;">VISIT STORE →</span>
+            </div>
+            <div class="detail-footer-strip">${miniCards}</div>`;
     } else {
         footer.innerHTML = `
-            <div class="filter-section" style="margin-top: 20px;">
-                <h4 style="margin-bottom: 15px; font-size: 12px; color: #888; padding: 0 15px;">SIMILAR ITEMS</h4>
-                <div class="results-grid" style="margin-top: 0; padding-bottom: 30px;">${miniGridHTML}</div>
-            </div>`;
+            <div class="detail-footer-label">SIMILAR ITEMS</div>
+            <div class="detail-footer-strip">${miniCards}</div>`;
     }
 
     const detailScrollArea = document.getElementById('detailScrollArea');
@@ -2988,18 +3035,21 @@ function printPartLabel(partId) {
     const part = getPartById(partId);
     if (!part) return;
 
-    const nameEl  = document.getElementById('labelPartName');
-    const binEl   = document.getElementById('labelBinRef');
-    const priceEl = document.getElementById('labelPrice');
-    const qrEl    = document.getElementById('labelQrCode');
+    const nameEl   = document.getElementById('labelPartName');
+    const binEl    = document.getElementById('labelBinRef');
+    const priceEl  = document.getElementById('labelPrice');
+    const qrEl     = document.getElementById('labelQrCode');
+    const apcIdEl  = document.getElementById('labelApcId');
 
     if (nameEl)  nameEl.textContent  = part.title;
     if (binEl)   binEl.textContent   = part.warehouseBin || '';
     if (priceEl) priceEl.textContent = '$' + part.price;
+    if (apcIdEl) apcIdEl.textContent = part.apcId || '';
 
     if (qrEl) {
         qrEl.innerHTML = '';
-        const qrText = 'APC-' + part.id + '\n' + part.title + '\nBin: ' + (part.warehouseBin || 'N/A') + '\nPrice: $' + part.price;
+        const apcId  = part.apcId || ('APC-' + part.id);
+        const qrText = apcId + '\n' + part.title + '\nBin: ' + (part.warehouseBin || 'N/A') + '\nPrice: $' + part.price;
         new QRCode(qrEl, { text: qrText, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
     }
 
@@ -3221,6 +3271,12 @@ function renderDashActivity() {
 }
 
 function filterDashListings() {
+    _dashListingsShown = 25;
+    renderDashListings(_dashCurrentTab);
+}
+
+function loadMoreDashListings() {
+    _dashListingsShown += 25;
     renderDashListings(_dashCurrentTab);
 }
 
@@ -3242,7 +3298,7 @@ function renderDashListings(tab, btn) {
     if (tab === 'active') {
         let items = getAllParts().filter(p => p.seller === sellerName);
         const total = items.length;
-        if (q)   items = items.filter(p => p.title.toLowerCase().includes(q) || (p.category || '').includes(q) || p.loc.toLowerCase().includes(q));
+        if (q)   items = items.filter(p => p.title.toLowerCase().includes(q) || (p.category || '').includes(q) || p.loc.toLowerCase().includes(q) || String(p.stockNumber || '').includes(q));
         if (cat) items = items.filter(p => p.category === cat);
         if (countEl) countEl.textContent = items.length < total ? `${items.length} of ${total} listings` : `${total} listing${total !== 1 ? 's' : ''}`;
         if (!total) {
@@ -3253,7 +3309,10 @@ function renderDashListings(tab, btn) {
             body.innerHTML = '<div class="dash-empty-state">No listings match your search.</div>';
             return;
         }
-        rows = items.map(p => `<tr>
+        const isFiltered = q || cat;
+        const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
+        const hasMore  = !isFiltered && items.length > _dashListingsShown;
+        rows = visible.map(p => `<tr>
             <td><img class="dash-thumb" src="${p.images[0]}" alt=""></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
@@ -3340,7 +3399,7 @@ function renderDashListings(tab, btn) {
     body.innerHTML = `<table class="dash-table">
         <thead><tr>${hdrs.map(h => `<th>${h}</th>`).join('')}</tr></thead>
         <tbody>${rows}</tbody>
-    </table>`;
+    </table>${hasMore ? `<div style="text-align:center; padding: 14px 0;"><button class="dash-action-btn" style="padding: 8px 24px; font-size:13px;" onclick="loadMoreDashListings()">Load more listings</button></div>` : ''}`;
 }
 
 function dashFmtDate(ts) {
