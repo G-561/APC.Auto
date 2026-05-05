@@ -2371,15 +2371,24 @@ function renderWantedList() {
             matchBadge.textContent = hasMatches ? `${matches.length} match${matches.length > 1 ? 'es' : ''} available` : 'No matches yet';
             metaRow.appendChild(matchBadge);
 
+            if (hasMatches) {
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'wl-view-btn';
+                viewBtn.textContent = 'View listing';
+                viewBtn.onclick = () => {
+                    toggleDrawer('wantedListDrawer');
+                    openItemDetail(matches[0].id);
+                };
+                metaRow.appendChild(viewBtn);
+            }
+
             info.appendChild(name);
             info.appendChild(metaRow);
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'wanted-delete';
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.onclick = () => {
-                if (confirm('Remove this from your wanted list?')) deleteWanted(w.id);
-            };
+            deleteBtn.textContent = '×';
+            deleteBtn.onclick = () => deleteWanted(w.id);
 
             card.appendChild(info);
             card.appendChild(deleteBtn);

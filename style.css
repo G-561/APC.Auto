@@ -1057,13 +1057,28 @@ header {
 .wanted-delete {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 22px;
+    line-height: 1;
     cursor: pointer;
     color: #ccc;
     flex-shrink: 0;
     padding: 4px;
+    font-family: inherit;
 }
 .wanted-delete:hover { color: #ff3b30; }
+.wl-view-btn {
+    background: none;
+    border: 1px solid var(--apc-green);
+    border-radius: 20px;
+    color: var(--apc-green);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+}
+.wl-view-btn:hover { background: var(--apc-green); color: white; }
 .wanted-contact-btn {
     flex-shrink: 0;
     background: var(--apc-orange);
@@ -2562,6 +2577,7 @@ header {
     #garageDrawer,
     #vehicleDetailDrawer,
     #addVehicleDrawer,
+    #wantedListDrawer,
     #savedPartsDrawer,
     #profileDrawer,
     #myPartsDrawer,
