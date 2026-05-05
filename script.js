@@ -2591,7 +2591,7 @@ function openVehicleDetail(vehicleId) {
     const v = myVehicles.find(x => x.id === vehicleId);
     if (!v) return;
     currentVehicleId  = vehicleId;
-    currentVehicleTab = 'all';
+    currentVehicleTab = 'wanted';
 
     document.getElementById('vehDetailHeaderTitle').textContent = `${v.make} ${v.model}`;
     document.getElementById('vehDetailBannerName').textContent  = `${v.make} ${v.model}`;
@@ -2600,7 +2600,7 @@ function openVehicleDetail(vehicleId) {
     const editBtn = document.getElementById('vehDetailEditBtn');
     if (editBtn) editBtn.onclick = () => openEditVehicleDrawer(vehicleId);
 
-    setVehicleTab('all');
+    setVehicleTab('wanted');
     toggleDrawer('vehicleDetailDrawer', true);  // stack on top of garage drawer
 }
 
@@ -2620,16 +2620,12 @@ function renderVehicleTab() {
 
     c.innerHTML = '';
 
-    if (currentVehicleTab === 'all') {
-        const fitting = getAllParts().filter(p => partFitsVehicle(p, v));
-        if (!fitting.length) {
-            c.appendChild(buildVehicleEmpty('🔍', `No listings match a ${v.make} ${v.model} yet.\nCheck back soon.`));
-            return;
-        }
-        c.appendChild(buildPartsGrid(fitting));
-
-    } else if (currentVehicleTab === 'wanted') {
-        const vehicleWanted = myWanted.filter(w => w.vehicleId === currentVehicleId);
+    if (currentVehicleTab === 'wanted') {
+        const vehicleWanted = myWanted.filter(w =>
+            w.vehicleId === currentVehicleId ||
+            (w.make && v && w.make.toLowerCase() === v.make.toLowerCase() &&
+             w.model.toLowerCase() === v.model.toLowerCase())
+        );
         if (!vehicleWanted.length) {
             c.appendChild(buildVehicleEmpty(
                 '✦',
@@ -2657,7 +2653,11 @@ function renderVehicleTab() {
         c.appendChild(buildPartsGrid(savedFitting));
 
     } else if (currentVehicleTab === 'matches') {
-        const vehicleWanted = myWanted.filter(w => w.vehicleId === currentVehicleId);
+        const vehicleWanted = myWanted.filter(w =>
+            w.vehicleId === currentVehicleId ||
+            (w.make && v && w.make.toLowerCase() === v.make.toLowerCase() &&
+             w.model.toLowerCase() === v.model.toLowerCase())
+        );
         const matchingParts = getAllParts().filter(p =>
             vehicleWanted.some(w => wantedMatchesPart(w, p))
         );
@@ -2703,13 +2703,10 @@ function buildWantedGrid(wanteds) {
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'wanted-delete';
-        deleteBtn.textContent = '🗑️';
+        deleteBtn.textContent = '×';
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm('Delete this wanted part?')) {
-                deleteWanted(w.id);
-                renderVehicleTab();
-            }
+            deleteWanted(w.id);
         };
 
         card.appendChild(info);
