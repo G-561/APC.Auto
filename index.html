@@ -355,6 +355,71 @@
     </div>
 </div>
 
+<!-- WELCOME MODAL — shown once after first signup -->
+<div id="welcomeBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3400; backdrop-filter:blur(2px);"></div>
+<div id="welcomeModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(580px, calc(100vw - 24px)); max-height:calc(100vh - 48px); background:white; border-radius:24px; border:1.5px solid var(--apc-orange); box-shadow:0 20px 70px rgba(0,0,0,0.22); z-index:3401; overflow:hidden; flex-direction:column;">
+
+    <!-- Header — soft apricot, hex #fde8cb -->
+    <div style="background:#fde8cb; padding:26px 28px 20px; text-align:center; border-bottom:1px solid #f5d5a8; flex-shrink:0;">
+        <img src="images/APC.logo.Apricot.png" alt="APC" style="height:52px; width:auto; object-fit:contain; display:block; margin:0 auto 14px;">
+        <div style="font-size:21px; font-weight:900; color:#1a1a1a; margin-bottom:5px; letter-spacing:-0.3px;">Welcome to the APC Community! 👋</div>
+        <div style="font-size:13px; color:#7a5c3a; font-weight:500; line-height:1.5;">You're in. Here's a quick tour of everything APC has to offer.</div>
+    </div>
+
+    <!-- Scrollable body -->
+    <div style="overflow-y:auto; padding:20px 20px 0; flex:1;">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;">
+
+            <div class="welcome-tile">
+                <div class="welcome-tile-icon">🔍</div>
+                <div class="welcome-tile-title">Browse &amp; Search</div>
+                <div class="welcome-tile-desc">Search thousands of parts from real sellers across Australia. Filter by make, model, year and category.</div>
+            </div>
+
+            <div class="welcome-tile">
+                <div class="welcome-tile-icon">🚗</div>
+                <div class="welcome-tile-title">My Garage</div>
+                <div class="welcome-tile-desc">Save your vehicles and every search is tailored to your exact make and model. No more sifting through the wrong parts.</div>
+            </div>
+
+            <div class="welcome-tile">
+                <div class="welcome-tile-icon">📋</div>
+                <div class="welcome-tile-title">Wanted List</div>
+                <div class="welcome-tile-desc">Post the parts you're after and let sellers come to you. Get notified when a match hits the marketplace.</div>
+            </div>
+
+            <div class="welcome-tile">
+                <div class="welcome-tile-icon">🏷️</div>
+                <div class="welcome-tile-title">List a Part</div>
+                <div class="welcome-tile-desc">Got a spare sitting around? List it in minutes and reach thousands of buyers across the country.</div>
+            </div>
+
+            <div class="welcome-tile">
+                <div class="welcome-tile-icon">💬</div>
+                <div class="welcome-tile-title">Message Centre</div>
+                <div class="welcome-tile-desc">Talk directly with buyers and sellers. No middlemen, no phone calls — just a clean thread for every part.</div>
+            </div>
+
+            <div class="welcome-tile welcome-tile-pro">
+                <div class="welcome-tile-icon">⭐</div>
+                <div class="welcome-tile-title welcome-tile-title-pro">APC Pro</div>
+                <div class="welcome-tile-desc">Trade seller or wrecker? Upgrade to unlock a workshop profile, stock search, QR labels and more.</div>
+            </div>
+
+        </div>
+
+        <div style="text-align:center; font-size:12px; color:#bbb; margin-bottom:18px; font-style:italic;">"Built by car people, for car people."</div>
+
+    </div>
+
+    <!-- Sticky CTA -->
+    <div style="padding:14px 20px 20px; flex-shrink:0; border-top:1px solid #f0ece8; background:white;">
+        <button onclick="closeWelcomeModal()" class="welcome-cta-btn">Start Exploring APC →</button>
+    </div>
+
+</div>
+
 <!-- UPGRADE TO APC PRO MODAL -->
 <div id="upgradeBackdrop" onclick="closeUpgradeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3200;"></div>
 <div id="upgradeModal" style="display:none; position:fixed; left:50%; transform:translateX(-50%); top:50%; margin-top:-260px; width:min(520px, calc(100vw - 24px)); background:white; border-radius:20px; box-shadow:0 16px 60px rgba(0,0,0,0.25); z-index:3201; overflow:hidden;">
@@ -644,15 +709,15 @@
 </div>
 
 <div id="authDrawer" class="drawer">
-    <div class="drawer-header">
-        <span id="authTitle">Sign In / Sign Up</span>
-        <div onclick="toggleDrawer('authDrawer')" style="font-size: 30px; color: #888; cursor: pointer;">×</div>
-    </div>
-    <div class="drawer-content">
-        <div style="display:flex; gap: 10px; margin-bottom: 18px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 16px;">
+        <img src="images/APC.logo.png" alt="APC" style="height: 52px; width: auto; object-fit: contain;">
+        <div style="display: flex; align-items: center; gap: 8px;">
             <button type="button" class="auth-tab active" id="authTabSignIn" onclick="setAuthMode('signin')">Sign In</button>
             <button type="button" class="auth-tab" id="authTabSignUp" onclick="setAuthMode('signup')">Sign Up</button>
         </div>
+        <div onclick="toggleDrawer('authDrawer')" style="font-size: 28px; color: #aaa; cursor: pointer; line-height: 1; margin-left: 12px;">×</div>
+    </div>
+    <div class="drawer-content" style="padding-top: 0;">
         <div id="authSignInSection">
             <div class="input-group" style="margin-bottom: 12px;"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
             <div class="input-group" style="margin-bottom: 12px;"><label>Password</label><input type="password" id="authPassword" placeholder="Password"></div>

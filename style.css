@@ -721,7 +721,7 @@ header {
 
 /* WORKSHOP DETAIL DRAWER */
 .wsd-hero {
-    background: linear-gradient(135deg, var(--apc-orange) 0%, #e07b00 100%);
+    background: linear-gradient(135deg, #2e2820 0%, #1c1812 100%);
     padding: 20px 20px 16px;
     color: white;
 }
@@ -777,7 +777,7 @@ header {
 }
 .vehicle-card-icon {
     width: 56px; height: 56px;
-    background: linear-gradient(135deg, var(--apc-orange), #FFB85C);
+    background: linear-gradient(135deg, #2e2820, #3d3228);
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     font-size: 28px;
@@ -827,7 +827,7 @@ header {
 
 /* VEHICLE DETAIL — banner, segmented toggle, tab content */
 .vehicle-banner {
-    background: linear-gradient(135deg, var(--apc-orange), #FF6E00);
+    background: linear-gradient(135deg, #2e2820 0%, #1c1812 100%);
     color: white;
     padding: 14px;
     border-radius: 12px;
@@ -1312,7 +1312,7 @@ header {
 
 /* PROFILE */
 .profile-hero {
-    background: linear-gradient(135deg, var(--apc-orange) 0%, #e07b00 100%);
+    background: linear-gradient(135deg, #2e2820 0%, #1c1812 100%);
     padding: 32px 20px 28px 20px;
     display: flex;
     flex-direction: column;
@@ -2921,6 +2921,48 @@ header {
     letter-spacing: 0.5px;
     margin: 18px 0 10px;
 }
+
+/* ===== WELCOME MODAL ===== */
+#welcomeModal { flex-direction: column; }
+
+.welcome-tile {
+    background: #f9f8f6;
+    border: 1.5px solid #edeae6;
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.welcome-tile:hover {
+    border-color: rgba(200,130,60,0.35);
+    box-shadow: 0 2px 10px rgba(200,130,60,0.08);
+}
+.welcome-tile-pro {
+    border-color: rgba(200,130,60,0.3);
+    background: linear-gradient(135deg, #fdf9f4 0%, #faf5ec 100%);
+}
+.welcome-tile-icon { font-size: 26px; line-height: 1; margin-bottom: 2px; }
+.welcome-tile-title { font-size: 13px; font-weight: 900; color: #1a1a1a; letter-spacing: -0.1px; }
+.welcome-tile-title-pro { color: #b8721a; }
+.welcome-tile-desc { font-size: 12px; color: #777; line-height: 1.5; }
+
+.welcome-cta-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 900;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(247,148,29,0.3);
+    transition: opacity 0.15s;
+}
+.welcome-cta-btn:hover { opacity: 0.88; }
 
 /* ===== UPGRADE TO PRO MODAL ===== */
 .upgrade-plan-card {

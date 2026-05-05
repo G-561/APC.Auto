@@ -2716,14 +2716,12 @@ function setAuthMode(mode) {
     const signUpTab = document.getElementById('authTabSignUp');
     const signInSection = document.getElementById('authSignInSection');
     const signUpSection = document.getElementById('authSignUpSection');
-    const authTitle = document.getElementById('authTitle');
     const proBenefitsPanel = document.getElementById('proBenefitsPanel');
 
     if (signInTab) signInTab.classList.toggle('active', mode === 'signin');
     if (signUpTab) signUpTab.classList.toggle('active', mode === 'signup');
     if (signInSection) signInSection.style.display = mode === 'signin' ? 'block' : 'none';
     if (signUpSection) signUpSection.style.display = mode === 'signup' ? 'block' : 'none';
-    if (authTitle) authTitle.textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
     if (proBenefitsPanel) proBenefitsPanel.style.display = 'none';
 
     if (mode === 'signin') {
@@ -2799,6 +2797,9 @@ function handleSignUpSubmit() {
         const nextAction = authReturnAction;
         authReturnAction = null;
         nextAction();
+    } else {
+        // Show welcome onboarding on first ever signup
+        setTimeout(showWelcomeModal, 350);
     }
 }
 
@@ -2851,6 +2852,21 @@ function confirmUpgrade() {
 function closeUpgradeModal() {
     document.getElementById('upgradeBackdrop').style.display = 'none';
     document.getElementById('upgradeModal').style.display    = 'none';
+}
+
+function showWelcomeModal() {
+    if (localStorage.getItem('apcWelcomeSeen')) return;
+    const modal   = document.getElementById('welcomeModal');
+    const backdrop = document.getElementById('welcomeBackdrop');
+    if (!modal || !backdrop) return;
+    backdrop.style.display = 'block';
+    modal.style.display    = 'flex';
+}
+
+function closeWelcomeModal() {
+    document.getElementById('welcomeBackdrop').style.display = 'none';
+    document.getElementById('welcomeModal').style.display    = 'none';
+    localStorage.setItem('apcWelcomeSeen', '1');
 }
 
 // Pro-only: turn the FIND PARTS / FIND WANTED bar on/off
