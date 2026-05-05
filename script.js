@@ -372,31 +372,31 @@ function saveConversations() {
 }
 function getInitialConversations() {
     return [
-        { id:1, with:'Dave R.',            isPro:false, unread:true,  partId:1,  msgs:[
+        { id:1, with:'Dave R.',            isPro:false, unread:true,  partId:null, msgs:[
             {id:1,sent:false,text:'Hey, is the Hiace mirror still available?',          time:'Mon',       clock:'9:14 am'},
             {id:2,sent:true, text:'Yes still available — good condition, no cracks.',   time:'Mon',       clock:'9:32 am'},
             {id:3,sent:false,text:'Would you take $70 for it?',                         time:'Mon',       clock:'9:45 am'},
             {id:4,sent:true, text:'Best I can do is $75 — fits 2019+ perfectly.',       time:'Mon',       clock:'10:02 am'},
             {id:5,sent:false,text:'Done! Can I pick up Saturday morning?',              time:'Today',     clock:'8:03 am'},
         ]},
-        { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:2,  msgs:[
+        { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:null, msgs:[
             {id:1,sent:false,text:'Hi! Is the Lotus spoiler still for sale?',           time:'Yesterday', clock:'2:11 pm'},
             {id:2,sent:true, text:'Yes — genuine factory item, excellent condition.',   time:'Yesterday', clock:'2:45 pm'},
             {id:3,sent:false,text:'Does it come with the mounting hardware?',           time:'Yesterday', clock:'3:02 pm'},
         ]},
-        { id:3, with:'Tom K.',             isPro:false, unread:false, partId:12, msgs:[
+        { id:3, with:'Tom K.',             isPro:false, unread:false, partId:null, msgs:[
             {id:1,sent:false,text:'Interested in the 1KD engine — km reading?',        time:'Wed',       clock:'11:20 am'},
             {id:2,sent:true, text:'156,000km, ran perfectly when pulled. Fully tested.',time:'Wed',       clock:'11:55 am'},
             {id:3,sent:false,text:'Can you do $2,600?',                                 time:'Wed',       clock:'12:10 pm'},
             {id:4,sent:true, text:"Best is $2,700 — includes the turbo.",               time:'Wed',       clock:'12:18 pm'},
             {id:5,sent:false,text:'Fair enough! Can you arrange freight from Adelaide?',time:'Wed',       clock:'1:30 pm'},
         ]},
-        { id:4, with:'Brett (Parts Plus)', isPro:true,  unread:true,  partId:9,  msgs:[
+        { id:4, with:'Brett (Parts Plus)', isPro:true,  unread:true,  partId:null, msgs:[
             {id:1,sent:false,text:"Do you have more Hiace turbos? We'd buy 3 if available.", time:'Thu', clock:'8:50 am'},
             {id:2,sent:true, text:"2 in stock now. Can source more — what's your timeline?", time:'Thu', clock:'9:15 am'},
             {id:3,sent:false,text:'No rush, within a month. Price firm on $650 each?',       time:'Thu', clock:'9:28 am'},
         ]},
-        { id:5, with:'Lee P.',             isPro:false, unread:false, partId:13, msgs:[
+        { id:5, with:'Lee P.',             isPro:false, unread:false, partId:null, msgs:[
             {id:1,sent:false,text:'Is the Elise headlight driver or passenger side?',   time:'Tue',      clock:'4:45 pm'},
             {id:2,sent:true, text:"Left (driver's side). Fits S2 models 2001–2011.",    time:'Tue',      clock:'5:10 pm'},
             {id:3,sent:false,text:"Perfect — exactly what I need. I'll be in touch!",   time:'Tue',      clock:'5:22 pm'},
@@ -936,9 +936,7 @@ function buildCardHTML(part) {
         ? `<span class="fitting-pill">FITTING AVAILABLE</span>`
         : '';
 
-    const locationHTML = userIsSignedIn
-        ? `📍 ${part.loc}`
-        : `<span class="blurred-location">📍 ${part.loc}</span>`;
+    const locationHTML = `📍 ${part.loc}`;
 
     const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
 
@@ -1055,7 +1053,7 @@ function renderWantedSearchResults(mainGrid) {
                 ${w.maxPrice ? `<span class="wanted-chip wanted-chip-budget">Max $${w.maxPrice}</span>` : ''}
                 <span class="wanted-chip wanted-chip-time">${escapeHtml(w.posted)}</span>
             </div>
-            <button class="wanted-have-btn" onclick="listFromWanted(${JSON.stringify(escapeHtml(w.make))},${JSON.stringify(escapeHtml(w.model))},${JSON.stringify(escapeHtml(w.year))})">LIST THIS PART ›</button>
+            <button class="wanted-have-btn" onclick="listFromWanted('${escapeHtml(w.make)}','${escapeHtml(w.model)}','${escapeHtml(w.year)}')">LIST THIS PART ›</button>
         `;
         wrap.appendChild(row);
     });
@@ -1541,13 +1539,10 @@ function openItemDetail(partId) {
     const detailSignInPrompt = document.getElementById('detailSignInPrompt');
     const lockDetails = !userIsSignedIn;
 
-    [detailSellerSection, detailLocationSection, detailDescriptionSection].forEach(el => {
-        if (!el) return;
-        el.classList.toggle('blurred-detail', lockDetails);
-    });
-    if (detailSignInPrompt) {
-        detailSignInPrompt.style.display = lockDetails ? 'block' : 'none';
-    }
+    if (detailSellerSection) detailSellerSection.classList.toggle('blurred-detail', lockDetails);
+    const detailMsgBtn = document.getElementById('detailMsgBtn');
+    if (detailMsgBtn)        detailMsgBtn.style.display        = lockDetails ? 'none'  : '';
+    if (detailSignInPrompt)  detailSignInPrompt.style.display  = lockDetails ? ''      : 'none';
 
     // 3. Update the seller header in the overlay (was hardcoded to Gary)
     // Amber header seller card (mobile)
@@ -1598,7 +1593,7 @@ function openItemDetail(partId) {
     if (!footer) return;
 
     const relatedParts = getAllParts().filter(p => p.id !== part.id);
-    const miniCards = relatedParts.slice(0, 5).map(p => {
+    const miniCards = relatedParts.slice(0, 8).map(p => {
         const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
         return `
             <div class="detail-mini-card" onclick="openDetail(${p.id})">
@@ -1717,15 +1712,59 @@ function handleMessageSeller() {
     if (!userIsSignedIn) { openAuthDrawer(); return; }
     const part = getPartById(currentOpenPartId);
     if (!part) return;
-    let conv = conversations.find(c => c.partId === currentOpenPartId);
-    if (!conv) {
-        conv = { id: nextConvId(), with: part.seller, isPro: !!part.isPro, unread: false, partId: currentOpenPartId, msgs: [] };
-        conversations.unshift(conv);
-        saveConversations();
+
+    // If a conversation already exists for this part, go straight to the inbox thread
+    const existing = conversations.find(c => c.partId === currentOpenPartId);
+    if (existing) {
+        toggleDrawer('inboxDrawer', true);
+        switchInboxTab('chats');
+        openInboxConv(existing.id);
+        return;
     }
-    toggleDrawer('inboxDrawer', true);
-    switchInboxTab('chats');
-    openInboxConv(conv.id);
+
+    // First contact — open the floating compose card
+    const titleEl = document.getElementById('contactCardTitle');
+    const msgEl   = document.getElementById('contactCardMsg');
+    const compose = document.getElementById('contactCardCompose');
+    const confirm = document.getElementById('contactCardConfirm');
+    if (titleEl) titleEl.textContent = part.title;
+    if (msgEl)   msgEl.value = `Hi, is the ${part.title} still available?`;
+    if (compose) compose.style.display = '';
+    if (confirm) confirm.style.display = 'none';
+
+    document.getElementById('contactSellerBackdrop').style.display = '';
+    document.getElementById('contactSellerCard').style.display     = '';
+}
+
+function sendContactMessage() {
+    const part = getPartById(currentOpenPartId);
+    if (!part) return;
+    const msgEl = document.getElementById('contactCardMsg');
+    const text  = msgEl ? msgEl.value.trim() : '';
+    if (!text) return;
+
+    // Create conversation and add the opening message
+    const conv = { id: nextConvId(), with: part.seller, isPro: !!part.isPro, unread: false, partId: currentOpenPartId, msgs: [] };
+    conv.msgs.push({ id: 1, sent: true, text, time: 'Today', clock: nowClock() });
+    conversations.unshift(conv);
+    saveConversations();
+    updateInboxBadge();
+
+    // Switch to confirmation state
+    const compose = document.getElementById('contactCardCompose');
+    const confirm = document.getElementById('contactCardConfirm');
+    const sub     = document.getElementById('contactCardConfirmSub');
+    if (compose) compose.style.display = 'none';
+    if (confirm) confirm.style.display = '';
+    if (sub)     sub.textContent = `${part.seller} will be in touch shortly.`;
+
+    // Auto-close after 2.2 seconds
+    setTimeout(closeContactCard, 2200);
+}
+
+function closeContactCard() {
+    document.getElementById('contactSellerBackdrop').style.display = 'none';
+    document.getElementById('contactSellerCard').style.display     = 'none';
 }
 
 // XSS-safe chat: build message node with textContent, never innerHTML
@@ -3214,7 +3253,7 @@ function updateHeaderOffset() {
         if (window.innerWidth >= 900) {
             if (rightPanel)           rightPanel.style.top           = totalH + 'px';
             if (filterDrawer)         filterDrawer.style.top         = totalH + 'px';
-            if (detailOverlay)        detailOverlay.style.top        = totalH + 'px';
+            if (detailOverlay)        detailOverlay.style.top        = topBarH + 'px';
             const sellOverlay = document.getElementById('sellOverlay');
             if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
             if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
@@ -3228,9 +3267,11 @@ function updateHeaderOffset() {
             if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
             if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
             if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
-            if (inboxDrawer)           inboxDrawer.style.top           = totalH + 'px';
+            if (inboxDrawer)           inboxDrawer.style.top           = topBarH + 'px';
             if (messageDetailDrawer)   messageDetailDrawer.style.top   = totalH + 'px';
             if (chatDrawer)            chatDrawer.style.top            = totalH + 'px';
+            const authDrawer = document.getElementById('authDrawer');
+            if (authDrawer)            authDrawer.style.top            = (totalH + 20) + 'px';
             if (accountDropdown)       accountDropdown.style.top       = (totalH + 8) + 'px';
             const dashView = document.getElementById('dashboardView');
             if (dashView)             dashView.style.top             = totalH + 'px';

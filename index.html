@@ -317,8 +317,11 @@
             </div>
 
             <div style="padding: 0 15px 25px 15px;">
-                <button onclick="handleMessageSeller()" style="width: 100%; padding: 16px; background: var(--apc-orange); color: white; border: none; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
+                <button id="detailMsgBtn" onclick="handleMessageSeller()" style="width: 100%; padding: 16px; background: var(--apc-orange); color: white; border: none; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
                     ✉️ MESSAGE SELLER
+                </button>
+                <button id="detailSignInPrompt" onclick="openAuthDrawer()" style="display:none; width: 100%; padding: 16px; background: var(--apc-blue); color: white; border: none; border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
+                    🔒 SIGN IN TO CONTACT SELLER
                 </button>
             </div>
 
@@ -333,11 +336,6 @@
                 <div id="detailWorkshopCards" style="display: grid; gap: 12px;"></div>
             </div>
 
-            <div id="detailSignInPrompt" class="detail-signin-prompt" style="display:none; margin: 0 15px 20px 15px; padding: 18px; border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; background: rgba(255,255,255,0.95); text-align: center;">
-                <div style="font-size: 13px; font-weight: 800; margin-bottom: 10px; color:#333;">Sign in to view the seller details, location and full description.</div>
-                <button onclick="openAuthDrawer()" style="width: 100%; padding: 14px; background: var(--apc-orange); color:white; border:none; border-radius: 10px; font-weight:800; cursor:pointer;">SIGN IN TO VIEW DETAILS</button>
-            </div>
-
             <div id="sellYoursMobile" style="background: #fff; border: 2px dashed #eee; border-radius: 12px; padding: 20px; text-align: center; margin: 0 15px 30px 15px;">
                 <div style="font-size: 13px; font-weight: 600; color: #666; margin-bottom: 12px;">Have a part like this?</div>
                 <button onclick="openSellOverlay()" style="padding: 10px 25px; border-radius: 8px; border: 2px solid #FF9800; background: none; color: #FF9800; font-weight: 800; font-size: 11px; text-transform: uppercase; cursor: pointer;">Sell Yours</button>
@@ -348,6 +346,31 @@
 
         <!-- Full-width footer: spans both columns on desktop -->
         <div id="dynamicDetailFooter"></div>
+    </div>
+</div>
+
+<!-- CONTACT SELLER CARD — floating modal, replaces opening full inbox for first message -->
+<div id="contactSellerBackdrop" onclick="closeContactCard()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:3100;"></div>
+<div id="contactSellerCard" style="display:none; position:fixed; left:50%; transform:translateX(-50%); top:50%; margin-top:-140px; width:min(480px, calc(100vw - 32px)); background:white; border-radius:16px; box-shadow:0 12px 48px rgba(0,0,0,0.22); z-index:3101; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px 12px; border-bottom:1px solid #f0f0f0;">
+        <div>
+            <div style="font-size:11px; text-transform:uppercase; color:#aaa; font-weight:700; letter-spacing:0.5px;">Contact Seller</div>
+            <div id="contactCardTitle" style="font-size:15px; font-weight:800; color:#333; margin-top:2px;"></div>
+        </div>
+        <div onclick="closeContactCard()" style="font-size:26px; color:#bbb; cursor:pointer; line-height:1; padding:4px;">×</div>
+    </div>
+
+    <!-- Compose state -->
+    <div id="contactCardCompose" style="padding:16px 18px 20px;">
+        <textarea id="contactCardMsg" rows="4" style="width:100%; box-sizing:border-box; border:1.5px solid #e8e8e8; border-radius:10px; padding:12px; font-size:14px; font-family:inherit; resize:none; outline:none; color:#333;" placeholder="Write your message..."></textarea>
+        <button onclick="sendContactMessage()" style="margin-top:12px; width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer;">Send Message ✉️</button>
+    </div>
+
+    <!-- Confirmation state -->
+    <div id="contactCardConfirm" style="display:none; padding:32px 18px; text-align:center;">
+        <div style="font-size:36px; margin-bottom:12px;">✅</div>
+        <div style="font-size:16px; font-weight:800; color:#333; margin-bottom:6px;">Message sent!</div>
+        <div id="contactCardConfirmSub" style="font-size:13px; color:#888;">The seller will be in touch shortly.</div>
     </div>
 </div>
 
@@ -582,14 +605,36 @@
         </div>
         <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
             <button type="button" onclick="onShowProBenefits()" style="background: none; border: none; color: var(--apc-orange); font-weight: 800; cursor: pointer; text-align: left; padding: 0;">APC Pro benefits outlined →</button>
-            <div id="proBenefitsPanel" style="display:none; background: #fffdeb; border: 1px solid rgba(255,165,0,0.2); border-radius: 12px; padding: 14px; font-size: 13px; color: #333;">
-                <strong style="display:block; margin-bottom: 8px;">APC Pro benefits</strong>
-                <ul style="padding-left: 18px; margin: 0; color: #555;">
-                    <li>Pro-only search for wanted and part listings</li>
-                    <li>Priority listing placement for your parts</li>
-                    <li>Fitting Available toggle for pro sellers</li>
-                    <li>Seller badge and priority buyer access</li>
+            <div id="proBenefitsPanel" style="display:none; background: #fffdeb; border: 1px solid rgba(255,165,0,0.25); border-radius: 14px; padding: 16px; font-size: 13px; color: #333;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                    <span style="background:var(--apc-orange); color:white; font-size:10px; font-weight:900; padding:3px 10px; border-radius:20px; letter-spacing:0.5px;">APC PRO</span>
+                    <strong style="font-size:14px;">Everything in Pro, explained.</strong>
+                </div>
+
+                <div style="font-size:10px; font-weight:900; text-transform:uppercase; color:var(--apc-orange); letter-spacing:0.8px; margin-bottom:6px;">Selling Tools</div>
+                <ul style="padding-left:0; margin:0 0 14px 0; list-style:none; display:flex; flex-direction:column; gap:5px; color:#444;">
+                    <li>🏷️ Stock number tagging — link every part off the same vehicle instantly</li>
+                    <li>💸 Open to Offers toggle — let buyers negotiate on your terms</li>
+                    <li>🔧 Fitting Available flag — show buyers you can install the part</li>
+                    <li>📦 QR code &amp; warehouse label printing — built for wrecking yards &amp; trade sellers</li>
+                    <li>✔️ PRO seller badge — stand out in every search result</li>
                 </ul>
+
+                <div style="font-size:10px; font-weight:900; text-transform:uppercase; color:var(--apc-orange); letter-spacing:0.8px; margin-bottom:6px;">Search &amp; Discovery</div>
+                <ul style="padding-left:0; margin:0 0 14px 0; list-style:none; display:flex; flex-direction:column; gap:5px; color:#444;">
+                    <li>🔍 Find Wanted mode — search active buyer requests and match your stock</li>
+                    <li>🔢 Stock number search — pull up every part off a vehicle in one hit</li>
+                    <li>🪪 APC Item ID search — instant lookup by unique part ID</li>
+                </ul>
+
+                <div style="font-size:10px; font-weight:900; text-transform:uppercase; color:var(--apc-orange); letter-spacing:0.8px; margin-bottom:6px;">Business</div>
+                <ul style="padding-left:0; margin:0 0 14px 0; list-style:none; display:flex; flex-direction:column; gap:5px; color:#444;">
+                    <li>📊 Pro Dashboard — live analytics, listing management &amp; sales overview</li>
+                    <li>🛠️ Workshop &amp; Approved Repairer profile — get found by buyers who need fitting</li>
+                    <li>⭐ Priority listing placement — your parts shown first in relevant searches</li>
+                </ul>
+
+                <div style="font-size:11px; color:#aaa; border-top:1px solid rgba(0,0,0,0.07); padding-top:10px; margin-top:2px;">More features dropping soon — Pro members get access first.</div>
             </div>
         </div>
     </div>
