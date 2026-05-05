@@ -1012,6 +1012,21 @@ header {
 }
 .wl-vehicle-hdr:first-child { margin-top: 0; }
 
+.wanted-garage-chip {
+    background: #f4f4f4;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #555;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.wanted-garage-chip:hover  { border-color: var(--apc-orange); color: var(--apc-orange); }
+.wanted-garage-chip.active { background: var(--apc-orange); border-color: var(--apc-orange); color: white; }
+
 .wl-match-badge {
     font-size: 11px;
     font-weight: 700;

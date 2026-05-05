@@ -2281,12 +2281,13 @@ function nextWantedId() {
 }
 
 // Add a new wanted entry
-function addWanted(partName, vehicleId, maxPrice) {
-    const id = nextWantedId();
+function addWanted(partName, make, model, year, maxPrice) {
     myWanted.push({
-        id,
+        id: nextWantedId(),
         partName,
-        vehicleId, // null for any vehicle
+        make:  make  || '',
+        model: model || '',
+        year:  year  || '',
         maxPrice: maxPrice || null,
         mutedNotifications: false,
         createdAt: new Date().toISOString()
@@ -2331,22 +2332,20 @@ function renderWantedList() {
         return;
     }
 
-    // Build groups: one per vehicle, then "any vehicle" at the end
-    const groups = [];
-    myVehicles.forEach(v => {
-        const items = myWanted.filter(w => w.vehicleId === v.id);
-        if (items.length) groups.push({ vehicle: v, items });
+    // Group by make+model, then "no vehicle" at the end
+    const vehicleKeys = [...new Set(myWanted.filter(w => w.make).map(w => `${w.make}||${w.model}||${w.year}`))];
+    const noVehicle   = myWanted.filter(w => !w.make);
+
+    const groups = vehicleKeys.map(key => {
+        const [make, model, year] = key.split('||');
+        return { label: `🚗 ${make} ${model} ${year}`, items: myWanted.filter(w => w.make === make && w.model === model && w.year === year) };
     });
-    const orphans = myWanted.filter(w => w.vehicleId === null || !myVehicles.find(v => v.id === w.vehicleId));
-    if (orphans.length) groups.push({ vehicle: null, items: orphans });
+    if (noVehicle.length) groups.push({ label: '🔍 No vehicle specified', items: noVehicle });
 
     groups.forEach(group => {
-        // Section header
         const hdr = document.createElement('div');
         hdr.className = 'wl-vehicle-hdr';
-        hdr.textContent = group.vehicle
-            ? `🚗 ${group.vehicle.make} ${group.vehicle.model} ${group.vehicle.year}`
-            : '🔍 Any Vehicle';
+        hdr.textContent = group.label;
         body.appendChild(hdr);
 
         group.items.forEach(w => {
@@ -2397,83 +2396,130 @@ function renderWantedList() {
 
 // Match logic: does this part match the wanted criteria?
 function wantedMatchesPart(wanted, part) {
-    // Fuzzy substring match on part name (case-insensitive)
     if (!part.title.toLowerCase().includes(wanted.partName.toLowerCase())) return false;
-    // Vehicle compatibility: if wanted has vehicleId, check fit; if null, always true
-    if (wanted.vehicleId !== null) {
+    // If no make specified, any vehicle is fine
+    if (!wanted.make) return true;
+    // Legacy: wanted stored by vehicleId (old format)
+    if (!wanted.make && wanted.vehicleId !== null && wanted.vehicleId !== undefined) {
         const vehicle = myVehicles.find(v => v.id === wanted.vehicleId);
         if (!vehicle || !partFitsVehicle(part, vehicle)) return false;
+        return true;
     }
-    return true;
+    return part.fits.some(f =>
+        f.make.toLowerCase() === wanted.make.toLowerCase() &&
+        (!wanted.model || f.model.toLowerCase() === wanted.model.toLowerCase())
+    );
 }
 
-// Placeholder for Add Wanted from search
 function closeAddWantedDrawer() {
     const el = document.getElementById('addWantedDrawer');
     if (el) el.classList.remove('active');
     syncBackdrop();
 }
 
-function onAddWantedFromSearch() {
-    document.getElementById('wantedPartName').value = activeFilters.search;
-    document.getElementById('wantedMaxPrice').value = '';
-    populateWantedVehicleSelect();
-
-    const vehicleSelect = document.getElementById('wantedVehicleSelect');
-    if (myVehicles.length === 1 && vehicleSelect) {
-        vehicleSelect.value = myVehicles[0].id;
-    }
-
-    toggleDrawer('addWantedDrawer');
-}
-
-// Populate the vehicle dropdown for Add Wanted
-function populateWantedVehicleSelect() {
-    const select = document.getElementById('wantedVehicleSelect');
-    select.innerHTML = '<option value="">Any vehicle</option>';
+// Populate the garage quick-fill chips above the Make/Model/Year fields
+function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
+    const wrap  = document.getElementById('wantedGarageQuickFill');
+    const chips = document.getElementById('wantedGarageChips');
+    if (!wrap || !chips) return;
+    if (!myVehicles.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    chips.innerHTML = '';
     myVehicles.forEach(v => {
-        const option = document.createElement('option');
-        option.value = v.id;
-        option.textContent = `${v.make} ${v.model} ${v.year}`;
-        select.appendChild(option);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'wanted-garage-chip';
+        chip.textContent = `${v.make} ${v.model} ${v.year}`;
+        chip.onclick = () => {
+            document.getElementById('wantedMake').value  = v.make;
+            document.getElementById('wantedModel').value = v.model;
+            document.getElementById('wantedYear').value  = v.year;
+            chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+        };
+        if (v.make === prefillMake && v.model === prefillModel) chip.classList.add('active');
+        chips.appendChild(chip);
     });
 }
 
-function openAddWantedForVehicle(vehicleId) {
+function openAddWantedFromList() {
     document.getElementById('wantedPartName').value = '';
     document.getElementById('wantedMaxPrice').value = '';
-    populateWantedVehicleSelect();
-    const vehicleSelect = document.getElementById('wantedVehicleSelect');
-    if (vehicleSelect && vehicleId !== null) {
-        vehicleSelect.value = vehicleId;
+    document.getElementById('wantedMake').value  = '';
+    document.getElementById('wantedModel').value = '';
+    document.getElementById('wantedYear').value  = '';
+    populateWantedGarageChips();
+    toggleDrawer('addWantedDrawer', true);
+}
+
+function onAddWantedFromSearch() {
+    document.getElementById('wantedPartName').value = activeFilters.search;
+    document.getElementById('wantedMaxPrice').value = '';
+    document.getElementById('wantedMake').value  = '';
+    document.getElementById('wantedModel').value = '';
+    document.getElementById('wantedYear').value  = '';
+    // If only one garage vehicle, pre-fill it automatically
+    if (myVehicles.length === 1) {
+        document.getElementById('wantedMake').value  = myVehicles[0].make;
+        document.getElementById('wantedModel').value = myVehicles[0].model;
+        document.getElementById('wantedYear').value  = myVehicles[0].year;
     }
-    toggleDrawer('addWantedDrawer', true);  // stack — keeps vehicle detail open underneath
+    populateWantedGarageChips(
+        myVehicles.length === 1 ? myVehicles[0].make  : '',
+        myVehicles.length === 1 ? myVehicles[0].model : ''
+    );
+    toggleDrawer('addWantedDrawer');
+}
+
+function openAddWantedForVehicle(vehicleId) {
+    const v = myVehicles.find(x => x.id === vehicleId);
+    document.getElementById('wantedPartName').value = '';
+    document.getElementById('wantedMaxPrice').value = '';
+    document.getElementById('wantedMake').value  = v ? v.make  : '';
+    document.getElementById('wantedModel').value = v ? v.model : '';
+    document.getElementById('wantedYear').value  = v ? v.year  : '';
+    populateWantedGarageChips(v?.make, v?.model);
+    toggleDrawer('addWantedDrawer', true);
 }
 
 // Submit Add Wanted
 function submitAddWanted() {
     const partName = document.getElementById('wantedPartName').value.trim();
     const maxPriceStr = document.getElementById('wantedMaxPrice').value.trim();
-    const vehicleIdStr = document.getElementById('wantedVehicleSelect').value;
+    const make  = document.getElementById('wantedMake').value.trim();
+    const model = document.getElementById('wantedModel').value.trim();
+    const year  = document.getElementById('wantedYear').value.trim();
 
-    if (!partName) {
-        alert('Part name is required.');
-        return;
-    }
+    if (!partName) { alert('Part name is required.'); return; }
 
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
-    const vehicleId = vehicleIdStr ? Number(vehicleIdStr) : null;
+    addWanted(partName, make, model, year, maxPrice);
 
-    addWanted(partName, vehicleId, maxPrice);
-    showToast('Added to wanted list');
+    // If they typed a vehicle not already in the garage, offer to save it
+    const alreadyInGarage = make && myVehicles.some(v =>
+        v.make.toLowerCase() === make.toLowerCase() &&
+        v.model.toLowerCase() === model.toLowerCase()
+    );
+    if (make && !alreadyInGarage) {
+        showToastWithAction(
+            `Added to wanted list`,
+            `Save ${make} ${model} to garage?`,
+            () => {
+                myVehicles.push({ id: nextVehicleId(), make, model, year: Number(year) || year || '', variant: '', nickname: '', vin: '' });
+                saveVehicles();
+                renderGarage();
+                showToast(`${make} ${model} added to garage`);
+            }
+        );
+    } else {
+        showToast('Added to wanted list');
+    }
 
-    // Stay on the drawer so the user can add more — just clear the part name and price.
-    // Vehicle selection is kept so rapid multi-add for the same car is frictionless.
+    // Clear part name but keep vehicle — frictionless multi-add for the same car
     document.getElementById('wantedPartName').value = '';
     document.getElementById('wantedMaxPrice').value = '';
     document.getElementById('wantedPartName').focus();
 
-    // Keep related views fresh
     if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     updateAccountStats();
@@ -2654,6 +2700,28 @@ function showToast(msg) {
     toast.classList.add('show');
     clearTimeout(_toastTimer);
     _toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function showToastWithAction(msg, actionLabel, actionFn) {
+    let toast = document.getElementById('appToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'appToast';
+        toast.className = 'app-toast';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = '';
+    const text = document.createElement('span');
+    text.textContent = msg;
+    const btn = document.createElement('button');
+    btn.textContent = actionLabel;
+    btn.style.cssText = 'background:none; border:none; color:white; font-weight:900; font-size:12px; text-decoration:underline; cursor:pointer; margin-left:10px; font-family:inherit; padding:0;';
+    btn.onclick = () => { actionFn(); toast.classList.remove('show'); };
+    toast.appendChild(text);
+    toast.appendChild(btn);
+    toast.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => toast.classList.remove('show'), 4000);
 }
 
 // --- INBOX ---
