@@ -2442,11 +2442,18 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
         chip.className = 'wanted-garage-chip';
         chip.textContent = `${v.make} ${v.model} ${v.year}`;
         chip.onclick = () => {
-            document.getElementById('wantedMake').value  = v.make;
-            document.getElementById('wantedModel').value = v.model;
-            document.getElementById('wantedYear').value  = v.year;
+            const alreadyActive = chip.classList.contains('active');
             chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
+            if (alreadyActive) {
+                document.getElementById('wantedMake').value  = '';
+                document.getElementById('wantedModel').value = '';
+                document.getElementById('wantedYear').value  = '';
+            } else {
+                document.getElementById('wantedMake').value  = v.make;
+                document.getElementById('wantedModel').value = v.model;
+                document.getElementById('wantedYear').value  = v.year;
+                chip.classList.add('active');
+            }
         };
         const makeMatch  = prefillMake  && v.make.toLowerCase()  === prefillMake.toLowerCase();
         const modelMatch = prefillModel && v.model.toLowerCase() === prefillModel.toLowerCase();
