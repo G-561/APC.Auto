@@ -799,6 +799,53 @@ header {
 }
 .vehicle-delete:hover { color: #ff3b30; }
 
+.vehicle-star-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #ccc;
+    flex-shrink: 0;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s;
+}
+.vehicle-star-btn.active { color: var(--apc-orange); }
+.vehicle-star-btn:hover  { color: var(--apc-orange); }
+
+.vehicle-primary-badge {
+    font-size: 9px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--apc-orange);
+    background: rgba(247,148,29,0.12);
+    border: 1px solid rgba(247,148,29,0.3);
+    border-radius: 20px;
+    padding: 2px 7px;
+    flex-shrink: 0;
+}
+
+.vehicle-card-primary {
+    border-color: rgba(247,148,29,0.35);
+    background: linear-gradient(to right, #fffdf9, white);
+}
+
+.veh-edit-btn {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: white;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+.veh-edit-btn:hover { background: rgba(255,255,255,0.28); }
+
 .garage-add-btn {
     width: 100%;
     background: white;

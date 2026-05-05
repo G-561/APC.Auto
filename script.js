@@ -1241,6 +1241,7 @@ function deleteListing(id) {
     saveUserListings();
     renderMyParts();
     renderMainGrid();
+    if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
     if (currentEditingListingId === id) {
         currentEditingListingId = null;
         resetSellForm();
@@ -1458,6 +1459,7 @@ function submitSellListing() {
     saveUserListings();
     renderMainGrid();
     renderMyParts();
+    if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
     showToast(message);
     toggleDrawer('sellOverlay');
     resetSellForm();
@@ -1856,6 +1858,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- GARAGE: vehicle data model + persistence ---
 const VEHICLES_STORAGE_KEY = 'apc.vehicles.v1';
 let myVehicles = loadVehicles();
+let editingVehicleId = null;
+let primaryVehicleId = Number(localStorage.getItem('apcPrimaryVehicle')) || null;
 
 function loadVehicles() {
     try {
@@ -1878,11 +1882,29 @@ function onOpenGarage() {
 
 // Open the Add Vehicle form on top of the garage drawer
 function onAddVehicleClick() {
+    editingVehicleId = null;
+    const title = document.querySelector('#addVehicleDrawer .drawer-header span');
+    if (title) title.textContent = 'ADD VEHICLE';
     ['vehMake','vehModel','vehYear','vehVariant','vehNickname','vehVin'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
     toggleDrawer('addVehicleDrawer', true);  // stack — keeps garage open underneath
+}
+
+function openEditVehicleDrawer(id) {
+    const v = myVehicles.find(v => v.id === id);
+    if (!v) return;
+    editingVehicleId = id;
+    const title = document.querySelector('#addVehicleDrawer .drawer-header span');
+    if (title) title.textContent = 'EDIT VEHICLE';
+    document.getElementById('vehMake').value     = v.make     || '';
+    document.getElementById('vehModel').value    = v.model    || '';
+    document.getElementById('vehYear').value     = v.year     || '';
+    document.getElementById('vehVariant').value  = v.variant  || '';
+    document.getElementById('vehNickname').value = v.nickname || '';
+    document.getElementById('vehVin').value      = v.vin      || '';
+    toggleDrawer('addVehicleDrawer', true);
 }
 
 // Back to garage from vehicle detail
@@ -1911,13 +1933,22 @@ function submitAddVehicle() {
         return;
     }
 
-    myVehicles.push({
-        id: nextVehicleId(),
-        make, model, year,
-        variant:  variant  || '',
-        nickname: nickname || '',
-        vin:      vin      || ''
-    });
+    if (editingVehicleId) {
+        const idx = myVehicles.findIndex(v => v.id === editingVehicleId);
+        if (idx !== -1) {
+            myVehicles[idx] = { ...myVehicles[idx], make, model, year,
+                variant: variant||'', nickname: nickname||'', vin: vin||'' };
+        }
+        editingVehicleId = null;
+    } else {
+        myVehicles.push({
+            id: nextVehicleId(),
+            make, model, year,
+            variant:  variant  || '',
+            nickname: nickname || '',
+            vin:      vin      || ''
+        });
+    }
     saveVehicles();
     renderGarage();
     // Close only the add drawer — don't use toggleDrawer() here as it would nuke the garage underneath
@@ -1938,6 +1969,12 @@ function deleteVehicle(id) {
     renderGarage();
 }
 
+function setPrimaryVehicle(id) {
+    primaryVehicleId = (primaryVehicleId === id) ? null : id;
+    try { localStorage.setItem('apcPrimaryVehicle', primaryVehicleId ?? ''); } catch(e) {}
+    renderGarage();
+}
+
 // Render the garage list — XSS-safe via createElement + textContent
 function renderGarage() {
     const list = document.getElementById('garageVehicleList');
@@ -1955,9 +1992,17 @@ function renderGarage() {
         return;
     }
 
-    myVehicles.forEach(v => {
+    const sorted = [...myVehicles].sort((a, b) => {
+        if (a.id === primaryVehicleId) return -1;
+        if (b.id === primaryVehicleId) return 1;
+        return 0;
+    });
+
+    sorted.forEach(v => {
+        const isPrimary = v.id === primaryVehicleId;
+
         const card  = document.createElement('div');
-        card.className = 'vehicle-card';
+        card.className = 'vehicle-card' + (isPrimary ? ' vehicle-card-primary' : '');
         card.onclick = () => openVehicleDetail(v.id);
 
         const icon = document.createElement('div');
@@ -1967,16 +2012,33 @@ function renderGarage() {
         const info = document.createElement('div');
         info.className = 'vehicle-card-info';
 
-        const name = document.createElement('div');
+        const nameRow = document.createElement('div');
+        nameRow.style.cssText = 'display:flex; align-items:center; gap:7px; flex-wrap:wrap;';
+
+        const name = document.createElement('span');
         name.className = 'vehicle-card-name';
         name.textContent = `${v.make} ${v.model}`;
+        nameRow.appendChild(name);
+
+        if (isPrimary) {
+            const badge = document.createElement('span');
+            badge.className = 'vehicle-primary-badge';
+            badge.textContent = 'PRIMARY';
+            nameRow.appendChild(badge);
+        }
 
         const meta = document.createElement('div');
         meta.className = 'vehicle-card-meta';
         meta.textContent = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
 
-        info.appendChild(name);
+        info.appendChild(nameRow);
         info.appendChild(meta);
+
+        const starBtn = document.createElement('button');
+        starBtn.className = 'vehicle-star-btn' + (isPrimary ? ' active' : '');
+        starBtn.textContent = isPrimary ? '★' : '☆';
+        starBtn.title = isPrimary ? 'Remove as primary' : 'Set as primary vehicle';
+        starBtn.onclick = (e) => { e.stopPropagation(); setPrimaryVehicle(v.id); };
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'vehicle-delete';
@@ -1994,6 +2056,7 @@ function renderGarage() {
 
         card.appendChild(icon);
         card.appendChild(info);
+        card.appendChild(starBtn);
         card.appendChild(deleteBtn);
         card.appendChild(arrow);
         list.appendChild(card);
@@ -2324,6 +2387,8 @@ function openVehicleDetail(vehicleId) {
     document.getElementById('vehDetailBannerName').textContent  = `${v.make} ${v.model}`;
     document.getElementById('vehDetailBannerMeta').textContent  =
         [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
+    const editBtn = document.getElementById('vehDetailEditBtn');
+    if (editBtn) editBtn.onclick = () => openEditVehicleDrawer(vehicleId);
 
     setVehicleTab('all');
     toggleDrawer('vehicleDetailDrawer', true);  // stack on top of garage drawer
