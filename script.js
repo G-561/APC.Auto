@@ -44,10 +44,10 @@ const partDatabase = [
     { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000, openToOffers: true },
     { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000 },
     { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000 },
-    { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000, warehouseBin: 'C3-S2' },
+    { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, tradeOnly: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000, warehouseBin: 'C3-S2' },
     { id: 10, title: "Lotus Elise S2 Carbon Rear Diffuser", price: 480, images: ["images/elise.diffuser.jpg", "images/elise.exhaust.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 11, date: 1737590400000, status: 'sold' },
     { id: 11, title: "Toyota Hiace Tow Bar Heavy Duty", price: 220, images: ["images/hiace.towbar.webp", "images/hiace.bumper.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Jason M.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 7, date: 1738108800000 },
-    { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000, warehouseBin: 'C1-S1' },
+    { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, tradeOnly: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000, warehouseBin: 'C1-S1' },
     { id: 13, title: "Lotus Elise S2 Left Headlight", price: 380, images: ["images/elise.headlight.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 15, date: 1740009600000 },
     { id: 14, title: "Toyota Hiace Steering Rack Reconditioned", price: 295, images: ["images/hiace.steeringrack.jpg", "images/1KD.engine.webp"], loc: "SYDNEY, NSW", fit: true, seller: "Tom K.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 5, date: 1740528000000 },
     { id: 15, title: "Lotus Elise S2 Soft Top Hood", price: 550, images: ["images/elise.soft.top.jpg", "images/elise.seat.jpg"], loc: "PERTH, WA", fit: false, seller: "Chris B.", isPro: true, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 21, date: 1741219200000 },
@@ -909,6 +909,7 @@ function getFilteredParts() {
         }
         if (!activeFilters.sellerPro && part.isPro) return false;
         if (!activeFilters.sellerPrivate && !part.isPro) return false;
+        if (part.tradeOnly && currentUserTier !== 'pro') return false;
         return true;
     });
     if (sortOrder === 'asc')    results.sort((a, b) => a.price - b.price);
@@ -940,6 +941,10 @@ function buildCardHTML(part) {
         ? `<span class="fitting-pill">FITTING AVAILABLE</span>`
         : '';
 
+    const tradeBadge = part.tradeOnly
+        ? `<span class="trade-only-badge">TRADE</span>`
+        : '';
+
     const locationHTML = `📍 ${part.loc}`;
 
     const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
@@ -950,7 +955,7 @@ function buildCardHTML(part) {
             <div class="item-info">
                 <div class="price-row">
                     <span class="item-price">$${part.price}</span>
-                    ${fittingLabel}
+                    ${tradeBadge}${fittingLabel}
                 </div>
                 <div class="item-title">${part.title}</div>
                 <div class="item-loc">${locationHTML}</div>
@@ -1566,6 +1571,8 @@ function openItemDetail(partId) {
     if (sellerAvatar)     sellerAvatar.textContent      = part.seller.charAt(0).toUpperCase();
     const detailProBadge = document.getElementById('detailProBadge');
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
+    const detailTradeBadge = document.getElementById('detailTradeBadge');
+    if (detailTradeBadge) detailTradeBadge.style.display = part.tradeOnly ? 'inline-block' : 'none';
 
     // Info col seller card (desktop — shown via CSS)
     const colAvatar  = document.getElementById('detailSellerColAvatar');
@@ -2810,16 +2817,40 @@ function onSignOut() {
     renderAccountState();
 }
 
-// Stub for the upgrade flow — production would route to a payment screen first
+let selectedUpgradePlan = 'monthly';
+
 function onUpgradeToPro() {
-    if (!userIsSignedIn) return;
-    currentUserTier = 'pro';
-    proSearchOn = true;             // default ON so they immediately see what they paid for
+    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    if (currentUserTier === 'pro') return;
+    selectedUpgradePlan = 'monthly';
+    selectUpgradePlan('monthly');
     closeAccountMenu();
+    closeAccountDropdown();
+    document.getElementById('upgradeBackdrop').style.display = '';
+    document.getElementById('upgradeModal').style.display    = '';
+}
+
+function selectUpgradePlan(plan) {
+    selectedUpgradePlan = plan;
+    document.getElementById('planMonthly').classList.toggle('upgrade-plan-active', plan === 'monthly');
+    document.getElementById('planAnnual').classList.toggle('upgrade-plan-active',  plan === 'annual');
+}
+
+function confirmUpgrade() {
+    // Production: route to payment gateway here
+    currentUserTier = 'pro';
+    proSearchOn = true;
+    closeUpgradeModal();
     renderAccountState();
     if (document.getElementById('workshopDrawer')?.classList.contains('active')) {
         renderWorkshopProfile();
     }
+    showToast('Your 3-month Pro trial has started! 🎉');
+}
+
+function closeUpgradeModal() {
+    document.getElementById('upgradeBackdrop').style.display = 'none';
+    document.getElementById('upgradeModal').style.display    = 'none';
 }
 
 // Pro-only: turn the FIND PARTS / FIND WANTED bar on/off
@@ -2827,6 +2858,12 @@ function onToggleProSearch(e) {
     if (e) e.stopPropagation();
     proSearchOn = !proSearchOn;
     renderAccountState();
+}
+
+let userTradeOnly = false;
+function onToggleTradeOnly() {
+    userTradeOnly = document.getElementById('settingTradeOnly')?.checked || false;
+    applyFiltersAndRender();
 }
 
 // Pill click: open auth drawer if signed out, else toggle the dropdown menu

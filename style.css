@@ -303,6 +303,19 @@ header {
     color: var(--apc-blue);
     background: rgba(0, 122, 255, 0.1);
 }
+.trade-only-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    color: #b45309;
+    background: rgba(180, 83, 9, 0.1);
+    border: 1px solid rgba(180, 83, 9, 0.2);
+}
 
 .detail-seller-card {
     display: flex;
@@ -2904,6 +2917,21 @@ header {
     color: var(--apc-orange);
     letter-spacing: 0.5px;
     margin: 18px 0 10px;
+}
+
+/* ===== UPGRADE TO PRO MODAL ===== */
+.upgrade-plan-card {
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 14px 12px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: center;
+}
+.upgrade-plan-card:hover { border-color: var(--apc-orange); }
+.upgrade-plan-active {
+    border-color: var(--apc-orange) !important;
+    box-shadow: 0 0 0 3px rgba(247,148,29,0.15);
 }
 
 /* ===== QR LABEL MODAL ===== */

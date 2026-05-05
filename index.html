@@ -224,6 +224,7 @@
                 <div class="detail-seller-name-row">
                     <span id="detailSellerName" class="detail-seller-name">Seller</span>
                     <span id="detailProBadge" class="seller-pro-badge">✔ PRO</span>
+                    <span id="detailTradeBadge" class="trade-only-badge" style="display:none;">TRADE</span>
                 </div>
                 <div id="detailSellerSub" class="detail-seller-sub">View seller's other items →</div>
             </div>
@@ -346,6 +347,59 @@
         <!-- Full-width footer: spans both columns on desktop, scrolls inline on mobile -->
         <div id="dynamicDetailFooter"></div>
         </div>
+    </div>
+</div>
+
+<!-- UPGRADE TO APC PRO MODAL -->
+<div id="upgradeBackdrop" onclick="closeUpgradeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3200;"></div>
+<div id="upgradeModal" style="display:none; position:fixed; left:50%; transform:translateX(-50%); top:50%; margin-top:-260px; width:min(520px, calc(100vw - 24px)); background:white; border-radius:20px; box-shadow:0 16px 60px rgba(0,0,0,0.25); z-index:3201; overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding:24px 24px 20px; text-align:center; position:relative;">
+        <div onclick="closeUpgradeModal()" style="position:absolute; top:14px; right:16px; font-size:22px; color:rgba(255,255,255,0.4); cursor:pointer; line-height:1;">×</div>
+        <div style="display:inline-block; background:var(--apc-orange); color:white; font-size:10px; font-weight:900; padding:4px 14px; border-radius:20px; letter-spacing:1px; margin-bottom:10px;">APC PRO</div>
+        <div style="color:white; font-size:22px; font-weight:900; margin-bottom:6px;">3 months free.</div>
+        <div style="color:rgba(255,255,255,0.75); font-size:13px; font-weight:600;">Get your parts online, find buyers, and see what Pro can do — on us.</div>
+    </div>
+
+    <!-- Trial callout -->
+    <div style="margin:16px 24px 0; background:#fff8ee; border:1.5px solid rgba(247,148,29,0.25); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+        <div style="font-size:28px; line-height:1;">🎁</div>
+        <div>
+            <div style="font-size:13px; font-weight:900; color:#333;">Free for 3 months — no credit card needed.</div>
+            <div style="font-size:11px; color:#888; margin-top:2px;">Choose your plan below. Billing starts after your trial ends.</div>
+        </div>
+    </div>
+
+    <!-- Benefits summary -->
+    <div style="padding:14px 24px 4px; display:grid; grid-template-columns:1fr 1fr; gap:6px 16px;">
+        <div style="font-size:12px; color:#444; display:flex; align-items:center; gap:6px;"><span style="color:var(--apc-orange); font-weight:900;">✓</span> Pro Dashboard & analytics</div>
+        <div style="font-size:12px; color:#444; display:flex; align-items:center; gap:6px;"><span style="color:var(--apc-orange); font-weight:900;">✓</span> Find Wanted buyers</div>
+        <div style="font-size:12px; color:#444; display:flex; align-items:center; gap:6px;"><span style="color:var(--apc-orange); font-weight:900;">✓</span> Stock number & ID search</div>
+        <div style="font-size:12px; color:#444; display:flex; align-items:center; gap:6px;"><span style="color:var(--apc-orange); font-weight:900;">✓</span> QR & warehouse labels</div>
+        <div style="font-size:12px; color:#444; display:flex; align-items:center; gap:6px;"><span style="color:var(--apc-orange); font-weight:900;">✓</span> Workshop profile listing</div>
+        <div style="font-size:12px; color:#444; display:flex; align-items:center; gap:6px;"><span style="color:var(--apc-orange); font-weight:900;">✓</span> Trade-only listing mode</div>
+    </div>
+
+    <!-- Plan selector -->
+    <div style="padding:14px 24px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div id="planMonthly" class="upgrade-plan-card upgrade-plan-active" onclick="selectUpgradePlan('monthly')">
+            <div style="font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#888; margin-bottom:6px;">After trial — Monthly</div>
+            <div style="font-size:26px; font-weight:900; color:#333; line-height:1;">$29<span style="font-size:14px; font-weight:700;">.95</span></div>
+            <div style="font-size:11px; color:#888; margin-top:3px;">per month</div>
+        </div>
+        <div id="planAnnual" class="upgrade-plan-card" onclick="selectUpgradePlan('annual')" style="position:relative;">
+            <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); background:var(--apc-orange); color:white; font-size:9px; font-weight:900; padding:2px 10px; border-radius:20px; white-space:nowrap; letter-spacing:0.5px;">SAVE 30%</div>
+            <div style="font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#888; margin-bottom:6px;">After trial — Annual</div>
+            <div style="font-size:26px; font-weight:900; color:#333; line-height:1;">$249<span style="font-size:14px; font-weight:700;">/yr</span></div>
+            <div style="font-size:11px; color:#888; margin-top:3px;">$20.75 / month</div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="padding:0 24px 20px;">
+        <button onclick="confirmUpgrade()" style="width:100%; padding:16px; background:var(--apc-orange); color:white; border:none; border-radius:12px; font-weight:900; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; box-shadow:0 4px 16px rgba(247,148,29,0.35);">Start Free Trial →</button>
+        <div style="text-align:center; font-size:11px; color:#bbb; margin-top:10px;">Cancel anytime. No lock-in. Prices in AUD.</div>
     </div>
 </div>
 
@@ -822,6 +876,13 @@
                         <div class="settings-row-sub">Rack/bin locations &amp; QR labels for your listings</div>
                     </div>
                     <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-row-label">Trade Only — Pro buyers only</div>
+                        <div class="settings-row-sub">Your listings are hidden from the public. Only APC Pro members can see them.</div>
+                    </div>
+                    <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly()"><span class="settings-toggle-track"></span></label>
                 </div>
                 <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); onMenuOpenWorkshops()">
                     <span class="settings-row-label">Workshop Profile</span>
