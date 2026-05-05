@@ -2302,7 +2302,7 @@ function deleteWanted(id) {
     saveWanted();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
-    updateAccountStats();
+    renderProfile();
 }
 
 function openWantedListDrawer() {
@@ -2516,7 +2516,7 @@ function submitAddWanted() {
 
     if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
-    updateAccountStats();
+    renderProfile();
 
     // Show in-card success flash, then close and reset search bar
     const successMsg = document.getElementById('wantedSuccessMsg');
