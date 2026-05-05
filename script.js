@@ -2442,16 +2442,20 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
         chip.className = 'wanted-garage-chip';
         chip.textContent = `${v.make} ${v.model} ${v.year}`;
         chip.onclick = () => {
-            const alreadyActive = chip.classList.contains('active');
+            const makeEl  = document.getElementById('wantedMake');
+            const modelEl = document.getElementById('wantedModel');
+            const yearEl  = document.getElementById('wantedYear');
+            const alreadySelected = makeEl.value.trim().toLowerCase() === v.make.toLowerCase() &&
+                                    modelEl.value.trim().toLowerCase() === v.model.toLowerCase();
             chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
-            if (alreadyActive) {
-                document.getElementById('wantedMake').value  = '';
-                document.getElementById('wantedModel').value = '';
-                document.getElementById('wantedYear').value  = '';
+            if (alreadySelected) {
+                makeEl.value  = '';
+                modelEl.value = '';
+                yearEl.value  = '';
             } else {
-                document.getElementById('wantedMake').value  = v.make;
-                document.getElementById('wantedModel').value = v.model;
-                document.getElementById('wantedYear').value  = v.year;
+                makeEl.value  = v.make;
+                modelEl.value = v.model;
+                yearEl.value  = v.year;
                 chip.classList.add('active');
             }
         };
