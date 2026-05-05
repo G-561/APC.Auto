@@ -2448,7 +2448,9 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
             chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
         };
-        if (v.make === prefillMake && v.model === prefillModel) chip.classList.add('active');
+        const makeMatch  = prefillMake  && v.make.toLowerCase()  === prefillMake.toLowerCase();
+        const modelMatch = prefillModel && v.model.toLowerCase() === prefillModel.toLowerCase();
+        if (makeMatch && modelMatch) chip.classList.add('active');
         chips.appendChild(chip);
     });
 }
@@ -2471,10 +2473,10 @@ function onAddWantedFromSearch() {
     const catEl = document.getElementById('wantedCategory');
     if (catEl) catEl.value = '';
 
-    // Pre-fill vehicle: active filters take priority, then single-garage-vehicle fallback
-    const prefillMake  = activeFilters.make  || '';
-    const prefillModel = activeFilters.model || '';
-    const prefillYear  = activeFilters.year  || '';
+    // Pre-fill vehicle from filter panel inputs only (not activeFilters.make which can be set by part detail views)
+    const prefillMake  = (document.getElementById('filterMake')?.value  || '').trim();
+    const prefillModel = (document.getElementById('filterModel')?.value || '').trim();
+    const prefillYear  = (document.getElementById('filterYear')?.value  || '').trim();
 
     document.getElementById('wantedMake').value  = prefillMake;
     document.getElementById('wantedModel').value = prefillModel;
