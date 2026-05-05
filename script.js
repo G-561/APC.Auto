@@ -3478,6 +3478,7 @@ window.addEventListener('load', updateHeaderOffset);
 
 // --- SEARCH MODE TOGGLE ---
 function setSearchMode(mode) {
+    closeDashboard();
     const partBtn   = document.getElementById('searchModeParts');
     const wantedBtn = document.getElementById('searchModeWanted');
     const searchInput = document.getElementById('mainSearchInput');
