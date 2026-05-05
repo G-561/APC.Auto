@@ -2861,9 +2861,30 @@ function onToggleProSearch(e) {
 }
 
 let userTradeOnly = false;
-function onToggleTradeOnly() {
-    userTradeOnly = document.getElementById('settingTradeOnly')?.checked || false;
+function onToggleTradeOnly(src) {
+    userTradeOnly = src ? src.checked : false;
+    const a = document.getElementById('settingTradeOnly');
+    const b = document.getElementById('proSettingTradeOnly');
+    if (a && a !== src) a.checked = userTradeOnly;
+    if (b && b !== src) b.checked = userTradeOnly;
     applyFiltersAndRender();
+}
+
+function openProSettings() {
+    const drawer = document.getElementById('proSettingsDrawer');
+    if (!drawer) return;
+    // Sync toggle states from current app state
+    const ps = document.getElementById('proSettingProSearch');
+    const pt = document.getElementById('proSettingTradeOnly');
+    const pw = document.getElementById('proSettingWarehouse');
+    if (ps) ps.checked = proSearchOn;
+    if (pt) pt.checked = userTradeOnly;
+    if (pw) pw.checked = document.getElementById('settingWarehouseManagement')?.checked || false;
+    toggleDrawer('proSettingsDrawer', true);
+}
+
+function closeProSettings() {
+    toggleDrawer('proSettingsDrawer');
 }
 
 // Pill click: open auth drawer if signed out, else toggle the dropdown menu
@@ -2974,6 +2995,28 @@ function onMenuOpenWorkshops() {
     });
     renderWorkshopProfile();
     renderWorkshopBrowseView();
+    toggleDrawer('workshopDrawer', true);
+}
+
+function openWorkshopProfileEditor() {
+    if (!userIsSignedIn) { openAuthDrawer(openWorkshopProfileEditor); return; }
+    const browseSection  = document.getElementById('workshopBrowseSection');
+    const profileFields  = document.getElementById('workshopProfileFields');
+    const drawerTitle    = document.getElementById('workshopDrawerTitle');
+    const notice         = document.getElementById('workshopProNotice');
+    if (browseSection) browseSection.style.display = 'none';
+    if (profileFields) profileFields.style.display = 'block';
+    if (drawerTitle)   drawerTitle.textContent      = 'Workshop & Repairer Profile';
+    if (notice)        notice.style.display         = currentUserTier !== 'pro' ? 'block' : 'none';
+    // Pre-fill saved profile values
+    const nameField     = document.getElementById('workshopName');
+    const locationField = document.getElementById('workshopLocation');
+    const vehiclesField = document.getElementById('workshopVehicles');
+    const descField     = document.getElementById('workshopDescription');
+    if (nameField)     nameField.value     = workshopProfile.name;
+    if (locationField) locationField.value = workshopProfile.location;
+    if (vehiclesField) vehiclesField.value = workshopProfile.vehicles;
+    if (descField)     descField.value     = workshopProfile.description;
     toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {
@@ -3311,12 +3354,14 @@ function updateHeaderOffset() {
             if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
             if (addWantedDrawer)      addWantedDrawer.style.top      = totalH + 'px';
             if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
-            if (settingsDrawer)        settingsDrawer.style.top        = totalH + 'px';
+            if (settingsDrawer)        settingsDrawer.style.top        = (topBarH + 20) + 'px';
             if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';
             if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
             if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
             if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
             if (inboxDrawer)           inboxDrawer.style.top           = topBarH + 'px';
+            const proSettingsDrawer = document.getElementById('proSettingsDrawer');
+            if (proSettingsDrawer)     proSettingsDrawer.style.top     = (topBarH + 20) + 'px';
             if (messageDetailDrawer)   messageDetailDrawer.style.top   = totalH + 'px';
             if (chatDrawer)            chatDrawer.style.top            = totalH + 'px';
             const authDrawer = document.getElementById('authDrawer');

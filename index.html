@@ -122,7 +122,12 @@
                     <div class="dash-page-sub" id="dashWelcome">Your business at a glance</div>
                 </div>
             </div>
-            <span class="dash-pro-pill">● APC PRO</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button onclick="openProSettings()" style="display:flex; align-items:center; gap:6px; background:white; border:1.5px solid #e8e8e8; border-radius:10px; padding:7px 14px; font-size:12px; font-weight:700; color:#555; cursor:pointer; transition:border-color 0.15s;">
+                    ⚙ Pro Settings
+                </button>
+                <span class="dash-pro-pill">● APC PRO</span>
+            </div>
         </div>
 
         <div class="dash-stats-row">
@@ -882,9 +887,9 @@
                         <div class="settings-row-label">Trade Only — Pro buyers only</div>
                         <div class="settings-row-sub">Your listings are hidden from the public. Only APC Pro members can see them.</div>
                     </div>
-                    <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly()"><span class="settings-toggle-track"></span></label>
+                    <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
                 </div>
-                <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); onMenuOpenWorkshops()">
+                <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
                     <span class="settings-row-label">Workshop Profile</span>
                     <span class="settings-chevron">›</span>
                 </div>
@@ -1159,6 +1164,118 @@
             <div class="input-group"><label>VIN</label><input type="text" id="vehVin" placeholder="17-character VIN" maxlength="17"></div>
         </div>
         <div class="action-container"><button class="btn-full-action" onclick="submitAddVehicle()">SAVE VEHICLE</button></div>
+    </div>
+</div>
+
+<!-- PRO SETTINGS — accessed from Pro Dashboard header -->
+<div id="proSettingsDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>PRO SETTINGS</span>
+        <div onclick="closeProSettings()" style="font-size:30px; cursor:pointer;">×</div>
+    </div>
+    <div class="drawer-content">
+
+        <!-- Business Identity -->
+        <div class="settings-section-label">Business Identity</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <span class="settings-row-label">Business / Yard Name</span>
+                <input type="text" id="proSettingBusinessName" placeholder="e.g. Gary's Wreckers" style="border:none; text-align:right; font-size:13px; color:#333; background:transparent; outline:none; max-width:180px;">
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">Location</span>
+                <input type="text" id="proSettingLocation" placeholder="e.g. Adelaide, SA" style="border:none; text-align:right; font-size:13px; color:#333; background:transparent; outline:none; max-width:180px;">
+            </div>
+            <div class="settings-row">
+                <span class="settings-row-label">ABN (optional)</span>
+                <input type="text" id="proSettingABN" placeholder="12 345 678 901" style="border:none; text-align:right; font-size:13px; color:#333; background:transparent; outline:none; max-width:180px;">
+            </div>
+        </div>
+
+        <!-- Search & Discovery -->
+        <div class="settings-section-label">Search & Discovery</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Pro Search — Find Wanted</div>
+                    <div class="settings-row-sub">Search active buyer requests and match your stock</div>
+                </div>
+                <label class="settings-toggle"><input type="checkbox" id="proSettingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Trade Only — Pro buyers only</div>
+                    <div class="settings-row-sub">Your listings are hidden from the public</div>
+                </div>
+                <label class="settings-toggle"><input type="checkbox" id="proSettingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
+            </div>
+        </div>
+
+        <!-- Listing Defaults -->
+        <div class="settings-section-label">Listing Defaults</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Open to Offers by default</div>
+                    <div class="settings-row-sub">New listings will have offers enabled</div>
+                </div>
+                <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultOffers"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Fitting Available by default</div>
+                    <div class="settings-row-sub">Show fitting on all new listings</div>
+                </div>
+                <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting"><span class="settings-toggle-track"></span></label>
+            </div>
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Warehouse Management</div>
+                    <div class="settings-row-sub">Rack/bin locations & QR labels for listings</div>
+                </div>
+                <label class="settings-toggle"><input type="checkbox" id="proSettingWarehouse" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
+            </div>
+        </div>
+
+        <!-- Business Profile -->
+        <div class="settings-section-label">Business Profile</div>
+        <div class="settings-section">
+            <div class="settings-row settings-row-tappable" onclick="closeProSettings(); openWorkshopProfileEditor()">
+                <div>
+                    <div class="settings-row-label">Workshop & Repairer Profile</div>
+                    <div class="settings-row-sub">List your services, makes & models you specialise in</div>
+                </div>
+                <span class="settings-chevron">›</span>
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Storefront')">
+                <div>
+                    <div class="settings-row-label">My Storefront</div>
+                    <div class="settings-row-sub">Preview how buyers see your seller page</div>
+                </div>
+                <span class="settings-chevron">›</span>
+            </div>
+        </div>
+
+        <!-- Subscription -->
+        <div class="settings-section-label">Subscription</div>
+        <div class="settings-section">
+            <div class="settings-row">
+                <div>
+                    <div class="settings-row-label">Current Plan</div>
+                    <div class="settings-row-sub">3-month free trial active</div>
+                </div>
+                <span class="settings-row-value" style="color:var(--apc-orange); font-weight:800;">PRO TRIAL</span>
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Billing')">
+                <span class="settings-row-label">Billing & Payment</span>
+                <span class="settings-chevron">›</span>
+            </div>
+            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Cancel subscription')">
+                <span class="settings-row-label" style="color:#e53935;">Cancel Subscription</span>
+                <span class="settings-chevron" style="color:#e53935;">›</span>
+            </div>
+        </div>
+
     </div>
 </div>
 

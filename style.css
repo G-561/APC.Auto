@@ -2435,21 +2435,25 @@ header {
     /* 3-col grid inside storefront — 5-col would be too tight */
     #sellerPartsGrid { grid-template-columns: repeat(3, 1fr) !important; }
 
-    /* Auth drawer: floating centred card — auto height, not full screen */
-    #authDrawer {
+    /* Floating card drawers — centred, auto height, not full screen */
+    #authDrawer,
+    #settingsDrawer,
+    #proSettingsDrawer {
         left: 50% !important;
         right: auto !important;
         transform: translateX(-50%);
-        width: 420px !important;
         height: auto !important;
-        max-height: calc(100vh - 180px);
+        max-height: calc(100vh - 100px);
         overflow-y: auto;
-        top: 140px; /* overridden by updateHeaderOffset() */
+        top: 36px; /* overridden by updateHeaderOffset() */
         bottom: auto !important;
         border-radius: 16px !important;
         box-shadow: 0 8px 40px rgba(0,0,0,0.18) !important;
         z-index: 2100;
     }
+    #authDrawer     { width: 420px !important; }
+    #settingsDrawer { width: 480px !important; }
+    #proSettingsDrawer { width: 520px !important; }
 
     /* All full-screen drawers: centre column between sidebars */
     #garageDrawer,
@@ -2457,7 +2461,6 @@ header {
     #addVehicleDrawer,
     #addWantedDrawer,
     #savedPartsDrawer,
-    #settingsDrawer,
     #profileDrawer,
     #myPartsDrawer,
     #workshopDrawer,
