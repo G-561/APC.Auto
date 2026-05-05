@@ -107,14 +107,18 @@ const dashMockData = {
 
 // Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
 const publicWantedDatabase = [
-    { id: 101, partName: 'Hiace sliding door complete assembly', buyer: 'Mark T.', loc: 'ADELAIDE, SA', make: 'Toyota', model: 'Hiace', year: '2019', maxPrice: 400, posted: '2 hours ago' },
-    { id: 102, partName: 'Lotus Elise S2 front clamshell', buyer: 'Chris B.', loc: 'MELBOURNE, VIC', make: 'Lotus', model: 'Elise', year: '2004', maxPrice: 1200, posted: '5 hours ago' },
-    { id: 103, partName: 'Toyota Hiace radiator 2015+', buyer: 'Sam R.', loc: 'SYDNEY, NSW', make: 'Toyota', model: 'Hiace', year: '2017', maxPrice: 300, posted: '1 day ago' },
-    { id: 104, partName: 'Elise exhaust manifold', buyer: 'Jay P.', loc: 'BRISBANE, QLD', make: 'Lotus', model: 'Elise', year: '2006', maxPrice: 600, posted: '1 day ago' },
-    { id: 105, partName: 'Hiace front bumper bar grey', buyer: 'Tanya W.', loc: 'PERTH, WA', make: 'Toyota', model: 'Hiace', year: '2020', maxPrice: 250, posted: '2 days ago' },
-    { id: 106, partName: 'Ford Falcon BA XR6 turbo engine complete', buyer: 'Dave L.', loc: 'ADELAIDE, SA', make: 'Ford', model: 'Falcon', year: '2004', maxPrice: 2500, posted: '2 days ago' },
-    { id: 107, partName: 'Commodore VE SS front seats pair', buyer: 'Nic A.', loc: 'MELBOURNE, VIC', make: 'Holden', model: 'Commodore', year: '2008', maxPrice: 700, posted: '3 days ago' },
-    { id: 108, partName: 'Golf MK7 GTI exhaust', buyer: 'Petra H.', loc: 'SYDNEY, NSW', make: 'Volkswagen', model: 'Golf', year: '2016', maxPrice: 800, posted: '4 days ago' }
+    { id: 101, partName: 'Hiace sliding door complete assembly', buyer: 'Mark T.',   loc: 'ADELAIDE, SA',   make: 'Toyota',     model: 'Hiace',     year: '2019', maxPrice: 400,  posted: '2 hours ago', category: 'body' },
+    { id: 102, partName: 'Lotus Elise S2 front clamshell',       buyer: 'Chris B.',  loc: 'MELBOURNE, VIC', make: 'Lotus',      model: 'Elise',     year: '2004', maxPrice: 1200, posted: '5 hours ago', category: 'body' },
+    { id: 103, partName: 'Toyota Hiace radiator 2015+',           buyer: 'Sam R.',    loc: 'SYDNEY, NSW',    make: 'Toyota',     model: 'Hiace',     year: '2017', maxPrice: 300,  posted: '1 day ago',   category: 'cooling' },
+    { id: 104, partName: 'Elise exhaust manifold',                buyer: 'Jay P.',    loc: 'BRISBANE, QLD',  make: 'Lotus',      model: 'Elise',     year: '2006', maxPrice: 600,  posted: '1 day ago',   category: 'engine' },
+    { id: 105, partName: 'Hiace front bumper bar grey',           buyer: 'Tanya W.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'Hiace',     year: '2020', maxPrice: 250,  posted: '2 days ago',  category: 'body' },
+    { id: 106, partName: 'Ford Falcon BA XR6 turbo engine',       buyer: 'Dave L.',   loc: 'ADELAIDE, SA',   make: 'Ford',       model: 'Falcon',    year: '2004', maxPrice: 2500, posted: '2 days ago',  category: 'engine' },
+    { id: 107, partName: 'Commodore VE SS front seats pair',      buyer: 'Nic A.',    loc: 'MELBOURNE, VIC', make: 'Holden',     model: 'Commodore', year: '2008', maxPrice: 700,  posted: '3 days ago',  category: 'interior' },
+    { id: 108, partName: 'Golf MK7 GTI exhaust system',           buyer: 'Petra H.',  loc: 'SYDNEY, NSW',    make: 'Volkswagen', model: 'Golf',      year: '2016', maxPrice: 800,  posted: '4 days ago',  category: 'performance' },
+    { id: 109, partName: 'Autel MaxiSys scan tool MS906BT',       buyer: 'Brett M.',  loc: 'BRISBANE, QLD',  make: '',           model: '',          year: '',     maxPrice: 600,  posted: '1 day ago',   category: 'tools' },
+    { id: 110, partName: '4x4 snorkel — 200 Series LandCruiser',  buyer: 'Craig F.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'LandCruiser',year: '2015',maxPrice: 350,  posted: '3 days ago',  category: '4x4' },
+    { id: 111, partName: 'Bride reclinable bucket seat',          buyer: 'Tom K.',    loc: 'MELBOURNE, VIC', make: '',           model: '',          year: '',     maxPrice: 900,  posted: '5 days ago',  category: 'performance' },
+    { id: 112, partName: 'Alpine head unit iLX-W650',             buyer: 'Lisa R.',   loc: 'SYDNEY, NSW',    make: '',           model: '',          year: '',     maxPrice: 400,  posted: '6 days ago',  category: 'audio' },
 ];
 
 const workshopDatabase = [
@@ -1015,11 +1019,19 @@ function renderMainGrid() {
 // This is a Pro seller tool: search what buyers are looking for, then list it.
 function renderWantedSearchResults(mainGrid) {
     const query = activeFilters.search.toLowerCase();
+    const fMake  = activeFilters.make     || '';
+    const fModel = activeFilters.model    || '';
+    const fYear  = activeFilters.year     || '';
+    const fCat   = activeFilters.category || 'all';
     const matching = publicWantedDatabase.filter(w => {
-        if (!query) return true;
-        return w.partName.toLowerCase().includes(query) ||
-               w.make.toLowerCase().includes(query) ||
-               w.model.toLowerCase().includes(query);
+        if (query && !w.partName.toLowerCase().includes(query) &&
+                     !w.make.toLowerCase().includes(query) &&
+                     !w.model.toLowerCase().includes(query)) return false;
+        if (fMake  && !w.make.toLowerCase().includes(fMake))   return false;
+        if (fModel && !w.model.toLowerCase().includes(fModel)) return false;
+        if (fYear  && w.year !== fYear)                        return false;
+        if (fCat !== 'all' && w.category !== fCat)             return false;
+        return true;
     });
 
     if (!matching.length) {
