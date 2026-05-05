@@ -2408,6 +2408,7 @@ function wantedMatchesPart(wanted, part) {
 function closeAddWantedDrawer() {
     const el = document.getElementById('addWantedDrawer');
     if (el) el.classList.remove('active');
+    selectedWantedVehicleId = null;
     syncBackdrop();
 }
 
@@ -2428,6 +2429,9 @@ function saveWantedVehicleToGarage() {
     showToast(`${make} ${model} saved to garage`);
 }
 
+// Tracks which garage vehicle is selected in the Add Wanted form
+let selectedWantedVehicleId = null;
+
 // Populate the garage quick-fill chips above the Make/Model/Year fields
 function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
     const wrap  = document.getElementById('wantedGarageQuickFill');
@@ -2441,27 +2445,30 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
         chip.type = 'button';
         chip.className = 'wanted-garage-chip';
         chip.textContent = `${v.make} ${v.model} ${v.year}`;
-        chip.onclick = () => {
-            const makeEl  = document.getElementById('wantedMake');
-            const modelEl = document.getElementById('wantedModel');
-            const yearEl  = document.getElementById('wantedYear');
-            const alreadySelected = makeEl.value.trim().toLowerCase() === v.make.toLowerCase() &&
-                                    modelEl.value.trim().toLowerCase() === v.model.toLowerCase();
-            chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
-            if (alreadySelected) {
-                makeEl.value  = '';
-                modelEl.value = '';
-                yearEl.value  = '';
+        chip.addEventListener('click', () => {
+            if (selectedWantedVehicleId === v.id) {
+                // Deselect
+                selectedWantedVehicleId = null;
+                chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
+                document.getElementById('wantedMake').value  = '';
+                document.getElementById('wantedModel').value = '';
+                document.getElementById('wantedYear').value  = '';
             } else {
-                makeEl.value  = v.make;
-                modelEl.value = v.model;
-                yearEl.value  = v.year;
+                // Select
+                selectedWantedVehicleId = v.id;
+                chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
+                document.getElementById('wantedMake').value  = v.make;
+                document.getElementById('wantedModel').value = v.model;
+                document.getElementById('wantedYear').value  = v.year;
             }
-        };
+        });
         const makeMatch  = prefillMake  && v.make.toLowerCase()  === prefillMake.toLowerCase();
         const modelMatch = prefillModel && v.model.toLowerCase() === prefillModel.toLowerCase();
-        if (makeMatch && modelMatch) chip.classList.add('active');
+        if (makeMatch && modelMatch) {
+            chip.classList.add('active');
+            selectedWantedVehicleId = v.id;
+        }
         chips.appendChild(chip);
     });
 }
