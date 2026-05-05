@@ -2542,11 +2542,26 @@ header {
     #settingsDrawer { width: 480px !important; }
     #proSettingsDrawer { width: 520px !important; }
 
+    /* Add Wanted — floating card, centred both axes */
+    #addWantedDrawer {
+        left: 50% !important;
+        right: auto !important;
+        width: 480px !important;
+        transform: translate(-50%, -50%) !important;
+        top: 50% !important;
+        height: auto !important;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        bottom: auto !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.22) !important;
+        z-index: 2100;
+    }
+
     /* All full-screen drawers: centre column between sidebars */
     #garageDrawer,
     #vehicleDetailDrawer,
     #addVehicleDrawer,
-    #addWantedDrawer,
     #savedPartsDrawer,
     #profileDrawer,
     #myPartsDrawer,

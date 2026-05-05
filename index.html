@@ -1385,31 +1385,61 @@
     </div>
 </div>
 
-<!-- ADD WANTED — stacks on top of vehicle detail -->
+<!-- ADD WANTED — floating card -->
 <div id="addWantedDrawer" class="drawer">
-    <div class="drawer-header">
-        <span>ADD TO WANTED LIST</span>
-        <div onclick="closeAddWantedDrawer()" style="font-size:30px; cursor:pointer">×</div>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px 14px; border-bottom:1px solid #f0f0f0;">
+        <span style="font-size:14px; font-weight:900; color:#1a1a1a; text-transform:uppercase; letter-spacing:0.3px;">Add to Wanted List</span>
+        <div onclick="closeAddWantedDrawer()" style="font-size:26px; color:#aaa; cursor:pointer; line-height:1;">×</div>
     </div>
-    <div class="drawer-content">
-        <div class="filter-section">
-            <h4>Part Details</h4>
-            <div class="input-group"><label>Part Name *</label><input type="text" id="wantedPartName" placeholder="e.g. Brake pads, Exhaust manifold"></div>
-            <div class="input-group"><label>Max Price (optional)</label><input type="number" id="wantedMaxPrice" placeholder="e.g. 500" min="0"></div>
-        </div>
-        <div class="filter-section">
-            <h4>For Vehicle</h4>
-            <div id="wantedGarageQuickFill" style="display:none; margin-bottom:12px;">
-                <label style="font-size:12px; font-weight:700; color:#888; display:block; margin-bottom:6px;">Use a garage vehicle</label>
+    <div class="drawer-content" style="padding:16px 18px;">
+
+        <!-- VEHICLE FIRST -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; margin-bottom:10px;">Vehicle</div>
+            <div id="wantedGarageQuickFill" style="display:none; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:7px;">
+                    <span style="font-size:11px; font-weight:700; color:#888;">Garage vehicles</span>
+                    <button onclick="saveWantedVehicleToGarage()" style="background:none; border:none; color:var(--apc-orange); font-size:11px; font-weight:800; cursor:pointer; font-family:inherit; padding:0;">+ Save to Garage</button>
+                </div>
                 <div id="wantedGarageChips" style="display:flex; flex-wrap:wrap; gap:7px;"></div>
             </div>
-            <div class="input-row-flex">
-                <div class="input-group"><label>Make</label><input type="text" id="wantedMake" placeholder="e.g. Toyota"></div>
-                <div class="input-group"><label>Model</label><input type="text" id="wantedModel" placeholder="e.g. Hiace"></div>
-                <div class="input-group" style="max-width:90px;"><label>Year</label><input type="text" id="wantedYear" placeholder="2019"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 80px; gap:8px;">
+                <div class="input-group" style="margin:0;"><label>Make</label><input type="text" id="wantedMake" placeholder="Toyota"></div>
+                <div class="input-group" style="margin:0;"><label>Model</label><input type="text" id="wantedModel" placeholder="Hiace"></div>
+                <div class="input-group" style="margin:0;"><label>Year</label><input type="text" id="wantedYear" placeholder="2019"></div>
             </div>
         </div>
-        <div class="action-container"><button class="btn-full-action" onclick="submitAddWanted()">ADD TO WANTED</button></div>
+
+        <!-- SUCCESS FLASH -->
+        <div id="wantedSuccessMsg" style="display:none; text-align:center; padding:10px 0 6px; color:var(--apc-green); font-size:13px; font-weight:800; letter-spacing:0.2px;">Part added successfully</div>
+
+        <!-- PART DETAILS -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; margin-bottom:10px;">Part Details</div>
+            <div class="input-group" style="margin-bottom:8px;"><label>Part Name *</label><input type="text" id="wantedPartName" placeholder="e.g. Alternator, Front bumper"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div class="input-group" style="margin:0;">
+                    <label>Category</label>
+                    <select id="wantedCategory">
+                        <option value="">Any category</option>
+                        <option value="body">Body &amp; Exterior</option>
+                        <option value="engine">Engine &amp; Drivetrain</option>
+                        <option value="wheels">Wheels, Tyres &amp; Suspension</option>
+                        <option value="brakes">Brakes</option>
+                        <option value="lighting">Lighting &amp; Electrical</option>
+                        <option value="interior">Interior</option>
+                        <option value="cooling">Cooling &amp; Heating</option>
+                        <option value="performance">Performance &amp; Race</option>
+                        <option value="4x4">4x4 &amp; Accessories</option>
+                        <option value="audio">Audio &amp; In-Car Tech</option>
+                        <option value="tools">Workshop &amp; Tools</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin:0;"><label>Max Price</label><input type="number" id="wantedMaxPrice" placeholder="e.g. 500" min="0"></div>
+            </div>
+        </div>
+
+        <button class="btn-full-action" onclick="submitAddWanted()">ADD TO WANTED</button>
     </div>
 </div>
 

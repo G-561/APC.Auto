@@ -2281,14 +2281,15 @@ function nextWantedId() {
 }
 
 // Add a new wanted entry
-function addWanted(partName, make, model, year, maxPrice) {
+function addWanted(partName, make, model, year, maxPrice, category) {
     myWanted.push({
         id: nextWantedId(),
         partName,
-        make:  make  || '',
-        model: model || '',
-        year:  year  || '',
+        make:     make     || '',
+        model:    model    || '',
+        year:     year     || '',
         maxPrice: maxPrice || null,
+        category: category || '',
         mutedNotifications: false,
         createdAt: new Date().toISOString()
     });
@@ -2417,6 +2418,23 @@ function closeAddWantedDrawer() {
     syncBackdrop();
 }
 
+function saveWantedVehicleToGarage() {
+    const make  = document.getElementById('wantedMake').value.trim();
+    const model = document.getElementById('wantedModel').value.trim();
+    const year  = document.getElementById('wantedYear').value.trim();
+    if (!make) { showToast('Enter a make first'); return; }
+    const alreadyIn = myVehicles.some(v =>
+        v.make.toLowerCase() === make.toLowerCase() &&
+        v.model.toLowerCase() === (model || '').toLowerCase()
+    );
+    if (alreadyIn) { showToast('Already in your garage'); return; }
+    myVehicles.push({ id: nextVehicleId(), make, model, year: Number(year) || year || '', variant: '', nickname: '', vin: '' });
+    saveVehicles();
+    renderGarage();
+    populateWantedGarageChips(make, model, year);
+    showToast(`${make} ${model} saved to garage`);
+}
+
 // Populate the garage quick-fill chips above the Make/Model/Year fields
 function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
     const wrap  = document.getElementById('wantedGarageQuickFill');
@@ -2448,6 +2466,8 @@ function openAddWantedFromList() {
     document.getElementById('wantedMake').value  = '';
     document.getElementById('wantedModel').value = '';
     document.getElementById('wantedYear').value  = '';
+    const catEl = document.getElementById('wantedCategory');
+    if (catEl) catEl.value = '';
     populateWantedGarageChips();
     toggleDrawer('addWantedDrawer', true);
 }
@@ -2455,19 +2475,24 @@ function openAddWantedFromList() {
 function onAddWantedFromSearch() {
     document.getElementById('wantedPartName').value = activeFilters.search;
     document.getElementById('wantedMaxPrice').value = '';
-    document.getElementById('wantedMake').value  = '';
-    document.getElementById('wantedModel').value = '';
-    document.getElementById('wantedYear').value  = '';
-    // If only one garage vehicle, pre-fill it automatically
-    if (myVehicles.length === 1) {
-        document.getElementById('wantedMake').value  = myVehicles[0].make;
-        document.getElementById('wantedModel').value = myVehicles[0].model;
-        document.getElementById('wantedYear').value  = myVehicles[0].year;
-    }
-    populateWantedGarageChips(
-        myVehicles.length === 1 ? myVehicles[0].make  : '',
-        myVehicles.length === 1 ? myVehicles[0].model : ''
-    );
+    const catEl = document.getElementById('wantedCategory');
+    if (catEl) catEl.value = '';
+
+    // Pre-fill vehicle: active filters take priority, then single-garage-vehicle fallback
+    const filterMake  = activeFilters.make  || '';
+    const filterModel = activeFilters.model || '';
+    const filterYear  = activeFilters.year  || '';
+    const fallbackV   = myVehicles.length === 1 ? myVehicles[0] : null;
+
+    const prefillMake  = filterMake  || (fallbackV ? fallbackV.make  : '');
+    const prefillModel = filterModel || (fallbackV ? fallbackV.model : '');
+    const prefillYear  = filterYear  || (fallbackV ? fallbackV.year  : '');
+
+    document.getElementById('wantedMake').value  = prefillMake;
+    document.getElementById('wantedModel').value = prefillModel;
+    document.getElementById('wantedYear').value  = prefillYear;
+
+    populateWantedGarageChips(prefillMake, prefillModel, prefillYear);
     toggleDrawer('addWantedDrawer');
 }
 
@@ -2486,43 +2511,50 @@ function openAddWantedForVehicle(vehicleId) {
 function submitAddWanted() {
     const partName = document.getElementById('wantedPartName').value.trim();
     const maxPriceStr = document.getElementById('wantedMaxPrice').value.trim();
-    const make  = document.getElementById('wantedMake').value.trim();
-    const model = document.getElementById('wantedModel').value.trim();
-    const year  = document.getElementById('wantedYear').value.trim();
+    const make     = document.getElementById('wantedMake').value.trim();
+    const model    = document.getElementById('wantedModel').value.trim();
+    const year     = document.getElementById('wantedYear').value.trim();
+    const category = document.getElementById('wantedCategory')?.value || '';
 
     if (!partName) { alert('Part name is required.'); return; }
 
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
-    addWanted(partName, make, model, year, maxPrice);
-
-    // If they typed a vehicle not already in the garage, offer to save it
-    const alreadyInGarage = make && myVehicles.some(v =>
-        v.make.toLowerCase() === make.toLowerCase() &&
-        v.model.toLowerCase() === model.toLowerCase()
-    );
-    if (make && !alreadyInGarage) {
-        showToastWithAction(
-            `Added to wanted list`,
-            `Save ${make} ${model} to garage?`,
-            () => {
-                myVehicles.push({ id: nextVehicleId(), make, model, year: Number(year) || year || '', variant: '', nickname: '', vin: '' });
-                saveVehicles();
-                renderGarage();
-                showToast(`${make} ${model} added to garage`);
-            }
-        );
-    } else {
-        showToast('Added to wanted list');
-    }
-
-    // Clear part name but keep vehicle — frictionless multi-add for the same car
-    document.getElementById('wantedPartName').value = '';
-    document.getElementById('wantedMaxPrice').value = '';
-    document.getElementById('wantedPartName').focus();
+    addWanted(partName, make, model, year, maxPrice, category);
 
     if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     updateAccountStats();
+
+    // Show in-card success flash, then close and reset search bar
+    const successMsg = document.getElementById('wantedSuccessMsg');
+    if (successMsg) successMsg.style.display = 'block';
+
+    setTimeout(() => {
+        if (successMsg) successMsg.style.display = 'none';
+        closeAddWantedDrawer();
+
+        // Clear search bar text but leave filters (make/model/category etc.) intact
+        const searchEl = document.getElementById('mainSearchInput');
+        if (searchEl) { searchEl.value = ''; activeFilters.search = ''; renderMainGrid(); }
+
+        // If vehicle not in garage, offer save via toast after card closes
+        const alreadyInGarage = make && myVehicles.some(v =>
+            v.make.toLowerCase() === make.toLowerCase() &&
+            v.model.toLowerCase() === model.toLowerCase()
+        );
+        if (make && !alreadyInGarage) {
+            showToastWithAction(
+                `"${partName}" added`,
+                `Save ${make} ${model} to garage?`,
+                () => {
+                    myVehicles.push({ id: nextVehicleId(), make, model, year: Number(year) || year || '', variant: '', nickname: '', vin: '' });
+                    saveVehicles();
+                    renderGarage();
+                    showToast(`${make} ${model} saved to garage`);
+                }
+            );
+        }
+    }, 2000);
 }
 
 // --- VEHICLE DETAIL: open, segmented toggle, render each tab ---
@@ -3617,7 +3649,7 @@ function updateHeaderOffset() {
             if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
             if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
             if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
-            if (addWantedDrawer)      addWantedDrawer.style.top      = totalH + 'px';
+            // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
             if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
             if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
             if (settingsDrawer)        settingsDrawer.style.top        = (topBarH + 20) + 'px';
