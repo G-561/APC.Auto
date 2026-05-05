@@ -2472,14 +2472,9 @@ function onAddWantedFromSearch() {
     if (catEl) catEl.value = '';
 
     // Pre-fill vehicle: active filters take priority, then single-garage-vehicle fallback
-    const filterMake  = activeFilters.make  || '';
-    const filterModel = activeFilters.model || '';
-    const filterYear  = activeFilters.year  || '';
-    const fallbackV   = myVehicles.length === 1 ? myVehicles[0] : null;
-
-    const prefillMake  = filterMake  || (fallbackV ? fallbackV.make  : '');
-    const prefillModel = filterModel || (fallbackV ? fallbackV.model : '');
-    const prefillYear  = filterYear  || (fallbackV ? fallbackV.year  : '');
+    const prefillMake  = activeFilters.make  || '';
+    const prefillModel = activeFilters.model || '';
+    const prefillYear  = activeFilters.year  || '';
 
     document.getElementById('wantedMake').value  = prefillMake;
     document.getElementById('wantedModel').value = prefillModel;
