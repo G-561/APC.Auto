@@ -1020,8 +1020,25 @@ function renderMainGrid() {
     });
 }
 
+// Returns true if this seller already has a listing covering the wanted request.
+// Match requires part name overlap AND vehicle make/model compatibility.
+function sellerHasListedFor(wanted) {
+    const partLower = wanted.partName.toLowerCase();
+    return userListings.some(listing => {
+        const titleLower = listing.title.toLowerCase();
+        const nameMatch = titleLower.includes(partLower) || partLower.includes(titleLower);
+        if (!nameMatch) return false;
+        if (!wanted.make) return true;
+        return listing.fits.some(f =>
+            f.make.toLowerCase() === wanted.make.toLowerCase() &&
+            (!wanted.model || f.model.toLowerCase() === wanted.model.toLowerCase())
+        );
+    });
+}
+
 // FIND WANTED mode — shows other buyers' public wanted listings so sellers can see the market.
 // This is a Pro seller tool: search what buyers are looking for, then list it.
+// Wanted items the seller has already listed a matching part for are hidden automatically.
 function renderWantedSearchResults(mainGrid) {
     const query = activeFilters.search.toLowerCase();
     const fMake  = activeFilters.make     || '';
@@ -1029,6 +1046,7 @@ function renderWantedSearchResults(mainGrid) {
     const fYear  = activeFilters.year     || '';
     const fCat   = activeFilters.category || 'all';
     const matching = publicWantedDatabase.filter(w => {
+        if (sellerHasListedFor(w)) return false;
         if (query && !w.partName.toLowerCase().includes(query) &&
                      !w.make.toLowerCase().includes(query) &&
                      !w.model.toLowerCase().includes(query)) return false;
