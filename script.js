@@ -2311,13 +2311,6 @@ function openWantedListDrawer() {
     closeAccountMenu();
 }
 
-function openAddWantedFromList() {
-    document.getElementById('wantedPartName').value = '';
-    document.getElementById('wantedMaxPrice').value = '';
-    populateWantedVehicleSelect();
-    toggleDrawer('addWantedDrawer', true);
-}
-
 function renderWantedList() {
     const body = document.getElementById('wantedListBody');
     if (!body) return;
