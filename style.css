@@ -874,8 +874,10 @@ header {
 
 /* VEHICLE DETAIL — banner, segmented toggle, tab content */
 .vehicle-banner {
-    background: linear-gradient(135deg, #2e2820 0%, #1c1812 100%);
-    color: white;
+    background: #ffffff;
+    border: 1px solid #ebebeb;
+    border-left: 4px solid var(--apc-orange);
+    color: #1a1a1a;
     padding: 14px;
     border-radius: 12px;
     margin-bottom: 12px;
@@ -884,8 +886,8 @@ header {
     gap: 12px;
 }
 .vehicle-banner .ico { font-size: 34px; }
-.vehicle-banner .name { font-size: 17px; font-weight: 800; }
-.vehicle-banner .meta { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+.vehicle-banner .name { font-size: 17px; font-weight: 800; color: #1a1a1a; }
+.vehicle-banner .meta { font-size: 11px; color: #888; margin-top: 2px; }
 
 .segmented-control {
     display: flex;
