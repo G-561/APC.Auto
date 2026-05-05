@@ -2298,6 +2298,101 @@ function addWanted(partName, vehicleId, maxPrice) {
 function deleteWanted(id) {
     myWanted = myWanted.filter(w => w.id !== id);
     saveWanted();
+    if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
+    if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
+    updateAccountStats();
+}
+
+function openWantedListDrawer() {
+    renderWantedList();
+    toggleDrawer('wantedListDrawer');
+    closeAccountMenu();
+}
+
+function openAddWantedFromList() {
+    document.getElementById('wantedPartName').value = '';
+    document.getElementById('wantedMaxPrice').value = '';
+    populateWantedVehicleSelect();
+    toggleDrawer('addWantedDrawer', true);
+}
+
+function renderWantedList() {
+    const body = document.getElementById('wantedListBody');
+    if (!body) return;
+    body.innerHTML = '';
+
+    if (!myWanted.length) {
+        body.innerHTML = `
+            <div style="text-align:center; padding:48px 20px; color:#aaa;">
+                <div style="font-size:36px; margin-bottom:12px;">📋</div>
+                <div style="font-weight:800; font-size:15px; color:#666; margin-bottom:8px;">No wanted parts yet</div>
+                <div style="font-size:13px; line-height:1.5;">Add parts you're looking for and we'll notify you when a matching listing goes live.</div>
+            </div>`;
+        return;
+    }
+
+    // Build groups: one per vehicle, then "any vehicle" at the end
+    const groups = [];
+    myVehicles.forEach(v => {
+        const items = myWanted.filter(w => w.vehicleId === v.id);
+        if (items.length) groups.push({ vehicle: v, items });
+    });
+    const orphans = myWanted.filter(w => w.vehicleId === null || !myVehicles.find(v => v.id === w.vehicleId));
+    if (orphans.length) groups.push({ vehicle: null, items: orphans });
+
+    groups.forEach(group => {
+        // Section header
+        const hdr = document.createElement('div');
+        hdr.className = 'wl-vehicle-hdr';
+        hdr.textContent = group.vehicle
+            ? `🚗 ${group.vehicle.make} ${group.vehicle.model} ${group.vehicle.year}`
+            : '🔍 Any Vehicle';
+        body.appendChild(hdr);
+
+        group.items.forEach(w => {
+            const matches = getAllParts().filter(p => wantedMatchesPart(w, p));
+            const hasMatches = matches.length > 0;
+
+            const card = document.createElement('div');
+            card.className = 'wanted-card';
+
+            const info = document.createElement('div');
+            info.className = 'wanted-info';
+
+            const name = document.createElement('div');
+            name.className = 'wanted-name';
+            name.textContent = w.partName;
+
+            const metaRow = document.createElement('div');
+            metaRow.style.cssText = 'display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap;';
+
+            if (w.maxPrice) {
+                const price = document.createElement('span');
+                price.className = 'wanted-chip wanted-chip-budget';
+                price.textContent = `Max $${w.maxPrice}`;
+                metaRow.appendChild(price);
+            }
+
+            const matchBadge = document.createElement('span');
+            matchBadge.className = 'wl-match-badge' + (hasMatches ? ' wl-match-badge-hit' : '');
+            matchBadge.textContent = hasMatches ? `${matches.length} match${matches.length > 1 ? 'es' : ''} available` : 'No matches yet';
+            metaRow.appendChild(matchBadge);
+
+            info.appendChild(name);
+            info.appendChild(metaRow);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'wanted-delete';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.onclick = () => {
+                if (confirm('Remove this from your wanted list?')) deleteWanted(w.id);
+            };
+
+            card.appendChild(info);
+            card.appendChild(deleteBtn);
+            body.appendChild(card);
+        });
+    });
 }
 
 // Match logic: does this part match the wanted criteria?
@@ -2378,8 +2473,10 @@ function submitAddWanted() {
     document.getElementById('wantedMaxPrice').value = '';
     document.getElementById('wantedPartName').focus();
 
-    // If vehicle detail's wanted tab is open behind this drawer, keep it fresh
+    // Keep related views fresh
     if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
+    if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
+    updateAccountStats();
 }
 
 // --- VEHICLE DETAIL: open, segmented toggle, render each tab ---
@@ -3430,6 +3527,7 @@ function updateHeaderOffset() {
     const savedPartsDrawer    = document.getElementById('savedPartsDrawer');
     const settingsDrawer      = document.getElementById('settingsDrawer');
     const profileDrawer       = document.getElementById('profileDrawer');
+    const wantedListDrawer    = document.getElementById('wantedListDrawer');
     const myPartsDrawer       = document.getElementById('myPartsDrawer');
     const workshopDrawer      = document.getElementById('workshopDrawer');
     const recentlyViewedDrawer= document.getElementById('recentlyViewedDrawer');
@@ -3452,6 +3550,7 @@ function updateHeaderOffset() {
             if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
             if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
             if (addWantedDrawer)      addWantedDrawer.style.top      = totalH + 'px';
+            if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
             if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
             if (settingsDrawer)        settingsDrawer.style.top        = (topBarH + 20) + 'px';
             if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';

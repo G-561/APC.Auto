@@ -1344,6 +1344,19 @@
     </div>
 </div>
 
+<!-- WANTED LIST DRAWER — standalone view of all the user's wanted parts -->
+<div id="wantedListDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>MY WANTED LIST</span>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button onclick="openAddWantedFromList()" style="background:var(--apc-orange); color:white; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">＋ Add</button>
+            <div onclick="toggleDrawer('wantedListDrawer')" style="font-size:30px; color:#888; cursor:pointer; line-height:1;">×</div>
+        </div>
+    </div>
+    <div class="drawer-content" id="wantedListBody" style="background:#f4f4f4; padding:16px;">
+    </div>
+</div>
+
 <!-- ADD WANTED — modal for adding wanted parts -->
 <!-- VEHICLE DETAIL — stacks on top of garage; segmented toggle inside -->
 <div id="vehicleDetailDrawer" class="drawer">
@@ -1525,7 +1538,7 @@
             <button class="account-menu-item" onclick="onOpenGarage(); closeAccountMenu()">My Garage <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Wanted List')">Wanted List <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="openWantedListDrawer()">Wanted List <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')">Messages <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item amenu-mobile-only" onclick="dtbOpenWorkshops(); closeAccountMenu()">Workshops &amp; Services <span class="account-menu-chevron">›</span></button>
         </div>
@@ -1559,7 +1572,7 @@
         <button class="acct-dd-item" onclick="onOpenGarage(); closeAccountDropdown()">My Garage <span class="acct-dd-chevron">›</span></button>
         <button class="acct-dd-item" onclick="onMenuOpenMyListings(); closeAccountDropdown()">My Listings <span class="acct-dd-chevron">›</span></button>
         <button class="acct-dd-item" onclick="onMenuOpenSavedParts(); closeAccountDropdown()">Saved Parts <span class="acct-dd-chevron">›</span></button>
-        <button class="acct-dd-item" onclick="onMenuPlaceholder('Wanted List'); closeAccountDropdown()">Wanted List <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="openWantedListDrawer(); closeAccountDropdown()">Wanted List <span class="acct-dd-chevron">›</span></button>
         <button class="acct-dd-item" onclick="onMenuPlaceholder('Messages'); closeAccountDropdown()">Messages <span class="acct-dd-chevron">›</span></button>
     </div>
     <div class="acct-dd-divider"></div>

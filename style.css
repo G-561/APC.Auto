@@ -1000,6 +1000,31 @@ header {
 .wanted-have-btn:hover { background: var(--apc-orange); color: white; }
 
 /* WANTED LIST — cards for personal wanted drawer */
+/* WANTED LIST DRAWER */
+.wl-vehicle-hdr {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #888;
+    padding: 4px 2px 8px;
+    margin-top: 8px;
+}
+.wl-vehicle-hdr:first-child { margin-top: 0; }
+
+.wl-match-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #f0f0f0;
+    color: #aaa;
+}
+.wl-match-badge-hit {
+    background: rgba(40,167,69,0.12);
+    color: #1e7e34;
+}
+
 .wanted-list { padding-bottom: 4px; }
 .wanted-card {
     background: white;
