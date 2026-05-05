@@ -2060,12 +2060,10 @@ function renderGarage() {
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'vehicle-delete';
-        deleteBtn.textContent = '🗑️';
+        deleteBtn.textContent = '×';
         deleteBtn.onclick = (e) => {
             e.stopPropagation();
-            if (confirm('Remove this vehicle from your garage? This will also remove any wanted parts for this vehicle.')) {
-                deleteVehicle(v.id);
-            }
+            deleteVehicle(v.id);
         };
 
         const arrow = document.createElement('div');

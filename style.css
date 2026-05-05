@@ -791,11 +791,13 @@ header {
 .vehicle-delete {
     background: none;
     border: none;
-    font-size: 16px;
+    font-size: 22px;
+    line-height: 1;
     cursor: pointer;
     color: #ccc;
     flex-shrink: 0;
     padding: 4px;
+    font-family: inherit;
 }
 .vehicle-delete:hover { color: #ff3b30; }
 
