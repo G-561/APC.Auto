@@ -1630,7 +1630,10 @@ function openItemDetail(partId) {
             workshopHeadline.textContent = `Local ${vehicleLabel} specialists near you`;
             workshopCards.innerHTML = workshops.length
                 ? workshops.map(buildWorkshopCardHTML).join('')
-                : `<div style="padding: 14px; border: 1px solid #eee; border-radius: 14px; background: #fbfbfb; color: #555; font-size: 13px;">No local fitters are listed for this vehicle yet — check back soon.</div>`;
+                : `<div style="padding: 14px; border: 1px solid #eee; border-radius: 14px; background: #fbfbfb; font-size: 13px;">
+                    <div style="color:#555; margin-bottom:10px;">No local fitters are listed for this vehicle yet.</div>
+                    <div style="color:#888; line-height:1.5;">Are you a specialist workshop for this vehicle? If you offer fitting services and want to appear here, set up your <strong style="color:#555;">Workshop Profile</strong> in your <a href="#" onclick="event.preventDefault(); onMenuOpenSettings();" style="color:var(--apc-orange); font-weight:700; text-decoration:none;">Pro Settings</a>.</div>
+                  </div>`;
             workshopSection.style.display = 'block';
         }
     }
