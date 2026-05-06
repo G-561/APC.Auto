@@ -1498,7 +1498,7 @@
             <!-- Left: conversation list -->
             <div class="inbox-conv-col" id="inboxConvCol">
                 <div class="inbox-conv-search">
-                    <input type="text" id="inboxSearchInput" placeholder="Search messages..." oninput="filterInboxConvs(this.value)">
+                    <input type="text" id="inboxSearchInput" placeholder="Search by name or part…" oninput="filterInboxConvs(this.value)">
                 </div>
                 <div id="inboxConvList" class="inbox-conv-list"></div>
             </div>
@@ -1527,7 +1527,7 @@
                             <div id="inboxThreadTitle" class="inbox-thread-title"></div>
                             <div id="inboxThreadPrice" class="inbox-thread-price"></div>
                         </div>
-                        <button class="inbox-view-btn" onclick="viewConvListing()">View</button>
+                        <button class="inbox-view-btn" onclick="viewConvListing()">View Listing</button>
                     </div>
                     <div id="inboxMsgList" class="inbox-msg-list"></div>
                     <div class="inbox-reply-bar">
@@ -1599,7 +1599,7 @@
             <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="openWantedListDrawer()">Wanted List <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Messages')">Messages <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="closeAccountMenu(); onOpenInbox()">Messages <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item amenu-mobile-only" onclick="dtbOpenWorkshops(); closeAccountMenu()">Workshops &amp; Services <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
@@ -1633,7 +1633,7 @@
         <button class="acct-dd-item" onclick="onMenuOpenMyListings(); closeAccountDropdown()">My Listings <span class="acct-dd-chevron">›</span></button>
         <button class="acct-dd-item" onclick="onMenuOpenSavedParts(); closeAccountDropdown()">Saved Parts <span class="acct-dd-chevron">›</span></button>
         <button class="acct-dd-item" onclick="openWantedListDrawer(); closeAccountDropdown()">Wanted List <span class="acct-dd-chevron">›</span></button>
-        <button class="acct-dd-item" onclick="onMenuPlaceholder('Messages'); closeAccountDropdown()">Messages <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="closeAccountDropdown(); onOpenInbox()">Messages <span class="acct-dd-chevron">›</span></button>
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
@@ -1658,7 +1658,7 @@
         <span>SAVED PARTS</span>
         <div onclick="closeSavedPartsDrawer()" style="font-size:30px; cursor:pointer">×</div>
     </div>
-    <div class="drawer-content" style="padding: 0;">
+    <div class="drawer-content" style="background:#f4f4f4; padding:16px;">
         <div id="savedPartsContent"></div>
     </div>
 </div>

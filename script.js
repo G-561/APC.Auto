@@ -366,7 +366,7 @@ const INBOX_STORAGE_KEY = 'apc.inbox.v1';
 let inboxItems = loadInboxItems();
 
 // ── CONVERSATIONS (Message Centre) ───────────────────────────
-const CONVS_KEY = 'apc.conversations.v1';
+const CONVS_KEY = 'apc.conversations.v2';
 let conversations = loadConversations();
 let activeConvId  = null;
 let inboxCurrentTab = 'chats';
@@ -380,31 +380,31 @@ function saveConversations() {
 }
 function getInitialConversations() {
     return [
-        { id:1, with:'Dave R.',            isPro:false, unread:true,  partId:null, msgs:[
+        { id:1, with:'Dave R.',            isPro:false, unread:true,  partId:1,  msgs:[
             {id:1,sent:false,text:'Hey, is the Hiace mirror still available?',          time:'Mon',       clock:'9:14 am'},
             {id:2,sent:true, text:'Yes still available — good condition, no cracks.',   time:'Mon',       clock:'9:32 am'},
             {id:3,sent:false,text:'Would you take $70 for it?',                         time:'Mon',       clock:'9:45 am'},
             {id:4,sent:true, text:'Best I can do is $75 — fits 2019+ perfectly.',       time:'Mon',       clock:'10:02 am'},
             {id:5,sent:false,text:'Done! Can I pick up Saturday morning?',              time:'Today',     clock:'8:03 am'},
         ]},
-        { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:null, msgs:[
+        { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:2,  msgs:[
             {id:1,sent:false,text:'Hi! Is the Lotus spoiler still for sale?',           time:'Yesterday', clock:'2:11 pm'},
             {id:2,sent:true, text:'Yes — genuine factory item, excellent condition.',   time:'Yesterday', clock:'2:45 pm'},
             {id:3,sent:false,text:'Does it come with the mounting hardware?',           time:'Yesterday', clock:'3:02 pm'},
         ]},
-        { id:3, with:'Tom K.',             isPro:false, unread:false, partId:null, msgs:[
+        { id:3, with:'Tom K.',             isPro:false, unread:false, partId:12, msgs:[
             {id:1,sent:false,text:'Interested in the 1KD engine — km reading?',        time:'Wed',       clock:'11:20 am'},
             {id:2,sent:true, text:'156,000km, ran perfectly when pulled. Fully tested.',time:'Wed',       clock:'11:55 am'},
             {id:3,sent:false,text:'Can you do $2,600?',                                 time:'Wed',       clock:'12:10 pm'},
             {id:4,sent:true, text:"Best is $2,700 — includes the turbo.",               time:'Wed',       clock:'12:18 pm'},
             {id:5,sent:false,text:'Fair enough! Can you arrange freight from Adelaide?',time:'Wed',       clock:'1:30 pm'},
         ]},
-        { id:4, with:'Brett (Parts Plus)', isPro:true,  unread:true,  partId:null, msgs:[
+        { id:4, with:'Brett (Parts Plus)', isPro:true,  unread:true,  partId:9,  msgs:[
             {id:1,sent:false,text:"Do you have more Hiace turbos? We'd buy 3 if available.", time:'Thu', clock:'8:50 am'},
             {id:2,sent:true, text:"2 in stock now. Can source more — what's your timeline?", time:'Thu', clock:'9:15 am'},
             {id:3,sent:false,text:'No rush, within a month. Price firm on $650 each?',       time:'Thu', clock:'9:28 am'},
         ]},
-        { id:5, with:'Lee P.',             isPro:false, unread:false, partId:null, msgs:[
+        { id:5, with:'Lee P.',             isPro:false, unread:false, partId:13, msgs:[
             {id:1,sent:false,text:'Is the Elise headlight driver or passenger side?',   time:'Tue',      clock:'4:45 pm'},
             {id:2,sent:true, text:"Left (driver's side). Fits S2 models 2001–2011.",    time:'Tue',      clock:'5:10 pm'},
             {id:3,sent:false,text:"Perfect — exactly what I need. I'll be in touch!",   time:'Tue',      clock:'5:22 pm'},
@@ -452,9 +452,11 @@ function renderInboxConvList(filter) {
         const last    = c.msgs[c.msgs.length - 1];
         const preview = last ? ((last.sent ? 'You: ' : '') + (last.photo ? '📷 Photo' : last.text)) : '';
         return `
-            <div class="inbox-conv-item${c.unread?' unread':''}${activeConvId===c.id?' active':''}" onclick="openInboxConv(${c.id})">
+            <div class="inbox-conv-item${c.unread?' unread':''}${activeConvId===c.id?' active':''}${c.flagged?' flagged':''}" onclick="openInboxConv(${c.id})">
+                <button class="inbox-conv-del-btn" onclick="event.stopPropagation(); deleteConversation(${c.id})" title="Delete">×</button>
                 <div class="inbox-conv-name-row">
                     <span class="inbox-conv-name">${escapeHtml(c.with)}</span>
+                    <button class="inbox-conv-flag-btn${c.flagged?' flagged':''}" onclick="event.stopPropagation(); flagConversation(${c.id})" title="${c.flagged?'Unflag':'Flag'}">⚑</button>
                     <span class="inbox-conv-time">${last?last.time:''}</span>
                     ${c.unread?'<div class="inbox-unread-dot"></div>':''}
                 </div>
@@ -474,7 +476,7 @@ function openInboxConv(id) {
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
     const part  = findPartAnywhere(conv.partId);
     const thumb = document.getElementById('inboxThreadThumb');
-    if (thumb) thumb.src = part?.images?.[0] || '';
+    if (thumb) { thumb.src = part?.images?.[0] || ''; thumb.style.display = part?.images?.[0] ? '' : 'none'; }
     const withEl  = document.getElementById('inboxThreadWith');
     const titleEl = document.getElementById('inboxThreadTitle');
     const priceEl = document.getElementById('inboxThreadPrice');
@@ -560,10 +562,10 @@ function deleteInboxMsg(convId, msgIdx) {
 
 function viewConvListing() {
     const conv = conversations.find(c => c.id === activeConvId);
-    if (!conv) return;
+    if (!conv || !conv.partId) { showToast('No listing linked to this conversation'); return; }
     const part = findPartAnywhere(conv.partId);
     if (!part) { showToast('Listing no longer available'); return; }
-    openItemPreview(part);
+    openItemDetail(part.id);
 }
 
 function openItemPreview(part) {
@@ -623,6 +625,26 @@ function iipSelectPhoto(thumb, src) {
     thumb.classList.add('active');
 }
 
+function flagConversation(id) {
+    const conv = conversations.find(c => c.id === id);
+    if (!conv) return;
+    conv.flagged = !conv.flagged;
+    saveConversations();
+    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+}
+function deleteConversation(id) {
+    conversations = conversations.filter(c => c.id !== id);
+    if (activeConvId === id) {
+        activeConvId = null;
+        document.getElementById('inboxThreadContent').style.display = 'none';
+        document.getElementById('inboxThreadEmpty').style.display = '';
+        document.getElementById('inboxConvCol').classList.remove('slide-away');
+        document.getElementById('inboxThreadCol').classList.remove('slide-in');
+    }
+    saveConversations();
+    updateInboxBadge();
+    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+}
 function filterInboxConvs(val) { renderInboxConvList(val); }
 function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function inboxHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendInboxMessage();} }
@@ -2304,14 +2326,19 @@ function renderSavedParts() {
         </div>`;
     }).join('');
 
-    const buildActiveHTML = (parts) => {
-        const cards = parts.map(part => `
-            <div style="position:relative;">
-                ${buildCardHTML(part)}
-                <button onclick="event.stopPropagation(); toggleSavedPart(${part.id})" title="Remove from saved" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.45);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer;z-index:3;line-height:1;">×</button>
-            </div>`).join('');
-        return `<div class="wl-grid" style="margin-bottom:12px;">${cards}</div>`;
-    };
+    const buildActiveHTML = (parts) => parts.map(part => `
+        <div class="rv-drawer-row wl-wanted-row" onclick="openItemDetail(${part.id})">
+            <img src="${part.images[0]}" alt="" class="rv-drawer-img">
+            <div class="rv-drawer-info">
+                <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
+                <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+                <div class="rv-drawer-price">${part.price}</div>
+                <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
+            </div>
+        </div>
+    `).join('');
 
     let bodyHTML = '';
     if (savedPartsTab === 'all') {
@@ -2328,7 +2355,7 @@ function renderSavedParts() {
     }
 
     content.innerHTML = `
-        <div class="rv-drawer-header">${tabsHTML}</div>
+        <div style="padding: 12px 8px 10px; background:white; margin:-16px -16px 16px; border-bottom:1px solid #eee;">${tabsHTML}</div>
         ${bodyHTML}`;
 }
 
@@ -2492,10 +2519,7 @@ function renderWantedList() {
         hdr.className = 'wl-section-hdr wl-section-hdr-match';
         hdr.textContent = '🔔 Matches Found';
         body.appendChild(hdr);
-        const grid = document.createElement('div');
-        grid.className = 'wl-grid';
-        withMatches.forEach(({ w, matches }) => grid.appendChild(buildWantedCard(w, matches)));
-        body.appendChild(grid);
+        withMatches.forEach(({ w, matches }) => body.appendChild(buildWantedCard(w, matches)));
     }
 
     // WATCHING section — grouped by vehicle
@@ -2521,10 +2545,7 @@ function renderWantedList() {
                 ghdr.textContent = `🚗 ${group.label}`;
                 body.appendChild(ghdr);
             }
-            const grid = document.createElement('div');
-            grid.className = 'wl-grid';
-            group.items.forEach(w => grid.appendChild(buildWantedCard(w, [])));
-            body.appendChild(grid);
+            group.items.forEach(w => body.appendChild(buildWantedCard(w, [])));
         });
     }
 }
@@ -2532,7 +2553,7 @@ function renderWantedList() {
 function buildWantedCard(w, matches) {
     const hasMatches = matches.length > 0;
     const card = document.createElement('div');
-    card.className = 'wl-card ' + (hasMatches ? 'wl-card-match' : 'wl-card-watching');
+    card.className = 'rv-drawer-row wl-wanted-row' + (hasMatches ? ' wl-row-match' : ' wl-row-watching');
 
     if (hasMatches) {
         card.onclick = () => {
@@ -2545,39 +2566,39 @@ function buildWantedCard(w, matches) {
         };
     }
 
-    const left = document.createElement('div');
-    left.style.cssText = 'flex:1; min-width:0;';
+    const info = document.createElement('div');
+    info.className = 'rv-drawer-info';
 
     const name = document.createElement('div');
-    name.className = 'wl-card-name';
+    name.className = 'rv-drawer-title';
     name.textContent = w.partName;
 
     const metaParts = [];
     if (w.make) metaParts.push(`${w.make} ${w.model}${w.year ? ' ' + w.year : ''}`);
     if (w.maxPrice) metaParts.push(`Max $${w.maxPrice}`);
     const meta = document.createElement('div');
-    meta.className = 'wl-card-meta';
+    meta.className = 'rv-drawer-meta';
     meta.textContent = metaParts.join(' · ') || 'Any vehicle';
 
-    left.appendChild(name);
-    left.appendChild(meta);
+    info.appendChild(name);
+    info.appendChild(meta);
 
     const right = document.createElement('div');
-    right.className = 'wl-card-right';
+    right.style.cssText = 'display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;';
     if (hasMatches) {
-        right.innerHTML = `<span class="wl-match-count">${matches.length} match${matches.length !== 1 ? 'es' : ''}</span><span class="wl-chevron">›</span>`;
+        right.innerHTML = `<span class="wl-match-count">${matches.length} match${matches.length !== 1 ? 'es' : ''} ›</span>`;
     } else {
         right.innerHTML = `<span class="wl-watching-label">Watching</span>`;
     }
 
     const del = document.createElement('button');
-    del.className = 'wl-delete-btn';
+    del.className = 'sp-unsave-btn';
     del.textContent = '×';
     del.onclick = (e) => { e.stopPropagation(); deleteWanted(w.id); };
 
-    card.appendChild(left);
+    right.appendChild(del);
+    card.appendChild(info);
     card.appendChild(right);
-    card.appendChild(del);
     return card;
 }
 
@@ -3906,18 +3927,18 @@ function updateHeaderOffset() {
             const sellOverlay = document.getElementById('sellOverlay');
             if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
             if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
-            if (garageDrawer)         garageDrawer.style.top         = (totalH + 20) + 'px';
+            if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
             if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
             if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
             // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
-            if (wantedListDrawer)     wantedListDrawer.style.top     = (totalH + 20) + 'px';
-            if (savedPartsDrawer)      savedPartsDrawer.style.top      = (totalH + 20) + 'px';
+            if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
+            if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
             if (settingsDrawer)        settingsDrawer.style.top        = (topBarH + 20) + 'px';
             if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';
-            if (myPartsDrawer)         myPartsDrawer.style.top         = (totalH + 20) + 'px';
+            if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
             if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
             if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
-            if (inboxDrawer)           inboxDrawer.style.top           = topBarH + 'px';
+            if (inboxDrawer)           inboxDrawer.style.top           = totalH + 'px';
             const proSettingsDrawer = document.getElementById('proSettingsDrawer');
             if (proSettingsDrawer)     proSettingsDrawer.style.top     = (topBarH + 20) + 'px';
             if (messageDetailDrawer)   messageDetailDrawer.style.top   = totalH + 'px';
