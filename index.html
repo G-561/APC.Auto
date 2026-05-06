@@ -1370,13 +1370,18 @@
 <!-- WANTED LIST DRAWER — standalone view of all the user's wanted parts -->
 <div id="wantedListDrawer" class="drawer">
     <div class="drawer-header">
-        <span>MY WANTED LIST</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button id="wantedBackBtn" onclick="backToWantedList()" style="display:none; background:none; border:none; color:var(--apc-orange); font-size:13px; font-weight:800; cursor:pointer; padding:0; font-family:inherit;">‹ Back</button>
+            <span id="wantedListTitle">MY WANTED LIST</span>
+        </div>
         <div style="display:flex; align-items:center; gap:12px;">
-            <button onclick="openAddWantedFromList()" style="background:var(--apc-orange); color:white; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">＋ Add</button>
+            <button id="wantedAddBtn" onclick="openAddWantedFromList()" style="background:var(--apc-orange); color:white; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">＋ Add</button>
             <div onclick="toggleDrawer('wantedListDrawer')" style="font-size:30px; color:#888; cursor:pointer; line-height:1;">×</div>
         </div>
     </div>
-    <div class="drawer-content" id="wantedListBody" style="background:#f4f4f4; padding:16px;">
+    <div class="drawer-content" style="background:#f4f4f4; padding:16px;">
+        <div id="wantedListBody"></div>
+        <div id="wantedMatchesBody" style="display:none;"></div>
     </div>
 </div>
 

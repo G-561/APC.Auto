@@ -2414,6 +2414,7 @@ function deleteWanted(id) {
 
 function openWantedListDrawer() {
     closeAccountDropdown();
+    backToWantedList();
     renderWantedList();
     toggleDrawer('wantedListDrawer');
 }
@@ -2481,10 +2482,13 @@ function renderWantedList() {
             if (hasMatches) {
                 const viewBtn = document.createElement('button');
                 viewBtn.className = 'wl-view-btn';
-                viewBtn.textContent = 'View listing';
+                viewBtn.textContent = matches.length === 1 ? 'View listing' : `View ${matches.length} matches`;
                 viewBtn.onclick = () => {
-                    toggleDrawer('wantedListDrawer');
-                    openItemDetail(matches[0].id);
+                    if (matches.length === 1) {
+                        openItemDetail(matches[0].id);
+                    } else {
+                        showWantedMatches(w, matches);
+                    }
                 };
                 metaRow.appendChild(viewBtn);
             }
@@ -2502,6 +2506,26 @@ function renderWantedList() {
             body.appendChild(card);
         });
     });
+}
+
+function showWantedMatches(wanted, matches) {
+    document.getElementById('wantedListBody').style.display = 'none';
+    document.getElementById('wantedMatchesBody').style.display = 'block';
+    document.getElementById('wantedBackBtn').style.display = 'inline';
+    document.getElementById('wantedAddBtn').style.display = 'none';
+    document.getElementById('wantedListTitle').textContent = `${matches.length} matches · ${wanted.partName}`;
+
+    const body = document.getElementById('wantedMatchesBody');
+    body.innerHTML = '';
+    body.appendChild(buildPartsGrid(matches));
+}
+
+function backToWantedList() {
+    document.getElementById('wantedMatchesBody').style.display = 'none';
+    document.getElementById('wantedListBody').style.display = 'block';
+    document.getElementById('wantedBackBtn').style.display = 'none';
+    document.getElementById('wantedAddBtn').style.display = 'inline-block';
+    document.getElementById('wantedListTitle').textContent = 'MY WANTED LIST';
 }
 
 // Match logic: does this part match the wanted criteria?
