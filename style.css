@@ -2599,6 +2599,7 @@ header {
     }
 
     /* All full-screen drawers: centre column between sidebars */
+    #detailOverlay,
     #garageDrawer,
     #vehicleDetailDrawer,
     #addVehicleDrawer,
@@ -2622,6 +2623,7 @@ header {
     }
 
     /* Card-style drawers: rounded corners + shadow, stay as full-column drawers */
+    #detailOverlay,
     #garageDrawer,
     #myPartsDrawer {
         top: 160px !important;

@@ -3748,7 +3748,7 @@ function updateHeaderOffset() {
         if (window.innerWidth >= 900) {
             if (rightPanel)           rightPanel.style.top           = totalH + 'px';
             if (filterDrawer)         filterDrawer.style.top         = totalH + 'px';
-            if (detailOverlay)        detailOverlay.style.top        = topBarH + 'px';
+            if (detailOverlay)        detailOverlay.style.top        = (totalH + 20) + 'px';
             const sellOverlay = document.getElementById('sellOverlay');
             if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
             if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
