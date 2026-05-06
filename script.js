@@ -2178,7 +2178,11 @@ function renderGarageTab() {
         }
 
     } else if (currentVehicleTab === 'matches') {
-        const matchingParts = getAllParts().filter(p => vehicleWanted.some(w => wantedMatchesPart(w, p)));
+        const matchingParts = getAllParts().filter(p => {
+            const matchingWanteds = vehicleWanted.filter(w => wantedMatchesPart(w, p));
+            if (!matchingWanteds.length) return false;
+            return matchingWanteds.some(w => !dismissedMatches[String(w.id)]?.has(p.id));
+        });
         if (!matchingParts.length) {
             c.appendChild(buildVehicleEmpty('🔔', `No matches for your ${v.make} ${v.model} wanted parts yet.`));
         } else {
@@ -2411,6 +2415,7 @@ function dismissMatch(wantedId, partId) {
     dismissedMatches[key].add(partId);
     saveDismissedMatches();
     renderWantedList();
+    if (currentVehicleId && currentVehicleTab === 'matches') renderGarageTab();
     if (currentMatchesWanted && String(currentMatchesWanted.id) === key) {
         const allMatches = getAllParts().filter(p => wantedMatchesPart(currentMatchesWanted, p));
         const active = allMatches.filter(p => !dismissedMatches[key]?.has(p.id));
@@ -2423,6 +2428,7 @@ function restoreDismissedMatches(wantedId) {
     delete dismissedMatches[key];
     saveDismissedMatches();
     renderWantedList();
+    if (currentVehicleId && currentVehicleTab === 'matches') renderGarageTab();
     if (currentMatchesWanted && String(currentMatchesWanted.id) === key) {
         const allMatches = getAllParts().filter(p => wantedMatchesPart(currentMatchesWanted, p));
         showWantedMatches(currentMatchesWanted, allMatches, 0);
