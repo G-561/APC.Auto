@@ -2116,7 +2116,8 @@ function renderGarageTab() {
     const vehicleWanted = myWanted.filter(w =>
         w.vehicleId === currentVehicleId ||
         (w.make && w.make.toLowerCase() === v.make.toLowerCase() &&
-         w.model.toLowerCase() === v.model.toLowerCase())
+         w.model.toLowerCase() === v.model.toLowerCase() &&
+             (!w.year || !v.year || String(w.year) === String(v.year)))
     );
 
     if (currentVehicleTab === 'wanted') {
@@ -2549,7 +2550,8 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
         });
         const makeMatch  = prefillMake  && v.make.toLowerCase()  === prefillMake.toLowerCase();
         const modelMatch = prefillModel && v.model.toLowerCase() === prefillModel.toLowerCase();
-        if (makeMatch && modelMatch) {
+        const yearMatch  = !prefillYear || String(v.year) === String(prefillYear);
+        if (makeMatch && modelMatch && yearMatch) {
             chip.classList.add('active');
             selectedWantedVehicleId = v.id;
         }
@@ -2699,7 +2701,8 @@ function renderVehicleTab() {
         const vehicleWanted = myWanted.filter(w =>
             w.vehicleId === currentVehicleId ||
             (w.make && v && w.make.toLowerCase() === v.make.toLowerCase() &&
-             w.model.toLowerCase() === v.model.toLowerCase())
+             w.model.toLowerCase() === v.model.toLowerCase() &&
+             (!w.year || !v.year || String(w.year) === String(v.year)))
         );
         if (!vehicleWanted.length) {
             c.appendChild(buildVehicleEmpty(
@@ -2731,7 +2734,8 @@ function renderVehicleTab() {
         const vehicleWanted = myWanted.filter(w =>
             w.vehicleId === currentVehicleId ||
             (w.make && v && w.make.toLowerCase() === v.make.toLowerCase() &&
-             w.model.toLowerCase() === v.model.toLowerCase())
+             w.model.toLowerCase() === v.model.toLowerCase() &&
+             (!w.year || !v.year || String(w.year) === String(v.year)))
         );
         const matchingParts = getAllParts().filter(p =>
             vehicleWanted.some(w => wantedMatchesPart(w, p))
