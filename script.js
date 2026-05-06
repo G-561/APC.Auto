@@ -2140,7 +2140,7 @@ function renderGarageTab() {
         }
 
     } else if (currentVehicleTab === 'saved') {
-        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
+        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && p.fits?.length > 0 && partFitsVehicle(p, v));
         if (!savedFitting.length) {
             c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.`));
         } else {
@@ -2725,7 +2725,7 @@ function renderVehicleTab() {
         c.appendChild(buildWantedGrid(vehicleWanted));
 
     } else if (currentVehicleTab === 'saved') {
-        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
+        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && p.fits?.length > 0 && partFitsVehicle(p, v));
         if (!savedFitting.length) {
             c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.\nTap the heart on any listing to save it.`));
             return;
