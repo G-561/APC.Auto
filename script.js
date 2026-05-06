@@ -297,8 +297,9 @@ function closeSettingsDrawer() {
     syncBackdrop();
 }
 function onMenuOpenSettings() {
+    closeAccountDropdown();
     renderSettingsDrawer();
-    toggleDrawer('settingsDrawer', true);
+    toggleDrawer('settingsDrawer');
 }
 function renderSettingsDrawer() {
     const nameEl     = document.getElementById('settingsDisplayName');
@@ -2204,9 +2205,10 @@ function closeSavedPartsDrawer() {
     syncBackdrop();
 }
 function onMenuOpenSavedParts() {
+    closeAccountDropdown();
     savedPartsTab = 'all';
     renderSavedParts();
-    toggleDrawer('savedPartsDrawer', true);
+    toggleDrawer('savedPartsDrawer');
 }
 
 function setSavedPartsTab(tab) {
@@ -2382,9 +2384,9 @@ function deleteWanted(id) {
 }
 
 function openWantedListDrawer() {
+    closeAccountDropdown();
     renderWantedList();
     toggleDrawer('wantedListDrawer');
-    closeAccountMenu();
 }
 
 function renderWantedList() {
@@ -3320,8 +3322,9 @@ function closeProfileDrawer() {
 }
 
 function onMenuOpenProfile() {
+    closeAccountDropdown();
     renderProfile();
-    toggleDrawer('profileDrawer', true);
+    toggleDrawer('profileDrawer');
 }
 
 function openMyStorefront() {
@@ -3608,7 +3611,8 @@ function closeWorkshopDetailDrawer() {
     syncBackdrop();
 }
 function onMenuOpenMyListings() {
-    toggleDrawer('myPartsDrawer', true);
+    closeAccountDropdown();
+    toggleDrawer('myPartsDrawer');
 }
 
 // Re-render the pill, menu, and pro-toggle visibility based on current state
