@@ -2629,7 +2629,9 @@ header {
     /* Card-style drawers: rounded corners + shadow, stay as full-column drawers */
     #detailOverlay,
     #garageDrawer,
-    #myPartsDrawer {
+    #myPartsDrawer,
+    #wantedListDrawer,
+    #savedPartsDrawer {
         top: 160px !important;
         bottom: 16px !important;
         border-radius: 16px !important;
