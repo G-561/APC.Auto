@@ -255,8 +255,10 @@
     <div class="nav-item nav-sell" onclick="openSellOverlay()">Sell</div>
     <div class="nav-item" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
     <div class="nav-item" id="inboxNavItem" onclick="setActiveNav(this); onOpenInbox()">
-        Inbox
-        <span id="inboxBadge" style="display:none; position:absolute; top:4px; right:6px; background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center;"></span>
+        <span style="position:relative; display:inline-block;">
+            Inbox
+            <span id="inboxBadge" style="display:none; position:absolute; top:-6px; left:100%; margin-left:2px; background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; white-space:nowrap;"></span>
+        </span>
     </div>
 </nav>
 
