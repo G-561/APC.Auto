@@ -84,8 +84,23 @@ header {
     letter-spacing: 0;
     padding: 6px 4px;
 }
-.account-pill .caret { font-size: 9px; opacity: 0.6; }
-.pill-pro-label { color: var(--apc-blue); font-weight: 900; }
+/* Signed-in pill = just the avatar circle on all screen sizes */
+.account-pill.signed-in { background: none; box-shadow: none; padding: 0; border: none; }
+.pill-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--apc-orange);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.pill-avatar.pro { background: var(--apc-blue); }
+
 /* ACCOUNT MENU AVATAR — shared by drawer + dropdown */
 .account-menu-avatar {
     width: 40px; height: 40px;
@@ -1440,6 +1455,26 @@ header {
     background: transparent;
     min-width: 0;
 }
+/* Pro settings section — blue-tinted, only visible for Pro users */
+.settings-pro-label {
+    color: #2563eb !important;
+    letter-spacing: 1px;
+}
+.settings-pro-section {
+    background: #eef4ff !important;
+    border-left: 3px solid #2563eb;
+    margin-bottom: 8px !important;
+}
+.settings-pro-section-hdr {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #2563eb;
+    padding: 10px 16px 4px;
+    border-bottom: 1px solid #dbeafe;
+}
+
 /* iOS-style toggle */
 .settings-toggle {
     position: relative;
@@ -1852,8 +1887,8 @@ header {
 }
 .apc-textarea:focus { border-color: var(--apc-orange); background: #fff; }
 .apc-textarea::placeholder { color: #aaa; }
-.shared-choice-box { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
-.shared-choice-box .choice-item { flex: 1; justify-content: center; }
+.shared-choice-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.shared-choice-box .choice-item { justify-content: flex-start; }
 .choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
 /* Workshop service filter grid */
@@ -2311,44 +2346,146 @@ header {
     right: 0;
     width: 220px;
     overflow-y: auto;
-    padding: 12px;
+    padding: 10px 10px 20px;
     box-sizing: border-box;
-    background: var(--bg);
-    border-left: 1px solid #e8e8e8;
+    background: #f4f4f4;
 }
-.drp-box {
+
+/* Sidebar cards — base */
+.drp-card {
     background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 14px;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    margin-bottom: 12px;
+    overflow: hidden;
 }
-.drp-box h4 {
-    margin: 0 0 10px 0;
-    font-size: 10px;
-    text-transform: uppercase;
-    border-bottom: 2px solid var(--apc-orange);
+
+/* Sponsored / Featured / Partner tag */
+.drp-sponsored-tag {
     display: inline-block;
-    padding-bottom: 2px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: white;
+    background: var(--apc-orange);
+    padding: 4px 10px;
+    border-radius: 14px 0 8px 0;
 }
-.drp-featured { background: #fff8f0; border-color: var(--apc-orange); }
-.drp-ws-name { font-weight: 800; font-size: 12px; margin-bottom: 4px; }
-.drp-ws-desc { font-size: 10px; color: #666; margin: 4px 0 8px; line-height: 1.4; }
-.drp-ws-link { font-size: 10px; font-weight: 900; color: var(--apc-orange); cursor: pointer; }
+.drp-sponsored-tag--subtle {
+    color: #aaa;
+    background: #f0f0f0;
+    border-radius: 6px;
+    padding: 3px 7px;
+}
+
+/* Featured Supplier card */
+.drp-supplier-card { padding-bottom: 14px; }
+.drp-supplier-logo {
+    margin: 10px 12px 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--apc-orange), #e05000);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.drp-supplier-logo-placeholder {
+    font-size: 12px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 0.5px;
+}
+.drp-supplier-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #222;
+    padding: 0 12px 3px;
+    line-height: 1.2;
+}
+.drp-supplier-tagline {
+    font-size: 10px;
+    color: #888;
+    padding: 0 12px 10px;
+    line-height: 1.4;
+}
+.drp-supplier-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 12px 10px;
+}
+.drp-tag {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--apc-orange);
+    background: #fff3e8;
+    border: 1px solid #ffd5a8;
+    border-radius: 20px;
+    padding: 2px 8px;
+}
+.drp-supplier-btn {
+    display: block;
+    width: calc(100% - 24px);
+    margin: 0 12px;
+    padding: 8px 0;
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+}
+
+/* Individual sponsored part card */
+.drp-sp-card {
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+.drp-sp-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+    transform: translateY(-1px);
+}
+.drp-sp-card .drp-sp-item { border-bottom: none; padding: 8px 12px 12px; }
+
+/* Sponsored parts list */
 .drp-sp-item {
     display: flex;
-    gap: 10px;
-    padding: 8px 0;
+    gap: 9px;
+    padding: 9px 12px;
     border-bottom: 1px solid #f4f4f4;
     cursor: pointer;
-    transition: background 0.1s;
     align-items: center;
+    transition: background 0.1s;
 }
 .drp-sp-item:last-child { border-bottom: none; }
 .drp-sp-item:hover { background: #fafafa; }
-.drp-sp-img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: #eee; }
-.drp-sp-title { font-size: 11px; font-weight: 700; color: var(--apc-blue); line-height: 1.3; }
-.drp-sp-seller { font-size: 9px; color: #888; margin-top: 2px; }
+.drp-sp-img { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #eee; }
+.drp-sp-info { flex: 1; min-width: 0; }
+.drp-sp-title { font-size: 11px; font-weight: 700; color: #222; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drp-sp-seller { font-size: 9px; color: #aaa; margin-top: 1px; }
+.drp-sp-price { font-size: 12px; font-weight: 800; color: var(--apc-orange); flex-shrink: 0; }
+
+/* Partner / affiliate card */
+.drp-partner-card { padding: 10px 12px 14px; }
+.drp-partner-logo { font-size: 24px; margin-bottom: 6px; }
+.drp-partner-name { font-size: 12px; font-weight: 800; color: #222; margin-bottom: 4px; }
+.drp-partner-desc { font-size: 10px; color: #888; line-height: 1.4; margin-bottom: 10px; }
+.drp-partner-btn {
+    display: block;
+    width: 100%;
+    padding: 7px 0;
+    background: #f0f0f0;
+    color: #444;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
 
 /* DETAIL OVERLAY — desktop image column (hidden on mobile) */
 .desktop-detail-images { display: none; }
@@ -2424,20 +2561,8 @@ header {
         gap: 8px;
         transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .account-pill.signed-in:hover { border-color: var(--apc-orange); box-shadow: 0 2px 8px rgba(247,148,29,0.15); }
-    .pill-avatar {
-        width: 26px; height: 26px;
-        border-radius: 50%;
-        background: var(--apc-orange);
-        color: white;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        font-weight: 900;
-        flex-shrink: 0;
-    }
-    .pill-avatar.pro { background: var(--apc-blue); }
+    .pill-avatar { width: 32px; height: 32px; font-size: 13px; }
+    .account-pill.signed-in:hover .pill-avatar { box-shadow: 0 3px 10px rgba(0,0,0,0.2); transform: scale(1.06); transition: box-shadow 0.15s, transform 0.15s; }
 
     /* Right panel: below top bar + header */
     .desktop-right-panel { top: 140px; bottom: 0; } /* fallback — overridden by updateHeaderOffset() */
@@ -2495,36 +2620,54 @@ header {
     #accountMenuDrawer { width: 360px; }
     #filterDrawer { right: auto; width: 240px; box-shadow: none; }
 
-    /* Sell overlay: grey backdrop filling center column, form card centered inside */
+    /* Sell overlay: full card-drawer, two-column form layout */
     #sellOverlay {
         left: calc(max(0px, 50vw - 700px) + 240px) !important;
         right: calc(max(0px, 50vw - 700px) + 220px) !important;
         width: auto !important;
         height: auto !important;
-        top: 140px; /* overridden by updateHeaderOffset() */
-        bottom: 0;
-        background: transparent !important;
-        box-shadow: none !important;
-        border-left: 1px solid #e8e8e8;
-        border-right: 1px solid #e8e8e8;
-        align-items: center;
-        padding: 28px 24px;
     }
-    #sellOverlay .drawer-header {
-        width: 100%;
-        max-width: 560px;
-        border-radius: 12px 12px 0 0;
-        border: 1px solid #e0e0e0;
-        border-bottom: 5px solid var(--apc-orange);
+    #sellOverlay .drawer-header,
+    #settingsDrawer .drawer-header,
+    #workshopDrawer .drawer-header {
+        border-bottom: 3px solid var(--apc-orange);
+        border-radius: 0;
+        flex-shrink: 0;
     }
     #sellOverlay .drawer-content {
-        width: 100%;
-        max-width: 560px;
-        border-radius: 0 0 12px 12px;
-        border: 1px solid #e0e0e0;
-        border-top: none;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
     }
+    .sell-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        flex: 1;
+        overflow: hidden;
+    }
+    .sell-left-col {
+        overflow-y: auto;
+        padding: 20px;
+        border-right: 1px solid #f0f0f0;
+    }
+    .sell-right-col {
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    /* Settings: two-column layout on desktop */
+    #settingsDrawer .drawer-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+        overflow-y: auto;
+        padding: 20px;
+        gap: 0 24px;
+    }
+    #settingsDrawer .settings-col-left,
+    #settingsDrawer .settings-col-right { min-width: 0; }
 
     /* Detail overlay: fills center column between sidebars */
     #detailOverlay {
@@ -2663,9 +2806,7 @@ header {
     #sellerPartsGrid { grid-template-columns: repeat(3, 1fr) !important; }
 
     /* Floating card drawers — centred, auto height, not full screen */
-    #authDrawer,
-    #settingsDrawer,
-    #proSettingsDrawer {
+    #authDrawer {
         left: 50% !important;
         right: auto !important;
         transform: translateX(-50%);
@@ -2678,9 +2819,7 @@ header {
         box-shadow: 0 8px 40px rgba(0,0,0,0.18) !important;
         z-index: 2100;
     }
-    #authDrawer     { width: 420px !important; }
-    #settingsDrawer { width: 480px !important; }
-    #proSettingsDrawer { width: 520px !important; }
+    #authDrawer { width: 420px !important; }
 
     /* Add Wanted — floating card, centred both axes */
     #addWantedDrawer {
@@ -2711,7 +2850,8 @@ header {
     #recentlyViewedDrawer,
     #messageDetailDrawer,
     #chatDrawer,
-    #inboxDrawer {
+    #inboxDrawer,
+    #settingsDrawer {
         left: calc(max(0px, 50vw - 700px) + 240px) !important;
         right: calc(max(0px, 50vw - 700px) + 220px) !important;
         width: auto !important;
@@ -2732,7 +2872,10 @@ header {
     #myPartsDrawer,
     #wantedListDrawer,
     #savedPartsDrawer,
-    #inboxDrawer {
+    #inboxDrawer,
+    #settingsDrawer,
+    #workshopDrawer,
+    #sellOverlay {
         top: 140px !important;
         bottom: 16px !important;
         border-radius: 16px !important;

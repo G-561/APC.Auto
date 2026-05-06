@@ -8,8 +8,7 @@ let currentOpenPartId = null;  // tracks which part detail is open
 let currentEditingListingId = null; // edit mode for Sell form
 let authReturnAction = null; // optional callback after sign-in
 let authMode = 'signin';
-let sortOrder = 'none';     // 'none' | 'asc' | 'desc'
-let sortDate  = 'newest';  // 'newest' | 'oldest'
+let sortOrder = 'none';  // 'none' | 'asc' | 'desc'
 let _dashViewsChart  = null;
 let _dashCatChart    = null;
 let _dashCurrentTab  = 'active';
@@ -311,9 +310,8 @@ function renderSettingsDrawer() {
     if (locEl)  locEl.value  = userSettings.location || '';
 
     const isPro = currentUserTier === 'pro';
-    if (proSection) proSection.style.display = isPro ? 'block' : 'none';
-    const workshopBlock = document.getElementById('settingsWorkshopBlock');
-    if (workshopBlock) workshopBlock.style.display = isPro ? 'block' : 'none';
+    const proBlock = document.getElementById('settingsProBlock');
+    if (proBlock) proBlock.style.display = isPro ? 'block' : 'none';
     if (proToggle)  proToggle.checked = proSearchOn;
 
     const toggleMap = {
@@ -854,21 +852,14 @@ function setSortOrder(el, order) {
     if (sortOrder === order) {
         sortOrder = 'none';
         document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
-        renderMainGrid();
-        return;
+    } else {
+        sortOrder = order;
+        document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
+        if (el) el.classList.add('active');
     }
-    sortOrder = order;
-    document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
-    if (el) el.classList.add('active');
     renderMainGrid();
 }
 
-function setSortDate(el, order) {
-    sortDate = order;
-    document.querySelectorAll('#sortDateSegControl .radius-seg').forEach(s => s.classList.remove('active'));
-    if (el) el.classList.add('active');
-    renderMainGrid();
-}
 
 function applyFiltersAndRender() {
     getFilterValues();
@@ -898,11 +889,10 @@ function clearAllFilters() {
     const radiusHint = document.getElementById('radiusHint');
     if (radiusHint) radiusHint.style.display = 'block';
     document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('#sortDateSegControl .radius-seg').forEach((s, i) => s.classList.toggle('active', i === 0));
     document.querySelectorAll('#filterDrawer input[type="checkbox"]').forEach(cb => cb.checked = true);
     // Reset globals
     sortOrder = 'none';
-    sortDate = 'newest';
+    sortDate  = 'newest';
     // Re-render (getFilterValues reads fresh DOM state)
     getFilterValues();
     renderMainGrid();
@@ -938,10 +928,11 @@ function getFilteredParts() {
         if (part.tradeOnly && currentUserTier !== 'pro') return false;
         return true;
     });
-    if (sortOrder === 'asc')    results.sort((a, b) => a.price - b.price);
-    if (sortOrder === 'desc')   results.sort((a, b) => b.price - a.price);
-    if (sortDate === 'newest')  results.sort((a, b) => (b.date || 0) - (a.date || 0));
-    if (sortDate === 'oldest')  results.sort((a, b) => (a.date || 0) - (b.date || 0));
+    results.sort((a, b) => {
+        if (sortOrder === 'asc')  { const d = a.price - b.price; if (d !== 0) return d; }
+        if (sortOrder === 'desc') { const d = b.price - a.price; if (d !== 0) return d; }
+        return (b.date || 0) - (a.date || 0); // newest first always
+    });
     return results;
 }
 
@@ -1497,7 +1488,7 @@ function submitSellListing() {
     if (currentEditingListingId !== null) {
         const existing = userListings.find(l => l.id === currentEditingListingId);
         if (existing) {
-            Object.assign(existing, listingPayload);
+            Object.assign(existing, listingPayload, { date: Date.now() });
             message = 'Listing updated';
         } else {
             userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload });
@@ -1526,6 +1517,7 @@ function openItemDetail(partId) {
     if (!part) return;
     currentOpenPartId = partId;
     addToRecentlyViewed(partId);
+    history.pushState(null, '', '?item=' + partId);
 
     // 1. Carousel — only show images this part actually has, plus dot indicators
     const carousel = document.getElementById('imageCarousel');
@@ -1708,6 +1700,7 @@ function closeDetailOverlay() {
     const el = document.getElementById('detailOverlay');
     if (el) el.classList.remove('active');
     syncBackdrop();
+    history.pushState(null, '', location.pathname);
 }
 
 function openDetailImageViewer(src) {
@@ -3446,20 +3439,7 @@ function onToggleTradeOnly(src) {
 }
 
 function openProSettings() {
-    const drawer = document.getElementById('proSettingsDrawer');
-    if (!drawer) return;
-    // Sync toggle states from current app state
-    const ps = document.getElementById('proSettingProSearch');
-    const pt = document.getElementById('proSettingTradeOnly');
-    const pw = document.getElementById('proSettingWarehouse');
-    if (ps) ps.checked = proSearchOn;
-    if (pt) pt.checked = userTradeOnly;
-    if (pw) pw.checked = document.getElementById('settingWarehouseManagement')?.checked || false;
-    toggleDrawer('proSettingsDrawer', true);
-}
-
-function closeProSettings() {
-    toggleDrawer('proSettingsDrawer');
+    onMenuOpenSettings();
 }
 
 // Pill click: open auth drawer if signed out, else toggle the dropdown menu
@@ -3813,10 +3793,8 @@ function renderAccountState() {
     pill.classList.remove('signed-out', 'signed-in', 'tier-standard', 'tier-pro');
 
     const initial = (currentUserName || 'G').charAt(0).toUpperCase();
-    const isPillDesktop = window.innerWidth >= 900;
-    const avatarHTML = isPillDesktop
-        ? `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${initial}</span>`
-        : '';
+    const isMobile = window.innerWidth < 900;
+    const avatarHTML = `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${initial}</span>`;
 
     if (!userIsSignedIn) {
         pill.classList.add('signed-out');
@@ -3824,11 +3802,11 @@ function renderAccountState() {
         if (proToggle) proToggle.style.display = 'none';
     } else if (currentUserTier === 'pro') {
         pill.classList.add('signed-in');
-        pill.innerHTML = avatarHTML + escapeHtml(currentUserName || 'Account') + ' <span class="pill-pro-label">Pro</span> <span class="caret">▾</span>';
+        pill.innerHTML = avatarHTML;
         if (proToggle) proToggle.style.display = proSearchOn ? 'flex' : 'none';
     } else {
         pill.classList.add('signed-in');
-        pill.innerHTML = avatarHTML + escapeHtml(currentUserName || 'Account') + ' <span class="caret">▾</span>';
+        pill.innerHTML = avatarHTML;
         if (proToggle) proToggle.style.display = 'none';
     }
 
@@ -3933,14 +3911,12 @@ function updateHeaderOffset() {
             // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
             if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
             if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
-            if (settingsDrawer)        settingsDrawer.style.top        = (topBarH + 20) + 'px';
+            if (settingsDrawer)        settingsDrawer.style.top        = totalH + 'px';
             if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';
             if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
             if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
             if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
             if (inboxDrawer)           inboxDrawer.style.top           = totalH + 'px';
-            const proSettingsDrawer = document.getElementById('proSettingsDrawer');
-            if (proSettingsDrawer)     proSettingsDrawer.style.top     = (topBarH + 20) + 'px';
             if (messageDetailDrawer)   messageDetailDrawer.style.top   = totalH + 'px';
             if (chatDrawer)            chatDrawer.style.top            = totalH + 'px';
             const authDrawer = document.getElementById('authDrawer');
@@ -4154,6 +4130,7 @@ function openDashboard() {
         dv.style.display = 'block';
     }
     closeAccountMenu();
+    closeAccountDropdown();
     renderDashboard();
 }
 
@@ -4441,11 +4418,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Prepare the sell form preview boxes
     renderSellImagePreviews();
 
-    // Wire up search radius segmented control in filters
-    document.querySelectorAll('.radius-seg').forEach(seg => {
-        seg.addEventListener('click', () => {
-            document.querySelectorAll('.radius-seg').forEach(s => s.classList.remove('active'));
-            seg.classList.add('active');
-        });
-    });
+    // Deep-link: if URL contains ?item=123, open that listing directly
+    const itemParam = new URLSearchParams(location.search).get('item');
+    if (itemParam) openItemDetail(Number(itemParam));
+
 });

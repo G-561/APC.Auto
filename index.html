@@ -79,31 +79,71 @@
 
 <!-- DESKTOP RIGHT PANEL — hidden on mobile -->
 <aside id="desktopRightPanel" class="desktop-right-panel">
-    <div class="drp-box drp-featured">
-        <h4>Featured Workshop</h4>
-        <div class="drp-ws-name">Brighton Euro Tech</div>
-        <p class="drp-ws-desc">Lotus S2 &amp; performance specialists. Elise, Exige, Evora.</p>
-        <span class="drp-ws-link" onclick="onMenuOpenWorkshops()">VIEW WORKSHOPS →</span>
+
+    <!-- TIER 1: Featured Supplier -->
+    <div class="drp-card drp-supplier-card">
+        <div class="drp-sponsored-tag">Featured Supplier</div>
+        <div class="drp-supplier-logo">
+            <div class="drp-supplier-logo-placeholder">BET</div>
+        </div>
+        <div class="drp-supplier-name">Brighton Euro Tech</div>
+        <div class="drp-supplier-tagline">Lotus S2 &amp; performance specialists — Elise, Exige, Evora</div>
+        <div class="drp-supplier-tags">
+            <span class="drp-tag">Performance</span>
+            <span class="drp-tag">Workshop</span>
+            <span class="drp-tag">Fitting</span>
+        </div>
+        <button class="drp-supplier-btn" onclick="onMenuOpenWorkshops()">View Profile →</button>
     </div>
-    <div class="drp-box">
-        <h4>Sponsored Spares</h4>
-        <div class="drp-sp-item" onclick="openItemDetail(4)">
+
+    <!-- TIER 2: Sponsored Parts — one card per listing -->
+    <div class="drp-card drp-sp-card" onclick="openItemDetail(4)">
+        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+        <div class="drp-sp-item">
             <img src="images/elise.wheel.jpg" class="drp-sp-img" alt="">
-            <div class="drp-sp-info"><div class="drp-sp-title">3D Racing Caps</div><div class="drp-sp-seller">Func3D Design</div></div>
-        </div>
-        <div class="drp-sp-item" onclick="openItemDetail(8)">
-            <img src="images/Elise.scoops.webp" class="drp-sp-img" alt="">
-            <div class="drp-sp-info"><div class="drp-sp-title">Cold Air Intake</div><div class="drp-sp-seller">Alex T.</div></div>
-        </div>
-        <div class="drp-sp-item" onclick="openItemDetail(7)">
-            <img src="images/elise.brake.pads.jpg" class="drp-sp-img" alt="">
-            <div class="drp-sp-info"><div class="drp-sp-title">Brake Calipers</div><div class="drp-sp-seller">Mike D.</div></div>
-        </div>
-        <div class="drp-sp-item" onclick="openItemDetail(2)">
-            <img src="images/elise.wing.jpg" class="drp-sp-img" alt="">
-            <div class="drp-sp-info"><div class="drp-sp-title">GT Track Spoiler</div><div class="drp-sp-seller">Gary S.</div></div>
+            <div class="drp-sp-info">
+                <div class="drp-sp-title">3D Racing Wheel Caps</div>
+                <div class="drp-sp-seller">Func3D Design</div>
+            </div>
+            <div class="drp-sp-price">$85</div>
         </div>
     </div>
+
+    <div class="drp-card drp-sp-card" onclick="openItemDetail(8)">
+        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+        <div class="drp-sp-item">
+            <img src="images/Elise.scoops.webp" class="drp-sp-img" alt="">
+            <div class="drp-sp-info">
+                <div class="drp-sp-title">Cold Air Intake Scoops</div>
+                <div class="drp-sp-seller">Alex T.</div>
+            </div>
+            <div class="drp-sp-price">$120</div>
+        </div>
+    </div>
+
+    <div class="drp-card drp-sp-card" onclick="openItemDetail(7)">
+        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+        <div class="drp-sp-item">
+            <img src="images/elise.brake.pads.jpg" class="drp-sp-img" alt="">
+            <div class="drp-sp-info">
+                <div class="drp-sp-title">AP Racing Calipers</div>
+                <div class="drp-sp-seller">Mike D.</div>
+            </div>
+            <div class="drp-sp-price">$340</div>
+        </div>
+    </div>
+
+    <!-- TIER 3: Partner / Affiliate -->
+    <div class="drp-card">
+        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Partner</div>
+        <div class="drp-partner-card">
+            <div class="drp-partner-logo">🚚</div>
+            <div class="drp-partner-name">Ship it with Sendle</div>
+            <div class="drp-partner-desc">Australia-wide door-to-door parcel delivery. Get an instant quote for your part.</div>
+            <button class="drp-partner-btn" onclick="onMenuPlaceholder('Sendle')">Get a Quote →</button>
+        </div>
+    </div>
+
 </aside>
 
 <!-- DRAWER BACKDROP — only visible on desktop when a drawer is open -->
@@ -123,8 +163,8 @@
                 </div>
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button onclick="openProSettings()" style="display:flex; align-items:center; gap:6px; background:white; border:1.5px solid #e8e8e8; border-radius:10px; padding:7px 14px; font-size:12px; font-weight:700; color:#555; cursor:pointer; transition:border-color 0.15s;">
-                    ⚙ Pro Settings
+                <button onclick="onMenuOpenSettings()" style="display:flex; align-items:center; gap:6px; background:white; border:1.5px solid #e8e8e8; border-radius:10px; padding:7px 14px; font-size:12px; font-weight:700; color:#555; cursor:pointer; transition:border-color 0.15s;">
+                    ⚙ Settings
                 </button>
                 <span class="dash-pro-pill">● APC PRO</span>
             </div>
@@ -673,13 +713,7 @@
             </div>
         </div>
 
-        <div class="filter-section">
-            <h4>Sort by Date</h4>
-            <div class="radius-seg-control" id="sortDateSegControl">
-                <div class="radius-seg active" onclick="setSortDate(this, 'newest')">Newest first</div>
-                <div class="radius-seg" onclick="setSortDate(this, 'oldest')">Oldest first</div>
-            </div>
-        </div>
+
 
         <div class="filter-section">
             <h4>Condition</h4>
@@ -771,115 +805,122 @@
 <div id="sellOverlay" class="drawer">
     <div class="drawer-header"><span id="sellOverlayTitle">LIST A PART</span><div onclick="toggleDrawer('sellOverlay')" style="font-size:30px; cursor:pointer">×</div></div>
     <div class="drawer-content">
+        <div class="sell-form-grid">
 
-        <div class="filter-section">
-            <h4>Photos</h4>
-            <div id="sellPhotoGrid" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px;"></div>
-            <input type="file" id="sellImageInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleSellImageFiles(event)">
-            <div style="font-size: 12px; color: #666; margin-top: 8px;">Upload up to 5 photos. On mobile, this may open your camera.</div>
-        </div>
+            <div class="sell-left-col">
+                <div class="filter-section">
+                    <h4>Photos</h4>
+                    <div id="sellPhotoGrid" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px;"></div>
+                    <input type="file" id="sellImageInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleSellImageFiles(event)">
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Upload up to 5 photos. On mobile, this may open your camera.</div>
+                </div>
 
-        <div class="filter-section">
-            <h4>Part Details</h4>
-            <div class="input-group" style="margin-bottom: 10px;">
-                <label>Listing Title</label>
-                <input id="sellTitle" type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
-            </div>
-            <div class="input-group">
-                <label>Category</label>
-                <select id="sellCategory">
-                    <option value="" disabled selected>Select a category...</option>
-                    <option value="body">Body & Exterior</option>
-                    <option value="lighting">Lighting & Electrical</option>
-                    <option value="engine">Engine & Drivetrain</option>
-                    <option value="wheels">Wheels, Tyres & Suspension</option>
-                    <option value="interior">Interior</option>
-                    <option value="brakes">Brakes</option>
-                    <option value="cooling">Cooling & Heating</option>
-                    <option value="4x4">4x4 & Accessories</option>
-                    <option value="performance">Performance & Race</option>
-                    <option value="audio">Audio & In-Car Tech</option>
-                    <option value="tools">Workshop & Tools</option>
-                </select>
-            </div>
-        </div>
+                <div class="filter-section">
+                    <h4>Part Details</h4>
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Listing Title</label>
+                        <input id="sellTitle" type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
+                    </div>
+                    <div class="input-group">
+                        <label>Category</label>
+                        <select id="sellCategory">
+                            <option value="" disabled selected>Select a category...</option>
+                            <option value="body">Body & Exterior</option>
+                            <option value="lighting">Lighting & Electrical</option>
+                            <option value="engine">Engine & Drivetrain</option>
+                            <option value="wheels">Wheels, Tyres & Suspension</option>
+                            <option value="interior">Interior</option>
+                            <option value="brakes">Brakes</option>
+                            <option value="cooling">Cooling & Heating</option>
+                            <option value="4x4">4x4 & Accessories</option>
+                            <option value="performance">Performance & Race</option>
+                            <option value="audio">Audio & In-Car Tech</option>
+                            <option value="tools">Workshop & Tools</option>
+                        </select>
+                    </div>
+                </div>
 
-        <div class="filter-section">
-            <h4>Vehicle Details</h4>
-            <div class="input-row-flex">
-                <div class="input-group"><label>Make</label><input id="sellMake" type="text" placeholder="e.g. Lotus"></div>
-                <div class="input-group"><label>Model</label><input id="sellModel" type="text" placeholder="e.g. Elise"></div>
-                <div class="input-group"><label>Year</label><input id="sellYear" type="number" placeholder="2005"></div>
-            </div>
-            <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
-                <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
-                <input id="sellStockNumber" type="text" inputmode="text" maxlength="20" placeholder="e.g. WH-001/A" style="max-width: 22ch;">
-            </div>
-        </div>
-
-        <div class="filter-section">
-            <h4>Location & Delivery</h4>
-            <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
-                <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="number" placeholder="5000"></div>
-                <div class="input-group"><label>Suburb, State</label><input id="sellLocation" type="text" placeholder="e.g. Adelaide, SA"></div>
-            </div>
-            <div class="shared-choice-box">
-                <label class="choice-item"><input id="sellPickup" type="checkbox" checked> Pickup Available</label>
-                <label class="choice-item"><input id="sellPostage" type="checkbox"> Willing to Post</label>
-                <div id="sellFittingToggleSection" style="display:none;">
-                    <label class="choice-item"><input id="sellFittingAvailable" type="checkbox"> Fitting Available</label>
+                <div class="filter-section">
+                    <h4>Vehicle Details</h4>
+                    <div class="input-row-flex">
+                        <div class="input-group"><label>Make</label><input id="sellMake" type="text" placeholder="e.g. Lotus"></div>
+                        <div class="input-group"><label>Model</label><input id="sellModel" type="text" placeholder="e.g. Elise"></div>
+                        <div class="input-group"><label>Year</label><input id="sellYear" type="number" placeholder="2005"></div>
+                    </div>
+                    <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
+                        <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
+                        <input id="sellStockNumber" type="text" inputmode="text" maxlength="20" placeholder="e.g. WH-001/A" style="max-width: 22ch;">
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="filter-section">
-            <h4>Pricing & Condition</h4>
-            <div class="input-row-flex" style="margin-bottom: 10px;">
-                <div class="input-group"><label>Price ($)</label><input id="sellPrice" type="number" placeholder="0.00"></div>
-                <div class="input-group">
-                    <label>Condition</label>
-                    <select id="sellCondition">
-                        <option value="" disabled selected>Select condition...</option>
-                        <option value="new_oem">New OEM (Genuine)</option>
-                        <option value="new_aftermarket">New Aftermarket</option>
-                        <option value="used">Used</option>
-                        <option value="refurbished">Refurbished</option>
-                        <option value="parts_only">For Parts / Not Working</option>
-                    </select>
+            <div class="sell-right-col">
+                <div class="filter-section">
+                    <h4>Location & Delivery</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
+                        <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="number" placeholder="5000"></div>
+                        <div class="input-group"><label>Suburb, State</label><input id="sellLocation" type="text" placeholder="e.g. Adelaide, SA"></div>
+                    </div>
+                    <div class="shared-choice-box">
+                        <label class="choice-item"><input id="sellPickup" type="checkbox" checked> Pickup Available</label>
+                        <label class="choice-item"><input id="sellPostage" type="checkbox"> Willing to Post</label>
+                        <div id="sellFittingToggleSection" style="display:none;">
+                            <label class="choice-item"><input id="sellFittingAvailable" type="checkbox"> Fitting Available</label>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div id="sellQuantitySection" style="display:none;">
-                <div class="input-group">
-                    <label>Quantity in Stock</label>
-                    <input id="sellQuantity" type="number" min="1" max="9999" placeholder="1">
+
+                <div class="filter-section">
+                    <h4>Pricing & Condition</h4>
+                    <div class="input-row-flex" style="margin-bottom: 10px;">
+                        <div class="input-group"><label>Price ($)</label><input id="sellPrice" type="number" placeholder="0.00"></div>
+                        <div class="input-group">
+                            <label>Condition</label>
+                            <select id="sellCondition">
+                                <option value="" disabled selected>Select condition...</option>
+                                <option value="new_oem">New OEM (Genuine)</option>
+                                <option value="new_aftermarket">New Aftermarket</option>
+                                <option value="used">Used</option>
+                                <option value="refurbished">Refurbished</option>
+                                <option value="parts_only">For Parts / Not Working</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="sellQuantitySection" style="display:none;">
+                        <div class="input-group">
+                            <label>Quantity in Stock</label>
+                            <input id="sellQuantity" type="number" min="1" max="9999" placeholder="1">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Description</label>
+                        <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="input-group">
-                <label>Description</label>
-                <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
-            </div>
-        </div>
 
-        <div class="sell-toggle-row">
-            <div>
-                <div class="sell-toggle-label">Open to Offers</div>
-                <div class="sell-toggle-sub">Allow buyers to submit offers below your listed price</div>
-            </div>
-            <label class="settings-toggle">
-                <input type="checkbox" id="sellOpenToOffers">
-                <span class="settings-toggle-track"></span>
-            </label>
-        </div>
+                <div class="sell-toggle-row">
+                    <div>
+                        <div class="sell-toggle-label">Open to Offers</div>
+                        <div class="sell-toggle-sub">Allow buyers to submit offers below your listed price</div>
+                    </div>
+                    <label class="settings-toggle">
+                        <input type="checkbox" id="sellOpenToOffers">
+                        <span class="settings-toggle-track"></span>
+                    </label>
+                </div>
 
-        <div id="sellWarehouseBinSection" style="display:none;">
-            <div class="sell-warehouse-hdr">Warehouse Location</div>
-            <div class="input-group">
-                <label>Rack / Bin Reference</label>
-                <input id="sellWarehouseBin" type="text" placeholder="e.g. A3-B7 or SHELF-12" maxlength="30">
-            </div>
-        </div>
+                <div id="sellWarehouseBinSection" style="display:none;">
+                    <div class="sell-warehouse-hdr">Warehouse Location</div>
+                    <div class="input-group">
+                        <label>Rack / Bin Reference</label>
+                        <input id="sellWarehouseBin" type="text" placeholder="e.g. A3-B7 or SHELF-12" maxlength="30">
+                    </div>
+                </div>
 
-        <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
+                <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
+            </div>
+
+        </div>
     </div>
 </div>
 
@@ -888,124 +929,192 @@
         <span>SETTINGS</span>
         <div onclick="closeSettingsDrawer()" style="font-size:30px; cursor:pointer">×</div>
     </div>
-    <div class="drawer-content" style="padding: 0; background: #f4f4f4;">
+    <div class="drawer-content" style="background: #f4f4f4;">
 
-        <!-- ACCOUNT -->
-        <div class="settings-section-label">Account</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <span class="settings-row-label">Display Name</span>
-                <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name" onblur="saveSettingsName()">
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">Location</span>
-                <input id="settingsLocation" class="settings-inline-input" type="text" placeholder="e.g. Adelaide, SA" onblur="saveSettingsLocation()">
-            </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Email')">
-                <span class="settings-row-label">Email</span>
-                <span class="settings-row-value">gary@example.com</span>
-            </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Change Password')">
-                <span class="settings-row-label">Change Password</span>
-                <span class="settings-chevron">›</span>
-            </div>
-        </div>
+        <!-- LEFT COLUMN: Account + Notifications -->
+        <div class="settings-col-left">
 
-        <!-- WORKSHOP PROFILE — Pro only, shown near top -->
-        <div id="settingsWorkshopBlock" style="display:none;">
-            <div class="settings-section-label" style="color:#2563eb;">Pro — Workshop Profile</div>
-            <div class="settings-section" style="background:#eef4ff; border-left:3px solid #2563eb;">
-                <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
-                    <div>
-                        <div class="settings-row-label">Workshop Profile</div>
-                        <div class="settings-row-sub">Set up your profile to appear in local fitter listings</div>
-                    </div>
-                    <span class="settings-chevron" style="color:#2563eb;">›</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- NOTIFICATIONS -->
-        <div class="settings-section-label">Notifications</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <span class="settings-row-label">Wanted match alerts</span>
-                <label class="settings-toggle"><input type="checkbox" id="settingNotifyWanted" onchange="saveSettingsToggle('notifyWantedMatch', this.checked)"><span class="settings-toggle-track"></span></label>
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">New messages</span>
-                <label class="settings-toggle"><input type="checkbox" id="settingNotifyMessages" onchange="saveSettingsToggle('notifyMessages', this.checked)"><span class="settings-toggle-track"></span></label>
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">Price drops on saved parts</span>
-                <label class="settings-toggle"><input type="checkbox" id="settingNotifyPriceDrops" onchange="saveSettingsToggle('notifyPriceDrops', this.checked)"><span class="settings-toggle-track"></span></label>
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">New listings for my vehicles</span>
-                <label class="settings-toggle"><input type="checkbox" id="settingNotifyNewListings" onchange="saveSettingsToggle('notifyNewListings', this.checked)"><span class="settings-toggle-track"></span></label>
-            </div>
-        </div>
-
-        <!-- PRO FEATURES — only shown when user is Pro -->
-        <div id="settingsProSection" style="display:none;">
-            <div class="settings-section-label">Pro Features</div>
+            <!-- ACCOUNT -->
+            <div class="settings-section-label">Account</div>
             <div class="settings-section">
                 <div class="settings-row">
-                    <span class="settings-row-label">Pro Search (Find Wanted)</span>
-                    <label class="settings-toggle"><input type="checkbox" id="settingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
+                    <span class="settings-row-label">Display Name</span>
+                    <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name" onblur="saveSettingsName()">
                 </div>
                 <div class="settings-row">
-                    <div>
-                        <div class="settings-row-label">Warehouse Management</div>
-                        <div class="settings-row-sub">Rack/bin locations &amp; QR labels for your listings</div>
-                    </div>
-                    <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
+                    <span class="settings-row-label">Location</span>
+                    <input id="settingsLocation" class="settings-inline-input" type="text" placeholder="e.g. Adelaide, SA" onblur="saveSettingsLocation()">
+                </div>
+                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Email')">
+                    <span class="settings-row-label">Email</span>
+                    <span class="settings-row-value">gary@example.com</span>
+                </div>
+                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Change Password')">
+                    <span class="settings-row-label">Change Password</span>
+                    <span class="settings-chevron">›</span>
+                </div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="settings-section-label">Notifications</div>
+            <div class="settings-section">
+                <div class="settings-row">
+                    <span class="settings-row-label">Wanted match alerts</span>
+                    <label class="settings-toggle"><input type="checkbox" id="settingNotifyWanted" onchange="saveSettingsToggle('notifyWantedMatch', this.checked)"><span class="settings-toggle-track"></span></label>
                 </div>
                 <div class="settings-row">
+                    <span class="settings-row-label">New messages</span>
+                    <label class="settings-toggle"><input type="checkbox" id="settingNotifyMessages" onchange="saveSettingsToggle('notifyMessages', this.checked)"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-row-label">Price drops on saved parts</span>
+                    <label class="settings-toggle"><input type="checkbox" id="settingNotifyPriceDrops" onchange="saveSettingsToggle('notifyPriceDrops', this.checked)"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-row-label">New listings for my vehicles</span>
+                    <label class="settings-toggle"><input type="checkbox" id="settingNotifyNewListings" onchange="saveSettingsToggle('notifyNewListings', this.checked)"><span class="settings-toggle-track"></span></label>
+                </div>
+            </div>
+
+            <!-- PRIVACY -->
+            <div class="settings-section-label">Privacy</div>
+            <div class="settings-section">
+                <div class="settings-row">
                     <div>
-                        <div class="settings-row-label">Trade Only — Pro buyers only</div>
-                        <div class="settings-row-sub">Your listings are hidden from the public. Only APC Pro members can see them.</div>
+                        <div class="settings-row-label">Show suburb only to buyers</div>
+                        <div class="settings-row-sub">Hides your exact address from listings</div>
                     </div>
-                    <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
+                    <label class="settings-toggle"><input type="checkbox" id="settingPrivacySuburb" onchange="saveSettingsToggle('privacySuburbOnly', this.checked)"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-row-label">Public profile</span>
+                    <label class="settings-toggle"><input type="checkbox" id="settingPrivacyPublic" onchange="saveSettingsToggle('privacyPublicProfile', this.checked)"><span class="settings-toggle-track"></span></label>
                 </div>
             </div>
-        </div>
 
-        <!-- PRIVACY -->
-        <div class="settings-section-label">Privacy</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Show suburb only to buyers</div>
-                    <div class="settings-row-sub">Hides your exact address from listings</div>
+            <!-- HELP & LEGAL -->
+            <div class="settings-section-label">Help &amp; Legal</div>
+            <div class="settings-section">
+                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Help & Support')">
+                    <span class="settings-row-label">Help &amp; Support</span>
+                    <span class="settings-chevron">›</span>
                 </div>
-                <label class="settings-toggle"><input type="checkbox" id="settingPrivacySuburb" onchange="saveSettingsToggle('privacySuburbOnly', this.checked)"><span class="settings-toggle-track"></span></label>
+                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Terms of Service')">
+                    <span class="settings-row-label">Terms of Service</span>
+                    <span class="settings-chevron">›</span>
+                </div>
+                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Privacy Policy')">
+                    <span class="settings-row-label">Privacy Policy</span>
+                    <span class="settings-chevron">›</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-row-label">Version</span>
+                    <span class="settings-row-value">0.1.0 (prototype)</span>
+                </div>
             </div>
-            <div class="settings-row">
-                <span class="settings-row-label">Public profile</span>
-                <label class="settings-toggle"><input type="checkbox" id="settingPrivacyPublic" onchange="saveSettingsToggle('privacyPublicProfile', this.checked)"><span class="settings-toggle-track"></span></label>
-            </div>
+
         </div>
 
-        <!-- HELP & LEGAL -->
-        <div class="settings-section-label">Help &amp; Legal</div>
-        <div class="settings-section">
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Help & Support')">
-                <span class="settings-row-label">Help &amp; Support</span>
-                <span class="settings-chevron">›</span>
+        <!-- RIGHT COLUMN: Pro block (Pro users only) + Privacy + Help -->
+        <div class="settings-col-right">
+
+            <!-- PRO BLOCK — hidden for standard users -->
+            <div id="settingsProBlock" style="display:none;">
+                <div class="settings-section-label settings-pro-label">APC Pro</div>
+
+                <div class="settings-section settings-pro-section">
+                    <div class="settings-pro-section-hdr">Business Identity</div>
+                    <div class="settings-row">
+                        <span class="settings-row-label">Business / Yard Name</span>
+                        <input type="text" id="proSettingBusinessName" class="settings-inline-input" placeholder="e.g. Gary's Wreckers">
+                    </div>
+                    <div class="settings-row">
+                        <span class="settings-row-label">ABN <span style="font-weight:400;color:#aaa;">optional</span></span>
+                        <input type="text" id="proSettingABN" class="settings-inline-input" placeholder="12 345 678 901">
+                    </div>
+                </div>
+
+                <div class="settings-section settings-pro-section">
+                    <div class="settings-pro-section-hdr">Search & Discovery</div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Pro Search — Find Wanted</div>
+                            <div class="settings-row-sub">Search active buyer requests and match your stock</div>
+                        </div>
+                        <label class="settings-toggle"><input type="checkbox" id="settingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Trade Only — Pro buyers only</div>
+                            <div class="settings-row-sub">Your listings are hidden from the public</div>
+                        </div>
+                        <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
+                    </div>
+                </div>
+
+                <div class="settings-section settings-pro-section">
+                    <div class="settings-pro-section-hdr">Listing Defaults</div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Open to Offers by default</div>
+                            <div class="settings-row-sub">New listings will have offers enabled</div>
+                        </div>
+                        <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultOffers"><span class="settings-toggle-track"></span></label>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Fitting Available by default</div>
+                            <div class="settings-row-sub">Show fitting on all new listings</div>
+                        </div>
+                        <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting"><span class="settings-toggle-track"></span></label>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Warehouse Management</div>
+                            <div class="settings-row-sub">Rack/bin locations &amp; QR labels for listings</div>
+                        </div>
+                        <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
+                    </div>
+                </div>
+
+                <div class="settings-section settings-pro-section">
+                    <div class="settings-pro-section-hdr">Business Profile</div>
+                    <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
+                        <div>
+                            <div class="settings-row-label">Workshop &amp; Repairer Profile</div>
+                            <div class="settings-row-sub">List your services, makes &amp; models you specialise in</div>
+                        </div>
+                        <span class="settings-chevron" style="color:#2563eb;">›</span>
+                    </div>
+                    <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Storefront')">
+                        <div>
+                            <div class="settings-row-label">My Storefront</div>
+                            <div class="settings-row-sub">Preview how buyers see your seller page</div>
+                        </div>
+                        <span class="settings-chevron" style="color:#2563eb;">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section settings-pro-section">
+                    <div class="settings-pro-section-hdr">Subscription</div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Current Plan</div>
+                            <div class="settings-row-sub">3-month free trial active</div>
+                        </div>
+                        <span class="settings-row-value" style="color:var(--apc-orange); font-weight:800;">PRO TRIAL</span>
+                    </div>
+                    <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Billing')">
+                        <span class="settings-row-label">Billing &amp; Payment</span>
+                        <span class="settings-chevron" style="color:#2563eb;">›</span>
+                    </div>
+                    <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Cancel subscription')">
+                        <span class="settings-row-label" style="color:#e53935;">Cancel Subscription</span>
+                        <span class="settings-chevron" style="color:#e53935;">›</span>
+                    </div>
+                </div>
             </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Terms of Service')">
-                <span class="settings-row-label">Terms of Service</span>
-                <span class="settings-chevron">›</span>
-            </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Privacy Policy')">
-                <span class="settings-row-label">Privacy Policy</span>
-                <span class="settings-chevron">›</span>
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">Version</span>
-                <span class="settings-row-value">0.1.0 (prototype)</span>
-            </div>
+
         </div>
 
     </div>
@@ -1255,118 +1364,6 @@
     </div>
 </div>
 
-<!-- PRO SETTINGS — accessed from Pro Dashboard header -->
-<div id="proSettingsDrawer" class="drawer">
-    <div class="drawer-header">
-        <span>PRO SETTINGS</span>
-        <div onclick="closeProSettings()" style="font-size:30px; cursor:pointer;">×</div>
-    </div>
-    <div class="drawer-content">
-
-        <!-- Business Identity -->
-        <div class="settings-section-label">Business Identity</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <span class="settings-row-label">Business / Yard Name</span>
-                <input type="text" id="proSettingBusinessName" placeholder="e.g. Gary's Wreckers" style="border:none; text-align:right; font-size:13px; color:#333; background:transparent; outline:none; max-width:180px;">
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">Location</span>
-                <input type="text" id="proSettingLocation" placeholder="e.g. Adelaide, SA" style="border:none; text-align:right; font-size:13px; color:#333; background:transparent; outline:none; max-width:180px;">
-            </div>
-            <div class="settings-row">
-                <span class="settings-row-label">ABN (optional)</span>
-                <input type="text" id="proSettingABN" placeholder="12 345 678 901" style="border:none; text-align:right; font-size:13px; color:#333; background:transparent; outline:none; max-width:180px;">
-            </div>
-        </div>
-
-        <!-- Search & Discovery -->
-        <div class="settings-section-label">Search & Discovery</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Pro Search — Find Wanted</div>
-                    <div class="settings-row-sub">Search active buyer requests and match your stock</div>
-                </div>
-                <label class="settings-toggle"><input type="checkbox" id="proSettingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
-            </div>
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Trade Only — Pro buyers only</div>
-                    <div class="settings-row-sub">Your listings are hidden from the public</div>
-                </div>
-                <label class="settings-toggle"><input type="checkbox" id="proSettingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
-            </div>
-        </div>
-
-        <!-- Listing Defaults -->
-        <div class="settings-section-label">Listing Defaults</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Open to Offers by default</div>
-                    <div class="settings-row-sub">New listings will have offers enabled</div>
-                </div>
-                <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultOffers"><span class="settings-toggle-track"></span></label>
-            </div>
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Fitting Available by default</div>
-                    <div class="settings-row-sub">Show fitting on all new listings</div>
-                </div>
-                <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting"><span class="settings-toggle-track"></span></label>
-            </div>
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Warehouse Management</div>
-                    <div class="settings-row-sub">Rack/bin locations & QR labels for listings</div>
-                </div>
-                <label class="settings-toggle"><input type="checkbox" id="proSettingWarehouse" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
-            </div>
-        </div>
-
-        <!-- Business Profile -->
-        <div class="settings-section-label">Business Profile</div>
-        <div class="settings-section">
-            <div class="settings-row settings-row-tappable" onclick="closeProSettings(); openWorkshopProfileEditor()">
-                <div>
-                    <div class="settings-row-label">Workshop & Repairer Profile</div>
-                    <div class="settings-row-sub">List your services, makes & models you specialise in</div>
-                </div>
-                <span class="settings-chevron">›</span>
-            </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Storefront')">
-                <div>
-                    <div class="settings-row-label">My Storefront</div>
-                    <div class="settings-row-sub">Preview how buyers see your seller page</div>
-                </div>
-                <span class="settings-chevron">›</span>
-            </div>
-        </div>
-
-        <!-- Subscription -->
-        <div class="settings-section-label">Subscription</div>
-        <div class="settings-section">
-            <div class="settings-row">
-                <div>
-                    <div class="settings-row-label">Current Plan</div>
-                    <div class="settings-row-sub">3-month free trial active</div>
-                </div>
-                <span class="settings-row-value" style="color:var(--apc-orange); font-weight:800;">PRO TRIAL</span>
-            </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Billing')">
-                <span class="settings-row-label">Billing & Payment</span>
-                <span class="settings-chevron">›</span>
-            </div>
-            <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Cancel subscription')">
-                <span class="settings-row-label" style="color:#e53935;">Cancel Subscription</span>
-                <span class="settings-chevron" style="color:#e53935;">›</span>
-            </div>
-        </div>
-
-    </div>
-</div>
-
 <!-- WANTED LIST DRAWER — standalone view of all the user's wanted parts -->
 <div id="wantedListDrawer" class="drawer">
     <div class="drawer-header">
@@ -1594,7 +1591,7 @@
     </div>
     <div class="drawer-content" style="padding: 0;">
         <div class="amenu-section">
-            <button id="amenuDashboard" class="account-menu-item" onclick="openDashboard()" style="display:none;">My Dashboard <span class="account-menu-chevron">›</span></button>
+            <button id="amenuDashboard" class="account-menu-item" onclick="openDashboard(); closeAccountMenu()" style="display:none;">My Dashboard <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onOpenGarage(); closeAccountMenu()">My Garage <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
