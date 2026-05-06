@@ -3480,8 +3480,9 @@ header {
     font-size: 16px; color: #ccc; line-height: 1; flex-shrink: 0;
     transition: color 0.12s;
 }
-.inbox-conv-flag-btn:hover { color: #FF3B30; }
+.inbox-conv-flag-btn:hover { color: #bbb; }
 .inbox-conv-flag-btn.flagged { color: #FF3B30; }
+.inbox-conv-flag-btn.flagged:hover { color: #FF3B30; }
 .inbox-conv-time { font-size: 12px; color: #bbb; flex-shrink: 0; margin-left: auto; padding-right: 4px; }
 .inbox-unread-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--apc-orange); flex-shrink: 0; }
 .inbox-conv-part { font-size: 13px; color: var(--apc-orange); font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
