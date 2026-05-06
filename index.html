@@ -770,10 +770,6 @@
 
 <div id="sellOverlay" class="drawer">
     <div class="drawer-header"><span id="sellOverlayTitle">LIST A PART</span><div onclick="toggleDrawer('sellOverlay')" style="font-size:30px; cursor:pointer">×</div></div>
-    <div id="sellSuccessMsg" style="display:none; background:#e6f9ee; color:#1a7a3e; font-weight:700; font-size:15px; text-align:center; padding:18px 16px; border-bottom:1px solid #b2dfc5;">
-        ✓ Part listed successfully — manage in My Listings
-    </div>
-
     <div class="drawer-content">
 
         <div class="filter-section">
@@ -1705,5 +1701,12 @@
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
     }
 </script>
+
+<div id="sellSuccessMsg" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999; background:#fff; border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,0.22); padding:28px 36px; text-align:center; min-width:260px;">
+    <div style="font-size:32px; margin-bottom:10px;">✓</div>
+    <div style="font-weight:800; font-size:16px; color:#1a7a3e; margin-bottom:6px;">Part listed successfully</div>
+    <div style="font-size:13px; color:#888;">Manage in My Listings</div>
+</div>
+
 </body>
 </html>
