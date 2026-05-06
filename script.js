@@ -2518,7 +2518,7 @@ function saveWantedVehicleToGarage() {
 let selectedWantedVehicleId = null;
 
 // Populate the garage quick-fill chips above the Make/Model/Year fields
-function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
+function populateWantedGarageChips(prefillMake, prefillModel, prefillYear, prefillVehicleId) {
     const wrap  = document.getElementById('wantedGarageQuickFill');
     const chips = document.getElementById('wantedGarageChips');
     if (!wrap || !chips) return;
@@ -2548,10 +2548,12 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear) {
                 document.getElementById('wantedYear').value  = v.year;
             }
         });
-        const makeMatch  = prefillMake  && v.make.toLowerCase()  === prefillMake.toLowerCase();
-        const modelMatch = prefillModel && v.model.toLowerCase() === prefillModel.toLowerCase();
-        const yearMatch  = !prefillYear || String(v.year) === String(prefillYear);
-        if (makeMatch && modelMatch && yearMatch) {
+        const shouldPreselect = prefillVehicleId
+            ? v.id === prefillVehicleId
+            : prefillMake && v.make.toLowerCase() === prefillMake.toLowerCase() &&
+              prefillModel && v.model.toLowerCase() === prefillModel.toLowerCase() &&
+              prefillYear  && String(v.year) === String(prefillYear);
+        if (shouldPreselect) {
             chip.classList.add('active');
             selectedWantedVehicleId = v.id;
         }
@@ -2597,7 +2599,7 @@ function openAddWantedForVehicle(vehicleId) {
     document.getElementById('wantedMake').value  = v ? v.make  : '';
     document.getElementById('wantedModel').value = v ? v.model : '';
     document.getElementById('wantedYear').value  = v ? v.year  : '';
-    populateWantedGarageChips(v?.make, v?.model);
+    populateWantedGarageChips(null, null, null, vehicleId);
     toggleDrawer('addWantedDrawer', true);
 }
 
