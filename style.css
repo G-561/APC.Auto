@@ -2889,14 +2889,6 @@ header {
     /* Live filters on desktop — Apply button not needed */
     #filterDrawer .action-container { display: none; }
 
-    /* Inbox conv list — scale back down for the 270px desktop column */
-    .inbox-conv-item { padding: 10px 36px 10px 12px; }
-    .inbox-conv-del-btn { font-size: 15px; right: 8px; padding: 2px; }
-    .inbox-conv-name { font-size: 13px; }
-    .inbox-conv-flag-btn { font-size: 12px; padding: 0; }
-    .inbox-conv-time { font-size: 10px; }
-    .inbox-conv-part { font-size: 11px; }
-    .inbox-conv-preview { font-size: 11px; }
 
     /* Dashboard: constrained to 1400px zone */
     #dashboardView {
