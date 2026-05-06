@@ -758,36 +758,53 @@ header {
 }
 
 /* GARAGE — vehicle cards */
-.garage-list { padding-bottom: 4px; }
+.garage-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding-bottom: 4px;
+}
 .vehicle-card {
     background: white;
-    border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 10px;
+    border-radius: 14px;
+    padding: 16px 12px 14px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
+    text-align: center;
     cursor: pointer;
     border: 2px solid transparent;
+    position: relative;
     transition: border-color 0.15s, transform 0.1s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .vehicle-card:active {
     border-color: var(--apc-orange);
-    transform: scale(0.99);
+    transform: scale(0.98);
+}
+@media (min-width: 480px) {
+    .garage-list { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 700px) {
+    .garage-list { grid-template-columns: repeat(4, 1fr); }
 }
 .vehicle-card-icon {
-    width: 56px; height: 56px;
+    width: 52px; height: 52px;
     background: #ffffff;
     border: 2px solid var(--apc-orange);
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 28px;
-    flex-shrink: 0;
+    font-size: 26px;
+    margin-bottom: 10px;
 }
-.vehicle-card-info { flex: 1; min-width: 0; }
-.vehicle-card-name { font-weight: 800; font-size: 14px; color: var(--apc-charcoal); }
-.vehicle-card-meta { font-size: 11px; color: #666; margin-top: 2px; }
-.vehicle-card-arrow { font-size: 22px; color: #ccc; flex-shrink: 0; }
+.vehicle-card-info { width: 100%; }
+.vehicle-card-name { font-weight: 800; font-size: 13px; color: var(--apc-charcoal); line-height: 1.3; }
+.vehicle-card-meta { font-size: 11px; color: #888; margin-top: 3px; }
+.vehicle-card-actions {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex; gap: 2px;
+}
 .vehicle-delete {
     background: none;
     border: none;
@@ -804,11 +821,10 @@ header {
 .vehicle-star-btn {
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 16px;
     cursor: pointer;
     color: #ccc;
-    flex-shrink: 0;
-    padding: 4px;
+    padding: 2px;
     line-height: 1;
     transition: color 0.15s;
 }
@@ -816,6 +832,7 @@ header {
 .vehicle-star-btn:hover  { color: var(--apc-orange); }
 
 .vehicle-primary-badge {
+    display: inline-block;
     font-size: 9px;
     font-weight: 900;
     text-transform: uppercase;
@@ -825,7 +842,6 @@ header {
     border: 1px solid rgba(247,148,29,0.3);
     border-radius: 20px;
     padding: 2px 7px;
-    flex-shrink: 0;
 }
 
 .vehicle-card-primary {

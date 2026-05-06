@@ -2019,38 +2019,13 @@ function renderGarage() {
     sorted.forEach(v => {
         const isPrimary = v.id === primaryVehicleId;
 
-        const card  = document.createElement('div');
+        const card = document.createElement('div');
         card.className = 'vehicle-card' + (isPrimary ? ' vehicle-card-primary' : '');
         card.onclick = () => openVehicleDetail(v.id);
 
-        const icon = document.createElement('div');
-        icon.className = 'vehicle-card-icon';
-        icon.textContent = '🚗';
-
-        const info = document.createElement('div');
-        info.className = 'vehicle-card-info';
-
-        const nameRow = document.createElement('div');
-        nameRow.style.cssText = 'display:flex; align-items:center; gap:7px; flex-wrap:wrap;';
-
-        const name = document.createElement('span');
-        name.className = 'vehicle-card-name';
-        name.textContent = `${v.make} ${v.model}`;
-        nameRow.appendChild(name);
-
-        if (isPrimary) {
-            const badge = document.createElement('span');
-            badge.className = 'vehicle-primary-badge';
-            badge.textContent = 'PRIMARY';
-            nameRow.appendChild(badge);
-        }
-
-        const meta = document.createElement('div');
-        meta.className = 'vehicle-card-meta';
-        meta.textContent = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
-
-        info.appendChild(nameRow);
-        info.appendChild(meta);
+        // Top-right action buttons (star + delete)
+        const actions = document.createElement('div');
+        actions.className = 'vehicle-card-actions';
 
         const starBtn = document.createElement('button');
         starBtn.className = 'vehicle-star-btn' + (isPrimary ? ' active' : '');
@@ -2061,20 +2036,42 @@ function renderGarage() {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'vehicle-delete';
         deleteBtn.textContent = '×';
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation();
-            deleteVehicle(v.id);
-        };
+        deleteBtn.onclick = (e) => { e.stopPropagation(); deleteVehicle(v.id); };
 
-        const arrow = document.createElement('div');
-        arrow.className = 'vehicle-card-arrow';
-        arrow.textContent = '›';
+        actions.appendChild(starBtn);
+        actions.appendChild(deleteBtn);
 
+        // Centred icon
+        const icon = document.createElement('div');
+        icon.className = 'vehicle-card-icon';
+        icon.textContent = '🚗';
+
+        // Name + meta
+        const info = document.createElement('div');
+        info.className = 'vehicle-card-info';
+
+        const name = document.createElement('div');
+        name.className = 'vehicle-card-name';
+        name.textContent = `${v.make} ${v.model}`;
+
+        const meta = document.createElement('div');
+        meta.className = 'vehicle-card-meta';
+        meta.textContent = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
+
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        if (isPrimary) {
+            const badge = document.createElement('div');
+            badge.className = 'vehicle-primary-badge';
+            badge.style.marginTop = '6px';
+            badge.textContent = 'PRIMARY';
+            info.appendChild(badge);
+        }
+
+        card.appendChild(actions);
         card.appendChild(icon);
         card.appendChild(info);
-        card.appendChild(starBtn);
-        card.appendChild(deleteBtn);
-        card.appendChild(arrow);
         list.appendChild(card);
     });
 }
