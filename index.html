@@ -1081,7 +1081,7 @@
     <div class="drawer-content" style="padding: 15px; background: #f4f4f4;">
         <div class="input-group" style="margin-bottom: 15px;">
             <div style="position: relative;">
-                <input type="text" placeholder="Search my inventory..." style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #ddd; outline: none; box-sizing: border-box; font-size: 14px;">
+                <input id="myPartsSearchInput" type="text" placeholder="Search my inventory..." oninput="renderMyParts()" style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #ddd; outline: none; box-sizing: border-box; font-size: 14px;">
             </div>
         </div>
         <div id="myPartsList" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 50px;"></div>

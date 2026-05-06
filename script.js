@@ -1107,7 +1107,11 @@ function renderMyParts() {
 
     myPartsList.innerHTML = '';
     const mySeller = getCurrentSellerName();
-    const myParts = getAllParts().filter(part => part.seller === mySeller);
+    const query = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
+    const myParts = getAllParts().filter(part =>
+        part.seller === mySeller &&
+        (!query || part.title.toLowerCase().includes(query))
+    );
 
     if (myParts.length === 0) {
         myPartsList.innerHTML = `<div style="text-align:center; color:#888; padding: 30px; font-weight: 700;">No active listings.</div>`;
