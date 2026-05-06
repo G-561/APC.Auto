@@ -2889,6 +2889,15 @@ header {
     /* Live filters on desktop — Apply button not needed */
     #filterDrawer .action-container { display: none; }
 
+    /* Inbox conv list — scale back down for the 270px desktop column */
+    .inbox-conv-item { padding: 10px 36px 10px 12px; }
+    .inbox-conv-del-btn { font-size: 15px; right: 8px; padding: 2px; }
+    .inbox-conv-name { font-size: 13px; }
+    .inbox-conv-flag-btn { font-size: 12px; padding: 0; }
+    .inbox-conv-time { font-size: 10px; }
+    .inbox-conv-part { font-size: 11px; }
+    .inbox-conv-preview { font-size: 11px; }
+
     /* Dashboard: constrained to 1400px zone */
     #dashboardView {
         left: max(0px, calc(50vw - 700px)) !important;
@@ -3456,7 +3465,7 @@ header {
 
 .inbox-conv-item {
     position: relative;
-    padding: 11px 28px 11px 14px; cursor: pointer; border-bottom: 1px solid #f5f5f5;
+    padding: 13px 52px 13px 14px; cursor: pointer; border-bottom: 1px solid #f5f5f5;
     transition: background 0.12s; border-left: 3px solid transparent;
 }
 .inbox-conv-item:hover { background: #fafafa; }
@@ -3466,25 +3475,25 @@ header {
 .inbox-conv-item.unread .inbox-conv-preview { font-weight: 700; color: #333; }
 .inbox-conv-item.unread .inbox-conv-name { font-weight: 900; }
 .inbox-conv-del-btn {
-    position: absolute; top: 8px; right: 8px;
-    background: none; border: none; color: #ccc; font-size: 15px;
-    cursor: pointer; padding: 0; line-height: 1;
+    position: absolute; top: 50%; right: 14px; transform: translateY(-50%);
+    background: none; border: none; color: #ccc; font-size: 22px;
+    cursor: pointer; padding: 6px; line-height: 1;
     transition: color 0.12s;
 }
 .inbox-conv-del-btn:hover { color: #FF3B30; }
-.inbox-conv-name-row { display: flex; align-items: center; gap: 4px; }
-.inbox-conv-name { font-size: 13px; font-weight: 700; color: #222; }
+.inbox-conv-name-row { display: flex; align-items: center; gap: 6px; }
+.inbox-conv-name { font-size: 15px; font-weight: 700; color: #222; }
 .inbox-conv-flag-btn {
-    background: none; border: none; padding: 0; cursor: pointer;
-    font-size: 12px; color: #ccc; line-height: 1; flex-shrink: 0;
+    background: none; border: none; padding: 4px; cursor: pointer;
+    font-size: 16px; color: #ccc; line-height: 1; flex-shrink: 0;
     transition: color 0.12s;
 }
 .inbox-conv-flag-btn:hover { color: #FF3B30; }
 .inbox-conv-flag-btn.flagged { color: #FF3B30; }
-.inbox-conv-time { font-size: 10px; color: #bbb; flex-shrink: 0; margin-left: auto; }
-.inbox-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--apc-orange); flex-shrink: 0; }
-.inbox-conv-part { font-size: 11px; color: var(--apc-orange); font-weight: 700; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.inbox-conv-preview { font-size: 12px; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox-conv-time { font-size: 12px; color: #bbb; flex-shrink: 0; margin-left: auto; padding-right: 4px; }
+.inbox-unread-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--apc-orange); flex-shrink: 0; }
+.inbox-conv-part { font-size: 13px; color: var(--apc-orange); font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox-conv-preview { font-size: 13px; color: #999; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .inbox-thread-col { flex: 1; display: flex; flex-direction: column; background: #f9f9f9; min-width: 0; overflow: hidden; position: relative; }
 
