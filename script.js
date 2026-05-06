@@ -3753,7 +3753,7 @@ function updateHeaderOffset() {
             if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
             if (settingsDrawer)        settingsDrawer.style.top        = (topBarH + 20) + 'px';
             if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';
-            if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
+            if (myPartsDrawer)         myPartsDrawer.style.top         = (totalH + 20) + 'px';
             if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
             if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
             if (inboxDrawer)           inboxDrawer.style.top           = topBarH + 'px';

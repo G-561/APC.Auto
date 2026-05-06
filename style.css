@@ -2621,8 +2621,9 @@ header {
         border-right: 1px solid #e8e8e8;
     }
 
-    /* Garage — card styling: rounded corners + shadow, stays as full-column drawer */
-    #garageDrawer {
+    /* Card-style drawers: rounded corners + shadow, stay as full-column drawers */
+    #garageDrawer,
+    #myPartsDrawer {
         top: 160px !important;
         bottom: 16px !important;
         border-radius: 16px !important;
