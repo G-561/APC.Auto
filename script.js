@@ -1661,7 +1661,14 @@ function openItemDetail(partId) {
     const detailScrollArea = document.getElementById('detailScrollArea');
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
 
-    toggleDrawer('detailOverlay');
+    const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
+    toggleDrawer('detailOverlay', parentOpen);
+}
+
+function closeDetailOverlay() {
+    const el = document.getElementById('detailOverlay');
+    if (el) el.classList.remove('active');
+    syncBackdrop();
 }
 
 function openDetailImageViewer(src) {
