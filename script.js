@@ -2511,7 +2511,6 @@ function renderWantedList() {
 function showWantedMatches(wanted, matches) {
     document.getElementById('wantedListBody').style.display = 'none';
     document.getElementById('wantedMatchesBody').style.display = 'block';
-    document.getElementById('wantedBackBtn').style.display = 'inline';
     document.getElementById('wantedAddBtn').style.display = 'none';
     document.getElementById('wantedListTitle').textContent = `${matches.length} matches · ${wanted.partName}`;
 
@@ -2523,9 +2522,17 @@ function showWantedMatches(wanted, matches) {
 function backToWantedList() {
     document.getElementById('wantedMatchesBody').style.display = 'none';
     document.getElementById('wantedListBody').style.display = 'block';
-    document.getElementById('wantedBackBtn').style.display = 'none';
     document.getElementById('wantedAddBtn').style.display = 'inline-block';
     document.getElementById('wantedListTitle').textContent = 'MY WANTED LIST';
+}
+
+function closeWantedOrBack() {
+    const matchesVisible = document.getElementById('wantedMatchesBody')?.style.display !== 'none';
+    if (matchesVisible) {
+        backToWantedList();
+    } else {
+        toggleDrawer('wantedListDrawer');
+    }
 }
 
 // Match logic: does this part match the wanted criteria?
