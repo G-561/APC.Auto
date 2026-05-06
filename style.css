@@ -2598,30 +2598,8 @@ header {
         z-index: 2100;
     }
 
-    /* Garage — floating card, centred both axes */
-    #garageDrawer {
-        left: 50% !important;
-        right: auto !important;
-        width: 760px !important;
-        transform: translate(-50%, -50%) !important;
-        top: 50% !important;
-        height: auto !important;
-        max-height: 88vh;
-        overflow: hidden;
-        bottom: auto !important;
-        border-radius: 16px !important;
-        box-shadow: 0 8px 40px rgba(0,0,0,0.22) !important;
-        border: none !important;
-        z-index: 2100;
-    }
-
-    #garageDrawer .drawer-content {
-        overflow-y: auto;
-        flex: 1;
-        min-height: 0;
-    }
-
     /* All full-screen drawers: centre column between sidebars */
+    #garageDrawer,
     #vehicleDetailDrawer,
     #addVehicleDrawer,
     #wantedListDrawer,
@@ -2641,6 +2619,16 @@ header {
         box-shadow: none !important;
         border-left: 1px solid #e8e8e8;
         border-right: 1px solid #e8e8e8;
+    }
+
+    /* Garage — card styling: rounded corners + shadow, stays as full-column drawer */
+    #garageDrawer {
+        top: 160px !important;
+        bottom: 16px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important;
+        border: none !important;
+        overflow: hidden;
     }
 
     /* Inbox: same top as detail overlay — aligns with search bar */
