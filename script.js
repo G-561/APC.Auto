@@ -1479,9 +1479,14 @@ function submitSellListing() {
     renderMainGrid();
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
-    showToast(message);
-    toggleDrawer('sellOverlay');
-    resetSellForm();
+
+    const sellSuccess = document.getElementById('sellSuccessMsg');
+    if (sellSuccess) sellSuccess.style.display = 'block';
+    setTimeout(() => {
+        if (sellSuccess) sellSuccess.style.display = 'none';
+        toggleDrawer('sellOverlay');
+        resetSellForm();
+    }, 1500);
 }
 
 // --- DYNAMIC ITEM DETAIL ---
@@ -2659,7 +2664,7 @@ function submitAddWanted() {
                 }
             );
         }
-    }, 2000);
+    }, 1500);
 }
 
 // --- VEHICLE DETAIL: open, segmented toggle, render each tab ---
