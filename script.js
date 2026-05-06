@@ -2036,11 +2036,6 @@ function renderGarage() {
         deleteBtn.textContent = '×';
         deleteBtn.onclick = (e) => { e.stopPropagation(); deleteVehicle(v.id); };
 
-        // Centred icon
-        const icon = document.createElement('div');
-        icon.className = 'vehicle-card-icon';
-        icon.textContent = '🚗';
-
         // Name + meta
         const info = document.createElement('div');
         info.className = 'vehicle-card-info';
@@ -2056,7 +2051,7 @@ function renderGarage() {
         info.appendChild(name);
         info.appendChild(meta);
 
-        // Star — bottom centre
+        // Star — bottom left
         const starBtn = document.createElement('button');
         starBtn.className = 'vehicle-star-btn' + (isPrimary ? ' active' : '');
         starBtn.textContent = isPrimary ? '★' : '☆';
@@ -2065,7 +2060,6 @@ function renderGarage() {
 
         card.appendChild(editBtn);
         card.appendChild(deleteBtn);
-        card.appendChild(icon);
         card.appendChild(info);
         card.appendChild(starBtn);
         list.appendChild(card);
