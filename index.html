@@ -1197,11 +1197,13 @@
 <div id="garageDrawer" class="drawer">
     <div class="drawer-header">
         <span>MY GARAGE</span>
-        <div onclick="toggleDrawer('garageDrawer')" style="font-size:30px; cursor:pointer">×</div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <button onclick="onAddVehicleClick()" style="background:none; border:1px solid var(--apc-orange); color:var(--apc-orange); font-size:12px; font-weight:800; padding:5px 14px; border-radius:999px; cursor:pointer; font-family:inherit; white-space:nowrap;">+ Add Vehicle</button>
+            <div onclick="toggleDrawer('garageDrawer')" style="font-size:30px; cursor:pointer">×</div>
+        </div>
     </div>
     <div class="drawer-content" style="background: #f4f4f4;">
         <div id="garageVehicleList" class="garage-list"></div>
-        <button class="garage-add-btn" onclick="onAddVehicleClick()">+ Add Vehicle</button>
     </div>
 </div>
 

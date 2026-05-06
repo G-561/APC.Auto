@@ -864,22 +864,6 @@ header {
 }
 .veh-edit-btn:hover { background: rgba(255,255,255,0.28); }
 
-.garage-add-btn {
-    width: 100%;
-    background: white;
-    border: 2px dashed #ccc;
-    border-radius: 12px;
-    padding: 18px;
-    color: #888;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    margin-top: 4px;
-    font-family: inherit;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.garage-add-btn:hover { border-color: var(--apc-orange); color: var(--apc-orange); }
 
 .garage-empty {
     text-align: center;
