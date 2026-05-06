@@ -2021,7 +2021,8 @@ function renderGarage() {
 
         const card = document.createElement('div');
         card.className = 'vehicle-card' + (isPrimary ? ' vehicle-card-primary' : '');
-        card.onclick = () => openVehicleDetail(v.id);
+        card.dataset.vehicleId = v.id;
+        card.onclick = () => selectGarageVehicle(v.id);
 
         // Top-right action buttons (star + delete)
         const actions = document.createElement('div');
@@ -2074,6 +2075,102 @@ function renderGarage() {
         card.appendChild(info);
         list.appendChild(card);
     });
+
+    // Auto-select primary vehicle or first in list
+    const autoId = (primaryVehicleId && myVehicles.find(v => v.id === primaryVehicleId))
+        ? primaryVehicleId
+        : sorted[0]?.id;
+    if (autoId) selectGarageVehicle(autoId);
+}
+
+function selectGarageVehicle(vehicleId) {
+    currentVehicleId  = vehicleId;
+    currentVehicleTab = 'wanted';
+
+    document.querySelectorAll('#garageVehicleList .vehicle-card').forEach(c => {
+        c.classList.toggle('vehicle-card-selected', Number(c.dataset.vehicleId) === vehicleId);
+    });
+
+    renderGarageInlineDetail();
+}
+
+function renderGarageInlineDetail() {
+    const v      = myVehicles.find(x => x.id === currentVehicleId);
+    const detail = document.getElementById('garageInlineDetail');
+    if (!detail) return;
+    if (!v) { detail.style.display = 'none'; return; }
+
+    detail.style.display = 'block';
+    document.getElementById('garageInlineName').textContent = `${v.make} ${v.model}`;
+    document.getElementById('garageInlineMeta').textContent =
+        [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
+
+    const editBtn = document.getElementById('garageInlineEditBtn');
+    if (editBtn) editBtn.onclick = () => openEditVehicleDrawer(currentVehicleId);
+
+    document.querySelectorAll('#garageInlineDetail .seg').forEach(s => {
+        s.classList.toggle('active', s.dataset.gtab === 'wanted');
+    });
+
+    renderGarageTab();
+}
+
+function setGarageTab(tab) {
+    currentVehicleTab = tab;
+    document.querySelectorAll('#garageInlineDetail .seg').forEach(s => {
+        s.classList.toggle('active', s.dataset.gtab === tab);
+    });
+    renderGarageTab();
+}
+
+function renderGarageTab() {
+    const c = document.getElementById('garageInlineTabContent');
+    if (!c) return;
+    const v = myVehicles.find(x => x.id === currentVehicleId);
+    if (!v) { c.innerHTML = ''; return; }
+    c.innerHTML = '';
+
+    const vehicleWanted = myWanted.filter(w =>
+        w.vehicleId === currentVehicleId ||
+        (w.make && w.make.toLowerCase() === v.make.toLowerCase() &&
+         w.model.toLowerCase() === v.model.toLowerCase())
+    );
+
+    if (currentVehicleTab === 'wanted') {
+        if (!vehicleWanted.length) {
+            c.appendChild(buildVehicleEmpty(
+                '✦',
+                `No wanted parts for your ${v.make} ${v.model} yet.`,
+                { label: 'ADD WANTED PART', onClick: () => openAddWantedForVehicle(currentVehicleId) }
+            ));
+        } else {
+            const addRow = document.createElement('div');
+            addRow.style.cssText = 'display:flex; justify-content:flex-end; padding:0 0 10px 0;';
+            const addBtn = document.createElement('button');
+            addBtn.textContent = '+ Add Wanted';
+            addBtn.style.cssText = 'background:none; border:1px solid var(--apc-orange); color:var(--apc-orange); padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; cursor:pointer; font-family:inherit;';
+            addBtn.onclick = () => openAddWantedForVehicle(currentVehicleId);
+            addRow.appendChild(addBtn);
+            c.appendChild(addRow);
+            c.appendChild(buildWantedGrid(vehicleWanted));
+        }
+
+    } else if (currentVehicleTab === 'saved') {
+        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && partFitsVehicle(p, v));
+        if (!savedFitting.length) {
+            c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.`));
+        } else {
+            c.appendChild(buildPartsGrid(savedFitting));
+        }
+
+    } else if (currentVehicleTab === 'matches') {
+        const matchingParts = getAllParts().filter(p => vehicleWanted.some(w => wantedMatchesPart(w, p)));
+        if (!matchingParts.length) {
+            c.appendChild(buildVehicleEmpty('🔔', `No matches for your ${v.make} ${v.model} wanted parts yet.`));
+        } else {
+            c.appendChild(buildPartsGrid(matchingParts));
+        }
+    }
 }
 
 // --- SAVED PARTS: data model + persistence ---
@@ -2113,7 +2210,7 @@ function toggleSavedPart(partId, btn) {
     persistSavedParts();
     syncDetailSaveButton(partId);
     renderMainGrid(); // refresh saved indicators on cards
-    if (currentVehicleId && currentVehicleTab === 'saved') renderVehicleTab();
+    if (currentVehicleId && currentVehicleTab === 'saved') renderGarageTab();
     if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
 }
 
@@ -2296,7 +2393,7 @@ function deleteWanted(id) {
     myWanted = myWanted.filter(w => w.id !== id);
     saveWanted();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
-    if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
+    if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
     renderProfile();
 }
 
@@ -2533,7 +2630,7 @@ function submitAddWanted() {
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
     addWanted(partName, make, model, year, maxPrice, category);
 
-    if (currentVehicleId && currentVehicleTab === 'wanted') renderVehicleTab();
+    if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     renderProfile();
 
@@ -2604,7 +2701,7 @@ function setVehicleTab(tab) {
     document.querySelectorAll('#vehicleDetailDrawer .seg').forEach(s => {
         s.classList.toggle('active', s.dataset.tab === tab);
     });
-    renderVehicleTab();
+    renderGarageTab();
 }
 
 function renderVehicleTab() {

@@ -1204,6 +1204,25 @@
     </div>
     <div class="drawer-content" style="background: #f4f4f4;">
         <div id="garageVehicleList" class="garage-list"></div>
+
+        <div class="garage-divider"></div>
+
+        <div id="garageInlineDetail" style="display:none;">
+            <div class="vehicle-banner" id="garageInlineBanner">
+                <div class="ico">🚗</div>
+                <div style="flex:1; min-width:0;">
+                    <div class="name" id="garageInlineName"></div>
+                    <div class="meta" id="garageInlineMeta"></div>
+                </div>
+                <button id="garageInlineEditBtn" class="veh-edit-btn">✏️ Edit</button>
+            </div>
+            <div class="segmented-control" style="margin-bottom:12px;">
+                <div class="seg active" data-gtab="wanted"  onclick="setGarageTab('wanted')">Wanted</div>
+                <div class="seg"        data-gtab="saved"   onclick="setGarageTab('saved')">Saved</div>
+                <div class="seg"        data-gtab="matches" onclick="setGarageTab('matches')">Matches</div>
+            </div>
+            <div id="garageInlineTabContent"></div>
+        </div>
     </div>
 </div>
 
