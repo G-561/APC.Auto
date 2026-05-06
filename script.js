@@ -272,9 +272,13 @@ function saveUserSettings() {
 function saveSettingsName() {
     const val = document.getElementById('settingsDisplayName')?.value.trim();
     if (val && val !== currentUserName) {
+        const oldName = currentUserName;
         currentUserName = val;
+        userListings.forEach(l => { if (l.seller === oldName) l.seller = val; });
+        saveUserListings();
         renderAccountState();
         renderProfile();
+        renderMyParts();
         showToast('Name updated');
     }
 }
@@ -3791,6 +3795,7 @@ function closeWorkshopDetailDrawer() {
 }
 function onMenuOpenMyListings() {
     closeAccountDropdown();
+    renderMyParts();
     toggleDrawer('myPartsDrawer');
 }
 
@@ -4394,13 +4399,13 @@ function dashFmtDate(ts) {
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
     renderMainGrid();
-    renderMyParts();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications
     const remembered = loadRememberedUser();
     if (remembered && remembered.name) {
         signIn(remembered.name, remembered.tier || 'standard', true, remembered.email || '');
     }
+    renderMyParts();           // after sign-in so seller filter uses correct name
     renderAccountState();      // sets pill label/colour, hides pro toggle, sizes the grid offset
 
     // Wire up the carousel scroll → active-dot sync once
