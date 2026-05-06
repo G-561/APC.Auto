@@ -310,7 +310,10 @@ function renderSettingsDrawer() {
     if (nameEl) nameEl.value = currentUserName || '';
     if (locEl)  locEl.value  = userSettings.location || '';
 
-    if (proSection) proSection.style.display = currentUserTier === 'pro' ? 'block' : 'none';
+    const isPro = currentUserTier === 'pro';
+    if (proSection) proSection.style.display = isPro ? 'block' : 'none';
+    const workshopBlock = document.getElementById('settingsWorkshopBlock');
+    if (workshopBlock) workshopBlock.style.display = isPro ? 'block' : 'none';
     if (proToggle)  proToggle.checked = proSearchOn;
 
     const toggleMap = {

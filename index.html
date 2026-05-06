@@ -911,6 +911,20 @@
             </div>
         </div>
 
+        <!-- WORKSHOP PROFILE — Pro only, shown near top -->
+        <div id="settingsWorkshopBlock" style="display:none;">
+            <div class="settings-section-label" style="color:#2563eb;">Pro — Workshop Profile</div>
+            <div class="settings-section" style="background:#eef4ff; border-left:3px solid #2563eb;">
+                <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
+                    <div>
+                        <div class="settings-row-label">Workshop Profile</div>
+                        <div class="settings-row-sub">Set up your profile to appear in local fitter listings</div>
+                    </div>
+                    <span class="settings-chevron" style="color:#2563eb;">›</span>
+                </div>
+            </div>
+        </div>
+
         <!-- NOTIFICATIONS -->
         <div class="settings-section-label">Notifications</div>
         <div class="settings-section">
@@ -953,10 +967,6 @@
                         <div class="settings-row-sub">Your listings are hidden from the public. Only APC Pro members can see them.</div>
                     </div>
                     <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
-                </div>
-                <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
-                    <span class="settings-row-label">Workshop Profile</span>
-                    <span class="settings-chevron">›</span>
                 </div>
             </div>
         </div>
