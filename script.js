@@ -450,7 +450,7 @@ function renderInboxConvList(filter) {
         const last    = c.msgs[c.msgs.length - 1];
         const preview = last ? ((last.sent ? 'You: ' : '') + (last.photo ? '📷 Photo' : last.text)) : '';
         return `
-            <div class="inbox-conv-item${c.unread?' unread':''}${activeConvId===c.id?' active':''}${c.flagged?' flagged':''}" onclick="openInboxConv(${c.id})">
+            <div class="inbox-conv-item${c.unread?' unread':''}${activeConvId===c.id?' active':''}${c.flagged?' flagged':''}" data-conv-id="${c.id}" onclick="openInboxConv(${c.id})">
                 <button class="inbox-conv-del-btn" onclick="event.stopPropagation(); deleteConversation(${c.id})" title="Delete">×</button>
                 <div class="inbox-conv-name-row">
                     <span class="inbox-conv-name">${escapeHtml(c.with)}</span>
@@ -628,7 +628,16 @@ function flagConversation(id) {
     if (!conv) return;
     conv.flagged = !conv.flagged;
     saveConversations();
-    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+    const row = document.querySelector(`#inboxConvList [data-conv-id="${id}"]`);
+    if (row) {
+        row.classList.toggle('flagged', conv.flagged);
+        const btn = row.querySelector('.inbox-conv-flag-btn');
+        if (btn) {
+            btn.classList.toggle('flagged', conv.flagged);
+            btn.title = conv.flagged ? 'Unflag' : 'Flag';
+            btn.blur();
+        }
+    }
 }
 function deleteConversation(id) {
     conversations = conversations.filter(c => c.id !== id);
