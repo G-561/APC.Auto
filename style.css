@@ -2598,8 +2598,32 @@ header {
         z-index: 2100;
     }
 
+    /* Garage — floating card, centred both axes */
+    #garageDrawer {
+        left: 50% !important;
+        right: auto !important;
+        width: 760px !important;
+        transform: translate(-50%, -50%) !important;
+        top: 50% !important;
+        height: auto !important;
+        max-height: 88vh;
+        overflow: hidden;
+        bottom: auto !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.22) !important;
+        border: none !important;
+        z-index: 2100;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #garageDrawer .drawer-content {
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
     /* All full-screen drawers: centre column between sidebars */
-    #garageDrawer,
     #vehicleDetailDrawer,
     #addVehicleDrawer,
     #wantedListDrawer,

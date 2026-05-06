@@ -3745,7 +3745,7 @@ function updateHeaderOffset() {
             const sellOverlay = document.getElementById('sellOverlay');
             if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
             if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
-            if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
+            // garageDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
             if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
             if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
             // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
