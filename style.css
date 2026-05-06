@@ -2613,8 +2613,6 @@ header {
         box-shadow: 0 8px 40px rgba(0,0,0,0.22) !important;
         border: none !important;
         z-index: 2100;
-        display: flex;
-        flex-direction: column;
     }
 
     #garageDrawer .drawer-content {
