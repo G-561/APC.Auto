@@ -2024,23 +2024,17 @@ function renderGarage() {
         card.dataset.vehicleId = v.id;
         card.onclick = () => selectGarageVehicle(v.id);
 
-        // Top-right action buttons (star + delete)
-        const actions = document.createElement('div');
-        actions.className = 'vehicle-card-actions';
+        // Edit — top left
+        const editBtn = document.createElement('button');
+        editBtn.className = 'vehicle-tile-edit';
+        editBtn.textContent = '✏️';
+        editBtn.onclick = (e) => { e.stopPropagation(); openEditVehicleDrawer(v.id); };
 
-        const starBtn = document.createElement('button');
-        starBtn.className = 'vehicle-star-btn' + (isPrimary ? ' active' : '');
-        starBtn.textContent = isPrimary ? '★' : '☆';
-        starBtn.title = isPrimary ? 'Remove as primary' : 'Set as primary vehicle';
-        starBtn.onclick = (e) => { e.stopPropagation(); setPrimaryVehicle(v.id); };
-
+        // Delete — top right
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'vehicle-delete';
         deleteBtn.textContent = '×';
         deleteBtn.onclick = (e) => { e.stopPropagation(); deleteVehicle(v.id); };
-
-        actions.appendChild(starBtn);
-        actions.appendChild(deleteBtn);
 
         // Centred icon
         const icon = document.createElement('div');
@@ -2062,17 +2056,18 @@ function renderGarage() {
         info.appendChild(name);
         info.appendChild(meta);
 
-        if (isPrimary) {
-            const badge = document.createElement('div');
-            badge.className = 'vehicle-primary-badge';
-            badge.style.marginTop = '6px';
-            badge.textContent = 'PRIMARY';
-            info.appendChild(badge);
-        }
+        // Star — bottom centre
+        const starBtn = document.createElement('button');
+        starBtn.className = 'vehicle-star-btn' + (isPrimary ? ' active' : '');
+        starBtn.textContent = isPrimary ? '★' : '☆';
+        starBtn.title = isPrimary ? 'Remove as primary' : 'Set as primary vehicle';
+        starBtn.onclick = (e) => { e.stopPropagation(); setPrimaryVehicle(v.id); };
 
-        card.appendChild(actions);
+        card.appendChild(editBtn);
+        card.appendChild(deleteBtn);
         card.appendChild(icon);
         card.appendChild(info);
+        card.appendChild(starBtn);
         list.appendChild(card);
     });
 
@@ -2101,12 +2096,6 @@ function renderGarageInlineDetail() {
     if (!v) { detail.style.display = 'none'; return; }
 
     detail.style.display = 'block';
-    document.getElementById('garageInlineName').textContent = `${v.make} ${v.model}`;
-    document.getElementById('garageInlineMeta').textContent =
-        [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
-
-    const editBtn = document.getElementById('garageInlineEditBtn');
-    if (editBtn) editBtn.onclick = () => openEditVehicleDrawer(currentVehicleId);
 
     document.querySelectorAll('#garageInlineDetail .seg').forEach(s => {
         s.classList.toggle('active', s.dataset.gtab === 'wanted');
