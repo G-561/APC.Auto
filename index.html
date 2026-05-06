@@ -941,11 +941,11 @@
             <div class="settings-section">
                 <div class="settings-row">
                     <span class="settings-row-label">Display Name</span>
-                    <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name" onblur="saveSettingsName()">
+                    <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name">
                 </div>
                 <div class="settings-row">
                     <span class="settings-row-label">Location</span>
-                    <input id="settingsLocation" class="settings-inline-input" type="text" placeholder="e.g. Adelaide, SA" onblur="saveSettingsLocation()">
+                    <input id="settingsLocation" class="settings-inline-input" type="text" placeholder="e.g. Adelaide, SA">
                 </div>
                 <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Email')">
                     <span class="settings-row-label">Email</span>
@@ -954,6 +954,9 @@
                 <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Change Password')">
                     <span class="settings-row-label">Change Password</span>
                     <span class="settings-chevron">›</span>
+                </div>
+                <div class="settings-row" style="justify-content:flex-end; padding-top:4px;">
+                    <button onclick="saveSettingsAccount()" class="settings-save-btn">Save changes</button>
                 </div>
             </div>
 
@@ -1033,6 +1036,9 @@
                     <div class="settings-row">
                         <span class="settings-row-label">ABN <span style="font-weight:400;color:#aaa;">optional</span></span>
                         <input type="text" id="proSettingABN" class="settings-inline-input" placeholder="12 345 678 901">
+                    </div>
+                    <div class="settings-row" style="justify-content:flex-end; padding-top:4px;">
+                        <button onclick="saveSettingsProBusiness()" class="settings-save-btn settings-save-btn-pro">Save details</button>
                     </div>
                 </div>
 

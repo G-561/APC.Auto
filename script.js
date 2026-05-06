@@ -257,6 +257,8 @@ function loadUserSettings() {
 function getDefaultSettings() {
     return {
         location: '',
+        businessName: '',
+        abn: '',
         notifyWantedMatch:    true,
         notifyMessages:       true,
         notifyPriceDrops:     true,
@@ -279,15 +281,25 @@ function saveSettingsName() {
         renderAccountState();
         renderProfile();
         renderMyParts();
-        showToast('Name updated');
     }
 }
 function saveSettingsLocation() {
     const val = document.getElementById('settingsLocation')?.value.trim();
     if (val !== undefined) {
-        userSettings.location = val;
+        userSettings.location = val || '';
         saveUserSettings();
     }
+}
+function saveSettingsAccount() {
+    saveSettingsName();
+    saveSettingsLocation();
+    showToast('Account settings saved');
+}
+function saveSettingsProBusiness() {
+    userSettings.businessName = document.getElementById('proSettingBusinessName')?.value.trim() || '';
+    userSettings.abn          = document.getElementById('proSettingABN')?.value.trim() || '';
+    saveUserSettings();
+    showToast('Business details saved');
 }
 function saveSettingsToggle(key, value) {
     userSettings[key] = value;
@@ -311,6 +323,10 @@ function renderSettingsDrawer() {
 
     if (nameEl) nameEl.value = currentUserName || '';
     if (locEl)  locEl.value  = userSettings.location || '';
+    const bizEl = document.getElementById('proSettingBusinessName');
+    const abnEl = document.getElementById('proSettingABN');
+    if (bizEl) bizEl.value = userSettings.businessName || '';
+    if (abnEl) abnEl.value = userSettings.abn || '';
 
     const isPro = currentUserTier === 'pro';
     const proBlock = document.getElementById('settingsProBlock');

@@ -1457,6 +1457,21 @@ header {
     background: transparent;
     min-width: 0;
 }
+.settings-save-btn {
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+}
+.settings-save-btn:active { opacity: 0.8; }
+.settings-save-btn-pro {
+    background: #2563eb;
+}
 /* Pro settings section — blue-tinted, only visible for Pro users */
 .settings-pro-label {
     color: #2563eb !important;
