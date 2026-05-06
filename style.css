@@ -1052,58 +1052,88 @@ header {
 .wanted-garage-chip:hover  { border-color: var(--apc-orange); color: var(--apc-orange); }
 .wanted-garage-chip.active { background: var(--apc-orange); border-color: var(--apc-orange); color: white; }
 
-.wl-match-badge {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 20px;
-    background: #f0f0f0;
-    color: #aaa;
+/* WANTED LIST — redesigned cards */
+.wl-section-hdr {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #bbb;
+    padding: 16px 2px 8px;
 }
-.wl-match-badge-hit {
-    background: rgba(40,167,69,0.12);
-    color: #1e7e34;
-}
+.wl-section-hdr:first-child { padding-top: 4px; }
+.wl-section-hdr-match { color: var(--apc-orange); }
 
-.wanted-list { padding-bottom: 4px; }
-.wanted-card {
+.wl-card {
     background: white;
     border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 10px;
+    padding: 14px 12px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    border: 2px solid transparent;
+    gap: 10px;
+    border-left: 3px solid transparent;
+    transition: background 0.12s;
 }
-.wanted-info { flex: 1; min-width: 0; }
-.wanted-name { font-weight: 800; font-size: 14px; color: var(--apc-charcoal); }
-.wanted-meta { font-size: 11px; color: #666; margin-top: 2px; }
-.wanted-delete {
-    background: none;
-    border: none;
-    font-size: 22px;
-    line-height: 1;
+.wl-card-match {
     cursor: pointer;
-    color: #ccc;
-    flex-shrink: 0;
-    padding: 4px;
-    font-family: inherit;
+    border-left-color: var(--apc-orange);
 }
-.wanted-delete:hover { color: #ff3b30; }
-.wl-view-btn {
-    background: none;
-    border: 1px solid var(--apc-green);
-    border-radius: 20px;
-    color: var(--apc-green);
+.wl-card-match:active { background: #fff8f4; }
+.wl-card-watching { opacity: 0.65; }
+
+.wl-card-name {
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--apc-charcoal);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wl-card-meta {
     font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    cursor: pointer;
-    font-family: inherit;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wl-card-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.wl-match-count {
+    font-weight: 900;
+    font-size: 13px;
+    color: var(--apc-orange);
     white-space: nowrap;
 }
-.wl-view-btn:hover { background: var(--apc-green); color: white; }
+.wl-chevron {
+    font-size: 20px;
+    color: var(--apc-orange);
+    line-height: 1;
+}
+.wl-watching-label {
+    font-size: 11px;
+    color: #ccc;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.wl-delete-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    color: #ddd;
+    flex-shrink: 0;
+    padding: 2px 0 2px 6px;
+    font-family: inherit;
+}
+.wl-delete-btn:hover { color: #ff3b30; }
 .wanted-contact-btn {
     flex-shrink: 0;
     background: var(--apc-orange);

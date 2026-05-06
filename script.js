@@ -2482,80 +2482,102 @@ function renderWantedList() {
         return;
     }
 
-    // Group by make+model, then "no vehicle" at the end
-    const vehicleKeys = [...new Set(myWanted.filter(w => w.make).map(w => `${w.make}||${w.model}||${w.year}`))];
-    const noVehicle   = myWanted.filter(w => !w.make);
-
-    const groups = vehicleKeys.map(key => {
-        const [make, model, year] = key.split('||');
-        return { label: `🚗 ${make} ${model} ${year}`, items: myWanted.filter(w => w.make === make && w.model === model && w.year === year) };
+    // Split into matched vs watching
+    const withMatches = [];
+    const watching    = [];
+    myWanted.forEach(w => {
+        const dismissed = dismissedMatches[String(w.id)] || new Set();
+        const matches   = getAllParts().filter(p => wantedMatchesPart(w, p) && !dismissed.has(p.id));
+        matches.length ? withMatches.push({ w, matches }) : watching.push(w);
     });
-    if (noVehicle.length) groups.push({ label: '🔍 No vehicle specified', items: noVehicle });
 
-    groups.forEach(group => {
+    // MATCHES FOUND section
+    if (withMatches.length) {
         const hdr = document.createElement('div');
-        hdr.className = 'wl-vehicle-hdr';
-        hdr.textContent = group.label;
+        hdr.className = 'wl-section-hdr wl-section-hdr-match';
+        hdr.textContent = '🔔 Matches Found';
         body.appendChild(hdr);
+        withMatches.forEach(({ w, matches }) => body.appendChild(buildWantedCard(w, matches)));
+    }
 
-        group.items.forEach(w => {
-            const dismissed = dismissedMatches[String(w.id)] || new Set();
-            const matches = getAllParts().filter(p => wantedMatchesPart(w, p) && !dismissed.has(p.id));
-            const hasMatches = matches.length > 0;
-
-            const card = document.createElement('div');
-            card.className = 'wanted-card';
-
-            const info = document.createElement('div');
-            info.className = 'wanted-info';
-
-            const name = document.createElement('div');
-            name.className = 'wanted-name';
-            name.textContent = w.partName;
-
-            const metaRow = document.createElement('div');
-            metaRow.style.cssText = 'display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap;';
-
-            if (w.maxPrice) {
-                const price = document.createElement('span');
-                price.className = 'wanted-chip wanted-chip-budget';
-                price.textContent = `Max $${w.maxPrice}`;
-                metaRow.appendChild(price);
-            }
-
-            const matchBadge = document.createElement('span');
-            matchBadge.className = 'wl-match-badge' + (hasMatches ? ' wl-match-badge-hit' : '');
-            matchBadge.textContent = hasMatches ? `${matches.length} match${matches.length > 1 ? 'es' : ''} available` : 'No matches yet';
-            metaRow.appendChild(matchBadge);
-
-            if (hasMatches) {
-                const viewBtn = document.createElement('button');
-                viewBtn.className = 'wl-view-btn';
-                viewBtn.textContent = matches.length === 1 ? 'View listing' : `View ${matches.length} matches`;
-                viewBtn.onclick = () => {
-                    if (matches.length === 1) {
-                        openItemDetail(matches[0].id);
-                    } else {
-                        const totalMatches = getAllParts().filter(p => wantedMatchesPart(w, p));
-                        showWantedMatches(w, matches, totalMatches.length - matches.length);
-                    }
-                };
-                metaRow.appendChild(viewBtn);
-            }
-
-            info.appendChild(name);
-            info.appendChild(metaRow);
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'wanted-delete';
-            deleteBtn.textContent = '×';
-            deleteBtn.onclick = () => deleteWanted(w.id);
-
-            card.appendChild(info);
-            card.appendChild(deleteBtn);
-            body.appendChild(card);
+    // WATCHING section — grouped by vehicle
+    if (watching.length) {
+        if (withMatches.length) {
+            const hdr = document.createElement('div');
+            hdr.className = 'wl-section-hdr';
+            hdr.textContent = 'Watching';
+            body.appendChild(hdr);
+        }
+        const vehicleKeys = [...new Set(watching.filter(w => w.make).map(w => `${w.make}||${w.model}||${w.year}`))];
+        const noVehicle   = watching.filter(w => !w.make);
+        const groups = vehicleKeys.map(key => {
+            const [make, model, year] = key.split('||');
+            return { label: `${make} ${model}${year ? ' ' + year : ''}`, items: watching.filter(w => w.make === make && w.model === model && w.year === year) };
         });
-    });
+        if (noVehicle.length) groups.push({ label: 'No vehicle specified', items: noVehicle });
+
+        groups.forEach(group => {
+            if (groups.length > 1 || withMatches.length) {
+                const ghdr = document.createElement('div');
+                ghdr.className = 'wl-vehicle-hdr';
+                ghdr.textContent = `🚗 ${group.label}`;
+                body.appendChild(ghdr);
+            }
+            group.items.forEach(w => body.appendChild(buildWantedCard(w, [])));
+        });
+    }
+}
+
+function buildWantedCard(w, matches) {
+    const hasMatches = matches.length > 0;
+    const card = document.createElement('div');
+    card.className = 'wl-card ' + (hasMatches ? 'wl-card-match' : 'wl-card-watching');
+
+    if (hasMatches) {
+        card.onclick = () => {
+            if (matches.length === 1) {
+                openItemDetail(matches[0].id);
+            } else {
+                const total = getAllParts().filter(p => wantedMatchesPart(w, p));
+                showWantedMatches(w, matches, total.length - matches.length);
+            }
+        };
+    }
+
+    const left = document.createElement('div');
+    left.style.cssText = 'flex:1; min-width:0;';
+
+    const name = document.createElement('div');
+    name.className = 'wl-card-name';
+    name.textContent = w.partName;
+
+    const metaParts = [];
+    if (w.make) metaParts.push(`${w.make} ${w.model}${w.year ? ' ' + w.year : ''}`);
+    if (w.maxPrice) metaParts.push(`Max $${w.maxPrice}`);
+    const meta = document.createElement('div');
+    meta.className = 'wl-card-meta';
+    meta.textContent = metaParts.join(' · ') || 'Any vehicle';
+
+    left.appendChild(name);
+    left.appendChild(meta);
+
+    const right = document.createElement('div');
+    right.className = 'wl-card-right';
+    if (hasMatches) {
+        right.innerHTML = `<span class="wl-match-count">${matches.length} match${matches.length !== 1 ? 'es' : ''}</span><span class="wl-chevron">›</span>`;
+    } else {
+        right.innerHTML = `<span class="wl-watching-label">Watching</span>`;
+    }
+
+    const del = document.createElement('button');
+    del.className = 'wl-delete-btn';
+    del.textContent = '×';
+    del.onclick = (e) => { e.stopPropagation(); deleteWanted(w.id); };
+
+    card.appendChild(left);
+    card.appendChild(right);
+    card.appendChild(del);
+    return card;
 }
 
 function showWantedMatches(wanted, matches, dismissedCount = 0) {
