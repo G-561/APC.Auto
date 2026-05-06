@@ -2623,6 +2623,9 @@ header {
         border-right: 1px solid #e8e8e8;
     }
 
+    /* Detail overlay always sits above other open drawers (e.g. garage) */
+    #detailOverlay { z-index: 2100; }
+
     /* Card-style drawers: rounded corners + shadow, stay as full-column drawers */
     #detailOverlay,
     #garageDrawer,
