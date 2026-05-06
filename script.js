@@ -1378,9 +1378,11 @@ function generateApcId() {
 }
 
 function updateSellFittingToggleVisibility() {
-    const section = document.getElementById('sellFittingToggleSection');
-    if (!section) return;
-    section.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'contents' : 'none';
+    const isPro = userIsSignedIn && currentUserTier === 'pro';
+    const fitting = document.getElementById('sellFittingToggleSection');
+    if (fitting) fitting.style.display = isPro ? 'contents' : 'none';
+    const stockSection = document.getElementById('sellStockNumberSection');
+    if (stockSection) stockSection.style.display = isPro ? 'block' : 'none';
 }
 
 function updateSellQuantityVisibility() {
