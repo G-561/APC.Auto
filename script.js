@@ -2304,19 +2304,14 @@ function renderSavedParts() {
         </div>`;
     }).join('');
 
-    const buildActiveHTML = (parts) => parts.map(part => `
-        <div class="rv-drawer-row" onclick="openItemDetail(${part.id})">
-            <img src="${part.images[0]}" alt="" class="rv-drawer-img">
-            <div class="rv-drawer-info">
-                <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
-                <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-                <div class="rv-drawer-price">$${part.price}</div>
-                <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
-            </div>
-        </div>
-    `).join('');
+    const buildActiveHTML = (parts) => {
+        const cards = parts.map(part => `
+            <div style="position:relative;">
+                ${buildCardHTML(part)}
+                <button onclick="event.stopPropagation(); toggleSavedPart(${part.id})" title="Remove from saved" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.45);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:11px;cursor:pointer;z-index:3;line-height:1;">×</button>
+            </div>`).join('');
+        return `<div class="wl-grid" style="margin-bottom:12px;">${cards}</div>`;
+    };
 
     let bodyHTML = '';
     if (savedPartsTab === 'all') {
@@ -2497,7 +2492,10 @@ function renderWantedList() {
         hdr.className = 'wl-section-hdr wl-section-hdr-match';
         hdr.textContent = '🔔 Matches Found';
         body.appendChild(hdr);
-        withMatches.forEach(({ w, matches }) => body.appendChild(buildWantedCard(w, matches)));
+        const grid = document.createElement('div');
+        grid.className = 'wl-grid';
+        withMatches.forEach(({ w, matches }) => grid.appendChild(buildWantedCard(w, matches)));
+        body.appendChild(grid);
     }
 
     // WATCHING section — grouped by vehicle
@@ -2523,7 +2521,10 @@ function renderWantedList() {
                 ghdr.textContent = `🚗 ${group.label}`;
                 body.appendChild(ghdr);
             }
-            group.items.forEach(w => body.appendChild(buildWantedCard(w, [])));
+            const grid = document.createElement('div');
+            grid.className = 'wl-grid';
+            group.items.forEach(w => grid.appendChild(buildWantedCard(w, [])));
+            body.appendChild(grid);
         });
     }
 }
