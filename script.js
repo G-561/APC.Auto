@@ -2387,6 +2387,48 @@ function nextWantedId() {
     return myWanted.length ? Math.max(...myWanted.map(w => w.id)) + 1 : 1;
 }
 
+// --- DISMISSED MATCHES ---
+let currentMatchesWanted = null;
+let dismissedMatches = loadDismissedMatches();
+
+function loadDismissedMatches() {
+    try {
+        const raw = localStorage.getItem('apc.dismissed.v1');
+        if (!raw) return {};
+        const obj = JSON.parse(raw);
+        return Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, new Set(v)]));
+    } catch (e) { return {}; }
+}
+function saveDismissedMatches() {
+    try {
+        const obj = Object.fromEntries(Object.entries(dismissedMatches).map(([k, v]) => [k, [...v]]));
+        localStorage.setItem('apc.dismissed.v1', JSON.stringify(obj));
+    } catch (e) {}
+}
+function dismissMatch(wantedId, partId) {
+    const key = String(wantedId);
+    if (!dismissedMatches[key]) dismissedMatches[key] = new Set();
+    dismissedMatches[key].add(partId);
+    saveDismissedMatches();
+    renderWantedList();
+    if (currentMatchesWanted && String(currentMatchesWanted.id) === key) {
+        const allMatches = getAllParts().filter(p => wantedMatchesPart(currentMatchesWanted, p));
+        const active = allMatches.filter(p => !dismissedMatches[key]?.has(p.id));
+        if (!active.length) { backToWantedList(); return; }
+        showWantedMatches(currentMatchesWanted, active, allMatches.length - active.length);
+    }
+}
+function restoreDismissedMatches(wantedId) {
+    const key = String(wantedId);
+    delete dismissedMatches[key];
+    saveDismissedMatches();
+    renderWantedList();
+    if (currentMatchesWanted && String(currentMatchesWanted.id) === key) {
+        const allMatches = getAllParts().filter(p => wantedMatchesPart(currentMatchesWanted, p));
+        showWantedMatches(currentMatchesWanted, allMatches, 0);
+    }
+}
+
 // Add a new wanted entry
 function addWanted(partName, make, model, year, maxPrice, category) {
     myWanted.push({
@@ -2451,7 +2493,8 @@ function renderWantedList() {
         body.appendChild(hdr);
 
         group.items.forEach(w => {
-            const matches = getAllParts().filter(p => wantedMatchesPart(w, p));
+            const dismissed = dismissedMatches[String(w.id)] || new Set();
+            const matches = getAllParts().filter(p => wantedMatchesPart(w, p) && !dismissed.has(p.id));
             const hasMatches = matches.length > 0;
 
             const card = document.createElement('div');
@@ -2487,7 +2530,8 @@ function renderWantedList() {
                     if (matches.length === 1) {
                         openItemDetail(matches[0].id);
                     } else {
-                        showWantedMatches(w, matches);
+                        const totalMatches = getAllParts().filter(p => wantedMatchesPart(w, p));
+                        showWantedMatches(w, matches, totalMatches.length - matches.length);
                     }
                 };
                 metaRow.appendChild(viewBtn);
@@ -2508,18 +2552,46 @@ function renderWantedList() {
     });
 }
 
-function showWantedMatches(wanted, matches) {
+function showWantedMatches(wanted, matches, dismissedCount = 0) {
+    currentMatchesWanted = wanted;
     document.getElementById('wantedListBody').style.display = 'none';
     document.getElementById('wantedMatchesBody').style.display = 'block';
     document.getElementById('wantedAddBtn').style.display = 'none';
-    document.getElementById('wantedListTitle').textContent = `${matches.length} matches · ${wanted.partName}`;
+    document.getElementById('wantedListTitle').textContent = `${matches.length} match${matches.length !== 1 ? 'es' : ''} · ${wanted.partName}`;
 
     const body = document.getElementById('wantedMatchesBody');
     body.innerHTML = '';
-    body.appendChild(buildPartsGrid(matches));
+    body.appendChild(buildMatchesGrid(matches, wanted.id));
+
+    if (dismissedCount > 0) {
+        const restoreRow = document.createElement('div');
+        restoreRow.style.cssText = 'text-align:center; padding:14px 0 4px; font-size:12px;';
+        restoreRow.innerHTML = `<a href="#" onclick="event.preventDefault(); restoreDismissedMatches(${wanted.id})" style="color:#aaa; text-decoration:underline;">Show ${dismissedCount} dismissed listing${dismissedCount !== 1 ? 's' : ''}</a>`;
+        body.appendChild(restoreRow);
+    }
+}
+
+function buildMatchesGrid(parts, wantedId) {
+    const g = document.createElement('div');
+    g.className = 'results-grid';
+    g.style.marginTop = '0';
+    parts.forEach(p => {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.innerHTML = buildCardHTML(p);
+        const btn = document.createElement('button');
+        btn.textContent = '✕';
+        btn.title = 'Dismiss this match';
+        btn.style.cssText = 'position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.45);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:10px;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;line-height:1;';
+        btn.onclick = (e) => { e.stopPropagation(); dismissMatch(wantedId, p.id); };
+        wrapper.appendChild(btn);
+        g.appendChild(wrapper);
+    });
+    return g;
 }
 
 function backToWantedList() {
+    currentMatchesWanted = null;
     document.getElementById('wantedMatchesBody').style.display = 'none';
     document.getElementById('wantedListBody').style.display = 'block';
     document.getElementById('wantedAddBtn').style.display = 'inline-block';
