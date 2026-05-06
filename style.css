@@ -626,11 +626,13 @@ header {
 }
 
 /* DRAWER SYSTEM */
-.drawer { 
+.drawer {
     display: none;
-    position: fixed; top: 0; left: 0; width: 100%; height: 100vh; 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
     background: var(--white); z-index: 2000; flex-direction: column;
 }
+/* Detail overlay always stacks on top of any other open drawer */
+#detailOverlay { z-index: 2050; }
 .drawer.active {
     display: flex !important;
 }
@@ -2864,7 +2866,7 @@ header {
     }
 
     /* Detail overlay always sits above other open drawers (e.g. garage) */
-    #detailOverlay { z-index: 2100; }
+    #detailOverlay { z-index: 2050; }
 
     /* Card-style drawers: rounded corners + shadow, stay as full-column drawers */
     #detailOverlay,
