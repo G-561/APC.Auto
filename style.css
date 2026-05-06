@@ -1902,12 +1902,13 @@ header {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
 }
-#imageCarousel img { 
-    scroll-snap-align: start;              /* fixed: was snap-align */
-    flex-shrink: 0; 
-    width: 100%; 
-    aspect-ratio: 4/3; 
-    object-fit: cover; 
+#imageCarousel img {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: contain;
+    background: #f4f4f4;
 }
 
 /* CAROUSEL DOT INDICATORS */
@@ -2509,11 +2510,11 @@ header {
     }
     .desktop-main-img {
         width: 100%;
-        aspect-ratio: 4/3;
-        object-fit: cover;
+        aspect-ratio: 1/1;
+        object-fit: contain;
         border-radius: 12px;
         cursor: zoom-in;
-        background: #ddd;
+        background: #f4f4f4;
         display: block;
     }
     .desktop-thumbnails {

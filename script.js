@@ -1500,7 +1500,7 @@ function openItemDetail(partId) {
         part.images.forEach(src => {
             const img = document.createElement('img');
             img.src = src;
-            img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:4/3; object-fit:cover; cursor: zoom-in;';
+            img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;';
             img.alt = part.title;
             img.onclick = () => openDetailImageViewer(src);
             carousel.appendChild(img);
