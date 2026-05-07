@@ -105,18 +105,18 @@ const dashMockData = {
 
 // Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
 const publicWantedDatabase = [
-    { id: 101, partName: 'Hiace sliding door complete assembly', buyer: 'Mark T.',   loc: 'ADELAIDE, SA',   make: 'Toyota',     model: 'Hiace',     year: '2019', maxPrice: 400,  posted: '2 hours ago', category: 'body' },
-    { id: 102, partName: 'Lotus Elise S2 front clamshell',       buyer: 'Chris B.',  loc: 'MELBOURNE, VIC', make: 'Lotus',      model: 'Elise',     year: '2004', maxPrice: 1200, posted: '5 hours ago', category: 'body' },
-    { id: 103, partName: 'Toyota Hiace radiator 2015+',           buyer: 'Sam R.',    loc: 'SYDNEY, NSW',    make: 'Toyota',     model: 'Hiace',     year: '2017', maxPrice: 300,  posted: '1 day ago',   category: 'cooling' },
-    { id: 104, partName: 'Elise exhaust manifold',                buyer: 'Jay P.',    loc: 'BRISBANE, QLD',  make: 'Lotus',      model: 'Elise',     year: '2006', maxPrice: 600,  posted: '1 day ago',   category: 'engine' },
-    { id: 105, partName: 'Hiace front bumper bar grey',           buyer: 'Tanya W.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'Hiace',     year: '2020', maxPrice: 250,  posted: '2 days ago',  category: 'body' },
-    { id: 106, partName: 'Ford Falcon BA XR6 turbo engine',       buyer: 'Dave L.',   loc: 'ADELAIDE, SA',   make: 'Ford',       model: 'Falcon',    year: '2004', maxPrice: 2500, posted: '2 days ago',  category: 'engine' },
-    { id: 107, partName: 'Commodore VE SS front seats pair',      buyer: 'Nic A.',    loc: 'MELBOURNE, VIC', make: 'Holden',     model: 'Commodore', year: '2008', maxPrice: 700,  posted: '3 days ago',  category: 'interior' },
-    { id: 108, partName: 'Golf MK7 GTI exhaust system',           buyer: 'Petra H.',  loc: 'SYDNEY, NSW',    make: 'Volkswagen', model: 'Golf',      year: '2016', maxPrice: 800,  posted: '4 days ago',  category: 'performance' },
-    { id: 109, partName: 'Autel MaxiSys scan tool MS906BT',       buyer: 'Brett M.',  loc: 'BRISBANE, QLD',  make: '',           model: '',          year: '',     maxPrice: 600,  posted: '1 day ago',   category: 'tools' },
-    { id: 110, partName: '4x4 snorkel — 200 Series LandCruiser',  buyer: 'Craig F.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'LandCruiser',year: '2015',maxPrice: 350,  posted: '3 days ago',  category: '4x4' },
-    { id: 111, partName: 'Bride reclinable bucket seat',          buyer: 'Tom K.',    loc: 'MELBOURNE, VIC', make: '',           model: '',          year: '',     maxPrice: 900,  posted: '5 days ago',  category: 'performance' },
-    { id: 112, partName: 'Alpine head unit iLX-W650',             buyer: 'Lisa R.',   loc: 'SYDNEY, NSW',    make: '',           model: '',          year: '',     maxPrice: 400,  posted: '6 days ago',  category: 'audio' },
+    { id: 101, partName: 'Hiace sliding door complete assembly', buyer: 'Mark T.',   loc: 'ADELAIDE, SA',   make: 'Toyota',     model: 'Hiace',      year: '2019', maxPrice: 400,  posted: '2 hours ago', category: 'body',        isPro: false },
+    { id: 102, partName: 'Lotus Elise S2 front clamshell',       buyer: 'Chris B.',  loc: 'MELBOURNE, VIC', make: 'Lotus',      model: 'Elise',      year: '2004', maxPrice: 1200, posted: '5 hours ago', category: 'body',        isPro: false },
+    { id: 103, partName: 'Toyota Hiace radiator 2015+',           buyer: 'Sam R.',    loc: 'SYDNEY, NSW',    make: 'Toyota',     model: 'Hiace',      year: '2017', maxPrice: 300,  posted: '1 day ago',   category: 'cooling',     isPro: true  },
+    { id: 104, partName: 'Elise exhaust manifold',                buyer: 'Jay P.',    loc: 'BRISBANE, QLD',  make: 'Lotus',      model: 'Elise',      year: '2006', maxPrice: 600,  posted: '1 day ago',   category: 'engine',      isPro: false },
+    { id: 105, partName: 'Hiace front bumper bar grey',           buyer: 'Tanya W.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'Hiace',      year: '2020', maxPrice: 250,  posted: '2 days ago',  category: 'body',        isPro: false },
+    { id: 106, partName: 'Ford Falcon BA XR6 turbo engine',       buyer: 'Dave L.',   loc: 'ADELAIDE, SA',   make: 'Ford',       model: 'Falcon',     year: '2004', maxPrice: 2500, posted: '2 days ago',  category: 'engine',      isPro: true  },
+    { id: 107, partName: 'Commodore VE SS front seats pair',      buyer: 'Nic A.',    loc: 'MELBOURNE, VIC', make: 'Holden',     model: 'Commodore',  year: '2008', maxPrice: 700,  posted: '3 days ago',  category: 'interior',    isPro: false },
+    { id: 108, partName: 'Golf MK7 GTI exhaust system',           buyer: 'Petra H.',  loc: 'SYDNEY, NSW',    make: 'Volkswagen', model: 'Golf',       year: '2016', maxPrice: 800,  posted: '4 days ago',  category: 'performance', isPro: false },
+    { id: 109, partName: 'Autel MaxiSys scan tool MS906BT',       buyer: 'Brett M.',  loc: 'BRISBANE, QLD',  make: '',           model: '',           year: '',     maxPrice: 600,  posted: '1 day ago',   category: 'tools',       isPro: true  },
+    { id: 110, partName: '4x4 snorkel — 200 Series LandCruiser',  buyer: 'Craig F.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'LandCruiser',year: '2015', maxPrice: 350,  posted: '3 days ago',  category: '4x4',         isPro: false },
+    { id: 111, partName: 'Bride reclinable bucket seat',          buyer: 'Tom K.',    loc: 'MELBOURNE, VIC', make: '',           model: '',           year: '',     maxPrice: 900,  posted: '5 days ago',  category: 'performance', isPro: true  },
+    { id: 112, partName: 'Alpine head unit iLX-W650',             buyer: 'Lisa R.',   loc: 'SYDNEY, NSW',    make: '',           model: '',           year: '',     maxPrice: 400,  posted: '6 days ago',  category: 'audio',       isPro: false },
 ];
 
 const workshopDatabase = [
@@ -350,6 +350,54 @@ function renderSettingsDrawer() {
 
 const LISTINGS_STORAGE_KEY = 'apc.listings.v1';
 const REMEMBER_ME_KEY = 'apc.rememberMe.v1';
+const SEARCH_DEMAND_KEY = 'apc.searchDemand.v1';
+
+function loadSearchDemand() {
+    try { return JSON.parse(localStorage.getItem(SEARCH_DEMAND_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveSearchDemand(data) {
+    try { localStorage.setItem(SEARCH_DEMAND_KEY, JSON.stringify(data)); } catch(e) {}
+}
+let _lastRecordedSearch = '';
+function recordSearch(term) {
+    const clean = (term || '').toLowerCase().trim();
+    if (!clean || clean.length < 3 || clean === _lastRecordedSearch) return;
+    _lastRecordedSearch = clean;
+    const data = loadSearchDemand();
+    data.push({ term: clean, ts: Date.now() });
+    const cutoff = Date.now() - 180 * 24 * 60 * 60 * 1000;
+    saveSearchDemand(data.filter(d => d.ts > cutoff).slice(-3000));
+}
+
+// Seed platform-level demand data for demo — represents aggregated APC-wide searches
+const _demandSeed = [
+    { term: 'Commodore VE engine',       count: 14 },
+    { term: 'Hiace sliding door',         count: 11 },
+    { term: 'Falcon BA gearbox',          count: 9  },
+    { term: 'Hilux differential',         count: 8  },
+    { term: 'Golf GTI exhaust',           count: 7  },
+    { term: 'LandCruiser 200 snorkel',    count: 6  },
+    { term: 'Elise front clam',           count: 5  },
+    { term: 'Triton gearbox',             count: 4  },
+    { term: 'WRX STI seats',              count: 3  },
+    { term: 'Camry ABS pump',             count: 2  },
+];
+
+function getDemandReport() {
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const real = loadSearchDemand().filter(d => d.ts >= monthStart.getTime());
+    const counts = {};
+    real.forEach(d => { counts[d.term] = (counts[d.term] || 0) + 1; });
+    const realEntries = Object.entries(counts).map(([term, count]) => ({ term, count }));
+    // Merge seed data, boosting any real matches
+    const merged = [..._demandSeed];
+    realEntries.forEach(r => {
+        const existing = merged.find(m => m.term.toLowerCase() === r.term);
+        if (existing) existing.count += r.count;
+        else merged.push({ term: r.term, count: r.count });
+    });
+    return merged.sort((a, b) => b.count - a.count).slice(0, 10);
+}
 let userListings = loadUserListings();
 let sellListingImages = [];
 
@@ -1044,6 +1092,7 @@ function renderMainGrid() {
     if (!mainGrid) return;
 
     mainGrid.innerHTML = '';
+    recordSearch(activeFilters.search);
 
     if (currentSearchMode === 'wanted') {
         setDtbActive(null);
@@ -1133,14 +1182,20 @@ function renderWantedSearchResults(mainGrid) {
         const initials = w.buyer.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         const row = document.createElement('div');
         row.className = 'wanted-row';
+        const buyerBadge = w.isPro
+            ? `<span class="wanted-chip wanted-chip-pro">APC Pro</span>`
+            : `<span class="wanted-chip wanted-chip-personal">Personal</span>`;
         row.innerHTML = `
-            <div class="wanted-row-avatar">${initials}</div>
-            <div class="wanted-row-name">${escapeHtml(w.partName)}</div>
-            <div class="wanted-row-chips">
-                <span class="wanted-chip">${escapeHtml(w.make)} ${escapeHtml(w.model)} ${escapeHtml(w.year)}</span>
-                <span class="wanted-chip">${escapeHtml(w.loc)}</span>
-                ${w.maxPrice ? `<span class="wanted-chip wanted-chip-budget">Max $${w.maxPrice}</span>` : ''}
-                <span class="wanted-chip wanted-chip-time">${escapeHtml(w.posted)}</span>
+            <div class="wanted-row-avatar${w.isPro ? ' wanted-avatar-pro' : ''}">${initials}</div>
+            <div class="wanted-row-body">
+                <div class="wanted-row-name">${escapeHtml(w.partName)}</div>
+                <div class="wanted-row-chips">
+                    ${buyerBadge}
+                    <span class="wanted-chip">${escapeHtml(w.make)} ${escapeHtml(w.model)} ${escapeHtml(w.year)}</span>
+                    <span class="wanted-chip">${escapeHtml(w.loc)}</span>
+                    ${w.maxPrice ? `<span class="wanted-chip wanted-chip-budget">Max $${w.maxPrice}</span>` : ''}
+                    <span class="wanted-chip wanted-chip-time">${escapeHtml(w.posted)}</span>
+                </div>
             </div>
             <button class="wanted-have-btn" onclick="listFromWanted('${escapeHtml(w.make)}','${escapeHtml(w.model)}','${escapeHtml(w.year)}')">LIST THIS PART ›</button>
         `;
@@ -4215,6 +4270,50 @@ function closeDashboard() {
     updateHeaderOffset();
 }
 
+function renderDemandWidget() {
+    const card = document.getElementById('dashDemandCard');
+    if (!card) return;
+
+    const report = getDemandReport();
+    const maxCount = report[0]?.count || 1;
+    const monthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    // Find how many top terms have no matching listings
+    const gaps = report.filter(r => {
+        const t = r.term.toLowerCase();
+        return !getAllParts().some(p => p.title.toLowerCase().includes(t));
+    });
+
+    const bars = report.map(r => {
+        const pct = Math.round((r.count / maxCount) * 100);
+        const isGap = !getAllParts().some(p => p.title.toLowerCase().includes(r.term.toLowerCase()));
+        return `<div class="demand-bar-row">
+            <div class="demand-bar-label">${escapeHtml(r.term)}</div>
+            <div class="demand-bar-track">
+                <div class="demand-bar-fill${isGap ? ' demand-bar-gap' : ''}" style="width:${pct}%"></div>
+            </div>
+            <div class="demand-bar-count">${r.count}</div>
+        </div>`;
+    }).join('');
+
+    const insight = gaps.length
+        ? `<div class="demand-insight">
+               <span class="demand-insight-ico">💡</span>
+               <div><strong>${gaps.length} stocking ${gaps.length === 1 ? 'gap' : 'gaps'} this month</strong> — no listings match: ${gaps.slice(0,3).map(g => `<em>${escapeHtml(g.term)}</em>`).join(', ')}${gaps.length > 3 ? ` +${gaps.length - 3} more` : ''}. Consider sourcing these at auction.</div>
+           </div>`
+        : '';
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Search Demand</span>
+            <span class="dash-card-meta">${monthLabel}</span>
+        </div>
+        <p class="demand-subtitle">Most searched terms on APC this month — orange bars have no matching listings</p>
+        <div class="demand-bars">${bars}</div>
+        ${insight}
+    `;
+}
+
 function renderDashboard() {
     const sellerName = getCurrentSellerName();
     const myListings = getAllParts().filter(p => p.seller === sellerName);
@@ -4237,6 +4336,7 @@ function renderDashboard() {
 
     renderDashboardCharts(myListings);
     renderDashActivity();
+    renderDemandWidget();
     renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
 }
 
