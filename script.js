@@ -590,6 +590,7 @@ function openInboxConv(id) {
     if (titleEl) titleEl.textContent = part ? part.title : (conv.partTitle || '');
     if (priceEl) priceEl.textContent = part ? '$' + part.price : '';
     renderInboxMsgs(conv);
+    syncInboxPendingBtn();
     document.getElementById('inboxThreadEmpty').style.display = 'none';
     const tc = document.getElementById('inboxThreadContent');
     tc.style.display = 'flex';
@@ -672,6 +673,34 @@ function viewConvListing() {
     const part = findPartAnywhere(conv.partId);
     if (!part) { showToast('Listing no longer available'); return; }
     openItemDetail(part.id);
+}
+
+function syncInboxPendingBtn() {
+    const btn = document.getElementById('inboxPendingBtn');
+    if (!btn) return;
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) { btn.style.display = 'none'; return; }
+    const listing = userListings.find(l => l.id === conv.partId);
+    if (!listing) { btn.style.display = 'none'; return; }
+    // Only show for the seller (it's their listing)
+    btn.style.display = '';
+    const isPending = listing.status === 'pending';
+    btn.textContent  = isPending ? 'Remove Pending' : 'Mark as Pending';
+    btn.classList.toggle('inbox-pending-active', isPending);
+}
+
+function toggleListingPending() {
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) return;
+    const listing = userListings.find(l => l.id === conv.partId);
+    if (!listing) { showToast('Listing not found'); return; }
+    listing.status = listing.status === 'pending' ? undefined : 'pending';
+    saveUserListings();
+    syncInboxPendingBtn();
+    renderMainGrid();
+    renderMyParts();
+    if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+    showToast(listing.status === 'pending' ? 'Listing marked as Pending' : 'Pending status removed');
 }
 
 function openItemPreview(part) {
@@ -1092,9 +1121,14 @@ function buildCardHTML(part) {
 
     const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
 
+    const pendingBanner = part.status === 'pending'
+        ? `<div class="card-pending-banner">PENDING</div>`
+        : '';
+
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="lazy">
+            ${pendingBanner}
             <div class="item-info">
                 <div class="price-row">
                     <span class="item-price">$${part.price}</span>
@@ -1717,6 +1751,8 @@ function openItemDetail(partId) {
     // 2. Update detail fields safely
     safeText(document.getElementById('detailPrice'), `$${part.price}`);
     safeText(document.getElementById('detailTitle'), part.title);
+    const detailPendingBanner = document.getElementById('detailPendingBanner');
+    if (detailPendingBanner) detailPendingBanner.style.display = part.status === 'pending' ? '' : 'none';
     const detailApcIdEl = document.getElementById('detailApcId');
     if (detailApcIdEl) {
         if (part.apcId) {
@@ -4570,7 +4606,7 @@ function renderDashListings(tab, btn) {
         const hasMore  = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
             <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt=""></td>
-            <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}</td>
+            <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>

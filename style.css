@@ -729,6 +729,45 @@ header {
     cursor: pointer;
 }
 
+/* Pending banner — amber strip across top of listing card */
+.card-pending-banner {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 2;
+    background: #f59e0b;
+    color: white;
+    font-size: 10px; font-weight: 900;
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 4px 0;
+    border-radius: 10px 10px 0 0;
+}
+
+/* Pending banner in detail overlay */
+.detail-pending-banner {
+    margin: 8px 15px;
+    padding: 9px 14px;
+    background: #fef3c7;
+    border: 1.5px solid #f59e0b;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 800;
+    color: #92400e;
+    letter-spacing: 0.3px;
+}
+
+/* Dashboard pending chip */
+.dash-pending-chip {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 8px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+    border-radius: 99px;
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
 /* Saved indicator — orange heart top-right of saved cards, non-interactive */
 .card-saved-dot {
     position: absolute;
@@ -3889,6 +3928,9 @@ header {
 .inbox-thread-title { font-size: 13px; font-weight: 800; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inbox-thread-price { font-size: 15px; font-weight: 900; color: var(--apc-blue); }
 .inbox-view-btn { background: var(--apc-orange); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; font-family: inherit; }
+.inbox-pending-btn { background: white; color: #92400e; border: 2px solid #f59e0b; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; font-family: inherit; transition: background 0.15s, color 0.15s; }
+.inbox-pending-btn:hover { background: #fef3c7; }
+.inbox-pending-btn.inbox-pending-active { background: #f59e0b; color: white; border-color: #f59e0b; }
 
 .inbox-msg-list { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .inbox-date-divider { text-align: center; font-size: 11px; font-weight: 700; color: #c0c0c0; margin: 4px 0 2px; }
