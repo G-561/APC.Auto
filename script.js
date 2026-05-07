@@ -3069,7 +3069,6 @@ function showToastWithAction(msg, actionLabel, actionFn) {
 let currentInboxTab = 'all';
 
 function onOpenInbox() {
-    if (!userIsSignedIn) { openAuthDrawer(onOpenInbox); return; }
     updateInboxBadge();
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
@@ -3874,6 +3873,9 @@ function renderAccountState() {
     const amenuDash = document.getElementById('amenuDashboard');
     if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
     if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
+
+    const inboxNavItem = document.getElementById('inboxNavItem');
+    if (inboxNavItem) inboxNavItem.style.display = userIsSignedIn ? '' : 'none';
 
     // Sync desktop dropdown
     const ddAvatar  = document.getElementById('acctDdAvatar');
