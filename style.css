@@ -74,6 +74,20 @@ header {
     font-family: inherit;
 }
 .account-pill:active { transform: scale(0.97); }
+.sign-up-prompt {
+    display: none; /* hidden on mobile — shown via desktop media query */
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+    margin-top: 6px;
+    white-space: nowrap;
+}
+.sign-up-link {
+    color: var(--apc-orange);
+    font-weight: 700;
+    text-decoration: none;
+}
+.sign-up-link:hover { text-decoration: underline; }
 .account-pill.signed-out {
     background: var(--apc-orange);
     padding: 11px 22px;
@@ -1184,6 +1198,7 @@ header {
 .wanted-have-btn:hover { background: var(--apc-orange); color: white; }
 
 /* SEARCH DEMAND WIDGET */
+#dashDemandCard { overflow-y: auto; }
 .demand-subtitle {
     font-size: 12px; color: #888;
     margin: 0 0 14px 0; line-height: 1.4;
@@ -2738,8 +2753,9 @@ header {
     .search-col { order: 2; flex: 1; display: flex; flex-direction: column; gap: 6px; max-width: none; padding: 0; }
     .search-col .search-group { margin: 0; }
     #proSearchToggle { margin-top: 0; }
-    #accountPillZone { order: 3; flex-shrink: 0; width: 220px; display: flex; justify-content: center; align-items: center; padding: 0 8px; }
+    #accountPillZone { order: 3; flex-shrink: 0; width: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 8px; }
     #accountPill    { width: auto; }
+    .sign-up-prompt { display: block; }
     .account-pill.signed-out {
         font-size: 13px;
         padding: 11px 24px;

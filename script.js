@@ -3911,18 +3911,22 @@ function renderAccountState() {
     const isMobile = window.innerWidth < 900;
     const avatarHTML = `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${initial}</span>`;
 
+    const signUpPrompt = document.getElementById('signUpPrompt');
     if (!userIsSignedIn) {
         pill.classList.add('signed-out');
         pill.innerHTML = 'Sign In';
         if (proToggle) proToggle.style.display = 'none';
+        if (signUpPrompt) signUpPrompt.style.display = '';
     } else if (currentUserTier === 'pro') {
         pill.classList.add('signed-in');
         pill.innerHTML = avatarHTML;
         if (proToggle) proToggle.style.display = proSearchOn ? 'flex' : 'none';
+        if (signUpPrompt) signUpPrompt.style.display = 'none';
     } else {
         pill.classList.add('signed-in');
         pill.innerHTML = avatarHTML;
         if (proToggle) proToggle.style.display = 'none';
+        if (signUpPrompt) signUpPrompt.style.display = 'none';
     }
 
     if (menuName)   menuName.textContent   = currentUserName || 'Guest';
