@@ -1635,12 +1635,18 @@ function submitSellListing() {
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
 
+    const submitBtn = document.getElementById('sellSubmitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
     const sellSuccess = document.getElementById('sellSuccessMsg');
     if (sellSuccess) sellSuccess.style.display = 'block';
     setTimeout(() => {
         if (sellSuccess) sellSuccess.style.display = 'none';
-        toggleDrawer('sellOverlay');
+        const overlay = document.getElementById('sellOverlay');
+        if (overlay) overlay.classList.remove('active');
+        syncBackdrop();
         resetSellForm();
+        if (submitBtn) submitBtn.disabled = false;
     }, 1500);
 }
 
