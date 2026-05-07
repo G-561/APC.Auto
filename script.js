@@ -3397,7 +3397,7 @@ function prefillRememberedSignIn() {
 
 function clearSignUpFields() {
     ['authNamePersonal','authEmailPersonal','authPasswordPersonal',
-     'authNamePro','authEmailPro','authPasswordPro'].forEach(id => {
+     'authNamePro','authBusinessNamePro','authAbnPro','authEmailPro','authPasswordPro'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -3454,15 +3454,28 @@ function handleSignUpPersonalSubmit() {
 }
 
 function handleSignUpProSubmit() {
-    const name     = document.getElementById('authNamePro')?.value.trim();
-    const email    = document.getElementById('authEmailPro')?.value.trim() || '';
-    const password = document.getElementById('authPasswordPro')?.value;
-    const remember = document.getElementById('authRememberPro')?.checked;
+    const name         = document.getElementById('authNamePro')?.value.trim();
+    const businessName = document.getElementById('authBusinessNamePro')?.value.trim();
+    const abnRaw       = document.getElementById('authAbnPro')?.value.trim();
+    const email        = document.getElementById('authEmailPro')?.value.trim() || '';
+    const password     = document.getElementById('authPasswordPro')?.value;
+    const remember     = document.getElementById('authRememberPro')?.checked;
     document.getElementById('authPasswordPro').value = '';
-    if (!name || !email || !password) {
-        alert('Please enter your name, email and password to sign up.');
+
+    if (!name || !businessName || !abnRaw || !email || !password) {
+        alert('Please fill in all fields including your Business Name and ABN.');
         return;
     }
+    const abnDigits = abnRaw.replace(/\s/g, '');
+    if (!/^\d{11}$/.test(abnDigits)) {
+        alert('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).');
+        return;
+    }
+
+    userSettings.businessName = businessName;
+    userSettings.abn = abnDigits;
+    saveUserSettings();
+
     signIn(name, 'pro', remember, email);
     toggleDrawer('authDrawer');
     if (authReturnAction) {

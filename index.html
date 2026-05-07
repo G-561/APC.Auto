@@ -820,7 +820,12 @@
         <div id="authSignUpProSection" style="display:none;">
             <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>
             <div class="auth-form-heading">Pro / Business <span class="auth-pro-inline-badge">APC PRO</span></div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Name</label><input type="text" id="authNamePro" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Your Name</label><input type="text" id="authNamePro" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Business Name</label><input type="text" id="authBusinessNamePro" placeholder="e.g. Sydney Auto Wreckers"></div>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
+                <input type="text" id="authAbnPro" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
+            </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPro" placeholder="you@example.com"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPro" placeholder="Password"></div>
             <label class="choice-item" style="margin-bottom:16px;"><input type="checkbox" id="authRememberPro"> Remember me</label>
