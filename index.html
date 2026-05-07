@@ -917,7 +917,7 @@
                     <div class="input-row-flex">
                         <div class="input-group"><label>Make</label><input id="sellMake" type="text" placeholder="e.g. Lotus"></div>
                         <div class="input-group"><label>Model</label><input id="sellModel" type="text" placeholder="e.g. Elise"></div>
-                        <div class="input-group"><label>Year</label><input id="sellYear" type="number" placeholder="e.g. 2005"></div>
+                        <div class="input-group"><label>Year</label><input id="sellYear" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 2005"></div>
                     </div>
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
                         <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
@@ -930,7 +930,7 @@
                 <div class="filter-section">
                     <h4>Location & Delivery</h4>
                     <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
-                        <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="number" placeholder="e.g. 5000"></div>
+                        <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000"></div>
                         <div class="input-group"><label>Suburb, State</label><input id="sellLocation" type="text" placeholder="e.g. Adelaide, SA"></div>
                     </div>
                     <div class="shared-choice-box">
