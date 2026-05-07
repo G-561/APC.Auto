@@ -4447,7 +4447,7 @@ function renderDashListings(tab, btn) {
         const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
         const hasMore  = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
-            <td><img class="dash-thumb" src="${p.images[0]}" alt=""></td>
+            <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt=""></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
