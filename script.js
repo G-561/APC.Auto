@@ -3874,8 +3874,12 @@ function renderAccountState() {
     if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
     if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
 
-    const inboxNavItem = document.getElementById('inboxNavItem');
-    if (inboxNavItem) inboxNavItem.style.display = userIsSignedIn ? '' : 'none';
+    const inboxNavItem     = document.getElementById('inboxNavItem');
+    const dtbMessages      = document.getElementById('dtbMessages');
+    const desktopInboxItem = document.getElementById('desktopInboxItem');
+    if (inboxNavItem)     inboxNavItem.style.display     = userIsSignedIn ? '' : 'none';
+    if (dtbMessages)      dtbMessages.style.display      = userIsSignedIn ? '' : 'none';
+    if (desktopInboxItem) desktopInboxItem.style.display = userIsSignedIn ? '' : 'none';
 
     // Sync desktop dropdown
     const ddAvatar  = document.getElementById('acctDdAvatar');
