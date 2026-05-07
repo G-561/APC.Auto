@@ -245,14 +245,15 @@ header {
 
 .auth-tab {
     flex: 1;
-    border: 1px solid #ddd;
+    border: 1.5px solid #ddd;
     background: white;
-    color: #333;
-    border-radius: 999px;
-    padding: 10px 0;
-    font-size: 12px;
-    font-weight: 900;
+    color: #555;
+    border-radius: 8px;
+    padding: 11px 0;
+    font-size: 13px;
+    font-weight: 800;
     cursor: pointer;
+    letter-spacing: 0.2px;
 }
 .auth-tab.active {
     background: var(--apc-orange);
