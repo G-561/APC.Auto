@@ -389,7 +389,7 @@ function renderSettingsDrawer() {
     });
 }
 
-const LISTINGS_STORAGE_KEY = 'apc.listings.v1';
+const LISTINGS_STORAGE_KEY = 'apc.listings.v2';
 const REMEMBER_ME_KEY = 'apc.rememberMe.v1';
 const SEARCH_DEMAND_KEY = 'apc.searchDemand.v1';
 
@@ -442,12 +442,19 @@ function getDemandReport() {
 let userListings = loadUserListings();
 let sellListingImages = [];
 
+function getInitialUserListings() {
+    return [
+        { id: 9001, title: 'Toyota Hiace KDH 2KD Turbocharger — Low KM', price: 480, images: ['images/hiace.turbo.jpg'], loc: 'ADELAIDE, SA', postcode: '5000', seller: 'Gary S.', isPro: true, category: 'engine', fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 3, date: Date.now() - 3 * 24 * 60 * 60 * 1000, condition: 'used', description: 'Pulled from a 2016 KDH200 at 98,000km. Shaft play is minimal, no cracks on housing. Ready to bolt on.', pickup: true, postage: true },
+        { id: 9002, title: 'Toyota Hiace Power Steering Rack — Complete Unit', price: 220, images: ['images/hiace.steeringrack.jpg'], loc: 'ADELAIDE, SA', postcode: '5000', seller: 'Gary S.', isPro: true, category: 'engine', fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 1, date: Date.now() - 1 * 24 * 60 * 60 * 1000, condition: 'used', description: 'Complete rack and pinion unit from a 2018 Hiace. No leaks, smooth operation. Suits LWB and SLWB.', pickup: true, postage: false },
+    ];
+}
+
 function loadUserListings() {
     try {
         const raw = localStorage.getItem(LISTINGS_STORAGE_KEY);
-        return raw ? JSON.parse(raw) : [];
+        return raw ? JSON.parse(raw) : getInitialUserListings();
     } catch (e) {
-        return [];
+        return getInitialUserListings();
     }
 }
 function saveUserListings() {
@@ -472,7 +479,7 @@ const INBOX_STORAGE_KEY = 'apc.inbox.v1';
 let inboxItems = loadInboxItems();
 
 // ── CONVERSATIONS (Message Centre) ───────────────────────────
-const CONVS_KEY = 'apc.conversations.v2';
+const CONVS_KEY = 'apc.conversations.v3';
 let conversations = loadConversations();
 let activeConvId  = null;
 let inboxCurrentTab = 'chats';
@@ -514,6 +521,19 @@ function getInitialConversations() {
             {id:1,sent:false,text:'Is the Elise headlight driver or passenger side?',   time:'Tue',      clock:'4:45 pm'},
             {id:2,sent:true, text:"Left (driver's side). Fits S2 models 2001–2011.",    time:'Tue',      clock:'5:10 pm'},
             {id:3,sent:false,text:"Perfect — exactly what I need. I'll be in touch!",   time:'Tue',      clock:'5:22 pm'},
+        ]},
+        { id:6, with:'Marcus W.',          isPro:false, unread:true,  partId:9001, msgs:[
+            {id:1,sent:false,text:'Hi — is the KDH turbo still available?',                       time:'Yesterday', clock:'10:05 am'},
+            {id:2,sent:true, text:'Yes still here. Pulled clean, very low shaft play.',            time:'Yesterday', clock:'10:28 am'},
+            {id:3,sent:false,text:'Would you take $420 posted to Brisbane?',                       time:'Yesterday', clock:'10:44 am'},
+            {id:4,sent:true, text:'Best I can do is $450 posted — can box it up today.',           time:'Yesterday', clock:'11:02 am'},
+            {id:5,sent:false,text:"Deal — I'll pay this afternoon. Can you hold it?",              time:'Today',     clock:'8:15 am'},
+            {id:6,sent:true, text:"Held for you. Send payment to the email in my profile.",        time:'Today',     clock:'8:41 am'},
+        ]},
+        { id:7, with:'Priya N.',           isPro:false, unread:true,  partId:9002, msgs:[
+            {id:1,sent:false,text:'Does the steering rack suit a 2019 SLWB Hiace?',               time:'Today',     clock:'1:15 pm'},
+            {id:2,sent:true, text:'Yes — suits 2014–2021 LWB and SLWB, petrol and diesel.',       time:'Today',     clock:'1:38 pm'},
+            {id:3,sent:false,text:'Great. Any chance of pick-up this weekend in Adelaide?',        time:'Today',     clock:'1:52 pm'},
         ]},
     ];
 }
