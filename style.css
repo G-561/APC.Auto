@@ -516,39 +516,153 @@ header {
     background: #fafafa;
 }
 
-.storefront-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 15px;
-    border-bottom: 2px solid var(--apc-orange);
-    gap: 10px;
-}
+/* =====================
+   SELLER STOREFRONT v2
+   ===================== */
 
-.storefront-seller-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-    background: #fff;
-    padding: 12px 14px;
-    border-radius: 18px;
-    border: 1px solid #EEE;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-}
-
-.close-drawer-icon {
-    font-size: 32px;
-    cursor: pointer;
+/* Floating close button */
+.sf-close-btn {
+    position: absolute;
+    top: 14px; right: 16px;
+    z-index: 10;
+    font-size: 28px;
     line-height: 1;
-    padding-left: 15px;
-    color: #333;
+    cursor: pointer;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    font-weight: 300;
 }
 
-.storefront-seller-card .seller-card-name {
-    font-size: 15px;
+/* Hero banner */
+.sf-hero {
+    background: linear-gradient(135deg, var(--apc-orange) 0%, #e07a0a 100%);
+    height: 110px;
+    position: relative;
+    flex-shrink: 0;
 }
+
+/* Logo circle — sits half over hero, half over identity */
+.sf-logo-wrap {
+    position: absolute;
+    bottom: -36px;
+    left: 20px;
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid white;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+.sf-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.sf-logo-initials {
+    font-size: 26px; font-weight: 900;
+    color: var(--apc-orange);
+}
+
+/* Identity block */
+.sf-identity {
+    padding: 46px 20px 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.sf-name-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.sf-business-name {
+    font-size: 17px; font-weight: 900; color: var(--apc-charcoal);
+}
+.sf-seller-name {
+    font-size: 13px; color: #666; font-weight: 600;
+}
+.sf-abn-chip {
+    font-size: 10px; font-weight: 800;
+    background: #dcfce7; color: #16a34a;
+    border-radius: 99px; padding: 3px 9px;
+    letter-spacing: 0.3px;
+}
+.sf-location {
+    font-size: 12px; color: #888; margin-top: 4px;
+}
+
+/* Stats row */
+.sf-stats-row {
+    display: flex; align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 0;
+}
+.sf-stat {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+}
+.sf-stat-val {
+    font-size: 18px; font-weight: 900; color: var(--apc-charcoal);
+}
+.sf-stat-lbl {
+    font-size: 10px; font-weight: 700; color: #aaa;
+    text-transform: uppercase; letter-spacing: 0.4px;
+}
+.sf-stat-div {
+    width: 1px; height: 32px; background: #eee;
+}
+
+/* About */
+.sf-about-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.sf-about-text {
+    font-size: 13px; color: #555; line-height: 1.55;
+}
+
+/* Search */
+.sf-search-wrap {
+    padding: 14px 15px 8px;
+}
+.sf-search-input {
+    width: 100%; padding: 10px 16px;
+    border-radius: 20px; border: 1.5px solid #e8e8e8;
+    font-size: 13px; outline: none; background: #f9f9f9;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.sf-search-input:focus { border-color: var(--apc-orange); background: white; }
+
+/* Settings — logo upload */
+.logo-upload-preview {
+    width: 64px; height: 64px; flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--apc-orange);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+}
+.logo-upload-btn {
+    display: inline-block;
+    padding: 7px 14px;
+    background: #f0f0f0;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 700; color: #444;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.logo-upload-btn:hover { background: #e4e4e4; }
+.logo-remove-btn {
+    padding: 7px 14px;
+    background: none;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 12px; font-weight: 700; color: #e53935;
+    cursor: pointer;
+}
+.settings-about-input {
+    width: 100%; padding: 10px 12px;
+    border-radius: 10px; border: 1.5px solid #e8e8e8;
+    font-size: 13px; font-family: inherit;
+    resize: vertical; outline: none;
+    box-sizing: border-box; color: #333;
+}
+.settings-about-input:focus { border-color: var(--apc-orange); }
 
 .menu-divider { height: 1px; background: #eee; margin: 4px 0; }
 

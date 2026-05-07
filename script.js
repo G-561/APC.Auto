@@ -259,6 +259,8 @@ function getDefaultSettings() {
         location: '',
         businessName: '',
         abn: '',
+        about: '',
+        businessLogo: '',
         notifyWantedMatch:    true,
         notifyMessages:       true,
         notifyPriceDrops:     true,
@@ -298,9 +300,45 @@ function saveSettingsAccount() {
 function saveSettingsProBusiness() {
     userSettings.businessName = document.getElementById('proSettingBusinessName')?.value.trim() || '';
     userSettings.abn          = document.getElementById('proSettingABN')?.value.trim() || '';
+    userSettings.about        = document.getElementById('proSettingAbout')?.value.trim() || '';
     saveUserSettings();
     showToast('Business details saved');
 }
+function handleLogoUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) { showToast('Image too large — please use an image under 1 MB'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+        userSettings.businessLogo = e.target.result;
+        saveUserSettings();
+        renderLogoPreview();
+        showToast('Logo saved');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeBusinessLogo() {
+    userSettings.businessLogo = '';
+    saveUserSettings();
+    const fileInput = document.getElementById('logoFileInput');
+    if (fileInput) fileInput.value = '';
+    renderLogoPreview();
+    showToast('Logo removed');
+}
+
+function renderLogoPreview() {
+    const logo     = userSettings.businessLogo || '';
+    const initial  = (currentUserName || 'G').charAt(0).toUpperCase();
+    const img      = document.getElementById('logoPreviewImg');
+    const initials = document.getElementById('logoPreviewInitials');
+    const removeBtn = document.getElementById('logoRemoveBtn');
+    if (img) { img.src = logo; img.style.display = logo ? 'block' : 'none'; }
+    if (initials) initials.style.display = logo ? 'none' : '';
+    if (initials && !logo) initials.textContent = initial;
+    if (removeBtn) removeBtn.style.display = logo ? '' : 'none';
+}
+
 function saveSettingsToggle(key, value) {
     userSettings[key] = value;
     saveUserSettings();
@@ -323,10 +361,13 @@ function renderSettingsDrawer() {
 
     if (nameEl) nameEl.value = currentUserName || '';
     if (locEl)  locEl.value  = userSettings.location || '';
-    const bizEl = document.getElementById('proSettingBusinessName');
-    const abnEl = document.getElementById('proSettingABN');
-    if (bizEl) bizEl.value = userSettings.businessName || '';
-    if (abnEl) abnEl.value = userSettings.abn || '';
+    const bizEl   = document.getElementById('proSettingBusinessName');
+    const abnEl   = document.getElementById('proSettingABN');
+    const aboutEl = document.getElementById('proSettingAbout');
+    if (bizEl)   bizEl.value   = userSettings.businessName || '';
+    if (abnEl)   abnEl.value   = userSettings.abn || '';
+    if (aboutEl) aboutEl.value = userSettings.about || '';
+    renderLogoPreview();
 
     const isPro = currentUserTier === 'pro';
     const proBlock = document.getElementById('settingsProBlock');
@@ -1832,26 +1873,83 @@ function shareCurrentListing(btn) {
 }
 
 // --- SELLER STOREFRONT ---
+function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location) {
+    const initial = (sellerName || 'S').charAt(0).toUpperCase();
+
+    // Logo / initials
+    const logoImg      = document.getElementById('sfLogoImg');
+    const logoInitials = document.getElementById('sfLogoInitials');
+    if (logo) {
+        if (logoImg)      { logoImg.src = logo; logoImg.style.display = 'block'; }
+        if (logoInitials)   logoInitials.style.display = 'none';
+    } else {
+        if (logoImg)        logoImg.style.display = 'none';
+        if (logoInitials) { logoInitials.style.display = ''; logoInitials.textContent = initial; }
+    }
+
+    // Identity
+    const sfBizName = document.getElementById('sfBusinessName');
+    const sfProBadge = document.getElementById('sfProBadge');
+    const sfAbnChip  = document.getElementById('sfAbnChip');
+    const sfSeller   = document.getElementById('sfSellerName');
+    const sfLoc      = document.getElementById('sfLocation');
+
+    if (sfBizName) { sfBizName.textContent = businessName || ''; sfBizName.style.display = businessName ? '' : 'none'; }
+    if (sfProBadge)  sfProBadge.style.display = isPro ? '' : 'none';
+    if (sfAbnChip)   sfAbnChip.style.display  = (isPro && abn) ? '' : 'none';
+    if (sfSeller)    sfSeller.textContent = sellerName || '';
+    if (sfLoc)     { sfLoc.textContent = location ? '📍 ' + location : ''; sfLoc.style.display = location ? '' : 'none'; }
+
+    // About
+    const sfAbout     = document.getElementById('sfAboutSection');
+    const sfAboutText = document.getElementById('sfAboutText');
+    if (sfAbout) sfAbout.style.display = (isPro && about) ? '' : 'none';
+    if (sfAboutText) sfAboutText.textContent = about || '';
+
+    // Stats
+    const allParts   = getAllParts().filter(p => p.seller === sellerName);
+    const totalSaves = allParts.reduce((s, p) => s + (p.saves || 0), 0);
+    const listEl = document.getElementById('sfStatListings');
+    const saveEl = document.getElementById('sfStatSaves');
+    if (listEl) listEl.textContent = allParts.length;
+    if (saveEl) saveEl.textContent = totalSaves;
+
+    // Grid
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) {
+        grid.innerHTML = '';
+        allParts.forEach(p => { grid.innerHTML += buildCardHTML(p); });
+    }
+
+    // Clear search
+    const searchEl = document.getElementById('storefrontSearch');
+    if (searchEl) searchEl.value = '';
+}
+
+function filterStorefront() {
+    const q = (document.getElementById('storefrontSearch')?.value || '').toLowerCase().trim();
+    const grid = document.getElementById('sellerPartsGrid');
+    if (!grid) return;
+    const sellerName = grid.dataset.seller || '';
+    const parts = getAllParts().filter(p => p.seller === sellerName &&
+        (!q || p.title.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q)));
+    grid.innerHTML = '';
+    parts.forEach(p => { grid.innerHTML += buildCardHTML(p); });
+}
+
 function openStorefront(partId) {
     const part = getPartById(partId);
     if (!part) return;
-
-    const sellerName = part.seller;
-    const isPro = part.isPro;
-
-    safeText(document.getElementById('displaySellerName'), sellerName);
-
-    const sellerGrid = document.getElementById('sellerPartsGrid');
-    if (sellerGrid) {
-        sellerGrid.innerHTML = '';
-        partDatabase
-            .filter(p => p.seller === sellerName)
-            .forEach(p => { sellerGrid.innerHTML += buildCardHTML(p); });
-    }
-    const sellerBadge = document.getElementById('proBadge');
-    if (sellerBadge) sellerBadge.style.display = isPro ? 'inline-block' : 'none';
-
-    toggleDrawer('storefrontDrawer', true); // stack on top of detail overlay
+    const isOwn = part.seller === getCurrentSellerName();
+    const logo         = isOwn ? (userSettings.businessLogo || '') : '';
+    const businessName = isOwn ? (userSettings.businessName || '') : '';
+    const abn          = isOwn ? (userSettings.abn || '') : '';
+    const about        = isOwn ? (userSettings.about || '') : '';
+    const location     = isOwn ? (userSettings.location || '') : '';
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) grid.dataset.seller = part.seller;
+    renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location);
+    toggleDrawer('storefrontDrawer', true);
 }
 
 // --- MESSAGING ---
@@ -3618,17 +3716,18 @@ function onMenuOpenProfile() {
 
 function openMyStorefront() {
     closeProfileDrawer();
-    const sellerName = currentUserName || 'Me';
-    safeText(document.getElementById('displaySellerName'), sellerName);
-    const badgeEl = document.getElementById('proBadge');
-    if (badgeEl) badgeEl.style.display = currentUserTier === 'pro' ? 'inline-block' : 'none';
-    const sellerGrid = document.getElementById('sellerPartsGrid');
-    if (sellerGrid) {
-        sellerGrid.innerHTML = '';
-        getAllParts()
-            .filter(p => p.seller === sellerName)
-            .forEach(p => { sellerGrid.innerHTML += buildCardHTML(p); });
-    }
+    const sellerName = getCurrentSellerName();
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) grid.dataset.seller = sellerName;
+    renderStorefront(
+        sellerName,
+        currentUserTier === 'pro',
+        userSettings.businessLogo || '',
+        userSettings.businessName || '',
+        userSettings.abn          || '',
+        userSettings.about        || '',
+        userSettings.location     || ''
+    );
     toggleDrawer('storefrontDrawer');
 }
 

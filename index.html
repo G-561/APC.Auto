@@ -556,25 +556,48 @@
 </div>
 
 <div id="storefrontDrawer" class="drawer">
-    <div class="drawer-header storefront-header">
-        <div class="storefront-seller-card">
-            <div class="seller-avatar">👤</div>
-            <div class="seller-card-meta">
-                <div id="displaySellerName" class="seller-card-name">Seller Name</div>
-                <div class="seller-card-sub">Top Rated Seller</div>
-            </div>
-            <span id="proBadge" class="seller-pro-badge">PRO</span>
-        </div>
-        <div onclick="closeStorefrontDrawer()" class="close-drawer-icon">×</div>
-    </div>
-    <div class="drawer-content" style="padding: 0;">
-        <div style="padding: 15px 15px 5px 15px;">
-            <h4 id="storefrontTitle" style="margin: 0 0 10px 0; font-size: 14px; font-weight: 800;">Seller's Store</h4>
-            <div style="position: relative;">
-                <input type="text" id="storefrontSearch" placeholder="Search seller's parts..." style="width: 100%; padding: 10px 15px; border-radius: 20px; border: 1px solid #ddd; font-size: 14px; outline: none; background: #f9f9f9; box-sizing: border-box;">
+    <div class="sf-close-btn" onclick="closeStorefrontDrawer()">×</div>
+    <div class="drawer-content" style="padding:0;">
+
+        <!-- Hero banner -->
+        <div class="sf-hero">
+            <div class="sf-logo-wrap">
+                <img id="sfLogoImg" class="sf-logo-img" src="" alt="" style="display:none;">
+                <div id="sfLogoInitials" class="sf-logo-initials">G</div>
             </div>
         </div>
-        <div class="results-grid" id="sellerPartsGrid" style="margin-top: 5px; padding-bottom: 30px;"></div>
+
+        <!-- Identity -->
+        <div class="sf-identity">
+            <div class="sf-name-row">
+                <span id="sfBusinessName" class="sf-business-name" style="display:none;"></span>
+                <span id="sfProBadge" class="seller-pro-badge" style="display:none;">✔ PRO</span>
+                <span id="sfAbnChip" class="sf-abn-chip" style="display:none;">✓ ABN Verified</span>
+            </div>
+            <div id="sfSellerName" class="sf-seller-name"></div>
+            <div id="sfLocation" class="sf-location" style="display:none;"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="sf-stats-row">
+            <div class="sf-stat"><span id="sfStatListings" class="sf-stat-val">0</span><span class="sf-stat-lbl">Listings</span></div>
+            <div class="sf-stat-div"></div>
+            <div class="sf-stat"><span id="sfStatSaves" class="sf-stat-val">0</span><span class="sf-stat-lbl">Total Saves</span></div>
+            <div class="sf-stat-div"></div>
+            <div class="sf-stat"><span class="sf-stat-val">★ 4.9</span><span class="sf-stat-lbl">Rating</span></div>
+        </div>
+
+        <!-- About (Pro only) -->
+        <div id="sfAboutSection" class="sf-about-section" style="display:none;">
+            <div id="sfAboutText" class="sf-about-text"></div>
+        </div>
+
+        <!-- Search + grid -->
+        <div class="sf-search-wrap">
+            <input type="text" id="storefrontSearch" class="sf-search-input" placeholder="Search this store..." oninput="filterStorefront()">
+        </div>
+        <div class="results-grid" id="sellerPartsGrid" style="padding-bottom:40px;"></div>
+
     </div>
 </div>
 
@@ -1076,6 +1099,26 @@
 
                 <div class="settings-section settings-pro-section">
                     <div class="settings-pro-section-hdr">Business Identity</div>
+
+                    <!-- Logo upload -->
+                    <div class="settings-row" style="align-items:center; gap:14px; flex-wrap:wrap;">
+                        <div class="logo-upload-preview" id="logoPreviewCircle">
+                            <img id="logoPreviewImg" src="" alt="" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:50%;">
+                            <span id="logoPreviewInitials" style="font-size:18px; font-weight:800; color:#fff;">G</span>
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div class="settings-row-label">Business Logo</div>
+                            <div class="settings-row-sub">Shown on your storefront — square logos work best</div>
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <label class="logo-upload-btn">
+                                    Upload logo
+                                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+                                </label>
+                                <button id="logoRemoveBtn" onclick="removeBusinessLogo()" class="logo-remove-btn" style="display:none;">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="settings-row">
                         <span class="settings-row-label">Business / Yard Name</span>
                         <input type="text" id="proSettingBusinessName" class="settings-inline-input" placeholder="e.g. Gary's Wreckers">
@@ -1083,6 +1126,10 @@
                     <div class="settings-row">
                         <span class="settings-row-label">ABN <span style="font-weight:400;color:#aaa;">optional</span></span>
                         <input type="text" id="proSettingABN" class="settings-inline-input" placeholder="12 345 678 901">
+                    </div>
+                    <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:6px;">
+                        <span class="settings-row-label">About your business <span style="font-weight:400;color:#aaa;">optional</span></span>
+                        <textarea id="proSettingAbout" class="settings-about-input" rows="3" placeholder="e.g. Specialising in Japanese imports, serving SA since 2005. We stock 500+ vehicles at any time."></textarea>
                     </div>
                     <div class="settings-row" style="justify-content:flex-end; padding-top:4px;">
                         <button onclick="saveSettingsProBusiness()" class="settings-save-btn settings-save-btn-pro">Save details</button>
