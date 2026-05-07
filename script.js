@@ -3301,22 +3301,28 @@ function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '
 // Wired to the SIGN IN button inside #authDrawer
 function setAuthMode(mode) {
     authMode = mode;
-    const signInTab = document.getElementById('authTabSignIn');
-    const signUpTab = document.getElementById('authTabSignUp');
-    const signInSection = document.getElementById('authSignInSection');
-    const signUpSection = document.getElementById('authSignUpSection');
-    const proBenefitsPanel = document.getElementById('proBenefitsPanel');
+    const signInTab  = document.getElementById('authTabSignIn');
+    const signUpTab  = document.getElementById('authTabSignUp');
+    const isSignUp   = mode === 'signup' || mode === 'signup-personal' || mode === 'signup-pro';
 
     if (signInTab) signInTab.classList.toggle('active', mode === 'signin');
-    if (signUpTab) signUpTab.classList.toggle('active', mode === 'signup');
-    if (signInSection) signInSection.style.display = mode === 'signin' ? 'block' : 'none';
-    if (signUpSection) signUpSection.style.display = mode === 'signup' ? 'block' : 'none';
-    if (proBenefitsPanel) proBenefitsPanel.style.display = 'none';
+    if (signUpTab) signUpTab.classList.toggle('active', isSignUp);
+
+    const sections = {
+        authSignInSection:         mode === 'signin',
+        authSignUpSection:         mode === 'signup',
+        authSignUpPersonalSection: mode === 'signup-personal',
+        authSignUpProSection:      mode === 'signup-pro',
+    };
+    Object.entries(sections).forEach(([id, show]) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = show ? '' : 'none';
+    });
 
     if (mode === 'signin') {
         prefillRememberedSignIn();
-        if (signUpSection) clearSignUpFields();
-    } else {
+        clearSignUpFields();
+    } else if (mode === 'signup') {
         clearSignUpFields();
     }
 }
@@ -3335,14 +3341,15 @@ function prefillRememberedSignIn() {
 }
 
 function clearSignUpFields() {
-    const nameInput = document.getElementById('authName');
-    const emailInput = document.getElementById('authEmailSignup');
-    const passwordInput = document.getElementById('authPasswordSignup');
-    const rememberCheckbox = document.getElementById('authRememberMeSignup');
-    if (nameInput) nameInput.value = '';
-    if (emailInput) emailInput.value = '';
-    if (passwordInput) passwordInput.value = '';
-    if (rememberCheckbox) rememberCheckbox.checked = false;
+    ['authNamePersonal','authEmailPersonal','authPasswordPersonal',
+     'authNamePro','authEmailPro','authPasswordPro'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    ['authRememberPersonal','authRememberPro'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+    });
 }
 
 function openAuthDrawer(returnAction = null, mode = 'signin') {
@@ -3370,12 +3377,12 @@ function handleSignInSubmit() {
     }
 }
 
-function handleSignUpSubmit() {
-    const name = document.getElementById('authName')?.value.trim();
-    const email = document.getElementById('authEmailSignup')?.value.trim() || '';
-    const password = document.getElementById('authPasswordSignup')?.value;
-    const remember = document.getElementById('authRememberMeSignup')?.checked;
-    document.getElementById('authPasswordSignup').value = '';
+function handleSignUpPersonalSubmit() {
+    const name     = document.getElementById('authNamePersonal')?.value.trim();
+    const email    = document.getElementById('authEmailPersonal')?.value.trim() || '';
+    const password = document.getElementById('authPasswordPersonal')?.value;
+    const remember = document.getElementById('authRememberPersonal')?.checked;
+    document.getElementById('authPasswordPersonal').value = '';
     if (!name || !email || !password) {
         alert('Please enter your name, email and password to sign up.');
         return;
@@ -3387,15 +3394,30 @@ function handleSignUpSubmit() {
         authReturnAction = null;
         nextAction();
     } else {
-        // Show welcome onboarding on first ever signup
         setTimeout(showWelcomeModal, 350);
     }
 }
 
-function onShowProBenefits() {
-    const panel = document.getElementById('proBenefitsPanel');
-    if (!panel) return;
-    panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+function handleSignUpProSubmit() {
+    const name     = document.getElementById('authNamePro')?.value.trim();
+    const email    = document.getElementById('authEmailPro')?.value.trim() || '';
+    const password = document.getElementById('authPasswordPro')?.value;
+    const remember = document.getElementById('authRememberPro')?.checked;
+    document.getElementById('authPasswordPro').value = '';
+    if (!name || !email || !password) {
+        alert('Please enter your name, email and password to sign up.');
+        return;
+    }
+    signIn(name, 'pro', remember, email);
+    toggleDrawer('authDrawer');
+    if (authReturnAction) {
+        const nextAction = authReturnAction;
+        authReturnAction = null;
+        nextAction();
+    } else {
+        showToast('Welcome to APC Pro! Your 3-month free trial has started.');
+        setTimeout(showWelcomeModal, 350);
+    }
 }
 
 function onSignOut() {

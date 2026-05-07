@@ -745,62 +745,94 @@
 </div>
 
 <div id="authDrawer" class="drawer">
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 16px;">
-        <img src="images/APC.logo.png" alt="APC" style="height: 52px; width: auto; object-fit: contain;">
-        <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:18px 20px 16px;">
+        <img src="images/APC.logo.png" alt="APC" style="height:52px; width:auto; object-fit:contain;">
+        <div style="display:flex; align-items:center; gap:8px;">
             <button type="button" class="auth-tab active" id="authTabSignIn" onclick="setAuthMode('signin')">Sign In</button>
             <button type="button" class="auth-tab" id="authTabSignUp" onclick="setAuthMode('signup')">Sign Up</button>
         </div>
-        <div onclick="toggleDrawer('authDrawer')" style="font-size: 28px; color: #aaa; cursor: pointer; line-height: 1; margin-left: 12px;">×</div>
+        <div onclick="toggleDrawer('authDrawer')" style="font-size:28px; color:#aaa; cursor:pointer; line-height:1; margin-left:12px;">×</div>
     </div>
-    <div class="drawer-content" style="padding-top: 0;">
+    <div class="drawer-content" style="padding-top:0;">
+
+        <!-- SIGN IN -->
         <div id="authSignInSection">
-            <div class="input-group" style="margin-bottom: 12px;"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
-            <div class="input-group" style="margin-bottom: 12px;"><label>Password</label><input type="password" id="authPassword" placeholder="Password"></div>
-            <label class="choice-item" style="margin-bottom: 18px;"><input type="checkbox" id="authRememberMe"> Remember me</label>
-            <button onclick="handleSignInSubmit()" style="width: 100%; padding: 15px; background: var(--apc-orange); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN IN</button>
+            <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPassword" placeholder="Password"></div>
+            <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberMe"> Remember me</label>
+            <button onclick="handleSignInSubmit()" style="width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">SIGN IN</button>
         </div>
+
+        <!-- SIGN UP: CHOICE SCREEN -->
         <div id="authSignUpSection" style="display:none;">
-            <div class="input-group" style="margin-bottom: 12px;"><label>Name</label><input type="text" id="authName" placeholder="Your name"></div>
-            <div class="input-group" style="margin-bottom: 12px;"><label>Email</label><input type="email" id="authEmailSignup" placeholder="you@example.com"></div>
-            <div class="input-group" style="margin-bottom: 12px;"><label>Password</label><input type="password" id="authPasswordSignup" placeholder="Password"></div>
-            <label class="choice-item" style="margin-bottom: 18px;"><input type="checkbox" id="authRememberMeSignup"> Remember me</label>
-            <button onclick="handleSignUpSubmit()" style="width: 100%; padding: 15px; background: var(--apc-blue); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">SIGN UP</button>
-        </div>
-        <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
-            <button type="button" onclick="onShowProBenefits()" style="background: none; border: none; color: var(--apc-orange); font-weight: 800; cursor: pointer; text-align: left; padding: 0;">APC Pro benefits outlined →</button>
-            <div id="proBenefitsPanel" style="display:none; background: #fffdeb; border: 1px solid rgba(255,165,0,0.25); border-radius: 14px; padding: 16px; font-size: 13px; color: #333;">
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-                    <span style="background:var(--apc-orange); color:white; font-size:10px; font-weight:900; padding:3px 10px; border-radius:20px; letter-spacing:0.5px;">APC PRO</span>
-                    <strong style="font-size:14px;">Everything in Pro, explained.</strong>
+            <p class="auth-choice-heading">How will you use APC?</p>
+            <div class="auth-type-choice">
+
+                <div class="auth-type-card auth-type-personal" onclick="setAuthMode('signup-personal')">
+                    <div class="auth-type-title">Personal</div>
+                    <div class="auth-type-desc">Buying parts or selling privately</div>
+                    <ul class="auth-type-perks">
+                        <li>Buy &amp; save listings</li>
+                        <li>Message sellers</li>
+                        <li>List parts for free</li>
+                        <li>Garage &amp; Wanted alerts</li>
+                    </ul>
+                    <div class="auth-type-tag auth-tag-orange">Free</div>
                 </div>
 
-                <div style="font-size:10px; font-weight:900; text-transform:uppercase; color:var(--apc-orange); letter-spacing:0.8px; margin-bottom:6px;">Selling Tools</div>
-                <ul style="padding-left:0; margin:0 0 14px 0; list-style:none; display:flex; flex-direction:column; gap:5px; color:#444;">
-                    <li>🏷️ Stock number tagging — link every part off the same vehicle instantly</li>
-                    <li>💸 Open to Offers toggle — let buyers negotiate on your terms</li>
-                    <li>🔧 Fitting Available flag — show buyers you can install the part</li>
-                    <li>📦 QR code &amp; warehouse label printing — built for wrecking yards &amp; trade sellers</li>
-                    <li>✔️ PRO seller badge — stand out in every search result</li>
-                </ul>
+                <div class="auth-type-card auth-type-pro" onclick="setAuthMode('signup-pro')">
+                    <div class="auth-type-pro-pill">APC PRO</div>
+                    <div class="auth-type-title">Pro / Business</div>
+                    <div class="auth-type-desc">Wreckers, trade sellers &amp; workshops</div>
+                    <ul class="auth-type-perks">
+                        <li>Everything in Personal</li>
+                        <li>Unlimited listings</li>
+                        <li>Dashboard &amp; analytics</li>
+                        <li>Warehouse &amp; QR tools</li>
+                        <li>Workshop profile</li>
+                    </ul>
+                    <div class="auth-type-tag auth-tag-blue">3-month free trial</div>
+                </div>
 
-                <div style="font-size:10px; font-weight:900; text-transform:uppercase; color:var(--apc-orange); letter-spacing:0.8px; margin-bottom:6px;">Search &amp; Discovery</div>
-                <ul style="padding-left:0; margin:0 0 14px 0; list-style:none; display:flex; flex-direction:column; gap:5px; color:#444;">
-                    <li>🔍 Find Wanted mode — search active buyer requests and match your stock</li>
-                    <li>🔢 Stock number search — pull up every part off a vehicle in one hit</li>
-                    <li>🪪 APC Item ID search — instant lookup by unique part ID</li>
-                </ul>
-
-                <div style="font-size:10px; font-weight:900; text-transform:uppercase; color:var(--apc-orange); letter-spacing:0.8px; margin-bottom:6px;">Business</div>
-                <ul style="padding-left:0; margin:0 0 14px 0; list-style:none; display:flex; flex-direction:column; gap:5px; color:#444;">
-                    <li>📊 Pro Dashboard — live analytics, listing management &amp; sales overview</li>
-                    <li>🛠️ Workshop &amp; Approved Repairer profile — get found by buyers who need fitting</li>
-                    <li>⭐ Priority listing placement — your parts shown first in relevant searches</li>
-                </ul>
-
-                <div style="font-size:11px; color:#aaa; border-top:1px solid rgba(0,0,0,0.07); padding-top:10px; margin-top:2px;">More features dropping soon — Pro members get access first.</div>
             </div>
         </div>
+
+        <!-- SIGN UP: PERSONAL FORM -->
+        <div id="authSignUpPersonalSection" style="display:none;">
+            <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>
+            <div class="auth-form-heading">Personal Account</div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Name</label><input type="text" id="authNamePersonal" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPersonal" placeholder="you@example.com"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPersonal" placeholder="Password"></div>
+            <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberPersonal"> Remember me</label>
+            <button onclick="handleSignUpPersonalSubmit()" style="width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">CREATE ACCOUNT</button>
+        </div>
+
+        <!-- SIGN UP: PRO FORM -->
+        <div id="authSignUpProSection" style="display:none;">
+            <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>
+            <div class="auth-form-heading">Pro / Business <span class="auth-pro-inline-badge">APC PRO</span></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Name</label><input type="text" id="authNamePro" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPro" placeholder="you@example.com"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPro" placeholder="Password"></div>
+            <label class="choice-item" style="margin-bottom:16px;"><input type="checkbox" id="authRememberPro"> Remember me</label>
+            <div class="auth-pro-perks-box">
+                <div class="auth-pro-perks-hdr">What's included in your 3-month free trial</div>
+                <div class="auth-pro-perks-grid">
+                    <span>✓ Unlimited listings</span>
+                    <span>✓ Pro Dashboard</span>
+                    <span>✓ Warehouse &amp; QR labels</span>
+                    <span>✓ Trade Only mode</span>
+                    <span>✓ Find Wanted requests</span>
+                    <span>✓ Workshop profile</span>
+                    <span>✓ APC Pro badge</span>
+                    <span>✓ B2B marketplace</span>
+                </div>
+            </div>
+            <button onclick="handleSignUpProSubmit()" style="width:100%; padding:15px; background:#1d4ed8; color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; margin-top:4px;">START FREE TRIAL →</button>
+            <div style="text-align:center; font-size:11px; color:#aaa; margin-top:10px;">3 months free · No credit card required</div>
+        </div>
+
     </div>
 </div>
 
