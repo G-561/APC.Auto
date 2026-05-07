@@ -120,18 +120,18 @@ const publicWantedDatabase = [
 ];
 
 const workshopDatabase = [
-    { id: 1, name: 'Eastside Toyota Repairs', specialty: 'Camry bonnet, body panels & crash repair', distance: '3.4km', loc: 'ADELAIDE, SA', rating: 4.9, approvedClub: 'RAA', vehicleTypes: ['Toyota', 'Camry', 'Hiace'], services: ['panel', 'crash repair', 'fitting', 'radiator', 'cooling'] },
-    { id: 2, name: 'City Crash Workshop', specialty: 'Volkswagen and general panel fitment', distance: '5.1km', loc: 'ADELAIDE, SA', rating: 4.8, approvedClub: 'RAA', vehicleTypes: ['Volkswagen', 'Golf', 'Passat'], services: ['panel', 'alignment', 'fitment', 'electrical', 'air conditioning'] },
-    { id: 3, name: 'Suburban Auto Fitters', specialty: 'Suspension, brakes and body fitment for Japanese sedans', distance: '6.8km', loc: 'ADELAIDE, SA', rating: 4.7, vehicleTypes: ['Toyota', 'Mazda', 'Nissan'], services: ['mechanical', 'fitting', 'inspection', 'tyres', 'air conditioning'] },
-    { id: 4, name: 'Crash & Panel Pros', specialty: 'Full repair, repaint and fitting service', distance: '8.4km', loc: 'ADELAIDE, SA', rating: 4.6, vehicleTypes: ['Toyota', 'Volkswagen', 'Ford'], services: ['panel', 'body', 'fitment', 'upholstery', 'trimmer'] },
-    { id: 5, name: 'Hills Auto Trimmers', specialty: 'Custom upholstery, seat repairs and interior restoration', distance: '24km', loc: 'STIRLING, SA', rating: 4.8, vehicleTypes: ['All makes'], services: ['upholstery', 'trimmer'] },
-    { id: 6, name: 'Southern Auto Electrics & Air', specialty: 'Auto electrical, A/C regas and fault diagnosis', distance: '38km', loc: 'NOARLUNGA, SA', rating: 4.7, vehicleTypes: ['All makes'], services: ['electrical', 'air conditioning'] },
-    { id: 7, name: 'Barossa Mechanical & Cooling', specialty: 'Radiator repairs, engine cooling and general mechanical', distance: '62km', loc: 'NURIOOTPA, SA', rating: 4.5, vehicleTypes: ['Toyota', 'Ford', 'Holden'], services: ['mechanical', 'radiator', 'cooling'] }
+    { id: 1, name: 'Eastside Toyota Repairs',       specialty: 'Camry bonnet, body panels & crash repair',              distance: '3.4km',  loc: 'ADELAIDE, SA',   rating: 4.9, approvedClub: 'RAA', vehicleTypes: ['Toyota', 'Camry', 'Hiace'],          services: ['collision', 'sprayPaint', 'cooling'] },
+    { id: 2, name: 'City Crash Workshop',            specialty: 'Volkswagen and general panel fitment',                  distance: '5.1km',  loc: 'ADELAIDE, SA',   rating: 4.8, approvedClub: 'RAA', vehicleTypes: ['Volkswagen', 'Golf', 'Passat'],       services: ['collision', 'sprayPaint', 'autoElectrical', 'wheelAlign'] },
+    { id: 3, name: 'Suburban Auto Fitters',          specialty: 'Suspension, brakes and body fitment for Japanese sedans', distance: '6.8km', loc: 'ADELAIDE, SA',  rating: 4.7,                       vehicleTypes: ['Toyota', 'Mazda', 'Nissan'],          services: ['logbook', 'brakes', 'suspension', 'wheelAlign', 'aircon'] },
+    { id: 4, name: 'Crash & Panel Pros',             specialty: 'Full repair, repaint and fitting service',              distance: '8.4km',  loc: 'ADELAIDE, SA',   rating: 4.6,                       vehicleTypes: ['Toyota', 'Volkswagen', 'Ford'],       services: ['collision', 'sprayPaint', 'pdr', 'trimming'] },
+    { id: 5, name: 'Hills Auto Trimmers',            specialty: 'Custom upholstery, seat repairs and interior restoration', distance: '24km', loc: 'STIRLING, SA',  rating: 4.8,                       vehicleTypes: ['All makes'],                         services: ['autoGlass', 'trimming'] },
+    { id: 6, name: 'Southern Auto Electrics & Air',  specialty: 'Auto electrical, A/C regas and fault diagnosis',        distance: '38km',  loc: 'NOARLUNGA, SA',  rating: 4.7,                       vehicleTypes: ['All makes'],                         services: ['autoElectrical', 'aircon', 'battery'] },
+    { id: 7, name: 'Barossa Mechanical & Cooling',   specialty: 'Radiator repairs, engine cooling and general mechanical', distance: '62km', loc: 'NURIOOTPA, SA', rating: 4.5,                       vehicleTypes: ['Toyota', 'Ford', 'Holden'],           services: ['engineDiag', 'logbook', 'transmission', 'cooling'] }
 ];
 
 let workshopRadiusKm = null;
 
-const WORKSHOP_PROFILE_KEY = 'apc.workshopProfile.v1';
+const WORKSHOP_PROFILE_KEY = 'apc.workshopProfile.v2';
 let workshopProfile = loadWorkshopProfile();
 
 function loadWorkshopProfile() {
@@ -147,18 +147,22 @@ function saveWorkshopProfile() {
 }
 function getDefaultWorkshopProfile() {
     return {
-        name: '',
-        location: '',
         vehicles: '',
         services: {
-            panel: false,
-            fitment: false,
-            mechanical: false,
-            electrical: false,
-            alignment: false,
-            tyres: false
+            // Engine & Powertrain
+            logbook: false, engineDiag: false, engineRebuild: false,
+            transmission: false, exhaust: false, timingBelt: false,
+            // Chassis & Vehicle Dynamics
+            brakes: false, suspension: false, wheelAlign: false,
+            // Electrical, Climate & Cooling
+            autoElectrical: false, battery: false, aircon: false, cooling: false,
+            // Body, Glass & Interior
+            collision: false, sprayPaint: false, pdr: false, autoGlass: false, trimming: false,
         },
-        description: ''
+        partsType: 'new',
+        partsSpecialties: '',
+        wrecking: false,
+        wreckingMakes: '',
     };
 }
 
@@ -260,7 +264,9 @@ function getDefaultSettings() {
         businessName: '',
         abn: '',
         about: '',
+        businessType: 'supplier',
         businessLogo: '',
+        businessBanner: '',
         notifyWantedMatch:    true,
         notifyMessages:       true,
         notifyPriceDrops:     true,
@@ -296,6 +302,11 @@ function saveSettingsAccount() {
     saveSettingsName();
     saveSettingsLocation();
     showToast('Account settings saved');
+}
+function formatABN(abn) {
+    const d = abn.replace(/\s/g, '');
+    if (d.length !== 11) return abn;
+    return `${d.slice(0,2)} ${d.slice(2,5)} ${d.slice(5,8)} ${d.slice(8,11)}`;
 }
 function saveSettingsProBusiness() {
     userSettings.businessName = document.getElementById('proSettingBusinessName')?.value.trim() || '';
@@ -339,6 +350,61 @@ function renderLogoPreview() {
     if (removeBtn) removeBtn.style.display = logo ? '' : 'none';
 }
 
+function handleBannerUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { showToast('Image too large — please use an image under 2 MB'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+        userSettings.businessBanner = e.target.result;
+        saveUserSettings();
+        renderBannerPreview();
+        showToast('Banner saved');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeBannerImage() {
+    userSettings.businessBanner = '';
+    saveUserSettings();
+    const fileInput = document.getElementById('bannerFileInput');
+    if (fileInput) fileInput.value = '';
+    renderBannerPreview();
+    showToast('Banner removed');
+}
+
+function renderBannerPreview() {
+    const banner      = userSettings.businessBanner || '';
+    const img         = document.getElementById('bannerPreviewImg');
+    const placeholder = document.getElementById('bannerPreviewPlaceholder');
+    const removeBtn   = document.getElementById('bannerRemoveBtn');
+    if (img) { img.src = banner; img.style.display = banner ? 'block' : 'none'; }
+    if (placeholder) placeholder.style.display = banner ? 'none' : '';
+    if (removeBtn) removeBtn.style.display = banner ? '' : 'none';
+    const hint = document.getElementById('bannerSizeHint');
+    if (hint) hint.textContent = banner ? '' : 'Recommended: 1200 × 400 px · JPG or PNG · max 2 MB';
+}
+
+function setBizType(el, type) {
+    document.querySelectorAll('#bizTypeControl .radius-seg').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    userSettings.businessType = type;
+    saveUserSettings();
+    const servSection  = document.getElementById('workshopServicesSection');
+    const partsSection = document.getElementById('workshopPartsSection');
+    if (servSection)  servSection.style.display  = (type === 'service' || type === 'both') ? 'block' : 'none';
+    if (partsSection) partsSection.style.display = (type === 'supplier' || type === 'both') ? 'block' : 'none';
+}
+function setPartsType(el, type) {
+    document.querySelectorAll('#partsTypeControl .radius-seg').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    workshopProfile.partsType = type;
+}
+function toggleWreckingMakes(cb) {
+    const row = document.getElementById('wsWreckingMakesRow');
+    if (row) row.style.display = cb.checked ? 'block' : 'none';
+}
+
 function saveSettingsToggle(key, value) {
     userSettings[key] = value;
     saveUserSettings();
@@ -361,13 +427,6 @@ function renderSettingsDrawer() {
 
     if (nameEl) nameEl.value = currentUserName || '';
     if (locEl)  locEl.value  = userSettings.location || '';
-    const bizEl   = document.getElementById('proSettingBusinessName');
-    const abnEl   = document.getElementById('proSettingABN');
-    const aboutEl = document.getElementById('proSettingAbout');
-    if (bizEl)   bizEl.value   = userSettings.businessName || '';
-    if (abnEl)   abnEl.value   = userSettings.abn || '';
-    if (aboutEl) aboutEl.value = userSettings.about || '';
-    renderLogoPreview();
 
     const isPro = currentUserTier === 'pro';
     const proBlock = document.getElementById('settingsProBlock');
@@ -479,10 +538,13 @@ const INBOX_STORAGE_KEY = 'apc.inbox.v1';
 let inboxItems = loadInboxItems();
 
 // ── CONVERSATIONS (Message Centre) ───────────────────────────
-const CONVS_KEY = 'apc.conversations.v3';
-let conversations = loadConversations();
-let activeConvId  = null;
-let inboxCurrentTab = 'chats';
+const CONVS_KEY  = 'apc.conversations.v3';
+const TRASH_KEY  = 'apc.conversations.trash.v1';
+const TRASH_TTL  = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
+let conversations        = loadConversations();
+let trashedConversations = loadTrash();
+let activeConvId         = null;
+let inboxCurrentTab      = 'chats';
 
 function loadConversations() {
     try { const s = localStorage.getItem(CONVS_KEY); if (s) return JSON.parse(s); } catch(e) {}
@@ -490,6 +552,19 @@ function loadConversations() {
 }
 function saveConversations() {
     try { localStorage.setItem(CONVS_KEY, JSON.stringify(conversations)); } catch(e) {}
+}
+function loadTrash() {
+    try { const s = localStorage.getItem(TRASH_KEY); if (s) return JSON.parse(s); } catch(e) {}
+    return [];
+}
+function saveTrash() {
+    try { localStorage.setItem(TRASH_KEY, JSON.stringify(trashedConversations)); } catch(e) {}
+}
+function purgeTrashedConversations() {
+    const cutoff = Date.now() - TRASH_TTL;
+    const before = trashedConversations.length;
+    trashedConversations = trashedConversations.filter(c => c.deletedAt > cutoff);
+    if (trashedConversations.length !== before) saveTrash();
 }
 function getInitialConversations() {
     return [
@@ -553,14 +628,19 @@ function switchInboxTab(tab) {
     inboxCurrentTab = tab;
     const chatsBtn  = document.getElementById('itabChats');
     const notifsBtn = document.getElementById('itabNotifs');
+    const trashBtn  = document.getElementById('itabTrash');
     if (chatsBtn)  chatsBtn.classList.toggle('active',  tab === 'chats');
     if (notifsBtn) notifsBtn.classList.toggle('active', tab === 'notifications');
+    if (trashBtn)  trashBtn.classList.toggle('active',  tab === 'trash');
     const chatsPanel  = document.getElementById('inboxChatsPanel');
     const notifsPanel = document.getElementById('inboxNotifsPanel');
+    const trashPanel  = document.getElementById('inboxTrashPanel');
     if (chatsPanel)  chatsPanel.style.display  = tab === 'chats' ? 'flex' : 'none';
     if (notifsPanel) notifsPanel.style.display = tab === 'notifications' ? 'flex' : 'none';
+    if (trashPanel)  trashPanel.style.display  = tab === 'trash' ? 'flex' : 'none';
     if (tab === 'chats')         renderInboxConvList();
     if (tab === 'notifications') renderInboxContent();
+    if (tab === 'trash')         renderTrashList();
 }
 
 function renderInboxConvList(filter) {
@@ -797,6 +877,12 @@ function flagConversation(id) {
     }
 }
 function deleteConversation(id) {
+    const conv = conversations.find(c => c.id === id);
+    if (conv) {
+        trashedConversations.unshift({ ...conv, deletedAt: Date.now() });
+        saveTrash();
+        updateTrashBadge();
+    }
     conversations = conversations.filter(c => c.id !== id);
     if (activeConvId === id) {
         activeConvId = null;
@@ -808,6 +894,73 @@ function deleteConversation(id) {
     saveConversations();
     updateInboxBadge();
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+}
+function restoreConversation(id) {
+    const conv = trashedConversations.find(c => c.id === id);
+    if (!conv) return;
+    const { deletedAt, ...restored } = conv;
+    conversations.unshift(restored);
+    trashedConversations = trashedConversations.filter(c => c.id !== id);
+    saveConversations();
+    saveTrash();
+    updateInboxBadge();
+    updateTrashBadge();
+    renderTrashList();
+    showToast('Conversation restored');
+}
+function permanentDeleteConversation(id) {
+    trashedConversations = trashedConversations.filter(c => c.id !== id);
+    saveTrash();
+    updateTrashBadge();
+    renderTrashList();
+}
+function emptyTrash() {
+    if (!trashedConversations.length) return;
+    if (!confirm('Permanently delete all trashed conversations? This cannot be undone.')) return;
+    trashedConversations = [];
+    saveTrash();
+    updateTrashBadge();
+    renderTrashList();
+}
+function updateTrashBadge() {
+    const badge = document.getElementById('itabTrashBadge');
+    if (!badge) return;
+    const count = trashedConversations.length;
+    badge.textContent = count;
+    badge.style.display = count > 0 ? '' : 'none';
+}
+function renderTrashList() {
+    const panel = document.getElementById('inboxTrashPanel');
+    if (!panel) return;
+    if (!trashedConversations.length) {
+        panel.innerHTML = '<div class="inbox-trash-empty"><div style="font-size:36px;margin-bottom:8px;">🗑️</div><div>Trash is empty</div><div style="font-size:12px;color:#aaa;margin-top:4px;">Deleted chats are kept for 30 days</div></div>';
+        return;
+    }
+    const fmt = ts => {
+        const d = new Date(ts);
+        return d.toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+    };
+    const daysLeft = ts => Math.max(0, Math.ceil((ts + TRASH_TTL - Date.now()) / 86400000));
+    panel.innerHTML = `
+        <div class="inbox-trash-toolbar">
+            <span style="font-size:12px;color:#888;">${trashedConversations.length} chat${trashedConversations.length !== 1 ? 's' : ''} · auto-deleted after 30 days</span>
+            <button class="inbox-trash-empty-btn" onclick="emptyTrash()">Empty Trash</button>
+        </div>
+        ${trashedConversations.map(c => {
+            const partTitle = (() => { const p = partDatabase.concat(userListings).find(p => p.id === c.partId); return p ? p.title : (c.partTitle || 'Part'); })();
+            const days = daysLeft(c.deletedAt);
+            return `<div class="inbox-trash-item">
+                <div class="inbox-trash-item-info">
+                    <div class="inbox-trash-name">${escapeHtml(c.with)}</div>
+                    <div class="inbox-trash-part">${escapeHtml(partTitle)}</div>
+                    <div class="inbox-trash-meta">Deleted ${fmt(c.deletedAt)} · ${days > 0 ? `expires in ${days} day${days !== 1 ? 's' : ''}` : 'expires today'}</div>
+                </div>
+                <div class="inbox-trash-actions">
+                    <button class="inbox-trash-restore-btn" onclick="restoreConversation(${c.id})">Restore</button>
+                    <button class="inbox-trash-del-btn" onclick="permanentDeleteConversation(${c.id})">Delete</button>
+                </div>
+            </div>`;
+        }).join('')}`;
 }
 function filterInboxConvs(val) { renderInboxConvList(val); }
 function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
@@ -1238,11 +1391,12 @@ function sellerHasListedFor(wanted) {
 // This is a Pro seller tool: search what buyers are looking for, then list it.
 // Wanted items the seller has already listed a matching part for are hidden automatically.
 function renderWantedSearchResults(mainGrid) {
-    const query = activeFilters.search.toLowerCase();
+    const query  = activeFilters.search.toLowerCase();
     const fMake  = activeFilters.make     || '';
     const fModel = activeFilters.model    || '';
     const fYear  = activeFilters.year     || '';
     const fCat   = activeFilters.category || 'all';
+    const fState = activeFilters.location || 'all';
     const matching = publicWantedDatabase.filter(w => {
         if (sellerHasListedFor(w)) return false;
         if (query && !w.partName.toLowerCase().includes(query) &&
@@ -1252,6 +1406,12 @@ function renderWantedSearchResults(mainGrid) {
         if (fModel && !w.model.toLowerCase().includes(fModel)) return false;
         if (fYear  && w.year !== fYear)                        return false;
         if (fCat !== 'all' && w.category !== fCat)             return false;
+        if (fState !== 'all') {
+            const stateCode = w.loc.split(',')[1]?.trim();
+            if (stateCode !== fState) return false;
+        }
+        if (!activeFilters.sellerPro     &&  w.isPro) return false;
+        if (!activeFilters.sellerPrivate && !w.isPro) return false;
         return true;
     });
 
@@ -1308,8 +1468,8 @@ function renderMyParts() {
     myPartsList.innerHTML = '';
     const mySeller = getCurrentSellerName();
     const query = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
-    const myParts = getAllParts().filter(part =>
-        part.seller === mySeller &&
+    const myParts = userListings.filter(part =>
+        part.status !== 'sold' && part.status !== 'removed' &&
         (!query || part.title.toLowerCase().includes(query))
     );
 
@@ -1935,8 +2095,24 @@ function shareCurrentListing(btn) {
 }
 
 // --- SELLER STOREFRONT ---
-function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location) {
+function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location, banner) {
     const initial = (sellerName || 'S').charAt(0).toUpperCase();
+
+    // Hero banner
+    const hero = document.querySelector('#storefrontDrawer .sf-hero');
+    if (hero) {
+        if (banner) {
+            hero.style.backgroundImage = `url(${banner})`;
+            hero.style.backgroundSize = 'cover';
+            hero.style.backgroundPosition = 'center';
+            hero.classList.add('has-banner');
+        } else {
+            hero.style.backgroundImage = '';
+            hero.style.backgroundSize = '';
+            hero.style.backgroundPosition = '';
+            hero.classList.remove('has-banner');
+        }
+    }
 
     // Logo / initials
     const logoImg      = document.getElementById('sfLogoImg');
@@ -2003,14 +2179,15 @@ function openStorefront(partId) {
     const part = getPartById(partId);
     if (!part) return;
     const isOwn = part.seller === getCurrentSellerName();
-    const logo         = isOwn ? (userSettings.businessLogo || '') : '';
-    const businessName = isOwn ? (userSettings.businessName || '') : '';
-    const abn          = isOwn ? (userSettings.abn || '') : '';
-    const about        = isOwn ? (userSettings.about || '') : '';
-    const location     = isOwn ? (userSettings.location || '') : '';
+    const logo         = isOwn ? (userSettings.businessLogo   || '') : '';
+    const banner       = isOwn ? (userSettings.businessBanner || '') : '';
+    const businessName = isOwn ? (userSettings.businessName   || '') : '';
+    const abn          = isOwn ? (userSettings.abn            || '') : '';
+    const about        = isOwn ? (userSettings.about          || '') : '';
+    const location     = isOwn ? (userSettings.location       || '') : '';
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = part.seller;
-    renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location);
+    renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
     toggleDrawer('storefrontDrawer', true);
 }
 
@@ -3784,11 +3961,12 @@ function openMyStorefront() {
     renderStorefront(
         sellerName,
         currentUserTier === 'pro',
-        userSettings.businessLogo || '',
-        userSettings.businessName || '',
-        userSettings.abn          || '',
-        userSettings.about        || '',
-        userSettings.location     || ''
+        userSettings.businessLogo   || '',
+        userSettings.businessName   || '',
+        userSettings.abn            || '',
+        userSettings.about          || '',
+        userSettings.location       || '',
+        userSettings.businessBanner || ''
     );
     toggleDrawer('storefrontDrawer');
 }
@@ -3852,15 +4030,54 @@ function openWorkshopProfileEditor() {
     if (profileFields) profileFields.style.display = 'block';
     if (drawerTitle)   drawerTitle.textContent      = 'Workshop & Repairer Profile';
     if (notice)        notice.style.display         = currentUserTier !== 'pro' ? 'block' : 'none';
-    // Pre-fill saved profile values
-    const nameField     = document.getElementById('workshopName');
-    const locationField = document.getElementById('workshopLocation');
+    // Pre-fill unified profile fields
+    const bizEl   = document.getElementById('proSettingBusinessName');
+    const locEl   = document.getElementById('proSettingLocation');
+    const abnEl   = document.getElementById('proSettingABN');
+    const aboutEl = document.getElementById('proSettingAbout');
+    if (bizEl)   bizEl.value   = userSettings.businessName || '';
+    if (locEl)   locEl.value   = userSettings.location     || '';
+    if (abnEl)   abnEl.value   = formatABN(userSettings.abn || '');
+    if (aboutEl) aboutEl.value = userSettings.about        || '';
+    // Business type selector
+    const bizType = userSettings.businessType || 'supplier';
+    document.querySelectorAll('#bizTypeControl .radius-seg').forEach(s => {
+        s.classList.toggle('active', s.dataset.type === bizType);
+    });
+    const servSection  = document.getElementById('workshopServicesSection');
+    const partsSection = document.getElementById('workshopPartsSection');
+    if (servSection)  servSection.style.display  = (bizType === 'service' || bizType === 'both') ? 'block' : 'none';
+    if (partsSection) partsSection.style.display = (bizType === 'supplier' || bizType === 'both') ? 'block' : 'none';
+    // Service checkboxes
+    const svc = workshopProfile.services || {};
+    const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+    setChk('wsLogbook', svc.logbook);         setChk('wsEngineDiag', svc.engineDiag);
+    setChk('wsEngineRebuild', svc.engineRebuild); setChk('wsTransmission', svc.transmission);
+    setChk('wsExhaust', svc.exhaust);         setChk('wsTimingBelt', svc.timingBelt);
+    setChk('wsBrakes', svc.brakes);           setChk('wsSuspension', svc.suspension);
+    setChk('wsWheelAlign', svc.wheelAlign);
+    setChk('wsAutoElectrical', svc.autoElectrical); setChk('wsBattery', svc.battery);
+    setChk('wsAircon', svc.aircon);           setChk('wsCooling', svc.cooling);
+    setChk('wsCollision', svc.collision);     setChk('wsSprayPaint', svc.sprayPaint);
+    setChk('wsPDR', svc.pdr);                setChk('wsAutoGlass', svc.autoGlass);
+    setChk('wsTrimming', svc.trimming);
     const vehiclesField = document.getElementById('workshopVehicles');
-    const descField     = document.getElementById('workshopDescription');
-    if (nameField)     nameField.value     = workshopProfile.name;
-    if (locationField) locationField.value = workshopProfile.location;
-    if (vehiclesField) vehiclesField.value = workshopProfile.vehicles;
-    if (descField)     descField.value     = workshopProfile.description;
+    if (vehiclesField) vehiclesField.value = workshopProfile.vehicles || '';
+    // Parts section
+    const partsType = workshopProfile.partsType || 'new';
+    document.querySelectorAll('#partsTypeControl .radius-seg').forEach(s => {
+        s.classList.toggle('active', s.dataset.pts === partsType);
+    });
+    const partsSpecEl = document.getElementById('wsPartsSpecialties');
+    if (partsSpecEl) partsSpecEl.value = workshopProfile.partsSpecialties || '';
+    const wreckingCb = document.getElementById('wsWrecking');
+    if (wreckingCb) wreckingCb.checked = !!workshopProfile.wrecking;
+    const wreckingMakesRow = document.getElementById('wsWreckingMakesRow');
+    if (wreckingMakesRow) wreckingMakesRow.style.display = workshopProfile.wrecking ? 'block' : 'none';
+    const wreckingMakesEl = document.getElementById('wsWreckingMakes');
+    if (wreckingMakesEl) wreckingMakesEl.value = workshopProfile.wreckingMakes || '';
+    renderLogoPreview();
+    renderBannerPreview();
     toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {
@@ -3872,22 +4089,34 @@ function submitWorkshopProfile() {
         showToast('Upgrade to APC Pro to save your workshop profile');
         return;
     }
+    // Save unified profile to userSettings
+    userSettings.businessName = document.getElementById('proSettingBusinessName')?.value.trim() || '';
+    userSettings.location     = document.getElementById('proSettingLocation')?.value.trim() || '';
+    userSettings.abn          = document.getElementById('proSettingABN')?.value.trim() || '';
+    userSettings.about        = document.getElementById('proSettingAbout')?.value.trim() || '';
+    saveUserSettings();
+    const getChk = id => document.getElementById(id)?.checked || false;
     workshopProfile = {
-        name: document.getElementById('workshopName')?.value.trim() || '',
-        location: document.getElementById('workshopLocation')?.value.trim() || '',
         vehicles: document.getElementById('workshopVehicles')?.value.trim() || '',
         services: {
-            panel: document.getElementById('workshopServicePanel')?.checked || false,
-            fitment: document.getElementById('workshopServiceFitment')?.checked || false,
-            mechanical: document.getElementById('workshopServiceMechanical')?.checked || false,
-            electrical: document.getElementById('workshopServiceElectrical')?.checked || false,
-            alignment: document.getElementById('workshopServiceAlignment')?.checked || false,
-            tyres: document.getElementById('workshopServiceTyres')?.checked || false
+            logbook: getChk('wsLogbook'),         engineDiag: getChk('wsEngineDiag'),
+            engineRebuild: getChk('wsEngineRebuild'), transmission: getChk('wsTransmission'),
+            exhaust: getChk('wsExhaust'),         timingBelt: getChk('wsTimingBelt'),
+            brakes: getChk('wsBrakes'),           suspension: getChk('wsSuspension'),
+            wheelAlign: getChk('wsWheelAlign'),
+            autoElectrical: getChk('wsAutoElectrical'), battery: getChk('wsBattery'),
+            aircon: getChk('wsAircon'),           cooling: getChk('wsCooling'),
+            collision: getChk('wsCollision'),     sprayPaint: getChk('wsSprayPaint'),
+            pdr: getChk('wsPDR'),                autoGlass: getChk('wsAutoGlass'),
+            trimming: getChk('wsTrimming'),
         },
-        description: document.getElementById('workshopDescription')?.value.trim() || ''
+        partsType: document.querySelector('#partsTypeControl .radius-seg.active')?.dataset.pts || 'new',
+        partsSpecialties: document.getElementById('wsPartsSpecialties')?.value.trim() || '',
+        wrecking: getChk('wsWrecking'),
+        wreckingMakes: document.getElementById('wsWreckingMakes')?.value.trim() || '',
     };
     saveWorkshopProfile();
-    showToast('Workshop profile saved');
+    showToast('Profile saved');
     toggleDrawer('workshopDrawer');
 }
 function renderWorkshopProfile() {
@@ -3949,13 +4178,12 @@ function getApprovedClubInfo() {
 
 function renderWorkshopBrowseView() {
     const filters = {
-        mechanical:  document.getElementById('workshopFilterMechanical')?.checked,
-        crash:       document.getElementById('workshopFilterCrash')?.checked,
-        electrician: document.getElementById('workshopFilterElectrician')?.checked,
-        tyres:       document.getElementById('workshopFilterTyres')?.checked,
-        trimmer:     document.getElementById('workshopFilterTrimmer')?.checked,
-        aircon:      document.getElementById('workshopFilterAircon')?.checked,
-        radiator:    document.getElementById('workshopFilterRadiator')?.checked
+        engine:    document.getElementById('workshopFilterEngine')?.checked,
+        chassis:   document.getElementById('workshopFilterChassis')?.checked,
+        electrical: document.getElementById('workshopFilterElectrical')?.checked,
+        body:      document.getElementById('workshopFilterBody')?.checked,
+        parts:     document.getElementById('workshopFilterParts')?.checked,
+        wrecking:  document.getElementById('workshopFilterWrecking')?.checked,
     };
     const sponsoredList = document.getElementById('workshopSponsoredList');
     if (!sponsoredList) return;
@@ -3983,13 +4211,13 @@ function renderWorkshopBrowseView() {
         }
         if (!activeFilters.length) return true;
         return activeFilters.some(filter => {
-            if (filter === 'mechanical')  return w.services.includes('mechanical');
-            if (filter === 'crash')       return w.services.includes('crash repair') || w.services.includes('panel');
-            if (filter === 'electrician') return w.services.includes('electrical');
-            if (filter === 'tyres')       return w.services.includes('tyres');
-            if (filter === 'trimmer')     return w.services.includes('upholstery') || w.services.includes('trimmer');
-            if (filter === 'aircon')      return w.services.includes('air conditioning') || w.services.includes('aircon');
-            if (filter === 'radiator')    return w.services.includes('radiator') || w.services.includes('cooling');
+            const s = w.services;
+            if (filter === 'engine')     return s.some(x => ['logbook','engineDiag','engineRebuild','transmission','exhaust','timingBelt'].includes(x));
+            if (filter === 'chassis')    return s.some(x => ['brakes','suspension','wheelAlign'].includes(x));
+            if (filter === 'electrical') return s.some(x => ['autoElectrical','battery','aircon','cooling'].includes(x));
+            if (filter === 'body')       return s.some(x => ['collision','sprayPaint','pdr','autoGlass','trimming'].includes(x));
+            if (filter === 'parts')      return s.some(x => x === 'parts' || x === 'partsSupplier');
+            if (filter === 'wrecking')   return s.some(x => x === 'wrecking');
             return false;
         });
     });
@@ -4607,8 +4835,9 @@ function renderDashListings(tab, btn) {
     if (!body) return;
 
     let rows = '';
+    let hasMore = false;
     if (tab === 'active') {
-        let items = getAllParts().filter(p => p.seller === sellerName);
+        let items = userListings.filter(p => p.status !== 'sold' && p.status !== 'removed');
         const total = items.length;
         if (q)   items = items.filter(p => p.title.toLowerCase().includes(q) || (p.category || '').includes(q) || p.loc.toLowerCase().includes(q) || String(p.stockNumber || '').includes(q));
         if (cat) items = items.filter(p => p.category === cat);
@@ -4623,7 +4852,7 @@ function renderDashListings(tab, btn) {
         }
         const isFiltered = q || cat;
         const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
-        const hasMore  = !isFiltered && items.length > _dashListingsShown;
+        hasMore = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
             <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt=""></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
@@ -4632,7 +4861,7 @@ function renderDashListings(tab, btn) {
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
                 ${p.warehouseBin ? `<button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>` : ''}
-                <button class="dash-action-btn" onclick="openEditListing(${p.id});closeDashboard();">Edit</button>
+                <button class="dash-action-btn" onclick="openEditListing(${p.id});">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="showToast('Mark as sold — coming soon')">Mark Sold</button>
                 <button class="dash-action-btn dash-btn-danger" onclick="deleteListing(${p.id});renderDashboard();">Delete</button>
             </td></tr>`).join('');
@@ -4759,6 +4988,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.innerWidth >= 900) applyFiltersAndRender();
         });
     });
+
+    // Purge conversations trashed more than 30 days ago
+    purgeTrashedConversations();
+    updateTrashBadge();
 
     // Prepare the sell form preview boxes
     renderSellImagePreviews();

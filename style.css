@@ -536,33 +536,37 @@ header {
 /* Hero banner */
 .sf-hero {
     background: linear-gradient(135deg, var(--apc-orange) 0%, #e07a0a 100%);
-    height: 110px;
+    height: 120px;
     position: relative;
     flex-shrink: 0;
+    transition: height 0.2s ease;
+}
+.sf-hero.has-banner {
+    height: 160px;
 }
 
 /* Logo circle — sits half over hero, half over identity */
 .sf-logo-wrap {
     position: absolute;
-    bottom: -36px;
+    bottom: -44px;
     left: 20px;
-    width: 72px; height: 72px;
-    border-radius: 50%;
+    width: 88px; height: 88px;
+    border-radius: 16px;
     background: white;
     border: 3px solid white;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.22);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden;
 }
-.sf-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.sf-logo-img { width: 100%; height: 100%; object-fit: contain; border-radius: 13px; }
 .sf-logo-initials {
-    font-size: 26px; font-weight: 900;
+    font-size: 32px; font-weight: 900;
     color: var(--apc-orange);
 }
 
 /* Identity block */
 .sf-identity {
-    padding: 46px 20px 14px 20px;
+    padding: 54px 20px 14px 20px;
     border-bottom: 1px solid #f0f0f0;
 }
 .sf-name-row {
@@ -654,6 +658,29 @@ header {
     border-radius: 8px;
     font-size: 12px; font-weight: 700; color: #e53935;
     cursor: pointer;
+}
+.banner-upload-preview {
+    width: 100%; height: 80px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--apc-orange) 0%, #e07a0a 100%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+.ws-service-group { margin-bottom: 16px; }
+.input-group-row { display: flex; gap: 10px; align-items: flex-start; }
+.input-group-row .input-group { margin-bottom: 0; }
+.ws-group-label {
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--apc-orange);
+    margin-bottom: 8px; padding-bottom: 4px;
+    border-bottom: 1.5px solid #f0f0f0;
+}
+.prof-media-remove-btn {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(0,0,0,0.45); color: white; border: none;
+    border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
 }
 .settings-about-input {
     width: 100%; padding: 10px 12px;
@@ -3175,11 +3202,12 @@ header {
         right: calc(max(0px, 50vw - 700px) + 220px) !important;
         width: auto !important;
         height: auto !important;
-        top: 140px; /* overridden by updateHeaderOffset() */
-        bottom: 0;
-        box-shadow: none !important;
-        border-left: 1px solid #e8e8e8;
-        border-right: 1px solid #e8e8e8;
+        top: 140px !important;
+        bottom: 16px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important;
+        border: none !important;
+        overflow: hidden;
     }
     /* 3-col grid inside storefront — 5-col would be too tight */
     #sellerPartsGrid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -3820,6 +3848,21 @@ header {
 
 .inbox-two-panel { display: flex; flex: 1; overflow: hidden; }
 
+/* ── Trash panel ── */
+.inbox-trash-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: #aaa; font-size: 14px; font-weight: 600; }
+.inbox-trash-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; }
+.inbox-trash-empty-btn { background: none; border: 1.5px solid #e03b3b; color: #e03b3b; font-size: 12px; font-weight: 700; border-radius: 8px; padding: 5px 12px; cursor: pointer; font-family: inherit; }
+.inbox-trash-empty-btn:hover { background: #ffeaea; }
+.inbox-trash-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; }
+.inbox-trash-item-info { flex: 1; min-width: 0; }
+.inbox-trash-name { font-size: 14px; font-weight: 700; color: #222; }
+.inbox-trash-part { font-size: 12px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox-trash-meta { font-size: 11px; color: #bbb; margin-top: 3px; }
+.inbox-trash-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.inbox-trash-restore-btn { background: var(--apc-blue); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.inbox-trash-del-btn { background: none; border: 1.5px solid #e03b3b; color: #e03b3b; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.inbox-trash-del-btn:hover { background: #ffeaea; }
+
 .inbox-conv-col {
     width: 270px; flex-shrink: 0; border-right: 1px solid #eee;
     display: flex; flex-direction: column; background: white;
@@ -3927,7 +3970,8 @@ header {
 .inbox-thread-with { font-size: 11px; font-weight: 700; color: #888; }
 .inbox-thread-title { font-size: 13px; font-weight: 800; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inbox-thread-price { font-size: 15px; font-weight: 900; color: var(--apc-blue); }
-.inbox-view-btn { background: var(--apc-orange); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; font-family: inherit; }
+.inbox-view-btn { background: var(--apc-blue); color: white; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; font-family: inherit; }
+.inbox-view-btn:hover { background: #0062cc; }
 .inbox-pending-btn { background: white; color: #92400e; border: 2px solid #f59e0b; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; flex-shrink: 0; font-family: inherit; transition: background 0.15s, color 0.15s; }
 .inbox-pending-btn:hover { background: #fef3c7; }
 .inbox-pending-btn.inbox-pending-active { background: #f59e0b; color: white; border-color: #f59e0b; }
@@ -3955,7 +3999,7 @@ header {
 .inbox-photo-btn:hover { background: #e4e4e4; }
 .inbox-reply-input { flex: 1; border: 1.5px solid #e4e4e4; border-radius: 18px; padding: 8px 14px; font-size: 13px; resize: none; outline: none; font-family: inherit; min-height: 36px; max-height: 100px; overflow-y: auto; line-height: 1.4; background: #f8f8f8; }
 .inbox-reply-input:focus { border-color: var(--apc-orange); background: white; }
-.inbox-send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--apc-orange); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.inbox-send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--apc-blue); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 @media (max-width: 899px) {
     .inbox-conv-col { width: 100%; position: absolute; inset: 0; transition: transform 0.28s ease; z-index: 1; }

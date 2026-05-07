@@ -769,7 +769,7 @@
                 <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Pickup</label>
             </div>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Private</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Personal</label>
                 <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> APC Pro</label>
             </div>
         </div>
@@ -1099,41 +1099,20 @@
                 <div class="settings-section-label settings-pro-label">APC Pro</div>
 
                 <div class="settings-section settings-pro-section">
-                    <div class="settings-pro-section-hdr">Business Identity</div>
-
-                    <!-- Logo upload -->
-                    <div class="settings-row" style="align-items:center; gap:14px; flex-wrap:wrap;">
-                        <div class="logo-upload-preview" id="logoPreviewCircle">
-                            <img id="logoPreviewImg" src="" alt="" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:50%;">
-                            <span id="logoPreviewInitials" style="font-size:18px; font-weight:800; color:#fff;">G</span>
+                    <div class="settings-pro-section-hdr">Business Profile</div>
+                    <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openMyStorefront()">
+                        <div>
+                            <div class="settings-row-label">My Storefront</div>
+                            <div class="settings-row-sub">Preview how buyers see your seller page</div>
                         </div>
-                        <div style="flex:1; min-width:0;">
-                            <div class="settings-row-label">Business Logo</div>
-                            <div class="settings-row-sub">Shown on your storefront — square logos work best</div>
-                            <div style="display:flex; gap:8px; margin-top:8px;">
-                                <label class="logo-upload-btn">
-                                    Upload logo
-                                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
-                                </label>
-                                <button id="logoRemoveBtn" onclick="removeBusinessLogo()" class="logo-remove-btn" style="display:none;">Remove</button>
-                            </div>
+                        <span class="settings-chevron" style="color:var(--apc-blue);">›</span>
+                    </div>
+                    <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
+                        <div>
+                            <div class="settings-row-label">Workshop &amp; Repairer Profile</div>
+                            <div class="settings-row-sub">Manage your storefront logo, banner, business details &amp; services</div>
                         </div>
-                    </div>
-
-                    <div class="settings-row">
-                        <span class="settings-row-label">Business / Yard Name</span>
-                        <input type="text" id="proSettingBusinessName" class="settings-inline-input" placeholder="e.g. Gary's Wreckers">
-                    </div>
-                    <div class="settings-row">
-                        <span class="settings-row-label">ABN <span style="font-weight:400;color:#aaa;">optional</span></span>
-                        <input type="text" id="proSettingABN" class="settings-inline-input" placeholder="12 345 678 901">
-                    </div>
-                    <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:6px;">
-                        <span class="settings-row-label">About your business <span style="font-weight:400;color:#aaa;">optional</span></span>
-                        <textarea id="proSettingAbout" class="settings-about-input" rows="3" placeholder="e.g. Specialising in Japanese imports, serving SA since 2005. We stock 500+ vehicles at any time."></textarea>
-                    </div>
-                    <div class="settings-row" style="justify-content:flex-end; padding-top:4px;">
-                        <button onclick="saveSettingsProBusiness()" class="settings-save-btn settings-save-btn-pro">Save details</button>
+                        <span class="settings-chevron" style="color:var(--apc-blue);">›</span>
                     </div>
                 </div>
 
@@ -1177,24 +1156,6 @@
                             <div class="settings-row-sub">Rack/bin locations &amp; QR labels for listings</div>
                         </div>
                         <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
-                    </div>
-                </div>
-
-                <div class="settings-section settings-pro-section">
-                    <div class="settings-pro-section-hdr">Business Profile</div>
-                    <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
-                        <div>
-                            <div class="settings-row-label">Workshop &amp; Repairer Profile</div>
-                            <div class="settings-row-sub">List your services, makes &amp; models you specialise in</div>
-                        </div>
-                        <span class="settings-chevron" style="color:#2563eb;">›</span>
-                    </div>
-                    <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Storefront')">
-                        <div>
-                            <div class="settings-row-label">My Storefront</div>
-                            <div class="settings-row-sub">Preview how buyers see your seller page</div>
-                        </div>
-                        <span class="settings-chevron" style="color:#2563eb;">›</span>
                     </div>
                 </div>
 
@@ -1324,13 +1285,12 @@
             <div class="filter-section">
                 <h4>Filter by service</h4>
                 <div id="workshopServiceGrid">
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterMechanical" onclick="renderWorkshopBrowseView()"> Mechanical</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterCrash" onclick="renderWorkshopBrowseView()"> Crash repair</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterElectrician" onclick="renderWorkshopBrowseView()"> Auto electrician</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterTyres" onclick="renderWorkshopBrowseView()"> Tyres & wheels</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterTrimmer" onclick="renderWorkshopBrowseView()"> Auto trimmer</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterAircon" onclick="renderWorkshopBrowseView()"> Air conditioning</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterRadiator" onclick="renderWorkshopBrowseView()"> Radiator & cooling</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterEngine" onclick="renderWorkshopBrowseView()"> Engine &amp; Powertrain</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterChassis" onclick="renderWorkshopBrowseView()"> Chassis &amp; Vehicle Dynamics</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterElectrical" onclick="renderWorkshopBrowseView()"> Electrical, Climate &amp; Cooling</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterBody" onclick="renderWorkshopBrowseView()"> Body, Glass &amp; Interior</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterParts" onclick="renderWorkshopBrowseView()"> Parts Supplier</label>
+                    <label class="choice-item"><input type="checkbox" id="workshopFilterWrecking" onclick="renderWorkshopBrowseView()"> Wrecking &amp; Salvage</label>
                 </div>
                 <div class="workshop-approved-section">
                     <label class="workshop-approved-label">
@@ -1355,50 +1315,163 @@
                 <button onclick="onUpgradeToPro()" style="margin-top: 12px; width: 100%; background: var(--apc-blue); color: white; border: none; border-radius: 12px; padding: 12px 0; font-weight: 700; cursor: pointer;">Upgrade to APC Pro</button>
             </div>
 
-            <div class="filter-section">
-                <h4>Workshop / Repairer profile</h4>
-                <div class="input-group">
-                    <label>Business name</label>
-                    <input id="workshopName" type="text" placeholder="e.g. Eastside Toyota Repairs">
-                </div>
-                <div class="input-group">
-                    <label>Location</label>
-                    <input id="workshopLocation" type="text" placeholder="e.g. Adelaide, SA">
-                </div>
-            </div>
-
-            <div class="filter-section">
-                <h4>Vehicle types</h4>
-                <div class="input-group">
-                    <label>Vehicles you work on</label>
-                    <input id="workshopVehicles" type="text" placeholder="e.g. Toyota Camry, Hiace, Volkswagen Golf">
-                </div>
-                <div style="font-size: 11px; color: #888; margin-top: 6px;">Comma-separated make/model keywords help APC match your workshop to local part buyers.</div>
-            </div>
-
-            <div class="filter-section">
-                <h4>Service specialties</h4>
-                <div class="shared-choice-box" style="margin-top: 8px;">
-                    <label class="choice-item"><input type="checkbox" id="workshopServicePanel"> Panel & body repair</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopServiceFitment"> Part fitting</label>
-                </div>
-                <div class="shared-choice-box" style="margin-top: 8px;">
-                    <label class="choice-item"><input type="checkbox" id="workshopServiceMechanical"> Mechanical repair</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopServiceTyres"> Wheels and Tyres</label>
-                </div>
-                <div class="shared-choice-box" style="margin-top: 8px;">
-                    <label class="choice-item"><input type="checkbox" id="workshopServiceElectrical"> Electrical & lighting</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopServiceAlignment"> Wheel alignment</label>
+            <!-- Banner — full bleed top of editor -->
+            <div style="margin: -15px -15px 0; position:relative;">
+                <div class="banner-upload-preview" id="bannerPreviewBox" style="border-radius:0; height:130px; cursor:pointer; flex-direction:column; gap:4px;" onclick="document.getElementById('bannerFileInput').click()">
+                    <img id="bannerPreviewImg" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover;">
+                    <span id="bannerPreviewPlaceholder" style="font-size:13px; color:rgba(255,255,255,0.9); font-weight:700;">＋ Add store banner</span>
+                    <span id="bannerSizeHint" style="font-size:11px; color:rgba(255,255,255,0.6); font-weight:500;"></span>
+                    <input type="file" id="bannerFileInput" accept="image/*" style="display:none;" onchange="handleBannerUpload(this)">
+                    <button id="bannerRemoveBtn" onclick="event.stopPropagation(); removeBannerImage()" class="prof-media-remove-btn" style="display:none;">✕ Remove</button>
                 </div>
             </div>
 
-            <div class="filter-section">
-                <h4>About your workshop</h4>
-                <textarea id="workshopDescription" class="apc-textarea" rows="4" placeholder="Tell buyers what you specialise in and the vehicles you want to attract."></textarea>
+            <!-- Logo + upload buttons row -->
+            <div style="display:flex; align-items:center; gap:14px; padding: 14px 0 4px;">
+                <div class="logo-upload-preview" id="logoPreviewCircle" style="flex-shrink:0; cursor:pointer;" onclick="document.getElementById('logoFileInput').click()">
+                    <img id="logoPreviewImg" src="" alt="" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:50%;">
+                    <span id="logoPreviewInitials" style="font-size:20px; font-weight:900; color:#fff;">G</span>
+                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+                </div>
+                <div>
+                    <div style="font-size:12px; font-weight:700; color:#333; margin-bottom:6px;">Business Logo</div>
+                    <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="handleLogoUpload(this)">
+                    <button id="logoRemoveBtn" onclick="removeBusinessLogo()" class="logo-remove-btn" style="display:none;">Remove logo</button>
+                    <div style="font-size:11px; color:#aaa; margin-top:5px;">Tap logo to change · Square · 400 × 400 px · max 1 MB</div>
+                </div>
+            </div>
+
+            <!-- Your Business -->
+            <div class="filter-section" style="padding-top:8px;">
+                <h4>Your Business</h4>
+                <div class="input-group-row">
+                    <div class="input-group" style="flex:1; min-width:0;">
+                        <label>Business / Yard Name</label>
+                        <input type="text" id="proSettingBusinessName" placeholder="e.g. Gary's Wreckers">
+                    </div>
+                    <div class="input-group" style="width:130px; flex-shrink:0;">
+                        <label>ABN <span style="font-weight:400; color:#aaa;">optional</span></label>
+                        <input type="text" id="proSettingABN" placeholder="12 345 678 901">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Address</label>
+                    <input type="text" id="proSettingLocation" placeholder="e.g. 42 Main Rd, Adelaide SA">
+                </div>
+                <div class="input-group">
+                    <label>I am a</label>
+                    <div class="radius-seg-control" id="bizTypeControl">
+                        <div class="radius-seg active" data-type="supplier" onclick="setBizType(this,'supplier')">Part Supplier</div>
+                        <div class="radius-seg" data-type="service" onclick="setBizType(this,'service')">Service Provider</div>
+                        <div class="radius-seg" data-type="both" onclick="setBizType(this,'both')">Parts &amp; Services</div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>About <span style="font-weight:400; color:#aaa;">optional</span></label>
+                    <textarea id="proSettingAbout" class="apc-textarea" rows="3" placeholder="e.g. Specialising in Japanese imports, serving SA since 2005. We stock 500+ vehicles at any time."></textarea>
+                </div>
+            </div>
+
+            <!-- Services — shown for Service Provider / Parts & Services -->
+            <div class="filter-section" id="workshopServicesSection" style="display:none;">
+                <h4>Workshop Services</h4>
+
+                <div class="ws-service-group">
+                    <div class="ws-group-label">Engine &amp; Powertrain</div>
+                    <div class="shared-choice-box">
+                        <label class="choice-item"><input type="checkbox" id="wsLogbook"> Logbook Servicing &amp; Maintenance</label>
+                        <label class="choice-item"><input type="checkbox" id="wsEngineDiag"> Engine Diagnostics &amp; Tuning</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsEngineRebuild"> Engine Rebuilds &amp; Overhauls</label>
+                        <label class="choice-item"><input type="checkbox" id="wsTransmission"> Transmission &amp; Drivetrain</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsExhaust"> Exhaust &amp; Emissions</label>
+                        <label class="choice-item"><input type="checkbox" id="wsTimingBelt"> Timing Belt &amp; Chain</label>
+                    </div>
+                </div>
+
+                <div class="ws-service-group">
+                    <div class="ws-group-label">Chassis &amp; Vehicle Dynamics</div>
+                    <div class="shared-choice-box">
+                        <label class="choice-item"><input type="checkbox" id="wsBrakes"> Brake Machining &amp; Upgrades</label>
+                        <label class="choice-item"><input type="checkbox" id="wsSuspension"> Suspension &amp; Steering</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsWheelAlign"> Wheel Alignment &amp; Tyre Services</label>
+                    </div>
+                </div>
+
+                <div class="ws-service-group">
+                    <div class="ws-group-label">Electrical, Climate &amp; Cooling</div>
+                    <div class="shared-choice-box">
+                        <label class="choice-item"><input type="checkbox" id="wsAutoElectrical"> Auto Electrical Diagnostics</label>
+                        <label class="choice-item"><input type="checkbox" id="wsBattery"> Battery, Alternator &amp; Starter</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsAircon"> Air Conditioning (HVAC)</label>
+                        <label class="choice-item"><input type="checkbox" id="wsCooling"> Cooling &amp; Radiator Specialists</label>
+                    </div>
+                </div>
+
+                <div class="ws-service-group">
+                    <div class="ws-group-label">Body, Glass &amp; Interior</div>
+                    <div class="shared-choice-box">
+                        <label class="choice-item"><input type="checkbox" id="wsCollision"> Collision Repair &amp; Panel Beating</label>
+                        <label class="choice-item"><input type="checkbox" id="wsSprayPaint"> Spray Painting &amp; Refinishing</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsPDR"> Paintless Dent Removal (PDR)</label>
+                        <label class="choice-item"><input type="checkbox" id="wsAutoGlass"> Auto Glass Services</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsTrimming"> Motor Trimming &amp; Upholstery</label>
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top:4px;">
+                    <label>Vehicle makes you specialise in <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <input id="workshopVehicles" type="text" placeholder="e.g. Toyota, Subaru, Volkswagen">
+                    <div style="font-size:11px;color:#aaa;margin-top:4px;">Comma-separated — helps APC match your workshop to local buyers</div>
+                </div>
+            </div>
+
+            <!-- Parts Supply — shown for Part Supplier / Parts & Services -->
+            <div class="filter-section" id="workshopPartsSection" style="display:none;">
+                <h4>Parts Supply</h4>
+
+                <div class="ws-service-group">
+                    <div class="ws-group-label">Automotive Parts Supplier</div>
+                    <div class="input-group">
+                        <label>Parts condition</label>
+                        <div class="radius-seg-control" id="partsTypeControl">
+                            <div class="radius-seg active" data-pts="new" onclick="setPartsType(this,'new')">New</div>
+                            <div class="radius-seg" data-pts="used" onclick="setPartsType(this,'used')">Used</div>
+                            <div class="radius-seg" data-pts="both" onclick="setPartsType(this,'both')">New &amp; Used</div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Parts specialties <span style="font-weight:400;color:#aaa;">optional</span></label>
+                        <input id="wsPartsSpecialties" type="text" placeholder="e.g. Engine components, suspension, body panels">
+                    </div>
+                </div>
+
+                <div class="ws-service-group">
+                    <div class="ws-group-label">Parts Dismantling &amp; Salvage</div>
+                    <div class="shared-choice-box">
+                        <label class="choice-item"><input type="checkbox" id="wsWrecking" onchange="toggleWreckingMakes(this)"> Wrecking yard / dismantler</label>
+                    </div>
+                    <div class="input-group" id="wsWreckingMakesRow" style="display:none; margin-top:10px;">
+                        <label>Vehicle makes currently in yard</label>
+                        <input id="wsWreckingMakes" type="text" placeholder="e.g. Toyota, Holden, Ford, Nissan">
+                        <div style="font-size:11px;color:#aaa;margin-top:4px;">Comma-separated — shown to buyers searching for your parts</div>
+                    </div>
+                </div>
             </div>
 
             <div class="action-container">
-                <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE WORKSHOP PROFILE</button>
+                <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE PROFILE</button>
             </div>
         </div>
     </div>
@@ -1592,6 +1665,7 @@
         <div class="inbox-tab-bar">
             <button class="itab active" id="itabChats" onclick="switchInboxTab('chats')">Chats <span id="inboxChatsBadge" class="itab-badge" style="display:none;"></span></button>
             <button class="itab" id="itabNotifs" onclick="switchInboxTab('notifications')">Notifications <span id="inboxNotifsBadge" class="itab-badge" style="display:none;"></span></button>
+            <button class="itab" id="itabTrash" onclick="switchInboxTab('trash')">Trash <span id="itabTrashBadge" class="itab-badge" style="display:none;"></span></button>
         </div>
 
         <!-- Chats: two-panel (list + thread) -->
@@ -1657,6 +1731,9 @@
             </div>
             <div id="inboxContent"></div>
         </div>
+
+        <!-- Trash: soft-deleted conversations -->
+        <div id="inboxTrashPanel" style="display:none; flex:1; overflow-y:auto; flex-direction:column; padding:0;"></div>
 
     </div>
 </div>
