@@ -3069,6 +3069,7 @@ function showToastWithAction(msg, actionLabel, actionFn) {
 let currentInboxTab = 'all';
 
 function onOpenInbox() {
+    if (!userIsSignedIn) { openAuthDrawer(onOpenInbox); return; }
     updateInboxBadge();
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
