@@ -74,7 +74,12 @@ header {
     font-family: inherit;
 }
 .account-pill:active { transform: scale(0.97); }
-.account-pill.signed-out { background: var(--apc-orange); }
+.account-pill.signed-out {
+    background: var(--apc-orange);
+    padding: 11px 22px;
+    font-size: 13px;
+    border-radius: 8px;
+}
 .account-pill.signed-in  {
     background: none;
     box-shadow: none;
@@ -2695,8 +2700,9 @@ header {
     #accountPillZone { order: 3; flex-shrink: 0; width: 220px; display: flex; justify-content: center; align-items: center; padding: 0 8px; }
     #accountPill    { width: auto; }
     .account-pill.signed-out {
-        font-size: 12px;
-        padding: 7px 16px;
+        font-size: 13px;
+        padding: 11px 24px;
+        border-radius: 8px;
     }
     .account-pill.signed-in {
         background: white;
