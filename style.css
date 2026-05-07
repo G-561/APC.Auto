@@ -280,6 +280,19 @@ header {
     border-color: var(--apc-orange);
 }
 
+.auth-drawer-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--apc-charcoal);
+    letter-spacing: 0.2px;
+}
+.auth-join-prompt {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    margin: 14px 0 0 0;
+}
+
 /* Sign-up choice screen */
 .auth-choice-heading {
     font-size: 14px;

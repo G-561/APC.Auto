@@ -3356,12 +3356,12 @@ function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '
 // Wired to the SIGN IN button inside #authDrawer
 function setAuthMode(mode) {
     authMode = mode;
-    const signInTab  = document.getElementById('authTabSignIn');
-    const signUpTab  = document.getElementById('authTabSignUp');
-    const isSignUp   = mode === 'signup' || mode === 'signup-personal' || mode === 'signup-pro';
 
-    if (signInTab) signInTab.classList.toggle('active', mode === 'signin');
-    if (signUpTab) signUpTab.classList.toggle('active', isSignUp);
+    const titleEl = document.getElementById('authDrawerTitle');
+    if (titleEl) {
+        const titles = { 'signin': 'Sign In', 'signup': 'Create Account', 'signup-personal': 'Personal Account', 'signup-pro': 'Pro Account' };
+        titleEl.textContent = titles[mode] || 'Sign In';
+    }
 
     const sections = {
         authSignInSection:         mode === 'signin',
