@@ -1234,9 +1234,38 @@ function setSortOrder(el, order) {
 }
 
 
+function countActiveFilters() {
+    let n = 0;
+    if (activeFilters.category !== 'all') n++;
+    if (activeFilters.make) n++;
+    if (activeFilters.model) n++;
+    if (activeFilters.year) n++;
+    if (activeFilters.location !== 'all') n++;
+    if (activeFilters.postcode) n++;
+    if (sortOrder !== 'none') n++;
+    if (activeFilters.conditions && activeFilters.conditions.length < 5) n++;
+    if (!activeFilters.postage || !activeFilters.pickup) n++;
+    if (!activeFilters.sellerPrivate || !activeFilters.sellerPro) n++;
+    return n;
+}
+
+function updateFilterChip() {
+    const chip = document.getElementById('filterStatusChip');
+    if (!chip) return;
+    const n = countActiveFilters();
+    if (n > 0 && currentSearchMode !== 'wanted') {
+        const count = getFilteredParts().length;
+        chip.innerHTML = `<span>${count} result${count !== 1 ? 's' : ''} &nbsp;·&nbsp; ${n} filter${n !== 1 ? 's' : ''} active</span><button onclick="clearAllFilters()" aria-label="Clear filters">✕ Clear</button>`;
+        chip.style.display = 'flex';
+    } else {
+        chip.style.display = 'none';
+    }
+}
+
 function applyFiltersAndRender() {
     getFilterValues();
     renderMainGrid();
+    updateFilterChip();
     if (window.innerWidth < 900) toggleDrawer('filterDrawer');
 }
 
@@ -1269,6 +1298,8 @@ function clearAllFilters() {
     // Re-render (getFilterValues reads fresh DOM state)
     getFilterValues();
     renderMainGrid();
+    updateFilterChip();
+    showToast('Filters cleared');
 }
 
 function getFilteredParts() {
@@ -1610,6 +1641,18 @@ function renderMyParts() {
     });
 }
 
+function showSellError(msg) {
+    const banner = document.getElementById('sellErrorBanner');
+    if (!banner) return;
+    banner.textContent = '⚠ ' + msg;
+    banner.style.display = 'block';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function hideSellError() {
+    const banner = document.getElementById('sellErrorBanner');
+    if (banner) banner.style.display = 'none';
+}
+
 function openSellOverlay() {
     if (!userIsSignedIn) {
         openAuthDrawer(openSellOverlay);
@@ -1687,6 +1730,7 @@ function closeSellOverlay() {
     }
     syncBackdrop();
     resetSellForm();
+    hideSellError();
 }
 
 function deleteListing(id) {
@@ -1851,20 +1895,30 @@ function submitSellListing() {
     const condition = document.getElementById('sellCondition')?.value;
     const description = document.getElementById('sellDescription')?.value.trim();
 
-    if (!title || !category || !price || !location) {
-        alert('Please complete the title, category, price and location fields.');
+    const missing = [];
+    if (!title)    missing.push('Title');
+    if (!category) missing.push('Category');
+    if (!price)    missing.push('Price');
+    if (!location) missing.push('Location');
+    if (missing.length) {
+        showSellError(`Please complete: ${missing.join(', ')}`);
         return;
     }
     if (!sellListingImages.length) {
-        alert('Please add at least one photo.');
+        showSellError('Please add at least one photo before listing.');
         return;
     }
 
     const numericPrice = Number(price);
-    if (!Number.isFinite(numericPrice) || numericPrice < 0) {
-        alert('Enter a valid price.');
+    if (!Number.isFinite(numericPrice) || numericPrice < 1) {
+        showSellError('Enter a valid price (minimum $1).');
         return;
     }
+    if (title.length > 120) {
+        showSellError('Title is too long — keep it under 120 characters.');
+        return;
+    }
+    hideSellError();
 
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
@@ -1942,12 +1996,12 @@ function openItemDetail(partId) {
     if (carousel) {
         carousel.innerHTML = '';
         carousel.scrollLeft = 0;          // reset to first image when re-opening
-        part.images.forEach(src => {
+        part.images.forEach((src, i) => {
             const img = document.createElement('img');
             img.src = src;
             img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;';
             img.alt = part.title;
-            img.onclick = () => openDetailImageViewer(src);
+            img.onclick = () => openDetailImageViewer(src, part.images, i);
             carousel.appendChild(img);
         });
     }
@@ -1957,6 +2011,13 @@ function openItemDetail(partId) {
             part.images.forEach((_, idx) => {
                 const dot = document.createElement('div');
                 dot.className = 'carousel-dot' + (idx === 0 ? ' active' : '');
+                dot.setAttribute('aria-label', `Photo ${idx + 1}`);
+                dot.onclick = (e) => {
+                    e.stopPropagation();
+                    if (carousel) {
+                        carousel.scrollTo({ left: idx * carousel.offsetWidth, behavior: 'smooth' });
+                    }
+                };
                 dotsContainer.appendChild(dot);
             });
             dotsContainer.style.display = 'flex';
@@ -1971,7 +2032,7 @@ function openItemDetail(partId) {
     if (desktopMain) {
         desktopMain.src = part.images[0] || '';
         desktopMain.alt = part.title;
-        desktopMain.onclick = () => openDetailImageViewer(part.images[0]);
+        desktopMain.onclick = () => openDetailImageViewer(part.images[0], part.images, 0);
     }
     if (desktopThumbs) {
         desktopThumbs.innerHTML = '';
@@ -1983,7 +2044,7 @@ function openItemDetail(partId) {
             thumb.onclick = () => {
                 if (desktopMain) {
                     desktopMain.src = src;
-                    desktopMain.onclick = () => openDetailImageViewer(src);
+                    desktopMain.onclick = () => openDetailImageViewer(src, part.images, i);
                 }
                 document.querySelectorAll('.desktop-thumb').forEach(t => t.classList.remove('active'));
                 thumb.classList.add('active');
@@ -2024,7 +2085,12 @@ function openItemDetail(partId) {
     const detailSignInPrompt = document.getElementById('detailSignInPrompt');
     const lockDetails = !userIsSignedIn;
 
-    if (detailSellerSection) detailSellerSection.classList.toggle('blurred-detail', lockDetails);
+    if (detailSellerSection) {
+        detailSellerSection.classList.toggle('blurred-detail', lockDetails);
+        detailSellerSection.classList.toggle('locked', lockDetails);
+    }
+    const detailSellerColCard = document.getElementById('detailSellerColCard');
+    if (detailSellerColCard) detailSellerColCard.classList.toggle('locked', lockDetails);
     const detailMsgBtn = document.getElementById('detailMsgBtn');
     if (detailMsgBtn)        detailMsgBtn.style.display        = lockDetails ? 'none'  : '';
     if (detailSignInPrompt)  detailSignInPrompt.style.display  = lockDetails ? ''      : 'none';
@@ -2054,8 +2120,7 @@ function openItemDetail(partId) {
     if (colName)   colName.textContent   = part.seller;
     if (colProBadge) colProBadge.style.display = part.isPro ? 'inline-block' : 'none';
 
-    // Apply blur lock to col seller card same as header seller card
-    const detailSellerColCard = document.getElementById('detailSellerColCard');
+    // Apply blur lock to col seller card (also gets .locked class for overlay visibility — done above)
     if (detailSellerColCard) detailSellerColCard.classList.toggle('blurred-detail', !userIsSignedIn);
 
     const workshopSection = document.getElementById('detailWorkshopSection');
@@ -2132,6 +2197,11 @@ function openItemDetail(partId) {
     }
 }
 
+function onDetailSellerClick() {
+    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    openStorefront(currentOpenPartId);
+}
+
 function closeDetailOverlay() {
     const el = document.getElementById('detailOverlay');
     if (el) el.classList.remove('active');
@@ -2139,15 +2209,41 @@ function closeDetailOverlay() {
     history.pushState(null, '', location.pathname);
 }
 
-function openDetailImageViewer(src) {
+let _lightboxImages = [];
+let _lightboxIdx    = 0;
+
+function openDetailImageViewer(src, images, idx) {
+    _lightboxImages = (images && images.length) ? images : [src];
+    _lightboxIdx    = (idx !== undefined) ? idx : _lightboxImages.indexOf(src);
+    if (_lightboxIdx < 0) _lightboxIdx = 0;
+
     const lightbox = document.getElementById('imageLightbox');
-    const image = document.getElementById('lightboxImage');
+    const image    = document.getElementById('lightboxImage');
     if (!lightbox || !image) return;
-    image.src = src;
+    image.src = _lightboxImages[_lightboxIdx];
     lightbox.classList.add('active');
+    updateLightboxNav();
     // Allow pinch-to-zoom on the lightbox image
     document.querySelector('meta[name=viewport]').setAttribute('content',
         'width=device-width, initial-scale=1.0');
+}
+
+function lightboxNav(dir) {
+    if (_lightboxImages.length < 2) return;
+    _lightboxIdx = (_lightboxIdx + dir + _lightboxImages.length) % _lightboxImages.length;
+    const image = document.getElementById('lightboxImage');
+    if (image) image.src = _lightboxImages[_lightboxIdx];
+    updateLightboxNav();
+}
+
+function updateLightboxNav() {
+    const show    = _lightboxImages.length > 1;
+    const prev    = document.querySelector('.lightbox-prev');
+    const next    = document.querySelector('.lightbox-next');
+    const counter = document.getElementById('lightboxCounter');
+    if (prev)    prev.style.display    = show ? '' : 'none';
+    if (next)    next.style.display    = show ? '' : 'none';
+    if (counter) { counter.style.display = show ? '' : 'none'; counter.textContent = `${_lightboxIdx + 1} / ${_lightboxImages.length}`; }
 }
 
 function closeDetailImageViewer() {
@@ -2368,6 +2464,8 @@ function handleMessageSeller() {
     document.getElementById('contactSellerCard').style.display     = '';
 }
 
+let _lastSentConvId = null;
+
 function sendContactMessage() {
     const msgEl = document.getElementById('contactCardMsg');
     const text  = msgEl ? msgEl.value.trim() : '';
@@ -2394,16 +2492,23 @@ function sendContactMessage() {
     conversations.unshift(conv);
     saveConversations();
     updateInboxBadge();
+    _lastSentConvId = conv.id;
 
-    // Switch to confirmation state
+    // Switch to confirmation state — no auto-close, user chooses next action
     const compose = document.getElementById('contactCardCompose');
     const confirm = document.getElementById('contactCardConfirm');
     const sub     = document.getElementById('contactCardConfirmSub');
     if (compose) compose.style.display = 'none';
     if (confirm) confirm.style.display = '';
     if (sub)     sub.textContent = `${seller} will be in touch shortly.`;
+}
 
-    setTimeout(closeContactCard, 2200);
+function viewSentConversation() {
+    closeContactCard();
+    onOpenInbox();
+    if (_lastSentConvId !== null) {
+        setTimeout(() => openInboxConv(_lastSentConvId), 220);
+    }
 }
 
 function closeContactCard() {
@@ -2581,6 +2686,12 @@ function submitAddVehicle() {
 
 // Remove a vehicle (used later from vehicle detail/edit)
 function deleteVehicle(id) {
+    const vehicle = myVehicles.find(v => v.id === id);
+    const hasWanted = myWanted.some(w => w.vehicleId === id);
+    const msg = hasWanted
+        ? `Remove this vehicle? All ${myWanted.filter(w => w.vehicleId === id).length} wanted part(s) for it will also be removed.`
+        : 'Remove this vehicle from your garage?';
+    if (!confirm(msg)) return;
     myVehicles = myVehicles.filter(v => v.id !== id);
     myWanted = myWanted.filter(w => w.vehicleId !== id);
     saveVehicles();
@@ -3122,6 +3233,7 @@ function addWanted(partName, make, model, year, maxPrice, category) {
 
 // Delete a wanted entry
 function deleteWanted(id) {
+    if (!confirm('Remove this wanted part?')) return;
     myWanted = myWanted.filter(w => w.id !== id);
     saveWanted();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
@@ -5250,4 +5362,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemParam = new URLSearchParams(location.search).get('item');
     if (itemParam) openItemDetail(Number(itemParam));
 
+    // Lightbox keyboard navigation
+    document.addEventListener('keydown', e => {
+        const lightbox = document.getElementById('imageLightbox');
+        if (!lightbox || !lightbox.classList.contains('active')) return;
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); lightboxNav(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); lightboxNav(1); }
+        if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
+    });
 });
