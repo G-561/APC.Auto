@@ -1834,7 +1834,7 @@ function resetSellForm() {
     const pickup = document.getElementById('sellPickup');
     const postage = document.getElementById('sellPostage');
     const fitting = document.getElementById('sellFittingAvailable');
-    if (pickup) pickup.checked = true;
+    if (pickup) pickup.checked = false;
     if (postage) postage.checked = false;
     if (fitting) fitting.checked = false;
     const offersToggle = document.getElementById('sellOpenToOffers');
@@ -1906,6 +1906,10 @@ function submitSellListing() {
     }
     if (!sellListingImages.length) {
         showSellError('Please add at least one photo before listing.');
+        return;
+    }
+    if (!pickup && !postage) {
+        showSellError('Please select at least one delivery option — Pickup or Postage.');
         return;
     }
 
