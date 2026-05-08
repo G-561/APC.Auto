@@ -2230,6 +2230,9 @@ function openStorefront(partId) {
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = part.seller;
     renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
+    // Float above detailOverlay (z-index 2050) when opening from within a listing
+    const sfEl = document.getElementById('storefrontDrawer');
+    if (sfEl) sfEl.style.zIndex = '2060';
     toggleDrawer('storefrontDrawer', true);
 }
 
@@ -2242,7 +2245,10 @@ function closeChatDrawer() {
 
 function closeStorefrontDrawer() {
     const el = document.getElementById('storefrontDrawer');
-    if (el) el.classList.remove('active');
+    if (el) {
+        el.classList.remove('active');
+        el.style.zIndex = '';
+    }
     syncBackdrop();
 }
 
