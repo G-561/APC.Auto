@@ -4355,12 +4355,12 @@ function updateWsFilterBadge() {
 }
 
 function wsSelectAll() {
-    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]').forEach(c => c.checked = true);
+    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]:not(#workshopFilterApproved)').forEach(c => c.checked = true);
     updateWsFilterBadge();
 }
 
 function wsClearAll() {
-    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]').forEach(c => c.checked = false);
+    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]:not(#workshopFilterApproved)').forEach(c => c.checked = false);
     updateWsFilterBadge();
 }
 
