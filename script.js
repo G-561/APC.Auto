@@ -150,12 +150,12 @@ function getDefaultWorkshopProfile() {
         vehicles: '',
         services: {
             // Engine & Powertrain
-            logbook: false, engineDiag: false, engineRebuild: false,
+            generalService: false, logbook: false, engineDiag: false, engineRebuild: false,
             transmission: false, exhaust: false, timingBelt: false,
             // Chassis & Vehicle Dynamics
-            brakes: false, suspension: false, wheelAlign: false,
+            brakes: false, suspension: false, wheelAlign: false, tyreSupply: false,
             // Electrical, Climate & Cooling
-            autoElectrical: false, battery: false, aircon: false, cooling: false,
+            autoElectrical: false, battery: false, aircon: false, cooling: false, autoSecurity: false,
             // Body, Glass & Interior
             collision: false, sprayPaint: false, pdr: false, autoGlass: false, trimming: false,
         },
@@ -420,6 +420,7 @@ function onMenuOpenSettings() {
     toggleDrawer('settingsDrawer');
 }
 function renderSettingsDrawer() {
+    renderProfile();
     const nameEl     = document.getElementById('settingsDisplayName');
     const locEl      = document.getElementById('settingsLocation');
     const proSection = document.getElementById('settingsProSection');
@@ -769,7 +770,7 @@ function deleteInboxMsg(convId, msgIdx) {
 
 function viewConvListing() {
     const conv = conversations.find(c => c.id === activeConvId);
-    if (!conv || !conv.partId) { showToast('No listing linked to this conversation'); return; }
+    if (!conv || !conv.partId || conv.partId === 'general') { showToast('No listing linked to this conversation'); return; }
     const part = findPartAnywhere(conv.partId);
     if (!part) { showToast('Listing no longer available'); return; }
     openItemDetail(part.id);
@@ -801,6 +802,17 @@ function toggleListingPending() {
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
     showToast(listing.status === 'pending' ? 'Listing marked as Pending' : 'Pending status removed');
+}
+
+function clearListingPending(partId) {
+    const listing = userListings.find(l => l.id === partId);
+    if (!listing) return;
+    listing.status = undefined;
+    saveUserListings();
+    renderMainGrid();
+    renderMyParts();
+    renderDashboard();
+    showToast('Pending status removed');
 }
 
 function openItemPreview(part) {
@@ -1254,6 +1266,13 @@ function getFilteredParts() {
         if (activeFilters.conditions && activeFilters.conditions.length < 5 && part.condition) {
             if (!activeFilters.conditions.includes(part.condition)) return false;
         }
+        // Postage / pickup — only filter when at least one is unchecked
+        if (!activeFilters.postage || !activeFilters.pickup) {
+            const hasPickup  = part.pickup  !== false;   // available unless explicitly false
+            const hasPostage = part.postage === true;     // only if explicitly enabled
+            const ok = (activeFilters.postage && hasPostage) || (activeFilters.pickup && hasPickup);
+            if (!ok) return false;
+        }
         return true;
     });
     results.sort((a, b) => {
@@ -1619,7 +1638,14 @@ function openEditListing(listingId) {
     if (title) title.textContent = 'EDIT LISTING';
     if (submit) submit.textContent = 'UPDATE LISTING';
     updateSellFittingToggleVisibility();
-    toggleDrawer('sellOverlay');
+    toggleDrawer('sellOverlay', true);  // allowStack: keep myPartsDrawer open behind
+}
+
+function closeSellOverlay() {
+    const overlay = document.getElementById('sellOverlay');
+    if (overlay) overlay.classList.remove('active');
+    syncBackdrop();
+    resetSellForm();
 }
 
 function deleteListing(id) {
@@ -1856,10 +1882,7 @@ function submitSellListing() {
     if (sellSuccess) sellSuccess.style.display = 'block';
     setTimeout(() => {
         if (sellSuccess) sellSuccess.style.display = 'none';
-        const overlay = document.getElementById('sellOverlay');
-        if (overlay) overlay.classList.remove('active');
-        syncBackdrop();
-        resetSellForm();
+        closeSellOverlay();
         if (submitBtn) submitBtn.disabled = false;
     }, 1500);
 }
@@ -2096,6 +2119,7 @@ function shareCurrentListing(btn) {
 
 // --- SELLER STOREFRONT ---
 function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location, banner) {
+    currentStorefrontSeller = sellerName;
     const initial = (sellerName || 'S').charAt(0).toUpperCase();
 
     // Hero banner
@@ -2162,6 +2186,8 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     // Clear search
     const searchEl = document.getElementById('storefrontSearch');
     if (searchEl) searchEl.value = '';
+
+    syncStoreSaveButton();
 }
 
 function filterStorefront() {
@@ -2202,6 +2228,39 @@ function closeStorefrontDrawer() {
     const el = document.getElementById('storefrontDrawer');
     if (el) el.classList.remove('active');
     syncBackdrop();
+}
+
+function handleGeneralEnquiry() {
+    if (!userIsSignedIn) { openAuthDrawer(() => handleGeneralEnquiry()); return; }
+    const seller = currentStorefrontSeller;
+    if (!seller) return;
+
+    // If a general enquiry thread already exists with this seller, open it
+    const existing = conversations.find(c => c.with === seller && c.partId === 'general');
+    if (existing) {
+        toggleDrawer('inboxDrawer', true);
+        switchInboxTab('chats');
+        openInboxConv(existing.id);
+        return;
+    }
+
+    pendingGeneralEnquiry = {
+        seller,
+        isPro: document.getElementById('sfProBadge')?.style.display !== 'none'
+    };
+    currentOpenPartId = null;
+
+    const titleEl = document.getElementById('contactCardTitle');
+    const msgEl   = document.getElementById('contactCardMsg');
+    const compose = document.getElementById('contactCardCompose');
+    const confirm = document.getElementById('contactCardConfirm');
+    if (titleEl) titleEl.textContent = 'General Enquiry';
+    if (msgEl)   msgEl.value = `Hi, I have a general enquiry for you.`;
+    if (compose) compose.style.display = '';
+    if (confirm) confirm.style.display = 'none';
+
+    document.getElementById('contactSellerBackdrop').style.display = '';
+    document.getElementById('contactSellerCard').style.display     = '';
 }
 
 function closeAddVehicleDrawer() {
@@ -2245,14 +2304,27 @@ function handleMessageSeller() {
 }
 
 function sendContactMessage() {
-    const part = getPartById(currentOpenPartId);
-    if (!part) return;
     const msgEl = document.getElementById('contactCardMsg');
     const text  = msgEl ? msgEl.value.trim() : '';
     if (!text) return;
 
+    let seller, isPro, partId, partTitle;
+    if (pendingGeneralEnquiry) {
+        ({ seller, isPro } = pendingGeneralEnquiry);
+        partId = 'general';
+        partTitle = 'General Enquiry';
+        pendingGeneralEnquiry = null;
+    } else {
+        const part = getPartById(currentOpenPartId);
+        if (!part) return;
+        seller = part.seller;
+        isPro  = !!part.isPro;
+        partId = currentOpenPartId;
+        partTitle = undefined;
+    }
+
     // Create conversation and add the opening message
-    const conv = { id: nextConvId(), with: part.seller, isPro: !!part.isPro, unread: false, partId: currentOpenPartId, msgs: [] };
+    const conv = { id: nextConvId(), with: seller, isPro, unread: false, partId, ...(partTitle && { partTitle }), msgs: [] };
     conv.msgs.push({ id: 1, sent: true, text, time: 'Today', clock: nowClock() });
     conversations.unshift(conv);
     saveConversations();
@@ -2264,9 +2336,8 @@ function sendContactMessage() {
     const sub     = document.getElementById('contactCardConfirmSub');
     if (compose) compose.style.display = 'none';
     if (confirm) confirm.style.display = '';
-    if (sub)     sub.textContent = `${part.seller} will be in touch shortly.`;
+    if (sub)     sub.textContent = `${seller} will be in touch shortly.`;
 
-    // Auto-close after 2.2 seconds
     setTimeout(closeContactCard, 2200);
 }
 
@@ -2638,7 +2709,85 @@ function renderGarageTab() {
 // --- SAVED PARTS: data model + persistence ---
 const SAVED_STORAGE_KEY = 'apc.saved.v1';
 let savedParts = loadSavedParts();   // Set<partId>
-let savedPartsTab = 'all';           // 'all' | 'active' | 'ended'
+let savedPartsTab = 'all';           // 'all' | 'active' | 'ended' | 'stores'
+
+// --- SAVED STORES ---
+const SAVED_STORES_KEY = 'apc.savedStores.v1';
+let savedStores = loadSavedStores(); // Array<{ sellerName, businessName, isPro, savedAt }>
+let currentStorefrontSeller = null;  // tracks whose storefront is open
+let pendingGeneralEnquiry  = null;  // { seller, isPro } — set when contacting from storefront
+
+function loadSavedStores() {
+    try { const s = localStorage.getItem(SAVED_STORES_KEY); return s ? JSON.parse(s) : []; } catch(e) { return []; }
+}
+function persistSavedStores() {
+    try { localStorage.setItem(SAVED_STORES_KEY, JSON.stringify(savedStores)); } catch(e) {}
+}
+function isStoreSaved(sellerName) {
+    return savedStores.some(s => s.sellerName === sellerName);
+}
+function toggleSaveStore(sellerName, businessName, isPro) {
+    if (!userIsSignedIn) { openAuthDrawer(() => toggleSaveStore(sellerName, businessName, isPro)); return; }
+    if (isStoreSaved(sellerName)) {
+        savedStores = savedStores.filter(s => s.sellerName !== sellerName);
+        showToast('Store removed from saved');
+    } else {
+        savedStores.unshift({ sellerName, businessName: businessName || '', isPro: !!isPro, savedAt: Date.now() });
+        showToast('Store saved ♥');
+    }
+    persistSavedStores();
+    syncStoreSaveButton();
+    if (document.getElementById('savedPartsDrawer')?.classList.contains('active') && savedPartsTab === 'stores') renderSavedParts();
+}
+function syncStoreSaveButton() {
+    const btn = document.getElementById('sfSaveStoreBtn');
+    if (!btn || !currentStorefrontSeller) return;
+    const saved = isStoreSaved(currentStorefrontSeller);
+    const icon = btn.querySelector('.sf-heart-icon');
+    if (icon) icon.innerHTML = saved ? '&#x2665;&#xFE0E;' : '&#x2661;';
+    btn.title = saved ? 'Remove from saved stores' : 'Save this store';
+    btn.classList.toggle('sf-save-btn-active', saved);
+}
+function renderSavedStores(container) {
+    if (!savedStores.length) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:#aaa;">
+                <div style="font-size:36px; margin-bottom:10px;">🏪</div>
+                <div style="font-weight:800; font-size:15px; color:#888; margin-bottom:6px;">No saved stores yet</div>
+                <div style="font-size:13px;">Tap the heart on any storefront to save it here.</div>
+            </div>`;
+        return;
+    }
+    container.innerHTML = savedStores.map(store => {
+        const listingCount = [...partDatabase, ...userListings].filter(p => p.seller === store.sellerName && p.status !== 'sold' && p.status !== 'removed').length;
+        return `
+        <div class="saved-store-card">
+            <div class="saved-store-avatar">${(store.businessName || store.sellerName).charAt(0).toUpperCase()}</div>
+            <div class="saved-store-info">
+                <div class="saved-store-name">${escapeHtml(store.businessName || store.sellerName)}</div>
+                <div class="saved-store-meta">${escapeHtml(store.sellerName)}${store.isPro ? ' · <span class="saved-store-pro">PRO</span>' : ''}</div>
+                <div class="saved-store-count">${listingCount} active listing${listingCount !== 1 ? 's' : ''}</div>
+            </div>
+            <div class="saved-store-actions">
+                <button class="saved-store-visit-btn" onclick="openStoreFromSaved('${escapeHtml(store.sellerName)}')">Visit ›</button>
+                <button class="saved-store-unsave-btn" onclick="toggleSaveStore('${escapeHtml(store.sellerName)}','${escapeHtml(store.businessName || '')}',${store.isPro})">×</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+function openStoreFromSaved(sellerName) {
+    const part = [...partDatabase, ...userListings].find(p => p.seller === sellerName);
+    const store = savedStores.find(s => s.sellerName === sellerName);
+    closeSavedPartsDrawer();
+    renderStorefront(
+        sellerName, store?.isPro || false,
+        userSettings.businessLogo || '', store?.businessName || '',
+        '', '', '', ''
+    );
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) grid.dataset.seller = sellerName;
+    toggleDrawer('storefrontDrawer');
+}
 
 function loadSavedParts() {
     try {
@@ -2692,9 +2841,25 @@ function setSavedPartsTab(tab) {
     savedPartsTab = tab;
     renderSavedParts();
 }
+function buildSavedTabsHTML(total, active, ended) {
+    return `<div class="sp-tabs">
+        <button class="sp-tab ${savedPartsTab === 'all'    ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('all')">All <span class="sp-tab-count">${total}</span></button>
+        <button class="sp-tab ${savedPartsTab === 'active' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('active')">Active <span class="sp-tab-count">${active}</span></button>
+        <button class="sp-tab ${savedPartsTab === 'ended'  ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('ended')">Ended <span class="sp-tab-count sp-tab-count-ended">${ended}</span></button>
+        <button class="sp-tab ${savedPartsTab === 'stores' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('stores')">Stores <span class="sp-tab-count">${savedStores.length}</span></button>
+    </div>`;
+}
 function renderSavedParts() {
     const content = document.getElementById('savedPartsContent');
     if (!content) return;
+
+    if (savedPartsTab === 'stores') {
+        const totalCount = [...savedParts].filter(id => getPartById(id)).length + [...savedParts].filter(id => !getPartById(id) && findPartAnywhere(id)).length;
+        const tabsHTML = buildSavedTabsHTML(totalCount, [...savedParts].filter(id => getPartById(id)).length, [...savedParts].filter(id => !getPartById(id) && findPartAnywhere(id)).length);
+        content.innerHTML = tabsHTML + '<div id="savedStoresBody"></div>';
+        renderSavedStores(document.getElementById('savedStoresBody'));
+        return;
+    }
 
     const activeParts = [];
     const staleParts = [];
@@ -2720,12 +2885,7 @@ function renderSavedParts() {
 
     const totalCount = activeParts.length + staleParts.length;
 
-    const tabsHTML = `
-        <div class="sp-tabs">
-            <button class="sp-tab ${savedPartsTab === 'all' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('all')">All <span class="sp-tab-count">${totalCount}</span></button>
-            <button class="sp-tab ${savedPartsTab === 'active' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('active')">Active <span class="sp-tab-count">${activeParts.length}</span></button>
-            <button class="sp-tab ${savedPartsTab === 'ended' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('ended')">Ended <span class="sp-tab-count sp-tab-count-ended">${staleParts.length}</span></button>
-        </div>`;
+    const tabsHTML = buildSavedTabsHTML(totalCount, activeParts.length, staleParts.length);
 
     const buildStaleHTML = (parts) => parts.map(part => {
         const similar = findSimilarActiveParts(part);
@@ -3948,13 +4108,11 @@ function closeProfileDrawer() {
 }
 
 function onMenuOpenProfile() {
-    closeAccountDropdown();
-    renderProfile();
-    toggleDrawer('profileDrawer');
+    onMenuOpenSettings();
 }
 
 function openMyStorefront() {
-    closeProfileDrawer();
+    closeSettingsDrawer();
     const sellerName = getCurrentSellerName();
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = sellerName;
@@ -3974,29 +4132,23 @@ function openMyStorefront() {
 function renderProfile() {
     if (!userIsSignedIn) return;
 
-    const avatarEl        = document.getElementById('profileAvatar');
-    const nameEl          = document.getElementById('profileName');
-    const badgeEl         = document.getElementById('profileTierBadge');
-    const heroEl          = document.getElementById('profileHero');
-    const listingsEl      = document.getElementById('profileStatListings');
-    const savedEl         = document.getElementById('profileStatSaved');
-    const wantedEl        = document.getElementById('profileStatWanted');
+    const avatarEl   = document.getElementById('profileAvatar');
+    const nameEl     = document.getElementById('profileName');
+    const badgeEl    = document.getElementById('profileTierBadge');
+    const listingsEl = document.getElementById('profileStatListings');
+    const savedEl    = document.getElementById('profileStatSaved');
+    const wantedEl   = document.getElementById('profileStatWanted');
 
     if (avatarEl) avatarEl.textContent = (currentUserName || 'U').charAt(0).toUpperCase();
     if (nameEl)   nameEl.textContent   = currentUserName || 'User';
 
     const isPro = currentUserTier === 'pro';
     if (badgeEl) {
-        badgeEl.textContent = isPro ? 'APC Pro' : 'APC Standard';
+        badgeEl.textContent = isPro ? 'APC Pro' : 'Standard';
         badgeEl.className   = 'profile-tier-badge ' + (isPro ? 'pro' : 'standard');
     }
-    if (heroEl) {
-        heroEl.style.background = isPro
-            ? 'linear-gradient(135deg, #007AFF 0%, #0055cc 100%)'
-            : 'linear-gradient(135deg, var(--apc-orange) 0%, #e07b00 100%)';
-    }
 
-    const myListingCount = getAllParts().filter(p => p.seller === currentUserName).length;
+    const myListingCount = userListings.filter(p => p.status !== 'sold' && p.status !== 'removed').length;
     if (listingsEl) listingsEl.textContent = myListingCount;
     if (savedEl)    savedEl.textContent    = savedParts.size;
     if (wantedEl)   wantedEl.textContent   = myWanted.length;
@@ -4051,13 +4203,15 @@ function openWorkshopProfileEditor() {
     // Service checkboxes
     const svc = workshopProfile.services || {};
     const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-    setChk('wsLogbook', svc.logbook);         setChk('wsEngineDiag', svc.engineDiag);
-    setChk('wsEngineRebuild', svc.engineRebuild); setChk('wsTransmission', svc.transmission);
-    setChk('wsExhaust', svc.exhaust);         setChk('wsTimingBelt', svc.timingBelt);
+    setChk('wsGeneralService', svc.generalService); setChk('wsLogbook', svc.logbook);
+    setChk('wsEngineDiag', svc.engineDiag);   setChk('wsEngineRebuild', svc.engineRebuild);
+    setChk('wsTransmission', svc.transmission); setChk('wsExhaust', svc.exhaust);
+    setChk('wsTimingBelt', svc.timingBelt);
     setChk('wsBrakes', svc.brakes);           setChk('wsSuspension', svc.suspension);
-    setChk('wsWheelAlign', svc.wheelAlign);
+    setChk('wsWheelAlign', svc.wheelAlign);   setChk('wsTyreSupply', svc.tyreSupply);
     setChk('wsAutoElectrical', svc.autoElectrical); setChk('wsBattery', svc.battery);
     setChk('wsAircon', svc.aircon);           setChk('wsCooling', svc.cooling);
+    setChk('wsAutoSecurity', svc.autoSecurity);
     setChk('wsCollision', svc.collision);     setChk('wsSprayPaint', svc.sprayPaint);
     setChk('wsPDR', svc.pdr);                setChk('wsAutoGlass', svc.autoGlass);
     setChk('wsTrimming', svc.trimming);
@@ -4099,13 +4253,15 @@ function submitWorkshopProfile() {
     workshopProfile = {
         vehicles: document.getElementById('workshopVehicles')?.value.trim() || '',
         services: {
-            logbook: getChk('wsLogbook'),         engineDiag: getChk('wsEngineDiag'),
-            engineRebuild: getChk('wsEngineRebuild'), transmission: getChk('wsTransmission'),
-            exhaust: getChk('wsExhaust'),         timingBelt: getChk('wsTimingBelt'),
+            generalService: getChk('wsGeneralService'), logbook: getChk('wsLogbook'),
+            engineDiag: getChk('wsEngineDiag'),   engineRebuild: getChk('wsEngineRebuild'),
+            transmission: getChk('wsTransmission'), exhaust: getChk('wsExhaust'),
+            timingBelt: getChk('wsTimingBelt'),
             brakes: getChk('wsBrakes'),           suspension: getChk('wsSuspension'),
-            wheelAlign: getChk('wsWheelAlign'),
+            wheelAlign: getChk('wsWheelAlign'),   tyreSupply: getChk('wsTyreSupply'),
             autoElectrical: getChk('wsAutoElectrical'), battery: getChk('wsBattery'),
             aircon: getChk('wsAircon'),           cooling: getChk('wsCooling'),
+            autoSecurity: getChk('wsAutoSecurity'),
             collision: getChk('wsCollision'),     sprayPaint: getChk('wsSprayPaint'),
             pdr: getChk('wsPDR'),                autoGlass: getChk('wsAutoGlass'),
             trimming: getChk('wsTrimming'),
@@ -4212,9 +4368,9 @@ function renderWorkshopBrowseView() {
         if (!activeFilters.length) return true;
         return activeFilters.some(filter => {
             const s = w.services;
-            if (filter === 'engine')     return s.some(x => ['logbook','engineDiag','engineRebuild','transmission','exhaust','timingBelt'].includes(x));
-            if (filter === 'chassis')    return s.some(x => ['brakes','suspension','wheelAlign'].includes(x));
-            if (filter === 'electrical') return s.some(x => ['autoElectrical','battery','aircon','cooling'].includes(x));
+            if (filter === 'engine')     return s.some(x => ['generalService','logbook','engineDiag','engineRebuild','transmission','exhaust','timingBelt'].includes(x));
+            if (filter === 'chassis')    return s.some(x => ['brakes','suspension','wheelAlign','tyreSupply'].includes(x));
+            if (filter === 'electrical') return s.some(x => ['autoElectrical','battery','aircon','cooling','autoSecurity'].includes(x));
             if (filter === 'body')       return s.some(x => ['collision','sprayPaint','pdr','autoGlass','trimming'].includes(x));
             if (filter === 'parts')      return s.some(x => x === 'parts' || x === 'partsSupplier');
             if (filter === 'wrecking')   return s.some(x => x === 'wrecking');
@@ -4297,7 +4453,6 @@ function onMenuOpenMyListings() {
 // Re-render the pill, menu, and pro-toggle visibility based on current state
 function renderAccountState() {
     const pill           = document.getElementById('accountPill');
-    const proToggle      = document.getElementById('proSearchToggle');
     const menuName       = document.getElementById('accountMenuName');
     const menuStatus     = document.getElementById('accountMenuStatus');
     const menuAvatar     = document.getElementById('accountMenuAvatar');
@@ -4314,20 +4469,21 @@ function renderAccountState() {
     const avatarHTML = `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${initial}</span>`;
 
     const signUpPrompt = document.getElementById('signUpPrompt');
+    const searchModePill = document.getElementById('searchModeToggle');
     if (!userIsSignedIn) {
         pill.classList.add('signed-out');
         pill.innerHTML = 'Sign In';
-        if (proToggle) proToggle.style.display = 'none';
+        if (searchModePill) searchModePill.style.display = 'none';
         if (signUpPrompt) signUpPrompt.style.display = '';
     } else if (currentUserTier === 'pro') {
         pill.classList.add('signed-in');
         pill.innerHTML = avatarHTML;
-        if (proToggle) proToggle.style.display = proSearchOn ? 'flex' : 'none';
+        if (searchModePill) searchModePill.style.display = proSearchOn ? '' : 'none';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
     } else {
         pill.classList.add('signed-in');
         pill.innerHTML = avatarHTML;
-        if (proToggle) proToggle.style.display = 'none';
+        if (searchModePill) searchModePill.style.display = 'none';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
     }
 
@@ -4346,11 +4502,9 @@ function renderAccountState() {
         menuActivate.style.display = (currentUserTier === 'pro') ? 'flex' : 'none';
         menuActivate.classList.toggle('on', proSearchOn);
     }
-    if (proSearchSwitch)  proSearchSwitch.classList.toggle('on', proSearchOn);
-    if (proSearchOn && currentUserTier === 'pro') {
-        const proToggle = document.getElementById('proSearchToggle');
-        if (proToggle) proToggle.style.display = 'flex';
-    }
+    if (proSearchSwitch) proSearchSwitch.classList.toggle('on', proSearchOn);
+    if (searchModePill) searchModePill.style.display = (proSearchOn && currentUserTier === 'pro') ? '' : 'none';
+    if (!proSearchOn && currentSearchMode === 'wanted') setSearchMode('parts');
     const isPro = userIsSignedIn && currentUserTier === 'pro';
     const dtbDash   = document.getElementById('dtbDashboard');
     const amenuDash = document.getElementById('amenuDashboard');
@@ -4426,32 +4580,37 @@ function updateHeaderOffset() {
         const topBarH = topBar ? topBar.offsetHeight : 0;
         const totalH  = header.offsetHeight + topBarH;
         grid.style.marginTop = totalH + 'px';
+
+        // Position all drawers and backdrop flush with the bottom of the header — all screen sizes
+        const sellOverlay    = document.getElementById('sellOverlay');
+        const authDrawer     = document.getElementById('authDrawer');
+        const dashView       = document.getElementById('dashboardView');
+        const drawerBackdrop = document.getElementById('drawerBackdrop');
+        if (drawerBackdrop) drawerBackdrop.style.top = totalH + 'px';
+        if (detailOverlay)        detailOverlay.style.top        = totalH + 'px';
+        if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
+        if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
+        if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
+        if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
+        if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
+        // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
+        if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
+        if (savedPartsDrawer)     savedPartsDrawer.style.top     = totalH + 'px';
+        if (settingsDrawer)       settingsDrawer.style.top       = totalH + 'px';
+        if (profileDrawer)        profileDrawer.style.top        = totalH + 'px';
+        if (myPartsDrawer)        myPartsDrawer.style.top        = totalH + 'px';
+        if (workshopDrawer)       workshopDrawer.style.top       = totalH + 'px';
+        if (recentlyViewedDrawer) recentlyViewedDrawer.style.top = totalH + 'px';
+        if (inboxDrawer)          inboxDrawer.style.top          = totalH + 'px';
+        if (messageDetailDrawer)  messageDetailDrawer.style.top  = totalH + 'px';
+        if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
+        if (authDrawer)           authDrawer.style.top           = totalH + 'px';
+        if (dashView)             dashView.style.top             = totalH + 'px';
+
         if (window.innerWidth >= 900) {
-            if (rightPanel)           rightPanel.style.top           = totalH + 'px';
-            if (filterDrawer)         filterDrawer.style.top         = totalH + 'px';
-            if (detailOverlay)        detailOverlay.style.top        = (totalH + 20) + 'px';
-            const sellOverlay = document.getElementById('sellOverlay');
-            if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
-            if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
-            if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
-            if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
-            if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
-            // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
-            if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
-            if (savedPartsDrawer)      savedPartsDrawer.style.top      = totalH + 'px';
-            if (settingsDrawer)        settingsDrawer.style.top        = totalH + 'px';
-            if (profileDrawer)         profileDrawer.style.top         = totalH + 'px';
-            if (myPartsDrawer)         myPartsDrawer.style.top         = totalH + 'px';
-            if (workshopDrawer)        workshopDrawer.style.top        = totalH + 'px';
-            if (recentlyViewedDrawer)  recentlyViewedDrawer.style.top  = totalH + 'px';
-            if (inboxDrawer)           inboxDrawer.style.top           = totalH + 'px';
-            if (messageDetailDrawer)   messageDetailDrawer.style.top   = totalH + 'px';
-            if (chatDrawer)            chatDrawer.style.top            = totalH + 'px';
-            const authDrawer = document.getElementById('authDrawer');
-            if (authDrawer)            authDrawer.style.top            = (totalH + 20) + 'px';
-            if (accountDropdown)       accountDropdown.style.top       = (totalH + 8) + 'px';
-            const dashView = document.getElementById('dashboardView');
-            if (dashView)             dashView.style.top             = totalH + 'px';
+            if (rightPanel)   rightPanel.style.top   = totalH + 'px';
+            if (filterDrawer) filterDrawer.style.top = totalH + 'px';
+            if (accountDropdown) accountDropdown.style.top = (totalH + 8) + 'px';
         }
     }
 }
@@ -4461,34 +4620,32 @@ window.addEventListener('resize', updateHeaderOffset);
 window.addEventListener('load', updateHeaderOffset);
 
 // --- SEARCH MODE TOGGLE ---
-function setSearchMode(mode) {
+function toggleSearchMode() {
     closeDashboard();
-    const partBtn   = document.getElementById('searchModeParts');
-    const wantedBtn = document.getElementById('searchModeWanted');
-    const searchInput = document.getElementById('mainSearchInput');
-    if (!partBtn || !wantedBtn) return;
-
-    currentSearchMode = mode === 'wanted' ? 'wanted' : 'parts';
-
-    if (mode === 'parts') {
-        partBtn.style.background   = 'var(--white)';
-        partBtn.style.color        = 'var(--apc-orange)';
-        partBtn.style.boxShadow    = '0 1px 3px rgba(0,0,0,0.1)';
-        wantedBtn.style.background = 'none';
-        wantedBtn.style.color      = '#888';
-        wantedBtn.style.boxShadow  = 'none';
-        if (searchInput) searchInput.placeholder = 'Search parts for sale...';
-    } else {
-        wantedBtn.style.background = 'var(--white)';
-        wantedBtn.style.color      = 'var(--apc-orange)';
-        wantedBtn.style.boxShadow  = '0 1px 3px rgba(0,0,0,0.1)';
-        partBtn.style.background   = 'none';
-        partBtn.style.color        = '#888';
-        partBtn.style.boxShadow    = 'none';
-        if (searchInput) searchInput.placeholder = "Search members' wanted lists...";
-    }
-
+    currentSearchMode = currentSearchMode === 'wanted' ? 'parts' : 'wanted';
+    syncSearchModePill();
     renderMainGrid();
+}
+
+function setSearchMode(mode) {
+    currentSearchMode = mode === 'wanted' ? 'wanted' : 'parts';
+    syncSearchModePill();
+    renderMainGrid();
+}
+
+function syncSearchModePill() {
+    const pill  = document.getElementById('searchModeToggle');
+    const input = document.getElementById('mainSearchInput');
+    if (!pill) return;
+    if (currentSearchMode === 'wanted') {
+        pill.textContent = 'Search Parts';
+        pill.classList.add('mode-wanted');
+        if (input) input.placeholder = "Search members' wanted lists...";
+    } else {
+        pill.textContent = 'Search Wanted';
+        pill.classList.remove('mode-wanted');
+        if (input) input.placeholder = 'Search parts for sale...';
+    }
 }
 
 // --- DEBOUNCE UTILITY ---
@@ -4722,7 +4879,7 @@ function renderDemandWidget() {
 
 function renderDashboard() {
     const sellerName = getCurrentSellerName();
-    const myListings = getAllParts().filter(p => p.seller === sellerName);
+    const myListings = userListings.filter(p => p.status !== 'removed');
     const totalSaves = myListings.reduce((s, p) => s + (p.saves || 0), 0);
     const revenue    = dashMockData.closedSales.reduce((s, p) => s + p.price, 0);
     const unread     = parseInt(document.getElementById('inboxBadgeTopBar')?.textContent || '0') || 2;
@@ -4861,6 +5018,7 @@ function renderDashListings(tab, btn) {
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
                 ${p.warehouseBin ? `<button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>` : ''}
+                ${p.status === 'pending' ? `<button class="dash-action-btn dash-btn-warning" onclick="clearListingPending(${p.id})">Remove Pending</button>` : ''}
                 <button class="dash-action-btn" onclick="openEditListing(${p.id});">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="showToast('Mark as sold — coming soon')">Mark Sold</button>
                 <button class="dash-action-btn dash-btn-danger" onclick="deleteListing(${p.id});renderDashboard();">Delete</button>

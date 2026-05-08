@@ -40,19 +40,8 @@
         <div class="search-col">
         <div class="search-group">
             <input type="text" id="mainSearchInput" placeholder="Search parts for sale..." onfocus="closeDashboard()">
+            <button id="searchModeToggle" class="search-mode-pill" onclick="toggleSearchMode()" style="display:none;">Search Wanted</button>
             <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
-        </div>
-
-        <!-- Pro-only filter: hidden by default; revealed only when user is APC Pro AND Pro Search is on -->
-        <div id="proSearchToggle" style="display: none; background: #eee; border-radius: 8px; margin-top: 12px; padding: 2px; height: 32px;">
-            <div id="searchModeParts" onclick="setSearchMode('parts')"
-                 style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; background: var(--white); color: var(--apc-orange); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                 FIND PARTS
-            </div>
-            <div id="searchModeWanted" onclick="setSearchMode('wanted')"
-                 style="flex: 1; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border-radius: 6px; cursor: pointer; color: #888;">
-                 FIND WANTED <span style="margin-left:4px; font-size:8px; background:var(--apc-orange); color:white; padding:1px 4px; border-radius:4px;">PRO</span>
-            </div>
         </div>
         </div><!-- /.search-col -->
 
@@ -568,24 +557,29 @@
             </div>
         </div>
 
-        <!-- Identity -->
+        <!-- Identity block -->
         <div class="sf-identity">
+            <!-- Row 1: business name + badges -->
             <div class="sf-name-row">
                 <span id="sfBusinessName" class="sf-business-name" style="display:none;"></span>
                 <span id="sfProBadge" class="seller-pro-badge" style="display:none;">✔ PRO</span>
                 <span id="sfAbnChip" class="sf-abn-chip" style="display:none;">✓ ABN Verified</span>
             </div>
-            <div id="sfSellerName" class="sf-seller-name"></div>
+            <!-- Row 2: username + stats left | message + heart right -->
+            <div class="sf-stat-bar">
+                <span id="sfSellerName" class="sf-bar-name"></span>
+                <span class="sf-bar-divider"></span>
+                <span class="sf-bar-stat"><span id="sfStatListings" class="sf-bar-num">0</span> Listings</span>
+                <span class="sf-bar-divider"></span>
+                <span class="sf-bar-stat">★ 4.9 Rating</span>
+                <span class="sf-bar-spacer"></span>
+                <button class="sf-msg-btn" onclick="handleGeneralEnquiry()">Message Seller</button>
+                <button id="sfSaveStoreBtn" class="sf-heart-btn" onclick="toggleSaveStore(currentStorefrontSeller, document.getElementById('sfBusinessName')?.textContent, document.getElementById('sfProBadge')?.style.display !== 'none')" title="Save this store">
+                    <span class="sf-heart-icon">&#x2661;</span><span id="sfStatSaves" class="sf-bar-num sf-saves-count">0</span>
+                </button>
+            </div>
+            <!-- Row 3: location (if set) -->
             <div id="sfLocation" class="sf-location" style="display:none;"></div>
-        </div>
-
-        <!-- Stats -->
-        <div class="sf-stats-row">
-            <div class="sf-stat"><span id="sfStatListings" class="sf-stat-val">0</span><span class="sf-stat-lbl">Listings</span></div>
-            <div class="sf-stat-div"></div>
-            <div class="sf-stat"><span id="sfStatSaves" class="sf-stat-val">0</span><span class="sf-stat-lbl">Total Saves</span></div>
-            <div class="sf-stat-div"></div>
-            <div class="sf-stat"><span class="sf-stat-val">★ 4.9</span><span class="sf-stat-lbl">Rating</span></div>
         </div>
 
         <!-- About (Pro only) -->
@@ -593,7 +587,7 @@
             <div id="sfAboutText" class="sf-about-text"></div>
         </div>
 
-        <!-- Search + grid -->
+        <!-- Search -->
         <div class="sf-search-wrap">
             <input type="text" id="storefrontSearch" class="sf-search-input" placeholder="Search this store..." oninput="filterStorefront()">
         </div>
@@ -608,7 +602,7 @@
             <div class="seller-avatar" style="width: 35px; height: 35px; font-size: 14px;">👤</div>
             <span id="chatPartnerName">Seller</span>
         </div>
-        <div onclick="closeChatDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeChatDrawer()">×</div>
     </div>
     <div class="drawer-content" style="display: flex; flex-direction: column; background: #E5DDD5; padding: 10px;">
         <div id="chatBox" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px;">
@@ -631,7 +625,7 @@
 </div>
 
 <div id="filterDrawer" class="drawer">
-    <div class="drawer-header"><span>FILTER RESULTS</span><div onclick="toggleDrawer('filterDrawer')" style="font-size:30px; cursor:pointer">×</div></div>
+    <div class="drawer-header"><span>FILTER RESULTS</span><div class="dh-close" onclick="toggleDrawer('filterDrawer')">×</div></div>
     <div class="drawer-content">
 
         <div class="filter-clear-row"><button onclick="clearAllFilters()" class="filter-clear-btn">CLEAR ALL</button></div>
@@ -874,7 +868,7 @@
 </div>
 
 <div id="sellOverlay" class="drawer">
-    <div class="drawer-header"><span id="sellOverlayTitle">LIST A PART</span><div onclick="toggleDrawer('sellOverlay')" style="font-size:30px; cursor:pointer">×</div></div>
+    <div class="drawer-header"><span id="sellOverlayTitle">LIST A PART</span><div class="dh-close" onclick="closeSellOverlay()">×</div></div>
     <div class="drawer-content">
         <div class="sell-form-grid">
 
@@ -1000,9 +994,28 @@
 <div id="settingsDrawer" class="drawer">
     <div class="drawer-header">
         <span>SETTINGS</span>
-        <div onclick="closeSettingsDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeSettingsDrawer()">×</div>
     </div>
     <div class="drawer-content" style="background: #f4f4f4;">
+
+        <!-- PROFILE STRIP -->
+        <div id="settingsProfileCard" class="spc-card">
+            <div id="profileAvatar" class="spc-avatar">G</div>
+            <div class="spc-body">
+                <div class="spc-name-row">
+                    <span id="profileName" class="spc-name">Gary S.</span>
+                    <span id="profileTierBadge" class="profile-tier-badge pro">APC Pro</span>
+                </div>
+                <div class="spc-stats">
+                    <span><b id="profileStatListings">0</b> listings</span>
+                    <span class="spc-dot">·</span>
+                    <span><b id="profileStatSaved">0</b> saved</span>
+                    <span class="spc-dot">·</span>
+                    <span><b id="profileStatWanted">0</b> wanted</span>
+                </div>
+            </div>
+            <button class="spc-storefront-btn" onclick="openMyStorefront()">My Storefront ›</button>
+        </div>
 
         <!-- LEFT COLUMN: Account + Notifications -->
         <div class="settings-col-left">
@@ -1100,13 +1113,6 @@
 
                 <div class="settings-section settings-pro-section">
                     <div class="settings-pro-section-hdr">Business Profile</div>
-                    <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openMyStorefront()">
-                        <div>
-                            <div class="settings-row-label">My Storefront</div>
-                            <div class="settings-row-sub">Preview how buyers see your seller page</div>
-                        </div>
-                        <span class="settings-chevron" style="color:var(--apc-blue);">›</span>
-                    </div>
                     <div class="settings-row settings-row-tappable" onclick="closeSettingsDrawer(); openWorkshopProfileEditor()">
                         <div>
                             <div class="settings-row-label">Workshop &amp; Repairer Profile</div>
@@ -1187,7 +1193,7 @@
 <div id="profileDrawer" class="drawer">
     <div class="drawer-header">
         <span>MY PROFILE</span>
-        <div onclick="closeProfileDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeProfileDrawer()">×</div>
     </div>
     <div class="drawer-content" style="padding: 0;">
 
@@ -1249,7 +1255,7 @@
 <div id="myPartsDrawer" class="drawer">
     <div class="drawer-header">
         <span>MY LISTINGS</span>
-        <div onclick="toggleDrawer('myPartsDrawer')" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="toggleDrawer('myPartsDrawer')">×</div>
     </div>
     <div class="drawer-content" style="padding: 15px; background: #f4f4f4;">
         <div class="input-group" style="margin-bottom: 15px;">
@@ -1264,7 +1270,7 @@
 <div id="workshopDrawer" class="drawer">
     <div class="drawer-header">
         <span id="workshopDrawerTitle">Find workshops & services</span>
-        <div onclick="toggleDrawer('workshopDrawer')" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="toggleDrawer('workshopDrawer')">×</div>
     </div>
     <div class="drawer-content">
         <div id="workshopBrowseSection" style="display:none;">
@@ -1379,15 +1385,18 @@
                 <div class="ws-service-group">
                     <div class="ws-group-label">Engine &amp; Powertrain</div>
                     <div class="shared-choice-box">
+                        <label class="choice-item"><input type="checkbox" id="wsGeneralService"> General Servicing &amp; Repairs</label>
                         <label class="choice-item"><input type="checkbox" id="wsLogbook"> Logbook Servicing &amp; Maintenance</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
                         <label class="choice-item"><input type="checkbox" id="wsEngineDiag"> Engine Diagnostics &amp; Tuning</label>
-                    </div>
-                    <div class="shared-choice-box" style="margin-top:6px;">
                         <label class="choice-item"><input type="checkbox" id="wsEngineRebuild"> Engine Rebuilds &amp; Overhauls</label>
-                        <label class="choice-item"><input type="checkbox" id="wsTransmission"> Transmission &amp; Drivetrain</label>
                     </div>
                     <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsTransmission"> Transmission &amp; Drivetrain</label>
                         <label class="choice-item"><input type="checkbox" id="wsExhaust"> Exhaust &amp; Emissions</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
                         <label class="choice-item"><input type="checkbox" id="wsTimingBelt"> Timing Belt &amp; Chain</label>
                     </div>
                 </div>
@@ -1399,7 +1408,8 @@
                         <label class="choice-item"><input type="checkbox" id="wsSuspension"> Suspension &amp; Steering</label>
                     </div>
                     <div class="shared-choice-box" style="margin-top:6px;">
-                        <label class="choice-item"><input type="checkbox" id="wsWheelAlign"> Wheel Alignment &amp; Tyre Services</label>
+                        <label class="choice-item"><input type="checkbox" id="wsWheelAlign"> Wheel Alignment &amp; Balancing</label>
+                        <label class="choice-item"><input type="checkbox" id="wsTyreSupply"> Tyre Supply, Fitting &amp; Balancing</label>
                     </div>
                 </div>
 
@@ -1412,6 +1422,9 @@
                     <div class="shared-choice-box" style="margin-top:6px;">
                         <label class="choice-item"><input type="checkbox" id="wsAircon"> Air Conditioning (HVAC)</label>
                         <label class="choice-item"><input type="checkbox" id="wsCooling"> Cooling &amp; Radiator Specialists</label>
+                    </div>
+                    <div class="shared-choice-box" style="margin-top:6px;">
+                        <label class="choice-item"><input type="checkbox" id="wsAutoSecurity"> Security Systems &amp; Accessories</label>
                     </div>
                 </div>
 
@@ -1481,7 +1494,7 @@
 <div id="workshopDetailDrawer" class="drawer">
     <div class="drawer-header">
         <span>Workshop Details</span>
-        <div onclick="closeWorkshopDetailDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeWorkshopDetailDrawer()">×</div>
     </div>
     <div class="drawer-content" style="padding:0;">
         <div id="workshopDetailContent"></div>
@@ -1493,8 +1506,8 @@
     <div class="drawer-header">
         <span>MY GARAGE</span>
         <div style="display:flex; align-items:center; gap:24px;">
-            <button onclick="onAddVehicleClick()" style="background:none; border:1px solid var(--apc-orange); color:var(--apc-orange); font-size:12px; font-weight:800; padding:5px 14px; border-radius:999px; cursor:pointer; font-family:inherit; white-space:nowrap;">+ Add Vehicle</button>
-            <div onclick="toggleDrawer('garageDrawer')" style="font-size:30px; cursor:pointer">×</div>
+            <button class="dh-btn" onclick="onAddVehicleClick()">+ Add Vehicle</button>
+            <div class="dh-close" onclick="toggleDrawer('garageDrawer')">×</div>
         </div>
     </div>
     <div class="drawer-content" style="background: #f4f4f4;">
@@ -1517,7 +1530,7 @@
 <div id="addVehicleDrawer" class="drawer">
     <div class="drawer-header">
         <span>ADD VEHICLE</span>
-        <div onclick="closeAddVehicleDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeAddVehicleDrawer()">×</div>
     </div>
     <div class="drawer-content">
         <div class="filter-section">
@@ -1545,8 +1558,8 @@
     <div class="drawer-header">
         <span id="wantedListTitle">MY WANTED LIST</span>
         <div style="display:flex; align-items:center; gap:12px;">
-            <button id="wantedAddBtn" onclick="openAddWantedFromList()" style="background:var(--apc-orange); color:white; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;">＋ Add</button>
-            <div onclick="closeWantedOrBack()" style="font-size:30px; color:#888; cursor:pointer; line-height:1;">×</div>
+            <button id="wantedAddBtn" class="dh-btn" onclick="openAddWantedFromList()">＋ Add</button>
+            <div class="dh-close" onclick="closeWantedOrBack()">×</div>
         </div>
     </div>
     <div class="drawer-content" style="background:#f4f4f4; padding:16px;">
@@ -1646,7 +1659,7 @@
 <div id="recentlyViewedDrawer" class="drawer">
     <div class="drawer-header">
         <span>RECENTLY VIEWED</span>
-        <div onclick="toggleDrawer('recentlyViewedDrawer')" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="toggleDrawer('recentlyViewedDrawer')">×</div>
     </div>
     <div class="drawer-content" style="padding: 0;">
         <div id="rvDrawerContent"></div>
@@ -1657,7 +1670,7 @@
 <div id="inboxDrawer" class="drawer">
     <div class="drawer-header">
         <span>Messages</span>
-        <div onclick="toggleDrawer('inboxDrawer')" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="toggleDrawer('inboxDrawer')">×</div>
     </div>
     <div class="drawer-content inbox-drawer-content">
 
@@ -1748,7 +1761,7 @@
                 <div id="messageDetailMeta" style="font-size: 12px; color: #666;">Message meta</div>
             </div>
         </div>
-        <div onclick="closeMessageDetailDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeMessageDetailDrawer()">×</div>
     </div>
     <div class="drawer-content">
         <div id="messageDetailContent" style="padding: 15px;"></div>
@@ -1770,7 +1783,7 @@
                 <div class="account-menu-status" id="accountMenuStatus"></div>
             </div>
         </div>
-        <div onclick="closeAccountMenu()" style="font-size:30px; cursor:pointer">×</div>
+        <div class="dh-close" onclick="closeAccountMenu()">×</div>
     </div>
     <div class="drawer-content" style="padding: 0;">
         <div class="amenu-section">
@@ -1783,8 +1796,7 @@
             <button class="account-menu-item amenu-mobile-only" onclick="dtbOpenWorkshops(); closeAccountMenu()">Workshops &amp; Services <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
-            <button class="account-menu-item" onclick="onMenuOpenProfile()">Profile <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="onMenuOpenSettings()">Settings <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="onMenuOpenSettings()">Profile &amp; Settings <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
             <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">Upgrade to APC Pro ›</button>
@@ -1817,8 +1829,7 @@
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
-        <button class="acct-dd-item" onclick="onMenuOpenProfile(); closeAccountDropdown()">Profile <span class="acct-dd-chevron">›</span></button>
-        <button class="acct-dd-item" onclick="onMenuOpenSettings(); closeAccountDropdown()">Settings <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="onMenuOpenSettings(); closeAccountDropdown()">Profile &amp; Settings <span class="acct-dd-chevron">›</span></button>
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
@@ -1835,8 +1846,8 @@
 <!-- SAVED PARTS — from account menu -->
 <div id="savedPartsDrawer" class="drawer">
     <div class="drawer-header">
-        <span>SAVED PARTS</span>
-        <div onclick="closeSavedPartsDrawer()" style="font-size:30px; cursor:pointer">×</div>
+        <span>SAVED</span>
+        <div class="dh-close" onclick="closeSavedPartsDrawer()">×</div>
     </div>
     <div class="drawer-content" style="background:#f4f4f4; padding:16px;">
         <div id="savedPartsContent"></div>
