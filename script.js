@@ -688,7 +688,14 @@ function renderInboxConvList(filter) {
         ? conversations.filter(c => c.with.toLowerCase().includes(q) || getConvPartTitle(c).toLowerCase().includes(q))
         : conversations;
     if (!filtered.length) {
-        list.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;font-weight:600;">No conversations yet</div>';
+        const isSearch = !!filter;
+        list.innerHTML = isSearch
+            ? `<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;font-weight:600;">No conversations match "${escapeHtml(filter)}"</div>`
+            : `<div style="text-align:center;padding:40px 20px;color:#aaa;">
+                <div style="font-size:36px;margin-bottom:10px;">💬</div>
+                <div style="font-weight:800;font-size:14px;color:#888;margin-bottom:6px;">No messages yet</div>
+                <div style="font-size:12px;line-height:1.5;">When you message a seller or receive an enquiry,<br>the conversation will appear here.</div>
+              </div>`;
         return;
     }
     list.innerHTML = filtered.map(c => {
@@ -1420,6 +1427,13 @@ function syncDetailSaveButton(partId) {
     }
 }
 
+function updateGridHeading(label, count) {
+    const el = document.getElementById('gridHeading');
+    if (!el) return;
+    el.innerHTML = `<span class="grid-heading-label">${label}</span><span class="grid-heading-count">${count} part${count !== 1 ? 's' : ''}</span>`;
+    el.style.display = 'flex';
+}
+
 // --- RENDER MAIN HOME GRID ---
 function renderMainGrid() {
     const mainGrid = document.getElementById('mainGrid');
@@ -1430,6 +1444,8 @@ function renderMainGrid() {
 
     if (currentSearchMode === 'wanted') {
         setDtbActive(null);
+        const hdEl = document.getElementById('gridHeading');
+        if (hdEl) hdEl.style.display = 'none';
         return renderWantedSearchResults(mainGrid);
     }
     setDtbActive(null);
@@ -1437,8 +1453,13 @@ function renderMainGrid() {
     const filtered = getFilteredParts();
     mainGrid.innerHTML = '';
 
+    const hasSearch  = !!activeFilters.search.trim();
+    const hasFilters = countActiveFilters() > 0;
+
     if (filtered.length === 0) {
-        if (activeFilters.search.trim()) {
+        const hdEl = document.getElementById('gridHeading');
+        if (hdEl) hdEl.style.display = 'none';
+        if (hasSearch) {
             const safeSearch = escapeHtml(activeFilters.search);
             mainGrid.innerHTML = `
                 <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
@@ -1447,9 +1468,24 @@ function renderMainGrid() {
                     <button onclick="onAddWantedFromSearch()" style="background: var(--apc-orange); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer;">ADD TO WANTED LIST</button>
                 </div>`;
         } else {
-            mainGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888; font-weight: 700;">No parts match your filters.</div>`;
+            mainGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
+                    <div style="font-size:32px; margin-bottom:12px;">🔍</div>
+                    <div style="font-weight:800; font-size:15px; margin-bottom:8px; color:#555;">No parts match your filters</div>
+                    <div style="font-size:13px; margin-bottom:20px;">Try broadening your search or adjusting the filters.</div>
+                    <button onclick="clearAllFilters()" style="background:var(--apc-orange); color:white; border:none; padding:10px 22px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; text-transform:uppercase; letter-spacing:0.5px;">Clear Filters</button>
+                </div>`;
         }
         return;
+    }
+
+    // Set heading label based on state
+    if (hasSearch) {
+        updateGridHeading(`Results for "${escapeHtml(activeFilters.search)}"`, filtered.length);
+    } else if (hasFilters) {
+        updateGridHeading('Filtered results', filtered.length);
+    } else {
+        updateGridHeading('Recently Listed', filtered.length);
     }
 
     filtered.forEach(part => {
@@ -1560,7 +1596,13 @@ function renderMyParts() {
     );
 
     if (myParts.length === 0) {
-        myPartsList.innerHTML = `<div style="text-align:center; color:#888; padding: 30px; font-weight: 700;">No active listings.</div>`;
+        myPartsList.innerHTML = query
+            ? `<div style="text-align:center;color:#888;padding:30px;font-weight:700;">No listings match "${escapeHtml(query)}"</div>`
+            : `<div style="text-align:center;padding:40px 20px;color:#aaa;">
+                <div style="font-size:36px;margin-bottom:10px;">📦</div>
+                <div style="font-weight:800;font-size:14px;color:#888;margin-bottom:6px;">No active listings</div>
+                <div style="font-size:12px;">Tap <strong>+ Sell a Part</strong> to list your first part.</div>
+               </div>`;
         return;
     }
 
@@ -4949,7 +4991,8 @@ function submitOffer() {
     const part  = getPartById(currentOpenPartId);
     if (!part) return;
     const price = parseFloat(document.getElementById('offerPriceInput').value);
-    if (!price || price <= 0) { showToast('Please enter a valid offer amount'); return; }
+    if (!price || price < 1)          { showToast('Please enter a valid offer amount (minimum $1)'); return; }
+    if (price >= part.price)          { showToast(`Offer must be below the listed price of $${part.price}`); return; }
     const note  = document.getElementById('offerNoteInput').value.trim();
     const offer = {
         id:           nextOfferId(),
@@ -5338,6 +5381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('input', debounce(() => {
             activeFilters.search = searchInput.value.trim();
             renderMainGrid();
+            updateFilterChip();
         }, 300));
     }
 
