@@ -2053,15 +2053,9 @@ function openItemDetail(partId) {
 
     let footerParts;
     if (part.isPro) {
-        // More from this seller first, pad with same-category if needed
-        const fromSeller = getAllParts().filter(p => p.id !== part.id && p.seller === part.seller && active(p));
-        const fromCat    = getAllParts().filter(p => p.id !== part.id && p.seller !== part.seller && p.category === part.category && active(p));
-        footerParts = [...fromSeller, ...fromCat].slice(0, 8);
+        footerParts = getAllParts().filter(p => p.id !== part.id && p.seller === part.seller && active(p)).slice(0, 8);
     } else {
-        // Same category first, pad with anything else if needed
-        const sameCat = getAllParts().filter(p => p.id !== part.id && p.category === part.category && active(p));
-        const others  = getAllParts().filter(p => p.id !== part.id && p.category !== part.category && active(p));
-        footerParts = [...sameCat, ...others].slice(0, 8);
+        footerParts = getAllParts().filter(p => p.id !== part.id && p.category === part.category && active(p)).slice(0, 8);
     }
 
     const miniCards = footerParts.map(p => {
