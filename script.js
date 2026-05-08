@@ -2123,8 +2123,13 @@ function openItemDetail(partId) {
     const detailScrollArea = document.getElementById('detailScrollArea');
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
 
-    const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
-    toggleDrawer('detailOverlay', parentOpen);
+    const detailEl = document.getElementById('detailOverlay');
+    if (detailEl && detailEl.classList.contains('active')) {
+        // Already open — content has been refreshed above, no need to toggle
+    } else {
+        const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
+        toggleDrawer('detailOverlay', parentOpen);
+    }
 }
 
 function closeDetailOverlay() {
