@@ -1992,6 +1992,9 @@ function openItemDetail(partId) {
     const detailMsgBtn = document.getElementById('detailMsgBtn');
     if (detailMsgBtn)        detailMsgBtn.style.display        = lockDetails ? 'none'  : '';
     if (detailSignInPrompt)  detailSignInPrompt.style.display  = lockDetails ? ''      : 'none';
+    const detailVisitStoreBtn = document.getElementById('detailVisitStoreBtn');
+    const isOwnListing = part.seller === getCurrentSellerName();
+    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing) ? '' : 'none';
 
     // 3. Update the seller header in the overlay (was hardcoded to Gary)
     // Amber header seller card (mobile)
@@ -2046,11 +2049,25 @@ function openItemDetail(partId) {
     const footer = document.getElementById('dynamicDetailFooter');
     if (!footer) return;
 
-    const relatedParts = getAllParts().filter(p => p.id !== part.id);
-    const miniCards = relatedParts.slice(0, 8).map(p => {
+    const active = p => p.status !== 'sold' && p.status !== 'removed';
+
+    let footerParts;
+    if (part.isPro) {
+        // More from this seller first, pad with same-category if needed
+        const fromSeller = getAllParts().filter(p => p.id !== part.id && p.seller === part.seller && active(p));
+        const fromCat    = getAllParts().filter(p => p.id !== part.id && p.seller !== part.seller && p.category === part.category && active(p));
+        footerParts = [...fromSeller, ...fromCat].slice(0, 8);
+    } else {
+        // Same category first, pad with anything else if needed
+        const sameCat = getAllParts().filter(p => p.id !== part.id && p.category === part.category && active(p));
+        const others  = getAllParts().filter(p => p.id !== part.id && p.category !== part.category && active(p));
+        footerParts = [...sameCat, ...others].slice(0, 8);
+    }
+
+    const miniCards = footerParts.map(p => {
         const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
         return `
-            <div class="detail-mini-card" onclick="openDetail(${p.id})">
+            <div class="detail-mini-card" onclick="openItemDetail(${p.id})">
                 <img class="detail-mini-img" src="${img}" alt="${escapeHtml(p.title)}">
                 <div class="detail-mini-info">
                     <div class="detail-mini-title">${escapeHtml(p.title)}</div>

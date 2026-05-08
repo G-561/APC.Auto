@@ -88,38 +88,38 @@
 
     <!-- TIER 2: Sponsored Parts — one card per listing -->
     <div class="drp-card drp-sp-card" onclick="openItemDetail(4)">
-        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
-        <div class="drp-sp-item">
+        <div class="drp-sp-img-wrap">
             <img src="images/elise.wheel.jpg" class="drp-sp-img" alt="">
-            <div class="drp-sp-info">
-                <div class="drp-sp-title">3D Racing Wheel Caps</div>
-                <div class="drp-sp-seller">Func3D Design</div>
-            </div>
+            <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+        </div>
+        <div class="drp-sp-info">
             <div class="drp-sp-price">$85</div>
+            <div class="drp-sp-title">3D Racing Wheel Caps</div>
+            <div class="drp-sp-seller">Func3D Design</div>
         </div>
     </div>
 
     <div class="drp-card drp-sp-card" onclick="openItemDetail(8)">
-        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
-        <div class="drp-sp-item">
+        <div class="drp-sp-img-wrap">
             <img src="images/Elise.scoops.webp" class="drp-sp-img" alt="">
-            <div class="drp-sp-info">
-                <div class="drp-sp-title">Cold Air Intake Scoops</div>
-                <div class="drp-sp-seller">Alex T.</div>
-            </div>
+            <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+        </div>
+        <div class="drp-sp-info">
             <div class="drp-sp-price">$120</div>
+            <div class="drp-sp-title">Cold Air Intake Scoops</div>
+            <div class="drp-sp-seller">Alex T.</div>
         </div>
     </div>
 
     <div class="drp-card drp-sp-card" onclick="openItemDetail(7)">
-        <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
-        <div class="drp-sp-item">
+        <div class="drp-sp-img-wrap">
             <img src="images/elise.brake.pads.jpg" class="drp-sp-img" alt="">
-            <div class="drp-sp-info">
-                <div class="drp-sp-title">AP Racing Calipers</div>
-                <div class="drp-sp-seller">Mike D.</div>
-            </div>
+            <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+        </div>
+        <div class="drp-sp-info">
             <div class="drp-sp-price">$340</div>
+            <div class="drp-sp-title">AP Racing Calipers</div>
+            <div class="drp-sp-seller">Mike D.</div>
         </div>
     </div>
 
@@ -366,7 +366,10 @@
                 <button id="detailMsgBtn" onclick="handleMessageSeller()" style="width: 100%; padding: 16px; background: var(--apc-orange); color: white; border: none; border-radius: 8px; font-weight: 800; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2); text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
                     ✉️ MESSAGE SELLER
                 </button>
-                <button id="detailSignInPrompt" onclick="openAuthDrawer()" style="display:none; width: 100%; padding: 16px; background: var(--apc-blue); color: white; border: none; border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px;">
+                <button id="detailVisitStoreBtn" onclick="openStorefront(currentOpenPartId)" style="display:none; width: 100%; margin-top: 8px; padding: 13px; background: none; border: 2px solid var(--apc-orange); color: var(--apc-orange); border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 13px;">
+                    🏪 VISIT STORE
+                </button>
+                <button id="detailSignInPrompt" onclick="openAuthDrawer()" style="display:none; width: 100%; padding: 16px; background: var(--apc-blue); color: white; border: none; border-radius: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; font-size: 14px; margin-top: 8px;">
                     🔒 SIGN IN TO CONTACT SELLER
                 </button>
             </div>
@@ -876,8 +879,8 @@
                 <div class="filter-section">
                     <h4>Photos</h4>
                     <div id="sellPhotoGrid" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px;"></div>
-                    <input type="file" id="sellImageInput" accept="image/*" capture="environment" multiple style="display:none;" onchange="handleSellImageFiles(event)">
-                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Upload up to 5 photos. On mobile, this may open your camera.</div>
+                    <input type="file" id="sellImageInput" accept="image/*" multiple style="display:none;" onchange="handleSellImageFiles(event)">
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">Upload up to 5 photos. On mobile, choose camera or photo library.</div>
                 </div>
 
                 <div class="filter-section">
