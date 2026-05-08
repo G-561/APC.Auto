@@ -270,7 +270,7 @@
                     <span id="detailProBadge" class="seller-pro-badge">✔ PRO</span>
                     <span id="detailTradeBadge" class="trade-only-badge" style="display:none;">TRADE</span>
                 </div>
-                <div id="detailSellerSub" class="detail-seller-sub">View seller's other items →</div>
+                <div id="detailSellerSub" class="detail-seller-sub"></div>
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:4px;">
@@ -301,7 +301,7 @@
                         <span id="detailSellerColName" class="detail-seller-name">Seller</span>
                         <span id="detailProBadgeCol" class="seller-pro-badge" style="display:none;">✔ PRO</span>
                     </div>
-                    <div class="detail-seller-sub">View seller's other items →</div>
+                    <div class="detail-seller-sub"></div>
                 </div>
             </div>
 
@@ -1026,6 +1026,15 @@
             <!-- ACCOUNT -->
             <div class="settings-section-label">Account</div>
             <div class="settings-section">
+                <div class="settings-row" style="align-items:center; gap:12px;">
+                    <span class="settings-row-label">Profile Photo</span>
+                    <div class="settings-profile-pic-wrap" onclick="document.getElementById('profilePicInput').click()">
+                        <img id="profilePicPreview" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                        <span id="profilePicInitial" style="font-size:16px; font-weight:900; color:#fff;">G</span>
+                        <input type="file" id="profilePicInput" accept="image/*" style="display:none;" onchange="handleProfilePicUpload(this)">
+                    </div>
+                    <button id="profilePicRemoveBtn" onclick="removeProfilePic()" class="settings-pic-remove-btn" style="display:none;">Remove</button>
+                </div>
                 <div class="settings-row">
                     <span class="settings-row-label">Display Name</span>
                     <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name">

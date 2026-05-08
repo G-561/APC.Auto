@@ -265,6 +265,7 @@ function getDefaultSettings() {
         abn: '',
         about: '',
         businessType: 'supplier',
+        profilePic: '',
         businessLogo: '',
         businessBanner: '',
         notifyWantedMatch:    true,
@@ -336,6 +337,40 @@ function removeBusinessLogo() {
     if (fileInput) fileInput.value = '';
     renderLogoPreview();
     showToast('Logo removed');
+}
+
+function handleProfilePicUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) { showToast('Image too large — please use an image under 1 MB'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+        userSettings.profilePic = e.target.result;
+        saveUserSettings();
+        renderProfilePicPreview();
+        showToast('Profile photo saved');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeProfilePic() {
+    userSettings.profilePic = '';
+    saveUserSettings();
+    const input = document.getElementById('profilePicInput');
+    if (input) input.value = '';
+    renderProfilePicPreview();
+    showToast('Profile photo removed');
+}
+
+function renderProfilePicPreview() {
+    const pic      = userSettings.profilePic || '';
+    const initial  = (currentUserName || 'G').charAt(0).toUpperCase();
+    const img      = document.getElementById('profilePicPreview');
+    const ini      = document.getElementById('profilePicInitial');
+    const removeBtn = document.getElementById('profilePicRemoveBtn');
+    if (img) { img.src = pic; img.style.display = pic ? 'block' : 'none'; }
+    if (ini) { ini.style.display = pic ? 'none' : ''; ini.textContent = initial; }
+    if (removeBtn) removeBtn.style.display = pic ? '' : 'none';
 }
 
 function renderLogoPreview() {
@@ -428,6 +463,7 @@ function renderSettingsDrawer() {
 
     if (nameEl) nameEl.value = currentUserName || '';
     if (locEl)  locEl.value  = userSettings.location || '';
+    renderProfilePicPreview();
 
     const isPro = currentUserTier === 'pro';
     const proBlock = document.getElementById('settingsProBlock');
@@ -1994,7 +2030,8 @@ function openItemDetail(partId) {
     if (detailSignInPrompt)  detailSignInPrompt.style.display  = lockDetails ? ''      : 'none';
     const detailVisitStoreBtn = document.getElementById('detailVisitStoreBtn');
     const isOwnListing = part.seller === getCurrentSellerName();
-    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing) ? '' : 'none';
+    const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
+    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings) ? '' : 'none';
 
     // 3. Update the seller header in the overlay (was hardcoded to Gary)
     // Amber header seller card (mobile)
@@ -2221,12 +2258,13 @@ function openStorefront(partId) {
     const part = getPartById(partId);
     if (!part) return;
     const isOwn = part.seller === getCurrentSellerName();
-    const logo         = isOwn ? (userSettings.businessLogo   || '') : '';
-    const banner       = isOwn ? (userSettings.businessBanner || '') : '';
-    const businessName = isOwn ? (userSettings.businessName   || '') : '';
-    const abn          = isOwn ? (userSettings.abn            || '') : '';
-    const about        = isOwn ? (userSettings.about          || '') : '';
-    const location     = isOwn ? (userSettings.location       || '') : '';
+    // All users get their profile pic; Pro-only fields require isOwn + isPro
+    const logo         = isOwn ? (userSettings.profilePic || userSettings.businessLogo || '') : '';
+    const banner       = (isOwn && part.isPro) ? (userSettings.businessBanner || '') : '';
+    const businessName = (isOwn && part.isPro) ? (userSettings.businessName   || '') : '';
+    const abn          = (isOwn && part.isPro) ? (userSettings.abn            || '') : '';
+    const about        = (isOwn && part.isPro) ? (userSettings.about          || '') : '';
+    const location     = isOwn ? (userSettings.location || '') : '';
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = part.seller;
     renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
