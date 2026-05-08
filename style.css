@@ -262,6 +262,21 @@ header {
     background: #fafafa;
 }
 
+.auth-tab-bar {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 16px;
+}
+.auth-error-banner {
+    background: #fff1f2;
+    border: 1.5px solid #f87171;
+    border-radius: 8px;
+    color: #991b1b;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
 .auth-tab {
     flex: 1;
     border: 1.5px solid #ddd;
@@ -523,6 +538,23 @@ header {
 /* =====================
    SELLER STOREFRONT v2
    ===================== */
+
+/* Back-to-listing context bar */
+.storefront-back-bar {
+    padding: 10px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+.storefront-back-bar button {
+    background: none;
+    border: none;
+    color: var(--apc-orange);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
 
 /* Floating close button */
 .sf-close-btn {
@@ -1284,6 +1316,27 @@ header {
 .workshop-sponsor-grid {
     display: grid;
     gap: 8px;
+}
+
+/* WORKSHOP EMPTY STATE */
+.workshop-empty-state {
+    text-align: center;
+    padding: 48px 20px 40px;
+    color: #aaa;
+}
+.workshop-empty-icon { font-size: 36px; margin-bottom: 12px; }
+.workshop-empty-title { font-size: 15px; font-weight: 800; color: #666; margin-bottom: 6px; }
+.workshop-empty-sub { font-size: 13px; margin-bottom: 18px; }
+.workshop-empty-cta {
+    background: var(--apc-orange);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 /* WORKSHOP DETAIL DRAWER */
@@ -2344,6 +2397,34 @@ header {
 .profile-action-btn.primary   { background: var(--apc-orange); color: white; }
 .profile-action-btn.secondary { background: #f4f4f4; color: #333; }
 .profile-action-btn:last-child { margin-bottom: 0; }
+
+/* Settings Pro upgrade nudge */
+.settings-upgrade-nudge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border: 1.5px solid #fed7aa;
+    border-radius: 10px;
+    margin: 10px 14px 2px;
+    padding: 12px 14px;
+}
+.sun-left { flex: 1; min-width: 0; }
+.sun-title { font-size: 13px; font-weight: 800; color: #c2410c; margin-bottom: 2px; }
+.sun-sub { font-size: 11px; color: #9a3412; }
+.sun-btn {
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+}
 
 /* Settings profile strip */
 .spc-card {

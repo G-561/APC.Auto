@@ -179,9 +179,24 @@ function loadRecentlyViewed() {
 function saveRecentlyViewed() {
     try { localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(recentlyViewed)); } catch (e) {}
 }
+const _navPairs = {
+    homeNavItem:    'dsbHomeItem',
+    garageNavItem:  'dsbGarageItem',
+    recentNavItem:  'dsbRecentItem',
+    inboxNavItem:   'desktopInboxItem',
+    dsbHomeItem:    'homeNavItem',
+    dsbGarageItem:  'garageNavItem',
+    dsbRecentItem:  'recentNavItem',
+    desktopInboxItem: 'inboxNavItem',
+};
 function setActiveNav(el) {
     document.querySelectorAll('.nav-item, .dsb-item').forEach(n => n.classList.remove('active'));
-    if (el) el.classList.add('active');
+    const target = typeof el === 'string' ? document.getElementById(el) : el;
+    if (target) {
+        target.classList.add('active');
+        const pairedId = _navPairs[target.id];
+        if (pairedId) { const p = document.getElementById(pairedId); if (p) p.classList.add('active'); }
+    }
 }
 
 function setDtbActive(id) {
@@ -213,6 +228,7 @@ function addToRecentlyViewed(partId) {
     renderRecentlyViewed();
 }
 function onOpenRecentlyViewed() {
+    setActiveNav('recentNavItem');
     renderRecentlyViewed();
     toggleDrawer('recentlyViewedDrawer');
 }
@@ -1434,6 +1450,14 @@ function updateGridHeading(label, count) {
     el.style.display = 'flex';
 }
 
+function goHome() {
+    document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
+    syncBackdrop();
+    renderMainGrid();
+    window.scrollTo(0, 0);
+    setActiveNav('homeNavItem');
+}
+
 // --- RENDER MAIN HOME GRID ---
 function renderMainGrid() {
     const mainGrid = document.getElementById('mainGrid');
@@ -2193,43 +2217,69 @@ function openItemDetail(partId) {
         }
     }
 
-    // 4. Footer — more from seller or similar items
+    // 4. Footer — more from seller or similar items, padded to TARGET
     const footer = document.getElementById('dynamicDetailFooter');
     if (!footer) return;
 
+    const FOOTER_TARGET = 6;
     const active = p => p.status !== 'sold' && p.status !== 'removed';
+    const used = new Set([part.id]);
 
-    let footerParts;
-    if (part.isPro) {
-        footerParts = getAllParts().filter(p => p.id !== part.id && p.seller === part.seller && active(p)).slice(0, 8);
-    } else {
-        footerParts = getAllParts().filter(p => p.id !== part.id && p.category === part.category && active(p)).slice(0, 8);
+    function collectFooter(pool, n) {
+        const picks = [];
+        for (const p of pool) {
+            if (picks.length >= n) break;
+            if (!used.has(p.id)) { picks.push(p); used.add(p.id); }
+        }
+        return picks;
     }
 
-    const miniCards = footerParts.map(p => {
-        const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
-        return `
-            <div class="detail-mini-card" onclick="openItemDetail(${p.id})">
+    function buildStrip(parts) {
+        return parts.map(p => {
+            const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
+            return `<div class="detail-mini-card" onclick="openItemDetail(${p.id})">
                 <img class="detail-mini-img" src="${img}" alt="${escapeHtml(p.title)}">
                 <div class="detail-mini-info">
                     <div class="detail-mini-title">${escapeHtml(p.title)}</div>
                     <div class="detail-mini-price">$${p.price}</div>
                 </div>
             </div>`;
-    }).join('');
+        }).join('');
+    }
+
+    const allActive = getAllParts().filter(p => active(p));
+
+    let html = '';
 
     if (part.isPro) {
-        footer.innerHTML = `
-            <div class="detail-footer-label">
-                MORE FROM ${escapeHtml(part.seller.toUpperCase())}
-                <span onclick="openStorefront(${part.id})" style="color:var(--apc-orange);font-weight:900;cursor:pointer;font-size:10px;">VISIT STORE →</span>
-            </div>
-            <div class="detail-footer-strip">${miniCards}</div>`;
+        const sellerParts = collectFooter(allActive.filter(p => p.seller === part.seller), FOOTER_TARGET);
+        html += `<div class="detail-footer-label">
+            MORE FROM ${escapeHtml(part.seller.toUpperCase())}
+            <span onclick="openStorefront(${part.id})" style="color:var(--apc-orange);font-weight:900;cursor:pointer;font-size:10px;">VISIT STORE →</span>
+        </div>
+        <div class="detail-footer-strip">${buildStrip(sellerParts)}</div>`;
+
+        // Fill remainder with similar/recent
+        if (sellerParts.length < FOOTER_TARGET) {
+            const catFill  = collectFooter(allActive.filter(p => p.category === part.category), FOOTER_TARGET - sellerParts.length);
+            const remaining = FOOTER_TARGET - sellerParts.length - catFill.length;
+            const recentFill = remaining > 0 ? collectFooter(allActive, remaining) : [];
+            const fillParts = [...catFill, ...recentFill];
+            if (fillParts.length) {
+                html += `<div class="detail-footer-label" style="margin-top:12px;">YOU MIGHT ALSO LIKE</div>
+                <div class="detail-footer-strip">${buildStrip(fillParts)}</div>`;
+            }
+        }
     } else {
-        footer.innerHTML = `
-            <div class="detail-footer-label">SIMILAR ITEMS</div>
-            <div class="detail-footer-strip">${miniCards}</div>`;
+        const catParts    = collectFooter(allActive.filter(p => p.category === part.category), FOOTER_TARGET);
+        const remaining   = FOOTER_TARGET - catParts.length;
+        const recentFill  = remaining > 0 ? collectFooter(allActive, remaining) : [];
+        const allFill = [...catParts, ...recentFill];
+        html += `<div class="detail-footer-label">SIMILAR ITEMS</div>
+        <div class="detail-footer-strip">${buildStrip(allFill)}</div>`;
     }
+
+    footer.innerHTML = html;
 
     const detailScrollArea = document.getElementById('detailScrollArea');
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
@@ -2418,6 +2468,8 @@ function openStorefront(partId) {
     // Float above detailOverlay (z-index 2050) when opening from within a listing
     const sfEl = document.getElementById('storefrontDrawer');
     if (sfEl) sfEl.style.zIndex = '2060';
+    const backBar = document.getElementById('storefrontBackBar');
+    if (backBar) backBar.style.display = currentOpenPartId ? '' : 'none';
     toggleDrawer('storefrontDrawer', true);
 }
 
@@ -2605,7 +2657,7 @@ function sendChatImage(event) {
     const input = document.getElementById('chatInput');
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-        alert('Please choose an image file.');
+        showToast('Please choose an image file.');
         event.target.value = '';
         return;
     }
@@ -2650,6 +2702,7 @@ function nextVehicleId() {
 
 // Open the garage drawer (called from bottom nav)
 function onOpenGarage() {
+    setActiveNav('garageNavItem');
     renderGarage();
     toggleDrawer('garageDrawer');
 }
@@ -2698,12 +2751,12 @@ function submitAddVehicle() {
     const vin      = document.getElementById('vehVin').value.trim();
 
     if (!make || !model || !yearStr) {
-        alert('Make, Model and Year are required.');
+        showToast('Make, Model and Year are required.');
         return;
     }
     const year = Number(yearStr);
     if (!Number.isFinite(year) || year < 1900 || year > 2030) {
-        alert('Please enter a valid 4-digit year.');
+        showToast('Please enter a valid 4-digit year (1900–2030).');
         return;
     }
 
@@ -2885,7 +2938,7 @@ function renderGarageTab() {
     if (currentVehicleTab === 'wanted') {
         if (!vehicleWanted.length) {
             c.appendChild(buildVehicleEmpty(
-                '✦',
+                '🔍',
                 `No wanted parts for your ${v.make} ${v.model} yet.`,
                 { label: 'ADD WANTED PART', onClick: () => openAddWantedForVehicle(currentVehicleId) }
             ));
@@ -3008,6 +3061,8 @@ function openStoreFromSaved(sellerName) {
     );
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = sellerName;
+    const backBar3 = document.getElementById('storefrontBackBar');
+    if (backBar3) backBar3.style.display = 'none';
     toggleDrawer('storefrontDrawer');
 }
 
@@ -3601,7 +3656,7 @@ function submitAddWanted() {
     const year     = document.getElementById('wantedYear').value.trim();
     const category = document.getElementById('wantedCategory')?.value || '';
 
-    if (!partName) { alert('Part name is required.'); return; }
+    if (!partName) { showToast('Part name is required.'); return; }
 
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
     addWanted(partName, make, model, year, maxPrice, category);
@@ -3697,7 +3752,7 @@ function renderVehicleTab() {
         );
         if (!vehicleWanted.length) {
             c.appendChild(buildVehicleEmpty(
-                '✦',
+                '🔍',
                 `No wanted parts for your ${v.make} ${v.model} yet.\nAdd parts you're looking for to get notified when they're listed.`,
                 { label: 'ADD WANTED PART', onClick: () => openAddWantedForVehicle(currentVehicleId) }
             ));
@@ -3844,6 +3899,7 @@ function showToastWithAction(msg, actionLabel, actionFn) {
 let currentInboxTab = 'all';
 
 function onOpenInbox() {
+    setActiveNav('inboxNavItem');
     updateInboxBadge();
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
@@ -4083,6 +4139,14 @@ function setAuthMode(mode) {
         titleEl.textContent = titles[mode] || 'Sign In';
     }
 
+    hideAuthError();
+    const tabSignIn = document.getElementById('authTabSignIn');
+    const tabSignUp = document.getElementById('authTabSignUp');
+    if (tabSignIn && tabSignUp) {
+        tabSignIn.classList.toggle('active', mode === 'signin');
+        tabSignUp.classList.toggle('active', mode !== 'signin');
+    }
+
     const sections = {
         authSignInSection:         mode === 'signin',
         authSignUpSection:         mode === 'signup',
@@ -4127,6 +4191,17 @@ function clearSignUpFields() {
     });
 }
 
+function showAuthError(msg) {
+    const el = document.getElementById('authErrorBanner');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = '';
+}
+function hideAuthError() {
+    const el = document.getElementById('authErrorBanner');
+    if (el) el.style.display = 'none';
+}
+
 function openAuthDrawer(returnAction = null, mode = 'signin') {
     authReturnAction = returnAction;
     setAuthMode(mode);
@@ -4138,9 +4213,10 @@ function handleSignInSubmit() {
     const password = document.getElementById('authPassword')?.value;
     const remember = document.getElementById('authRememberMe')?.checked;
     if (!email || !password) {
-        alert('Enter your email and password to sign in.');
+        showAuthError('Enter your email and password to sign in.');
         return;
     }
+    hideAuthError();
     document.getElementById('authPassword').value = '';
     const userName = email.split('@')[0] || 'Member';
     signIn(userName, 'standard', remember, email);
@@ -4159,9 +4235,10 @@ function handleSignUpPersonalSubmit() {
     const remember = document.getElementById('authRememberPersonal')?.checked;
     document.getElementById('authPasswordPersonal').value = '';
     if (!name || !email || !password) {
-        alert('Please enter your name, email and password to sign up.');
+        showAuthError('Please enter your name, email and password to sign up.');
         return;
     }
+    hideAuthError();
     signIn(name, 'standard', remember, email);
     toggleDrawer('authDrawer');
     if (authReturnAction) {
@@ -4183,14 +4260,15 @@ function handleSignUpProSubmit() {
     document.getElementById('authPasswordPro').value = '';
 
     if (!name || !businessName || !abnRaw || !email || !password) {
-        alert('Please fill in all fields including your Business Name and ABN.');
+        showAuthError('Please fill in all fields including your Business Name and ABN.');
         return;
     }
     const abnDigits = abnRaw.replace(/\s/g, '');
     if (!/^\d{11}$/.test(abnDigits)) {
-        alert('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).');
+        showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).');
         return;
     }
+    hideAuthError();
 
     userSettings.businessName = businessName;
     userSettings.abn = abnDigits;
@@ -4349,6 +4427,8 @@ function openMyStorefront() {
         userSettings.location       || '',
         userSettings.businessBanner || ''
     );
+    const backBar4 = document.getElementById('storefrontBackBar');
+    if (backBar4) backBar4.style.display = 'none';
     toggleDrawer('storefrontDrawer');
 }
 
@@ -4565,6 +4645,13 @@ function wsClearAll() {
     updateWsFilterBadge();
 }
 
+function clearWorkshopFilters() {
+    const searchInput = document.getElementById('workshopSearchInput');
+    if (searchInput) searchInput.value = '';
+    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]').forEach(c => c.checked = false);
+    updateWsFilterBadge();
+}
+
 function getApprovedClubInfo() {
     const state = (document.getElementById('filterStateSelect')?.value || '').toUpperCase();
     const map = {
@@ -4629,7 +4716,12 @@ function renderWorkshopBrowseView() {
     });
 
     if (!matches.length) {
-        sponsoredList.innerHTML = '<div class="workshop-card"><div class="workshop-card-name">No workshops match your search.</div></div>';
+        sponsoredList.innerHTML = `<div class="workshop-empty-state">
+            <div class="workshop-empty-icon">🔧</div>
+            <div class="workshop-empty-title">No workshops match your filters</div>
+            <div class="workshop-empty-sub">Try adjusting your search or service filters</div>
+            <button class="workshop-empty-cta" onclick="clearWorkshopFilters()">Show all workshops</button>
+        </div>`;
         return;
     }
 
@@ -4748,6 +4840,8 @@ function renderAccountState() {
         menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
     }
     if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'standard') ? 'flex' : 'none';
+    const settingsUpgradeNudge = document.getElementById('settingsUpgradeNudge');
+    if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'standard') ? 'flex' : 'none';
     if (menuActivate) {
         menuActivate.style.display = (currentUserTier === 'pro') ? 'flex' : 'none';
         menuActivate.classList.toggle('on', proSearchOn);
@@ -5272,7 +5366,7 @@ function renderDashListings(tab, btn) {
                 ${p.status === 'pending' ? `<button class="dash-action-btn dash-btn-warning" onclick="clearListingPending(${p.id})">Remove Pending</button>` : ''}
                 <button class="dash-action-btn" onclick="openEditListing(${p.id});">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="showToast('Mark as sold — coming soon')">Mark Sold</button>
-                <button class="dash-action-btn dash-btn-danger" onclick="deleteListing(${p.id});renderDashboard();">Delete</button>
+                <button class="dash-action-btn dash-btn-danger" onclick="if(confirm('Delete this listing?')){deleteListing(${p.id});renderDashboard();}">Delete</button>
             </td></tr>`).join('');
     } else if (tab === 'pending') {
         const sellerName = getCurrentSellerName();

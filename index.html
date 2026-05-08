@@ -55,9 +55,9 @@
         <img src="images/APC.logo.png" alt="APC">
     </div>
     <div class="dsb-nav">
-        <div class="dsb-item active" onclick="setActiveNav(this); renderMainGrid(); window.scrollTo(0,0);">Home</div>
-        <div class="dsb-item" onclick="setActiveNav(this); onOpenGarage()">Garage</div>
-        <div class="dsb-item" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
+        <div class="dsb-item active" id="dsbHomeItem" onclick="goHome()">Home</div>
+        <div class="dsb-item" id="dsbGarageItem" onclick="setActiveNav(this); onOpenGarage()">Garage</div>
+        <div class="dsb-item" id="dsbRecentItem" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
         <div class="dsb-item" id="desktopInboxItem" onclick="setActiveNav(this); onOpenInbox()">
             Inbox
             <span id="inboxBadgeDesktop" class="dsb-inbox-badge" style="display:none;"></span>
@@ -249,10 +249,10 @@
 </div>
 
 <nav class="bottom-nav" id="bottomNav">
-    <div class="nav-item active" onclick="setActiveNav(this); location.reload()">Home</div>
-    <div class="nav-item" onclick="setActiveNav(this); onOpenGarage()">Garage</div>
+    <div class="nav-item active" id="homeNavItem" onclick="goHome()">Home</div>
+    <div class="nav-item" id="garageNavItem" onclick="setActiveNav(this); onOpenGarage()">Garage</div>
     <div class="nav-item nav-sell" onclick="openSellOverlay()">Sell</div>
-    <div class="nav-item" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
+    <div class="nav-item" id="recentNavItem" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
     <div class="nav-item" id="inboxNavItem" onclick="setActiveNav(this); onOpenInbox()">
         <span style="position:relative; display:inline-block;">
             Inbox
@@ -561,6 +561,9 @@
 </div>
 
 <div id="storefrontDrawer" class="drawer">
+    <div id="storefrontBackBar" class="storefront-back-bar" style="display:none;">
+        <button onclick="closeStorefrontDrawer()">← Back to listing</button>
+    </div>
     <div class="sf-close-btn" onclick="closeStorefrontDrawer()">×</div>
     <div class="drawer-content" style="padding:0;">
 
@@ -793,7 +796,12 @@
         <span class="auth-drawer-title" id="authDrawerTitle">Sign In</span>
         <div onclick="toggleDrawer('authDrawer')" style="font-size:28px; color:#aaa; cursor:pointer; line-height:1; margin-left:12px;">×</div>
     </div>
+    <div class="auth-tab-bar" id="authTabBar">
+        <button class="auth-tab active" id="authTabSignIn" onclick="setAuthMode('signin')">Sign In</button>
+        <button class="auth-tab" id="authTabSignUp" onclick="setAuthMode('signup')">Sign Up</button>
+    </div>
     <div class="drawer-content" style="padding-top:0;">
+        <div id="authErrorBanner" class="auth-error-banner" style="display:none;"></div>
 
         <!-- SIGN IN -->
         <div id="authSignInSection">
@@ -1031,6 +1039,15 @@
                 </div>
             </div>
             <button class="spc-storefront-btn" onclick="openMyStorefront()">My Storefront ›</button>
+        </div>
+
+        <!-- PRO UPGRADE NUDGE — hidden for Pro users -->
+        <div id="settingsUpgradeNudge" class="settings-upgrade-nudge" style="display:none;">
+            <div class="sun-left">
+                <div class="sun-title">Upgrade to APC Pro</div>
+                <div class="sun-sub">Unlimited listings · Dashboard · Warehouse tools</div>
+            </div>
+            <button class="sun-btn" onclick="onUpgradeToPro()">Upgrade →</button>
         </div>
 
         <!-- LEFT COLUMN: Account + Notifications -->
