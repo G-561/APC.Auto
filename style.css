@@ -3468,6 +3468,9 @@ header {
         overflow: hidden;
     }
 
+    /* Workshop service filters — 3 columns on desktop for better space use */
+    .ws-filter-group { grid-template-columns: 1fr 1fr 1fr; }
+
     /* Live filters on desktop — Apply button not needed */
     #filterDrawer .action-container { display: none; }
 
