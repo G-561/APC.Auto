@@ -1288,50 +1288,57 @@
                     <div class="radius-seg active" onclick="setWorkshopRadius(this, null)">All</div>
                 </div>
             </div>
-            <div class="filter-section">
-                <h4>Filter by service</h4>
+            <div class="ws-filter-toggle-row">
+                <button class="ws-filter-toggle-btn" onclick="toggleWsFilters()">
+                    <span>Filter by service</span>
+                    <span id="wsFilterBadge" class="ws-filter-badge" style="display:none;">0</span>
+                    <span id="wsFilterChevron" class="ws-filter-chevron">▾</span>
+                </button>
+            </div>
+
+            <div id="workshopFilterPanel" class="ws-filter-panel">
                 <div id="workshopServiceGrid">
                     <div class="ws-filter-group">
                         <div class="ws-filter-group-label">Engine &amp; Powertrain</div>
-                        <label class="choice-item"><input type="checkbox" id="wfGeneralService" onclick="renderWorkshopBrowseView()"> General Servicing &amp; Repairs</label>
-                        <label class="choice-item"><input type="checkbox" id="wfLogbook" onclick="renderWorkshopBrowseView()"> Logbook Servicing</label>
-                        <label class="choice-item"><input type="checkbox" id="wfEngineDiag" onclick="renderWorkshopBrowseView()"> Engine Diagnostics &amp; Tuning</label>
-                        <label class="choice-item"><input type="checkbox" id="wfEngineRebuild" onclick="renderWorkshopBrowseView()"> Engine Rebuilds &amp; Overhauls</label>
-                        <label class="choice-item"><input type="checkbox" id="wfTransmission" onclick="renderWorkshopBrowseView()"> Transmission &amp; Drivetrain</label>
-                        <label class="choice-item"><input type="checkbox" id="wfExhaust" onclick="renderWorkshopBrowseView()"> Exhaust &amp; Emissions</label>
+                        <label class="choice-item"><input type="checkbox" id="wfGeneralService" onclick="updateWsFilterBadge()"> General Servicing &amp; Repairs</label>
+                        <label class="choice-item"><input type="checkbox" id="wfLogbook" onclick="updateWsFilterBadge()"> Logbook Servicing</label>
+                        <label class="choice-item"><input type="checkbox" id="wfEngineDiag" onclick="updateWsFilterBadge()"> Engine Diagnostics &amp; Tuning</label>
+                        <label class="choice-item"><input type="checkbox" id="wfEngineRebuild" onclick="updateWsFilterBadge()"> Engine Rebuilds &amp; Overhauls</label>
+                        <label class="choice-item"><input type="checkbox" id="wfTransmission" onclick="updateWsFilterBadge()"> Transmission &amp; Drivetrain</label>
+                        <label class="choice-item"><input type="checkbox" id="wfExhaust" onclick="updateWsFilterBadge()"> Exhaust &amp; Emissions</label>
                     </div>
                     <div class="ws-filter-group">
                         <div class="ws-filter-group-label">Chassis &amp; Dynamics</div>
-                        <label class="choice-item"><input type="checkbox" id="wfBrakes" onclick="renderWorkshopBrowseView()"> Brake Machining &amp; Upgrades</label>
-                        <label class="choice-item"><input type="checkbox" id="wfSuspension" onclick="renderWorkshopBrowseView()"> Suspension &amp; Steering</label>
-                        <label class="choice-item"><input type="checkbox" id="wfWheelAlign" onclick="renderWorkshopBrowseView()"> Wheel Alignment &amp; Balancing</label>
-                        <label class="choice-item"><input type="checkbox" id="wfTyreSupply" onclick="renderWorkshopBrowseView()"> Tyre Supply &amp; Fitting</label>
+                        <label class="choice-item"><input type="checkbox" id="wfBrakes" onclick="updateWsFilterBadge()"> Brake Machining &amp; Upgrades</label>
+                        <label class="choice-item"><input type="checkbox" id="wfSuspension" onclick="updateWsFilterBadge()"> Suspension &amp; Steering</label>
+                        <label class="choice-item"><input type="checkbox" id="wfWheelAlign" onclick="updateWsFilterBadge()"> Wheel Alignment &amp; Balancing</label>
+                        <label class="choice-item"><input type="checkbox" id="wfTyreSupply" onclick="updateWsFilterBadge()"> Tyre Supply &amp; Fitting</label>
                     </div>
                     <div class="ws-filter-group">
                         <div class="ws-filter-group-label">Electrical, Climate &amp; Cooling</div>
-                        <label class="choice-item"><input type="checkbox" id="wfAutoElectrical" onclick="renderWorkshopBrowseView()"> Auto Electrical Diagnostics</label>
-                        <label class="choice-item"><input type="checkbox" id="wfBattery" onclick="renderWorkshopBrowseView()"> Battery, Alternator &amp; Starter</label>
-                        <label class="choice-item"><input type="checkbox" id="wfAircon" onclick="renderWorkshopBrowseView()"> Air Conditioning (HVAC)</label>
-                        <label class="choice-item"><input type="checkbox" id="wfCooling" onclick="renderWorkshopBrowseView()"> Cooling &amp; Radiator</label>
-                        <label class="choice-item"><input type="checkbox" id="wfAutoSecurity" onclick="renderWorkshopBrowseView()"> Security Systems &amp; Accessories</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAutoElectrical" onclick="updateWsFilterBadge()"> Auto Electrical Diagnostics</label>
+                        <label class="choice-item"><input type="checkbox" id="wfBattery" onclick="updateWsFilterBadge()"> Battery, Alternator &amp; Starter</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAircon" onclick="updateWsFilterBadge()"> Air Conditioning (HVAC)</label>
+                        <label class="choice-item"><input type="checkbox" id="wfCooling" onclick="updateWsFilterBadge()"> Cooling &amp; Radiator</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAutoSecurity" onclick="updateWsFilterBadge()"> Security Systems &amp; Accessories</label>
                     </div>
                     <div class="ws-filter-group">
                         <div class="ws-filter-group-label">Body, Glass &amp; Interior</div>
-                        <label class="choice-item"><input type="checkbox" id="wfCollision" onclick="renderWorkshopBrowseView()"> Collision Repair &amp; Panel Beating</label>
-                        <label class="choice-item"><input type="checkbox" id="wfSprayPaint" onclick="renderWorkshopBrowseView()"> Spray Painting &amp; Refinishing</label>
-                        <label class="choice-item"><input type="checkbox" id="wfPdr" onclick="renderWorkshopBrowseView()"> Paintless Dent Removal (PDR)</label>
-                        <label class="choice-item"><input type="checkbox" id="wfAutoGlass" onclick="renderWorkshopBrowseView()"> Auto Glass Services</label>
-                        <label class="choice-item"><input type="checkbox" id="wfTrimming" onclick="renderWorkshopBrowseView()"> Motor Trimming &amp; Upholstery</label>
+                        <label class="choice-item"><input type="checkbox" id="wfCollision" onclick="updateWsFilterBadge()"> Collision Repair &amp; Panel Beating</label>
+                        <label class="choice-item"><input type="checkbox" id="wfSprayPaint" onclick="updateWsFilterBadge()"> Spray Painting &amp; Refinishing</label>
+                        <label class="choice-item"><input type="checkbox" id="wfPdr" onclick="updateWsFilterBadge()"> Paintless Dent Removal (PDR)</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAutoGlass" onclick="updateWsFilterBadge()"> Auto Glass Services</label>
+                        <label class="choice-item"><input type="checkbox" id="wfTrimming" onclick="updateWsFilterBadge()"> Motor Trimming &amp; Upholstery</label>
                     </div>
                     <div class="ws-filter-group">
                         <div class="ws-filter-group-label">Trade &amp; Supply</div>
-                        <label class="choice-item"><input type="checkbox" id="workshopFilterParts" onclick="renderWorkshopBrowseView()"> Parts Supplier</label>
-                        <label class="choice-item"><input type="checkbox" id="workshopFilterWrecking" onclick="renderWorkshopBrowseView()"> Wrecking &amp; Salvage</label>
+                        <label class="choice-item"><input type="checkbox" id="workshopFilterParts" onclick="updateWsFilterBadge()"> Parts Supplier</label>
+                        <label class="choice-item"><input type="checkbox" id="workshopFilterWrecking" onclick="updateWsFilterBadge()"> Wrecking &amp; Salvage</label>
                     </div>
                 </div>
                 <div class="workshop-approved-section">
                     <label class="workshop-approved-label">
-                        <input type="checkbox" id="workshopFilterApproved" onclick="renderWorkshopBrowseView()">
+                        <input type="checkbox" id="workshopFilterApproved" onclick="updateWsFilterBadge()">
                         <span id="workshopApprovedBadge" class="approved-club-badge">Club</span>
                         <span id="workshopApprovedText">Motoring Club Approved</span>
                     </label>
@@ -1340,10 +1347,7 @@
                 </div>
             </div>
 
-            <div class="filter-section">
-                <h4>Sponsored workshops near you</h4>
-                <div id="workshopSponsoredList" class="workshop-sponsor-grid"></div>
-            </div>
+            <div id="workshopSponsoredList" class="workshop-sponsor-grid"></div>
         </div>
 
         <div id="workshopProfileFields" style="display:none;">

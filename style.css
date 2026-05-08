@@ -2440,6 +2440,47 @@ header {
 .shared-choice-box .choice-item { justify-content: flex-start; }
 .choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
+/* Workshop filter — collapsible panel */
+.ws-filter-toggle-row { margin-bottom: 10px; }
+.ws-filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #333;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.ws-filter-toggle-btn:hover { background: #f0f0f0; }
+.ws-filter-badge {
+    background: var(--apc-orange);
+    color: white;
+    font-size: 10px;
+    font-weight: 900;
+    border-radius: 10px;
+    padding: 1px 7px;
+    line-height: 1.6;
+}
+.ws-filter-chevron { margin-left: auto; font-size: 11px; color: #888; }
+.ws-filter-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+    margin-bottom: 0;
+}
+.ws-filter-panel.open {
+    max-height: 1200px;
+    margin-bottom: 16px;
+}
+
 /* Workshop browse — compact search + distance bar */
 .ws-search-bar {
     display: flex;
@@ -2455,8 +2496,7 @@ header {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    margin-top: 8px;
-    margin-bottom: 14px;
+    padding: 14px 0 10px;
 }
 .ws-filter-group {
     display: grid;

@@ -4339,6 +4339,21 @@ function setWorkshopRadius(el, km) {
     renderWorkshopBrowseView();
 }
 
+function toggleWsFilters() {
+    const panel   = document.getElementById('workshopFilterPanel');
+    const chevron = document.getElementById('wsFilterChevron');
+    if (!panel) return;
+    const open = panel.classList.toggle('open');
+    if (chevron) chevron.textContent = open ? '▴' : '▾';
+}
+
+function updateWsFilterBadge() {
+    const count = document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]:checked').length;
+    const badge = document.getElementById('wsFilterBadge');
+    if (badge) { badge.textContent = count; badge.style.display = count ? '' : 'none'; }
+    renderWorkshopBrowseView();
+}
+
 function getApprovedClubInfo() {
     const state = (document.getElementById('filterStateSelect')?.value || '').toUpperCase();
     const map = {
