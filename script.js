@@ -4355,14 +4355,23 @@ function getApprovedClubInfo() {
 }
 
 function renderWorkshopBrowseView() {
-    const filters = {
-        engine:    document.getElementById('workshopFilterEngine')?.checked,
-        chassis:   document.getElementById('workshopFilterChassis')?.checked,
-        electrical: document.getElementById('workshopFilterElectrical')?.checked,
-        body:      document.getElementById('workshopFilterBody')?.checked,
-        parts:     document.getElementById('workshopFilterParts')?.checked,
-        wrecking:  document.getElementById('workshopFilterWrecking')?.checked,
-    };
+    const chk = id => document.getElementById(id)?.checked;
+    const serviceMap = [
+        ['wfGeneralService', 'generalService'], ['wfLogbook',      'logbook'],
+        ['wfEngineDiag',     'engineDiag'],     ['wfEngineRebuild', 'engineRebuild'],
+        ['wfTransmission',   'transmission'],   ['wfExhaust',       'exhaust'],
+        ['wfBrakes',         'brakes'],         ['wfSuspension',    'suspension'],
+        ['wfWheelAlign',     'wheelAlign'],     ['wfTyreSupply',    'tyreSupply'],
+        ['wfAutoElectrical', 'autoElectrical'], ['wfBattery',       'battery'],
+        ['wfAircon',         'aircon'],         ['wfCooling',       'cooling'],
+        ['wfAutoSecurity',   'autoSecurity'],   ['wfCollision',     'collision'],
+        ['wfSprayPaint',     'sprayPaint'],     ['wfPdr',           'pdr'],
+        ['wfAutoGlass',      'autoGlass'],      ['wfTrimming',      'trimming'],
+    ];
+    const activeKeys  = serviceMap.filter(([id]) => chk(id)).map(([, key]) => key);
+    const filterParts    = chk('workshopFilterParts');
+    const filterWrecking = chk('workshopFilterWrecking');
+    const anyFilter = activeKeys.length || filterParts || filterWrecking;
     const sponsoredList = document.getElementById('workshopSponsoredList');
     if (!sponsoredList) return;
 
@@ -4373,10 +4382,9 @@ function renderWorkshopBrowseView() {
     if (badge) badge.textContent = clubInfo.abbr;
     if (text)  text.textContent  = clubInfo.full;
 
-    const filterApproved = document.getElementById('workshopFilterApproved')?.checked;
+    const filterApproved = chk('workshopFilterApproved');
     const query = (document.getElementById('workshopSearchInput')?.value || '').trim().toLowerCase();
 
-    const activeFilters = Object.entries(filters).filter(([, value]) => value).map(([key]) => key);
     const matches = workshopDatabase.filter(w => {
         if (filterApproved && !w.approvedClub) return false;
         if (workshopRadiusKm !== null) {
@@ -4387,17 +4395,11 @@ function renderWorkshopBrowseView() {
             const haystack = [w.name, w.loc, ...w.vehicleTypes, ...w.services].join(' ').toLowerCase();
             if (!haystack.includes(query)) return false;
         }
-        if (!activeFilters.length) return true;
-        return activeFilters.some(filter => {
-            const s = w.services;
-            if (filter === 'engine')     return s.some(x => ['generalService','logbook','engineDiag','engineRebuild','transmission','exhaust','timingBelt'].includes(x));
-            if (filter === 'chassis')    return s.some(x => ['brakes','suspension','wheelAlign','tyreSupply'].includes(x));
-            if (filter === 'electrical') return s.some(x => ['autoElectrical','battery','aircon','cooling','autoSecurity'].includes(x));
-            if (filter === 'body')       return s.some(x => ['collision','sprayPaint','pdr','autoGlass','trimming'].includes(x));
-            if (filter === 'parts')      return s.some(x => x === 'parts' || x === 'partsSupplier');
-            if (filter === 'wrecking')   return s.some(x => x === 'wrecking');
-            return false;
-        });
+        if (!anyFilter) return true;
+        if (activeKeys.length && activeKeys.some(k => w.services.includes(k))) return true;
+        if (filterParts    && w.services.some(x => x === 'parts' || x === 'partsSupplier')) return true;
+        if (filterWrecking && w.services.includes('wrecking')) return true;
+        return false;
     });
 
     if (!matches.length) {

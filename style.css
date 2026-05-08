@@ -2442,11 +2442,27 @@ header {
 
 /* Workshop service filter grid */
 #workshopServiceGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     margin-top: 8px;
     margin-bottom: 14px;
+}
+.ws-filter-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+}
+.ws-filter-group-label {
+    grid-column: 1 / -1;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--apc-orange);
+    padding-bottom: 2px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 2px;
 }
 
 /* Approved repairer filter */
@@ -2992,31 +3008,39 @@ header {
 /* Individual sponsored part card */
 .drp-sp-card {
     cursor: pointer;
+    overflow: hidden;
+    padding: 0;
     transition: box-shadow 0.15s, transform 0.15s;
 }
 .drp-sp-card:hover {
     box-shadow: 0 4px 18px rgba(0,0,0,0.13);
     transform: translateY(-1px);
 }
-.drp-sp-card .drp-sp-item { border-bottom: none; padding: 8px 12px 12px; }
-
-/* Sponsored parts list */
-.drp-sp-item {
-    display: flex;
-    gap: 9px;
-    padding: 9px 12px;
-    border-bottom: 1px solid #f4f4f4;
-    cursor: pointer;
-    align-items: center;
-    transition: background 0.1s;
+.drp-sp-img-wrap {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px 14px 0 0;
 }
-.drp-sp-item:last-child { border-bottom: none; }
-.drp-sp-item:hover { background: #fafafa; }
-.drp-sp-img { width: 42px; height: 42px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: #eee; }
-.drp-sp-info { flex: 1; min-width: 0; }
-.drp-sp-title { font-size: 11px; font-weight: 700; color: #222; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.drp-sp-seller { font-size: 9px; color: #aaa; margin-top: 1px; }
-.drp-sp-price { font-size: 12px; font-weight: 800; color: var(--apc-orange); flex-shrink: 0; }
+.drp-sp-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+    background: #eee;
+}
+.drp-sp-img-wrap .drp-sponsored-tag {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.drp-sp-info { padding: 8px 10px 12px; }
+.drp-sp-price { font-size: 15px; font-weight: 900; color: var(--apc-blue-bg); margin-bottom: 3px; }
+.drp-sp-title {
+    font-size: 11px; font-weight: 700; color: #222; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    margin-bottom: 3px;
+}
+.drp-sp-seller { font-size: 9px; color: #aaa; }
 
 /* Partner / affiliate card */
 .drp-partner-card { padding: 10px 12px 14px; }

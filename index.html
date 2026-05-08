@@ -1294,12 +1294,43 @@
             <div class="filter-section">
                 <h4>Filter by service</h4>
                 <div id="workshopServiceGrid">
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterEngine" onclick="renderWorkshopBrowseView()"> Engine &amp; Powertrain</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterChassis" onclick="renderWorkshopBrowseView()"> Chassis &amp; Vehicle Dynamics</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterElectrical" onclick="renderWorkshopBrowseView()"> Electrical, Climate &amp; Cooling</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterBody" onclick="renderWorkshopBrowseView()"> Body, Glass &amp; Interior</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterParts" onclick="renderWorkshopBrowseView()"> Parts Supplier</label>
-                    <label class="choice-item"><input type="checkbox" id="workshopFilterWrecking" onclick="renderWorkshopBrowseView()"> Wrecking &amp; Salvage</label>
+                    <div class="ws-filter-group">
+                        <div class="ws-filter-group-label">Engine &amp; Powertrain</div>
+                        <label class="choice-item"><input type="checkbox" id="wfGeneralService" onclick="renderWorkshopBrowseView()"> General Servicing &amp; Repairs</label>
+                        <label class="choice-item"><input type="checkbox" id="wfLogbook" onclick="renderWorkshopBrowseView()"> Logbook Servicing</label>
+                        <label class="choice-item"><input type="checkbox" id="wfEngineDiag" onclick="renderWorkshopBrowseView()"> Engine Diagnostics &amp; Tuning</label>
+                        <label class="choice-item"><input type="checkbox" id="wfEngineRebuild" onclick="renderWorkshopBrowseView()"> Engine Rebuilds &amp; Overhauls</label>
+                        <label class="choice-item"><input type="checkbox" id="wfTransmission" onclick="renderWorkshopBrowseView()"> Transmission &amp; Drivetrain</label>
+                        <label class="choice-item"><input type="checkbox" id="wfExhaust" onclick="renderWorkshopBrowseView()"> Exhaust &amp; Emissions</label>
+                    </div>
+                    <div class="ws-filter-group">
+                        <div class="ws-filter-group-label">Chassis &amp; Dynamics</div>
+                        <label class="choice-item"><input type="checkbox" id="wfBrakes" onclick="renderWorkshopBrowseView()"> Brake Machining &amp; Upgrades</label>
+                        <label class="choice-item"><input type="checkbox" id="wfSuspension" onclick="renderWorkshopBrowseView()"> Suspension &amp; Steering</label>
+                        <label class="choice-item"><input type="checkbox" id="wfWheelAlign" onclick="renderWorkshopBrowseView()"> Wheel Alignment &amp; Balancing</label>
+                        <label class="choice-item"><input type="checkbox" id="wfTyreSupply" onclick="renderWorkshopBrowseView()"> Tyre Supply &amp; Fitting</label>
+                    </div>
+                    <div class="ws-filter-group">
+                        <div class="ws-filter-group-label">Electrical, Climate &amp; Cooling</div>
+                        <label class="choice-item"><input type="checkbox" id="wfAutoElectrical" onclick="renderWorkshopBrowseView()"> Auto Electrical Diagnostics</label>
+                        <label class="choice-item"><input type="checkbox" id="wfBattery" onclick="renderWorkshopBrowseView()"> Battery, Alternator &amp; Starter</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAircon" onclick="renderWorkshopBrowseView()"> Air Conditioning (HVAC)</label>
+                        <label class="choice-item"><input type="checkbox" id="wfCooling" onclick="renderWorkshopBrowseView()"> Cooling &amp; Radiator</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAutoSecurity" onclick="renderWorkshopBrowseView()"> Security Systems &amp; Accessories</label>
+                    </div>
+                    <div class="ws-filter-group">
+                        <div class="ws-filter-group-label">Body, Glass &amp; Interior</div>
+                        <label class="choice-item"><input type="checkbox" id="wfCollision" onclick="renderWorkshopBrowseView()"> Collision Repair &amp; Panel Beating</label>
+                        <label class="choice-item"><input type="checkbox" id="wfSprayPaint" onclick="renderWorkshopBrowseView()"> Spray Painting &amp; Refinishing</label>
+                        <label class="choice-item"><input type="checkbox" id="wfPdr" onclick="renderWorkshopBrowseView()"> Paintless Dent Removal (PDR)</label>
+                        <label class="choice-item"><input type="checkbox" id="wfAutoGlass" onclick="renderWorkshopBrowseView()"> Auto Glass Services</label>
+                        <label class="choice-item"><input type="checkbox" id="wfTrimming" onclick="renderWorkshopBrowseView()"> Motor Trimming &amp; Upholstery</label>
+                    </div>
+                    <div class="ws-filter-group">
+                        <div class="ws-filter-group-label">Trade &amp; Supply</div>
+                        <label class="choice-item"><input type="checkbox" id="workshopFilterParts" onclick="renderWorkshopBrowseView()"> Parts Supplier</label>
+                        <label class="choice-item"><input type="checkbox" id="workshopFilterWrecking" onclick="renderWorkshopBrowseView()"> Wrecking &amp; Salvage</label>
+                    </div>
                 </div>
                 <div class="workshop-approved-section">
                     <label class="workshop-approved-label">
