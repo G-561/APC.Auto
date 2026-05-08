@@ -2449,7 +2449,7 @@ header {
     width: 100%;
     padding: 10px 14px;
     background: #f7f7f7;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--apc-orange);
     border-radius: 10px;
     font-size: 12px;
     font-weight: 800;
@@ -2459,7 +2459,7 @@ header {
     cursor: pointer;
     transition: background 0.15s;
 }
-.ws-filter-toggle-btn:hover { background: #f0f0f0; }
+.ws-filter-toggle-btn:hover { background: #fff6ec; }
 .ws-filter-badge {
     background: var(--apc-orange);
     color: white;
@@ -2479,6 +2479,19 @@ header {
 .ws-filter-panel.open {
     max-height: 1200px;
     margin-bottom: 16px;
+}
+.ws-filter-actions {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0 4px;
+}
+.ws-filter-action-btn {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--apc-orange);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
 /* Workshop browse — compact search + distance bar */

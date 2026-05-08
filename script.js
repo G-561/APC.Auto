@@ -4354,6 +4354,16 @@ function updateWsFilterBadge() {
     renderWorkshopBrowseView();
 }
 
+function wsSelectAll() {
+    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]').forEach(c => c.checked = true);
+    updateWsFilterBadge();
+}
+
+function wsClearAll() {
+    document.querySelectorAll('#workshopFilterPanel input[type="checkbox"]').forEach(c => c.checked = false);
+    updateWsFilterBadge();
+}
+
 function getApprovedClubInfo() {
     const state = (document.getElementById('filterStateSelect')?.value || '').toUpperCase();
     const map = {
