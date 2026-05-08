@@ -2440,6 +2440,16 @@ header {
 .shared-choice-box .choice-item { justify-content: flex-start; }
 .choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
+/* Workshop browse — compact search + distance bar */
+.ws-search-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.ws-search-input { flex: 1; }
+.ws-radius-control { width: 100%; }
+
 /* Workshop service filter grid */
 #workshopServiceGrid {
     display: flex;
@@ -3467,6 +3477,11 @@ header {
         border: none !important;
         overflow: hidden;
     }
+
+    /* Workshop search + distance — single row on desktop */
+    .ws-search-bar { flex-direction: row; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .ws-radius-control { width: auto; flex-shrink: 0; }
+    .ws-radius-control .radius-seg { padding: 7px 9px; font-size: 10px; }
 
     /* Workshop service filters — 3 columns on desktop for better space use */
     .ws-filter-group { grid-template-columns: 1fr 1fr 1fr; }

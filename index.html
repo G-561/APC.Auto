@@ -1277,18 +1277,15 @@
     </div>
     <div class="drawer-content">
         <div id="workshopBrowseSection" style="display:none;">
-            <div class="filter-section">
-                <div class="search-group" style="margin-bottom: 0;">
+            <div class="ws-search-bar">
+                <div class="search-group ws-search-input">
                     <input id="workshopSearchInput" type="text" placeholder="Search by name, suburb or vehicle…" oninput="renderWorkshopBrowseView()">
                 </div>
-            </div>
-            <div class="filter-section">
-                <h4>Distance</h4>
-                <div class="radius-seg-control" id="workshopRadiusControl">
+                <div class="radius-seg-control ws-radius-control" id="workshopRadiusControl">
                     <div class="radius-seg" onclick="setWorkshopRadius(this, 10)">10km</div>
                     <div class="radius-seg" onclick="setWorkshopRadius(this, 20)">20km</div>
                     <div class="radius-seg" onclick="setWorkshopRadius(this, 50)">50km</div>
-                    <div class="radius-seg active" onclick="setWorkshopRadius(this, null)">State-wide</div>
+                    <div class="radius-seg active" onclick="setWorkshopRadius(this, null)">All</div>
                 </div>
             </div>
             <div class="filter-section">
