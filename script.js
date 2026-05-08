@@ -1638,12 +1638,17 @@ function openEditListing(listingId) {
     if (title) title.textContent = 'EDIT LISTING';
     if (submit) submit.textContent = 'UPDATE LISTING';
     updateSellFittingToggleVisibility();
+    const sellOverlayEl = document.getElementById('sellOverlay');
+    if (sellOverlayEl) sellOverlayEl.style.zIndex = '2010'; // float above any open drawer
     toggleDrawer('sellOverlay', true);  // allowStack: keep myPartsDrawer open behind
 }
 
 function closeSellOverlay() {
     const overlay = document.getElementById('sellOverlay');
-    if (overlay) overlay.classList.remove('active');
+    if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.zIndex = '';
+    }
     syncBackdrop();
     resetSellForm();
 }
