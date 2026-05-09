@@ -2206,7 +2206,7 @@ function openItemDetail(partId) {
     const sellerHeaderSub  = document.getElementById('detailSellerSub');
     const sellerAvatar     = document.getElementById('detailSellerAvatar');
     if (sellerHeaderName) sellerHeaderName.textContent = part.seller;
-    if (sellerHeaderSub)  sellerHeaderSub.textContent  = 'View seller\'s other items →';
+    if (sellerHeaderSub)  sellerHeaderSub.textContent  = '';
     if (sellerAvatar)     sellerAvatar.textContent      = part.seller.charAt(0).toUpperCase();
     const detailProBadge = document.getElementById('detailProBadge');
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
