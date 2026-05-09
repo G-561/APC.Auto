@@ -67,6 +67,7 @@ const partDatabase = [
 // --- OFFERS ---
 const OFFERS_KEY = 'apc.offers.v1';
 let offersDb = loadOffers();
+const _dismissedMockOfferIds = new Set();
 
 function loadOffers() {
     try { return JSON.parse(localStorage.getItem(OFFERS_KEY) || '[]'); } catch { return []; }
@@ -5167,6 +5168,12 @@ function submitCounterOffer(offerId) {
     const input = document.getElementById('counter-input-' + offerId);
     const price = parseFloat(input?.value);
     if (!price || price <= 0) { showToast('Enter a valid counter price'); return; }
+    if (offerId < 0) {
+        _dismissedMockOfferIds.add(offerId);
+        showToast(`Counter of $${price} sent!`);
+        renderDashListings('pending');
+        return;
+    }
     const o = offersDb.find(x => x.id === offerId);
     if (!o) return;
     o.status       = 'countered';
@@ -5174,6 +5181,39 @@ function submitCounterOffer(offerId) {
     saveOffers();
     showToast(`Counter offer of $${price} sent to ${o.buyer}`);
     renderDashListings('pending');
+}
+
+function acceptMockOffer(mockId) {
+    _dismissedMockOfferIds.add(mockId);
+    showToast('Offer accepted — congrats on the sale!');
+    renderDashListings('pending');
+}
+
+function declineMockOffer(mockId) {
+    _dismissedMockOfferIds.add(mockId);
+    showToast('Offer declined');
+    renderDashListings('pending');
+}
+
+function markSold(partId) {
+    if (!confirm('Mark this listing as sold?')) return;
+    const listing = userListings.find(l => l.id === partId);
+    if (!listing) return;
+    listing.status   = 'sold';
+    listing.soldDate = Date.now();
+    saveUserListings();
+    renderDashboard();
+    showToast('Listing marked as sold');
+}
+
+function relistPart(partId) {
+    const listing = userListings.find(l => l.id === partId);
+    if (!listing) return;
+    listing.status   = 'active';
+    listing.soldDate = null;
+    saveUserListings();
+    renderDashboard();
+    showToast('Listing relisted');
 }
 
 // --- PRO DASHBOARD ---
@@ -5276,6 +5316,11 @@ function renderDashboard() {
 
     const countBadge = document.getElementById('dashActiveCount');
     if (countBadge) countBadge.textContent = myListings.length;
+    const soldBadge = document.getElementById('dashSoldCount');
+    if (soldBadge) {
+        const realSoldCount = userListings.filter(l => l.status === 'sold' && l.seller === getCurrentSellerName()).length;
+        soldBadge.textContent = realSoldCount + dashMockData.closedSales.length;
+    }
 
     renderDashboardCharts(myListings);
     renderDashActivity();
@@ -5400,7 +5445,7 @@ function renderDashListings(tab, btn) {
                 ${p.warehouseBin ? `<button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>` : ''}
                 ${p.status === 'pending' ? `<button class="dash-action-btn dash-btn-warning" onclick="clearListingPending(${p.id})">Remove Pending</button>` : ''}
                 <button class="dash-action-btn" onclick="openEditListing(${p.id});">Edit</button>
-                <button class="dash-action-btn dash-btn-primary" onclick="showToast('Mark as sold — coming soon')">Mark Sold</button>
+                <button class="dash-action-btn dash-btn-primary" onclick="markSold(${p.id})">Mark Sold</button>
                 <button class="dash-action-btn dash-btn-danger" onclick="if(confirm('Delete this listing?')){deleteListing(${p.id});renderDashboard();}">Delete</button>
             </td></tr>`).join('');
     } else if (tab === 'pending') {
@@ -5415,7 +5460,7 @@ function renderDashListings(tab, btn) {
             listedPrice: s.price + 50, offerPrice: s.price,
             buyerNote: 'Can you include postage to Melbourne?',
             buyer: s.buyer, date: s.offered, status: 'pending', counterPrice: null
-        }));
+        })).filter(o => !_dismissedMockOfferIds.has(o.id));
         let items = [...realOffers, ...mockOffers];
         if (q) items = items.filter(o => o.partTitle.toLowerCase().includes(q) || o.buyer.toLowerCase().includes(q));
         if (countEl) countEl.textContent = `${items.length} offer${items.length !== 1 ? 's' : ''}`;
@@ -5437,9 +5482,13 @@ function renderDashListings(tab, btn) {
             <td class="dash-td-date">${o.date}</td>
             <td>
                 ${isMock
-                    ? `<button class="dash-action-btn dash-btn-primary" onclick="showToast('Accept — coming soon')">Accept</button>
-                       <button class="dash-action-btn dash-btn-danger" onclick="showToast('Decline — coming soon')">Decline</button>
-                       <button class="dash-action-btn" onclick="showToast('Counter — coming soon')">Counter</button>`
+                    ? `<button class="dash-action-btn dash-btn-primary" onclick="acceptMockOffer(${o.id})">Accept</button>
+                       <button class="dash-action-btn dash-btn-danger" onclick="declineMockOffer(${o.id})">Decline</button>
+                       <button class="dash-action-btn" onclick="showCounterInput(${o.id})">Counter</button>
+                       <div class="dash-counter-row" id="counter-row-${o.id}" style="display:none;">
+                           <input id="counter-input-${o.id}" type="number" class="dash-counter-input" placeholder="$">
+                           <button class="dash-action-btn dash-btn-primary" onclick="submitCounterOffer(${o.id})">Send</button>
+                       </div>`
                     : `<button class="dash-action-btn dash-btn-primary" onclick="acceptOffer(${o.id})">Accept</button>
                        <button class="dash-action-btn dash-btn-danger" onclick="declineOffer(${o.id})">Decline</button>
                        <button class="dash-action-btn" onclick="showCounterInput(${o.id})">Counter</button>
@@ -5451,16 +5500,21 @@ function renderDashListings(tab, btn) {
             </td></tr>`;
         }).join('');
     } else {
-        let items = dashMockData.closedSales;
-        if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || s.buyer.toLowerCase().includes(q));
+        const sellerName = getCurrentSellerName();
+        const realSold = userListings
+            .filter(l => l.status === 'sold' && l.seller === sellerName)
+            .map(l => ({ id: l.id, title: l.title, price: l.price, buyer: null, date: l.soldDate, img: (l.images && l.images[0]) || 'images/placeholder.png', isReal: true }));
+        const mockSold = dashMockData.closedSales.map(s => ({ ...s, isReal: false }));
+        let items = [...realSold, ...mockSold];
+        if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || (s.buyer || '').toLowerCase().includes(q));
         if (countEl) countEl.textContent = `${items.length} listing${items.length !== 1 ? 's' : ''}`;
         rows = items.map(s => `<tr>
             <td><img class="dash-thumb" src="${s.img}" alt=""></td>
-            <td><div class="dash-part-name">${escapeHtml(s.title)}</div><div class="dash-part-sub">Sold to ${escapeHtml(s.buyer)}</div></td>
+            <td><div class="dash-part-name">${escapeHtml(s.title)}</div>${s.buyer ? `<div class="dash-part-sub">Sold to ${escapeHtml(s.buyer)}</div>` : ''}</td>
             <td class="dash-td-price">$${s.price}</td>
             <td></td>
-            <td class="dash-td-date">${s.date}</td>
-            <td><button class="dash-action-btn" onclick="showToast('Relist — coming soon')">Relist</button></td>
+            <td class="dash-td-date">${s.isReal ? dashFmtDate(s.date) : s.date}</td>
+            <td>${s.isReal ? `<button class="dash-action-btn" onclick="relistPart(${s.id})">Relist</button>` : ''}</td>
         </tr>`).join('');
     }
 
