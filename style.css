@@ -2957,6 +2957,7 @@ header {
     .desktop-thumbs-container { display: none; }
     #imageCarousel::-webkit-scrollbar { display: none; }
     #imageCarousel { -ms-overflow-style: none; scrollbar-width: none; }
+    .image-lightbox { background: #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 /* MY PARTS LIST — replaces inline styles from JS */
