@@ -2252,7 +2252,7 @@ function openItemDetail(partId) {
     const footer = document.getElementById('dynamicDetailFooter');
     if (!footer) return;
 
-    const FOOTER_TARGET = 6;
+    const FOOTER_TARGET = window.innerWidth >= 900 ? 5 : 6;
     const active = p => p.status !== 'sold' && p.status !== 'removed';
     const used = new Set([part.id]);
 

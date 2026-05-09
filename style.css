@@ -3637,6 +3637,8 @@ header {
         display: flex;
         align-items: stretch;
         gap: 10px;
+        flex-wrap: nowrap;
+        overflow: hidden;
     }
     #dynamicDetailFooter .detail-mini-card {
         flex: 0 0 calc(20% - 8px);
