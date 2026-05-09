@@ -4921,9 +4921,11 @@ function updateHeaderOffset() {
     const chatDrawer          = document.getElementById('chatDrawer');
     const accountDropdown     = document.getElementById('accountDropdown');
     if (header && grid) {
-        const topBarH = topBar ? topBar.offsetHeight : 0;
-        const totalH  = header.offsetHeight + topBarH;
+        const topBarH   = topBar ? topBar.offsetHeight : 0;
+        const totalH    = header.offsetHeight + topBarH;
         grid.style.marginTop = totalH + 'px';
+        const gridHeading = document.getElementById('gridHeading');
+        if (gridHeading) gridHeading.style.marginTop = totalH + 'px';
 
         // Position all drawers and backdrop flush with the bottom of the header — all screen sizes
         const sellOverlay    = document.getElementById('sellOverlay');
@@ -5453,6 +5455,7 @@ function dashFmtDate(ts) {
 
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
+    updateHeaderOffset();
     renderMainGrid();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications

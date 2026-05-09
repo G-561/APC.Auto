@@ -871,7 +871,7 @@ header {
     gap: 5px;
     padding: 5px 0px;
     background: #E4E6EB;
-    margin-top: 155px;
+    margin-top: 0;
 }
 #sellerPartsGrid {
     margin-top: 0 !important;
