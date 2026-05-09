@@ -1283,6 +1283,7 @@ function updateFilterChip() {
     } else {
         chip.style.display = 'none';
     }
+    updateHeaderOffset();
 }
 
 function applyFiltersAndRender() {
@@ -4961,10 +4962,10 @@ function updateHeaderOffset() {
         if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
         if (authDrawer)           authDrawer.style.top           = totalH + 'px';
         if (dashView)             dashView.style.top             = totalH + 'px';
+        if (filterDrawer)         filterDrawer.style.top         = totalH + 'px';
 
         if (window.innerWidth >= 900) {
             if (rightPanel)   rightPanel.style.top   = totalH + 'px';
-            if (filterDrawer) filterDrawer.style.top = totalH + 'px';
             if (accountDropdown) accountDropdown.style.top = (totalH + 8) + 'px';
         }
     }
