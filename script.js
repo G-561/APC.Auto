@@ -1337,12 +1337,17 @@ function getFilteredParts() {
     const results = getAllParts().filter(part => {
         if (search) {
             const isPro = userIsSignedIn && currentUserTier === 'pro';
-            const titleMatch = part.title.toLowerCase().includes(search);
-            const locMatch   = part.loc.toLowerCase().includes(search);
+            const tokens = search.split(/\s+/).filter(Boolean);
+            const haystack = [
+                part.title.toLowerCase(),
+                (part.description || '').toLowerCase(),
+                part.loc.toLowerCase()
+            ].join(' ');
+            const textMatch = tokens.every(t => haystack.includes(t));
             const apcIdMatch = isPro && part.apcId && part.apcId.toLowerCase().includes(search);
             const isOwnListing = userListings.some(l => l.id === part.id);
             const stockMatch = isPro && isOwnListing && part.stockNumber && String(part.stockNumber).includes(search);
-            if (!titleMatch && !locMatch && !apcIdMatch && !stockMatch) return false;
+            if (!textMatch && !apcIdMatch && !stockMatch) return false;
         }
         if (activeFilters.category !== 'all' && part.category !== activeFilters.category) return false;
         if (activeFilters.make && part.fits.length > 0) {
