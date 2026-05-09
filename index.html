@@ -1048,15 +1048,6 @@
             <button class="spc-storefront-btn" onclick="openMyStorefront()">My Storefront ›</button>
         </div>
 
-        <!-- PRO UPGRADE NUDGE — hidden for Pro users -->
-        <div id="settingsUpgradeNudge" class="settings-upgrade-nudge" style="display:none;">
-            <div class="sun-left">
-                <div class="sun-title">Upgrade to APC Pro</div>
-                <div class="sun-sub">Unlimited listings · Dashboard · Warehouse tools</div>
-            </div>
-            <button class="sun-btn" onclick="onUpgradeToPro()">Upgrade →</button>
-        </div>
-
         <!-- LEFT COLUMN: Account + Notifications -->
         <div class="settings-col-left">
 
@@ -1153,8 +1144,28 @@
 
         </div>
 
-        <!-- RIGHT COLUMN: Pro block (Pro users only) + Privacy + Help -->
+        <!-- RIGHT COLUMN: Upgrade promo (standard) or Pro settings (Pro) -->
         <div class="settings-col-right">
+
+            <!-- UPGRADE PROMO — shown for standard users -->
+            <div id="settingsUpgradeNudge" style="display:none;">
+                <div class="settings-section-label">Go Pro</div>
+                <div class="sun-promo-card">
+                    <div class="sun-badge">APC Pro</div>
+                    <div class="sun-headline">Grow your parts business</div>
+                    <ul class="sun-features">
+                        <li>Unlimited listings</li>
+                        <li>Pro seller dashboard &amp; analytics</li>
+                        <li>Wanted buyer feed — match your stock</li>
+                        <li>Odometer, stock number &amp; qty fields</li>
+                        <li>Warehouse bin &amp; QR label system</li>
+                        <li>Workshop &amp; storefront profile</li>
+                        <li>Fitting available badge on listings</li>
+                        <li>Trade-only listing mode</li>
+                    </ul>
+                    <button class="sun-promo-btn" onclick="onUpgradeToPro()">Upgrade to APC Pro →</button>
+                </div>
+            </div>
 
             <!-- PRO BLOCK — hidden for standard users -->
             <div id="settingsProBlock" style="display:none;">

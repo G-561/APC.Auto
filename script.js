@@ -4872,7 +4872,7 @@ function renderAccountState() {
     }
     if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'standard') ? 'flex' : 'none';
     const settingsUpgradeNudge = document.getElementById('settingsUpgradeNudge');
-    if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'standard') ? 'flex' : 'none';
+    if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'standard') ? 'block' : 'none';
     if (menuActivate) {
         menuActivate.style.display = (currentUserTier === 'pro') ? 'flex' : 'none';
         menuActivate.classList.toggle('on', proSearchOn);
