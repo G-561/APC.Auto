@@ -4923,9 +4923,12 @@ function updateHeaderOffset() {
     if (header && grid) {
         const topBarH   = topBar ? topBar.offsetHeight : 0;
         const totalH    = header.offsetHeight + topBarH;
-        grid.style.marginTop = totalH + 'px';
-        const gridHeading = document.getElementById('gridHeading');
-        if (gridHeading) gridHeading.style.marginTop = totalH + 'px';
+        const mainContentArea = document.getElementById('mainContentArea');
+        if (mainContentArea) {
+            mainContentArea.style.marginTop = totalH + 'px';
+        } else {
+            grid.style.marginTop = totalH + 'px';
+        }
 
         // Position all drawers and backdrop flush with the bottom of the header — all screen sizes
         const sellOverlay    = document.getElementById('sellOverlay');
