@@ -1387,7 +1387,7 @@ header {
 .vehicle-card {
     background: white;
     border-radius: 12px;
-    padding: 30px 8px;
+    padding: 16px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1411,17 +1411,17 @@ header {
     .garage-list { grid-template-columns: repeat(6, 1fr); gap: 10px; }
 }
 .vehicle-card-icon {
-    width: 42px; height: 42px;
+    width: 36px; height: 36px;
     background: #ffffff;
     border: 2px solid var(--apc-orange);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
-    margin-bottom: 7px;
+    font-size: 18px;
+    margin-bottom: 6px;
 }
 .vehicle-card-info { width: 100%; }
-.vehicle-card-name { font-weight: 800; font-size: 13px; color: var(--apc-charcoal); line-height: 1.35; }
-.vehicle-card-meta { font-size: 11px; color: #888; margin-top: 3px; }
+.vehicle-card-name { font-weight: 800; font-size: 12px; color: var(--apc-charcoal); line-height: 1.3; }
+.vehicle-card-meta { font-size: 10px; color: #888; margin-top: 2px; }
 .vehicle-tile-edit {
     position: absolute;
     top: 5px; left: 5px;
@@ -1476,10 +1476,11 @@ header {
     padding: 2px 7px;
 }
 
+#garageDrawer .drawer-content { padding-top: 20px; }
 .garage-divider {
     border: none;
     border-top: 1px solid #e4e4e4;
-    margin: 16px 0;
+    margin: 14px 0;
 }
 .vehicle-card-selected {
     border-color: var(--apc-orange) !important;
