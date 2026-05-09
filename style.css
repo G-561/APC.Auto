@@ -823,13 +823,14 @@ header {
 }
 .btn-search-filters:active { background: var(--apc-orange-dark, #d97c0c); }
 
-/* Pro search mode toggle pill — sits inside the search bar */
+/* Pro search mode toggle pill — lives in header-top row on mobile */
 .search-mode-pill {
     flex-shrink: 0;
     background: var(--apc-orange);
     color: white;
     border: none;
-    padding: 0 14px;
+    border-radius: 999px;
+    padding: 6px 14px;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.5px;
@@ -837,12 +838,11 @@ header {
     font-family: inherit;
     white-space: nowrap;
     text-transform: uppercase;
-    border-right: 1px solid rgba(255,255,255,0.25);
     transition: background 0.15s;
 }
 .search-mode-pill:active { background: var(--apc-orange-dark, #d97c0c); }
 .search-mode-pill.mode-wanted {
-    background: var(--apc-blue, #1e3a5f);
+    background: var(--apc-blue);
 }
 
 /* GRID HEADING — "Recently Listed" / "Results for X" */
@@ -3392,6 +3392,7 @@ header {
     .search-col { order: 2; flex: 1; display: flex; flex-direction: column; gap: 6px; max-width: none; padding: 0; }
     .search-col .search-group { margin: 0; }
     #proSearchToggle { margin-top: 0; }
+    #searchModeToggle { display: none !important; }
     #accountPillZone { order: 3; flex-shrink: 0; width: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 8px; }
     #accountPill    { width: auto; }
     .sign-up-prompt { display: block; }

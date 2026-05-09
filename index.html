@@ -31,6 +31,7 @@
     <header style="padding-bottom: 10px; position: relative;">
         <div class="header-top">
             <div class="logo-main" onclick="closeDashboard(); closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);" style="cursor:pointer;"><img src="images/APC.logo.png" alt="APC Logo"></div>
+            <button id="searchModeToggle" class="search-mode-pill" onclick="toggleSearchMode()" style="display:none;">Search Wanted</button>
             <div id="accountPillZone">
                 <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
                 <div id="signUpPrompt" class="sign-up-prompt">Not a member? <a href="#" class="sign-up-link" onclick="openAuthDrawer(null,'signup');return false;">Sign up free</a></div>
@@ -40,7 +41,6 @@
         <div class="search-col">
         <div class="search-group">
             <input type="text" id="mainSearchInput" placeholder="Search parts for sale..." onfocus="closeDashboard()">
-            <button id="searchModeToggle" class="search-mode-pill" onclick="toggleSearchMode()" style="display:none;">Search Wanted</button>
             <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
         </div>
         </div><!-- /.search-col -->
