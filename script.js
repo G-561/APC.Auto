@@ -1787,6 +1787,8 @@ function openEditListing(listingId) {
     if (binInput) binInput.value = listing.warehouseBin || '';
     const stockInput = document.getElementById('sellStockNumber');
     if (stockInput) stockInput.value = listing.stockNumber || '';
+    const odoInput = document.getElementById('sellOdometer');
+    if (odoInput) odoInput.value = listing.odometer || '';
 
     renderSellImagePreviews();
 
@@ -1923,6 +1925,8 @@ function resetSellForm() {
     if (binInput) binInput.value = '';
     const stockInput = document.getElementById('sellStockNumber');
     if (stockInput) stockInput.value = '';
+    const odoInput = document.getElementById('sellOdometer');
+    if (odoInput) odoInput.value = '';
     renderSellImagePreviews();
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
@@ -1939,6 +1943,8 @@ function updateSellFittingToggleVisibility() {
     if (fitting) fitting.style.display = isPro ? 'contents' : 'none';
     const stockSection = document.getElementById('sellStockNumberSection');
     if (stockSection) stockSection.style.display = isPro ? 'block' : 'none';
+    const odoSection = document.getElementById('sellOdometerSection');
+    if (odoSection) odoSection.style.display = isPro ? 'block' : 'none';
 }
 
 function updateSellQuantityVisibility() {
@@ -2005,6 +2011,8 @@ function submitSellListing() {
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
     const stockNumber = document.getElementById('sellStockNumber')?.value.trim() || null;
+    const odoRaw = document.getElementById('sellOdometer')?.value.trim().replace(/\D/g, '');
+    const odometer = (userIsSignedIn && currentUserTier === 'pro' && odoRaw) ? Number(odoRaw) : null;
     const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
     const warehouseBin = (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement)
         ? (document.getElementById('sellWarehouseBin')?.value.trim() || null)
@@ -2031,7 +2039,8 @@ function submitSellListing() {
         openToOffers,
         warehouseBin,
         quantity,
-        stockNumber
+        stockNumber,
+        odometer
     };
 
     let message = 'Listing created';
@@ -2147,6 +2156,15 @@ function openItemDetail(partId) {
             detailApcIdEl.style.display = 'block';
         } else {
             detailApcIdEl.style.display = 'none';
+        }
+    }
+    const detailOdoEl = document.getElementById('detailOdometer');
+    if (detailOdoEl) {
+        if (part.odometer) {
+            detailOdoEl.textContent = '🔢 Odometer: ' + Number(part.odometer).toLocaleString() + ' km';
+            detailOdoEl.style.display = 'block';
+        } else {
+            detailOdoEl.style.display = 'none';
         }
     }
     safeText(document.getElementById('detailLoc'), part.loc);

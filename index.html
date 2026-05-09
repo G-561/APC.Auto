@@ -331,6 +331,7 @@
                 Part Title
             </div>
             <div id="detailApcId" style="display:none; padding: 4px 15px 0 15px; font-size: 13px; font-weight: 600; color: #aaa; letter-spacing: 0.3px;"></div>
+            <div id="detailOdometer" style="display:none; padding: 4px 15px 0 15px; font-size: 13px; font-weight: 700; color: #555;"></div>
 
             <div style="padding: 10px 15px; display: flex; flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #666;">
@@ -943,6 +944,10 @@
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
                         <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
                         <input id="sellStockNumber" type="text" inputmode="text" maxlength="20" placeholder="e.g. WH-001/A" style="max-width: 22ch;">
+                    </div>
+                    <div id="sellOdometerSection" class="input-group" style="margin-top: 10px; display:none;">
+                        <label>Odometer (km) <span style="font-weight:400; color:#aaa;">optional · kms at time of removal</span></label>
+                        <input id="sellOdometer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="e.g. 120000" style="max-width: 18ch;">
                     </div>
                 </div>
             </div>
