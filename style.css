@@ -138,7 +138,7 @@ header {
 .account-menu-status.pro { color: var(--apc-blue); font-weight: 800; }
 
 /* ACCOUNT MENU DRAWER — mobile */
-#accountMenuDrawer { z-index: 1999; }
+#accountMenuDrawer { z-index: 3200; }
 .amenu-section {
     background: white;
     border-bottom: 8px solid #f4f4f4;
