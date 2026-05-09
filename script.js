@@ -1220,7 +1220,7 @@ function onPostcodeInput(input) {
         stateSelect.classList.toggle('filter-input-disabled', hasPostcode);
         if (hasPostcode) stateSelect.value = 'all';
     }
-    applyFiltersAndRender();
+    applyFiltersLive();
 }
 
 function onStateChange(select) {
@@ -1290,6 +1290,12 @@ function applyFiltersAndRender() {
     renderMainGrid();
     updateFilterChip();
     if (window.innerWidth < 900) toggleDrawer('filterDrawer');
+}
+
+function applyFiltersLive() {
+    getFilterValues();
+    renderMainGrid();
+    updateFilterChip();
 }
 
 function clearAllFilters() {
