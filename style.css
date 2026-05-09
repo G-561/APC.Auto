@@ -1211,10 +1211,10 @@ header {
 
 /* Uniform drawer header close × */
 .dh-close {
-    font-size: 26px;
+    font-size: 34px;
     line-height: 1;
     font-weight: 300;
-    color: #bbb;
+    color: #888;
     cursor: pointer;
     padding: 4px;
     flex-shrink: 0;
