@@ -1184,10 +1184,12 @@ header {
 .drawer {
     display: none;
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--white); z-index: 2000; flex-direction: column;
+    background: var(--white); z-index: 3100; flex-direction: column;
 }
 /* Detail overlay always stacks on top of any other open drawer */
-#detailOverlay { z-index: 2050; }
+#detailOverlay { z-index: 3150; }
+/* Filter drawer sits below the header on all screen sizes */
+#filterDrawer { z-index: 2000; }
 .drawer.active {
     display: flex !important;
 }

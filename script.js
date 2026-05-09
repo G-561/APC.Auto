@@ -4961,36 +4961,38 @@ function updateHeaderOffset() {
             grid.style.marginTop = totalH + 'px';
         }
 
-        // Position all drawers and backdrop flush with the bottom of the header — all screen sizes
         const sellOverlay    = document.getElementById('sellOverlay');
         const authDrawer     = document.getElementById('authDrawer');
         const dashView       = document.getElementById('dashboardView');
         const drawerBackdrop = document.getElementById('drawerBackdrop');
-        if (drawerBackdrop) drawerBackdrop.style.top = totalH + 'px';
-        if (detailOverlay)        detailOverlay.style.top        = totalH + 'px';
-        if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
-        if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
-        if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
-        if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
-        if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
-        // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
-        if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
-        if (savedPartsDrawer)     savedPartsDrawer.style.top     = totalH + 'px';
-        if (settingsDrawer)       settingsDrawer.style.top       = totalH + 'px';
-        if (profileDrawer)        profileDrawer.style.top        = totalH + 'px';
-        if (myPartsDrawer)        myPartsDrawer.style.top        = totalH + 'px';
-        if (workshopDrawer)       workshopDrawer.style.top       = totalH + 'px';
-        if (recentlyViewedDrawer) recentlyViewedDrawer.style.top = totalH + 'px';
-        if (inboxDrawer)          inboxDrawer.style.top          = totalH + 'px';
-        if (messageDetailDrawer)  messageDetailDrawer.style.top  = totalH + 'px';
-        if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
-        if (authDrawer)           authDrawer.style.top           = totalH + 'px';
-        if (dashView)             dashView.style.top             = totalH + 'px';
-        if (filterDrawer)         filterDrawer.style.top         = totalH + 'px';
+
+        // Filter drawer always sits flush below the header on all screen sizes
+        if (filterDrawer)    filterDrawer.style.top    = totalH + 'px';
+        if (drawerBackdrop)  drawerBackdrop.style.top  = totalH + 'px';
 
         if (window.innerWidth >= 900) {
-            if (rightPanel)   rightPanel.style.top   = totalH + 'px';
-            if (accountDropdown) accountDropdown.style.top = (totalH + 8) + 'px';
+            // On desktop drawers slide in below the header — on mobile they cover it (top:0 via CSS)
+            if (detailOverlay)        detailOverlay.style.top        = totalH + 'px';
+            if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
+            if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
+            if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
+            if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
+            if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
+            // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
+            if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
+            if (savedPartsDrawer)     savedPartsDrawer.style.top     = totalH + 'px';
+            if (settingsDrawer)       settingsDrawer.style.top       = totalH + 'px';
+            if (profileDrawer)        profileDrawer.style.top        = totalH + 'px';
+            if (myPartsDrawer)        myPartsDrawer.style.top        = totalH + 'px';
+            if (workshopDrawer)       workshopDrawer.style.top       = totalH + 'px';
+            if (recentlyViewedDrawer) recentlyViewedDrawer.style.top = totalH + 'px';
+            if (inboxDrawer)          inboxDrawer.style.top          = totalH + 'px';
+            if (messageDetailDrawer)  messageDetailDrawer.style.top  = totalH + 'px';
+            if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
+            if (authDrawer)           authDrawer.style.top           = totalH + 'px';
+            if (dashView)             dashView.style.top             = totalH + 'px';
+            if (rightPanel)           rightPanel.style.top           = totalH + 'px';
+            if (accountDropdown)      accountDropdown.style.top      = (totalH + 8) + 'px';
         }
     }
 }
@@ -5436,7 +5438,7 @@ function renderDashListings(tab, btn) {
         const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
         hasMore = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
-            <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt=""></td>
+            <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt="" onclick="openItemDetail(${p.id})" style="cursor:pointer;" title="View listing"></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
