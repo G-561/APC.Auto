@@ -649,7 +649,10 @@
     <div class="drawer-header"><span>FILTER RESULTS</span><div class="dh-close" onclick="toggleDrawer('filterDrawer')">×</div></div>
     <div class="drawer-content">
 
-        <div class="filter-clear-row"><button onclick="clearAllFilters()" class="filter-clear-btn">CLEAR ALL</button></div>
+        <div class="filter-clear-row">
+            <button onclick="clearAllFilters()" class="filter-clear-btn">CLEAR ALL</button>
+            <div class="filter-drawer-close dh-close" onclick="toggleDrawer('filterDrawer')">×</div>
+        </div>
 
         <div class="filter-section">
             <h4>Part Category</h4>

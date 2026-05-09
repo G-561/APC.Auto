@@ -2247,9 +2247,12 @@ header {
     background: #ccc;
     color: #fff;
 }
+#filterDrawer .drawer-header { display: none; }
+
 .filter-clear-row {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     padding: 6px 4px 0;
 }
 .filter-clear-btn {
@@ -3472,6 +3475,7 @@ header {
         box-sizing: border-box;
     }
     #filterDrawer .drawer-header { display: none; }
+    .filter-drawer-close { display: none; }
     .btn-search-filters { display: none; }
 
     /* 5-column grid */
