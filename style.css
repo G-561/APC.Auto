@@ -4360,9 +4360,9 @@ header {
 .inbox-trash-name { font-size: 14px; font-weight: 700; color: #222; }
 .inbox-trash-part { font-size: 12px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inbox-trash-meta { font-size: 11px; color: #bbb; margin-top: 3px; }
-.inbox-trash-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-.inbox-trash-restore-btn { background: var(--apc-blue); color: white; border: none; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.inbox-trash-del-btn { background: none; border: 1.5px solid #e03b3b; color: #e03b3b; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.inbox-trash-actions { display: flex; flex-direction: row; gap: 8px; flex-shrink: 0; align-items: center; }
+.inbox-trash-restore-btn { background: var(--apc-blue); color: white; border: none; border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+.inbox-trash-del-btn { background: none; border: 1.5px solid #e03b3b; color: #e03b3b; border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .inbox-trash-del-btn:hover { background: #ffeaea; }
 
 .inbox-conv-col {
