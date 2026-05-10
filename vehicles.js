@@ -33,6 +33,7 @@ const VEHICLE_DB = {
   "LDV":         ["D90","G10","G20","Deliver 9","T60","T60 Max","Terron"],
   "Lexus":       ["CT","ES","GS","GX","IS","LC","LM","LS","LX","NX","RC","RX","UX"],
   "Lincoln":     ["Aviator","Continental","Corsair","MKC","MKT","MKX","MKZ","Navigator"],
+  "Lotus":       ["2-Eleven","3-Eleven","Elan","Elise","Emira","Europa","Evija","Evora","Excel","Exige","Esprit","Seven"],
   "Mahindra":    ["Pik Up","Roxor","Scorpio","XUV300"],
   "Maserati":    ["Ghibli","Ghibli Hybrid","Grancabrio","Granturismo","Levante","Quattroporte"],
   "Mazda":       ["2","3","6","BT-50","CX-3","CX-30","CX-5","CX-60","CX-70","CX-8","CX-80","CX-9","MX-3","MX-5","MX-6","MX-30","MPV","RX-7","RX-8","Tribute"],
