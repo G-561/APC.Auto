@@ -1124,20 +1124,18 @@ header {
 .lightbox-nav:hover { background: rgba(0,0,0,0.7); }
 .lightbox-prev { left: 14px; }
 .lightbox-next { right: 14px; }
-.lightbox-counter {
+.lightbox-dots {
     position: absolute;
     bottom: 14px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.45);
-    color: white;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: 20px;
+    display: flex;
+    gap: 4px;
+    background: rgba(0,0,0,0.4);
+    padding: 7px 12px;
+    border-radius: 999px;
     z-index: 2;
-    letter-spacing: 0.5px;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .item-title { 

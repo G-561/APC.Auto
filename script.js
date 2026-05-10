@@ -2325,6 +2325,21 @@ function openDetailImageViewer(src, images, idx) {
     const lightbox = document.getElementById('imageLightbox');
     const image    = document.getElementById('lightboxImage');
     if (!lightbox || !image) return;
+
+    // Build dots once per open
+    const dotsEl = document.getElementById('lightboxDots');
+    if (dotsEl) {
+        dotsEl.innerHTML = '';
+        if (_lightboxImages.length > 1) {
+            _lightboxImages.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = 'carousel-dot' + (i === _lightboxIdx ? ' active' : '');
+                dot.onclick = (e) => { e.stopPropagation(); _lightboxIdx = i; image.src = _lightboxImages[i]; updateLightboxNav(); };
+                dotsEl.appendChild(dot);
+            });
+        }
+    }
+
     image.src = _lightboxImages[_lightboxIdx];
     lightbox.style.zIndex = '9999';
     lightbox.classList.add('active');
@@ -2343,13 +2358,14 @@ function lightboxNav(dir) {
 }
 
 function updateLightboxNav() {
-    const show    = _lightboxImages.length > 1;
-    const prev    = document.querySelector('.lightbox-prev');
-    const next    = document.querySelector('.lightbox-next');
-    const counter = document.getElementById('lightboxCounter');
-    if (prev)    prev.style.display    = show ? '' : 'none';
-    if (next)    next.style.display    = show ? '' : 'none';
-    if (counter) { counter.style.display = show ? '' : 'none'; counter.textContent = `${_lightboxIdx + 1} / ${_lightboxImages.length}`; }
+    const show = _lightboxImages.length > 1;
+    const prev = document.querySelector('.lightbox-prev');
+    const next = document.querySelector('.lightbox-next');
+    if (prev) prev.style.display = show ? '' : 'none';
+    if (next) next.style.display = show ? '' : 'none';
+    document.querySelectorAll('#lightboxDots .carousel-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === _lightboxIdx);
+    });
 }
 
 function closeDetailImageViewer() {
@@ -5570,3 +5586,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
     });
 });
+l

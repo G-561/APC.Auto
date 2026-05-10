@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -557,7 +557,7 @@
         <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); lightboxNav(-1)" aria-label="Previous photo" style="display:none;">‹</button>
         <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); lightboxNav(1)" aria-label="Next photo" style="display:none;">›</button>
         <img id="lightboxImage" src="" alt="Photo preview" />
-        <div id="lightboxCounter" class="lightbox-counter" style="display:none;"></div>
+        <div id="lightboxDots" class="lightbox-dots"></div>
     </div>
 </div>
 
@@ -1995,7 +1995,7 @@
     </div>
 </div>
 
-<script src="script.js?v=3"></script>
+<script src="script.js?v=4"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
