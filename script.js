@@ -2081,11 +2081,12 @@ function openItemDetail(partId) {
     addToRecentlyViewed(partId);
     history.pushState(null, '', '?item=' + partId);
 
-    // 1. Carousel — only show images this part actually has
+    // 1. Carousel — images + dot indicators
     const carousel = document.getElementById('imageCarousel');
+    const dotsContainer = document.getElementById('carouselDots');
     if (carousel) {
         carousel.innerHTML = '';
-        carousel.scrollLeft = 0;          // reset to first image when re-opening
+        carousel.scrollLeft = 0;
         part.images.forEach((src, i) => {
             const img = document.createElement('img');
             img.src = src;
@@ -2094,6 +2095,23 @@ function openItemDetail(partId) {
             img.onclick = () => openDetailImageViewer(src, part.images, i);
             carousel.appendChild(img);
         });
+    }
+    if (dotsContainer) {
+        dotsContainer.innerHTML = '';
+        if (part.images.length > 1) {
+            part.images.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = 'carousel-dot' + (idx === 0 ? ' active' : '');
+                dot.onclick = (e) => {
+                    e.stopPropagation();
+                    if (carousel) carousel.scrollTo({ left: idx * carousel.offsetWidth, behavior: 'smooth' });
+                };
+                dotsContainer.appendChild(dot);
+            });
+            dotsContainer.style.display = 'flex';
+        } else {
+            dotsContainer.style.display = 'none';
+        }
     }
 
     // 1b. Desktop: large main image + clickable thumbnails
@@ -5049,6 +5067,14 @@ window.addEventListener('scroll', () => {
 });
 
 // Update the active dot as the carousel is swiped/scrolled
+function updateCarouselActiveDot() {
+    const carousel = document.getElementById('imageCarousel');
+    const dots = document.querySelectorAll('#carouselDots .carousel-dot');
+    if (!carousel || !dots.length) return;
+    const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+
 // --- QR LABEL ---
 
 function printPartLabel(partId) {
@@ -5541,6 +5567,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     renderMyParts();           // after sign-in so seller filter uses correct name
     renderAccountState();      // sets pill label/colour, hides pro toggle, sizes the grid offset
+
+    // Sync carousel dots on scroll
+    const carouselEl = document.getElementById('imageCarousel');
+    if (carouselEl) carouselEl.addEventListener('scroll', updateCarouselActiveDot, { passive: true });
 
     // Wire up live search with debounce
     const searchInput = document.getElementById('mainSearchInput');
