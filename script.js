@@ -2081,9 +2081,8 @@ function openItemDetail(partId) {
     addToRecentlyViewed(partId);
     history.pushState(null, '', '?item=' + partId);
 
-    // 1. Carousel — only show images this part actually has, plus dot indicators
+    // 1. Carousel — only show images this part actually has
     const carousel = document.getElementById('imageCarousel');
-    const dotsContainer = document.getElementById('carouselDots');
     if (carousel) {
         carousel.innerHTML = '';
         carousel.scrollLeft = 0;          // reset to first image when re-opening
@@ -2095,26 +2094,6 @@ function openItemDetail(partId) {
             img.onclick = () => openDetailImageViewer(src, part.images, i);
             carousel.appendChild(img);
         });
-    }
-    if (dotsContainer) {
-        dotsContainer.innerHTML = '';
-        if (part.images.length > 1) {
-            part.images.forEach((_, idx) => {
-                const dot = document.createElement('div');
-                dot.className = 'carousel-dot' + (idx === 0 ? ' active' : '');
-                dot.setAttribute('aria-label', `Photo ${idx + 1}`);
-                dot.onclick = (e) => {
-                    e.stopPropagation();
-                    if (carousel) {
-                        carousel.scrollTo({ left: idx * carousel.offsetWidth, behavior: 'smooth' });
-                    }
-                };
-                dotsContainer.appendChild(dot);
-            });
-            dotsContainer.style.display = 'flex';
-        } else {
-            dotsContainer.style.display = 'none';   // hide entirely when only one photo
-        }
     }
 
     // 1b. Desktop: large main image + clickable thumbnails
@@ -2347,6 +2326,7 @@ function openDetailImageViewer(src, images, idx) {
     const image    = document.getElementById('lightboxImage');
     if (!lightbox || !image) return;
     image.src = _lightboxImages[_lightboxIdx];
+    lightbox.style.zIndex = '9999';
     lightbox.classList.add('active');
     updateLightboxNav();
     // Allow pinch-to-zoom on the lightbox image
@@ -2495,9 +2475,9 @@ function openStorefront(partId) {
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = part.seller;
     renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
-    // Float above detailOverlay (z-index 2050) when opening from within a listing
+    // Float above detailOverlay (z-index 3150 mobile / 2050 desktop) when opening from within a listing
     const sfEl = document.getElementById('storefrontDrawer');
-    if (sfEl) sfEl.style.zIndex = '2060';
+    if (sfEl) sfEl.style.zIndex = '3200';
     const backBar = document.getElementById('storefrontBackBar');
     if (backBar) backBar.style.display = currentOpenPartId ? '' : 'none';
     toggleDrawer('storefrontDrawer', true);
@@ -5053,14 +5033,6 @@ window.addEventListener('scroll', () => {
 });
 
 // Update the active dot as the carousel is swiped/scrolled
-function updateCarouselActiveDot() {
-    const carousel = document.getElementById('imageCarousel');
-    const dots     = document.querySelectorAll('#carouselDots .carousel-dot');
-    if (!carousel || !dots.length) return;
-    const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-}
-
 // --- QR LABEL ---
 
 function printPartLabel(partId) {
@@ -5553,12 +5525,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     renderMyParts();           // after sign-in so seller filter uses correct name
     renderAccountState();      // sets pill label/colour, hides pro toggle, sizes the grid offset
-
-    // Wire up the carousel scroll → active-dot sync once
-    const carouselEl = document.getElementById('imageCarousel');
-    if (carouselEl) {
-        carouselEl.addEventListener('scroll', updateCarouselActiveDot, { passive: true });
-    }
 
     // Wire up live search with debounce
     const searchInput = document.getElementById('mainSearchInput');

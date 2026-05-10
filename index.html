@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -315,7 +315,6 @@
             <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
                 <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
                 </div>
-                <div id="carouselDots" class="carousel-dots"></div>
             </div>
 
             <div style="padding: 20px 15px 5px 15px; display: flex; align-items: center; justify-content: space-between;">
@@ -1953,7 +1952,7 @@
 </div>
 
 <!-- OFFER BOTTOM SHEET -->
-<div id="offerSheetBackdrop" onclick="closeOfferSheet()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2999;"></div>
+<div id="offerSheetBackdrop" onclick="closeOfferSheet()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:3299;"></div>
 <div id="offerSheet" class="offer-sheet">
     <div class="offer-sheet-handle"></div>
     <div class="offer-sheet-header">
@@ -1996,7 +1995,7 @@
     </div>
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=3"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
