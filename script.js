@@ -1,4 +1,9 @@
-﻿// --- GLOBAL STATE ---
+﻿// --- SUPABASE ---
+const SUPABASE_URL  = 'https://ufpsnjtnvchazqswntch.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcHNuanRudmNoYXpxc3dudGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc5MDAsImV4cCI6MjA5Mzg4MzkwMH0.Wl60CI8rcIo26EnNx1A1Dd7xfZEFOBlAXJDpXA6fyCA';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// --- GLOBAL STATE ---
 let userIsSignedIn = false;          // starts logged out — header shows "Sign In" pill
 let currentUserName = null;          // e.g. "Gary"
 let currentUserTier = null;          // 'standard' | 'pro'
