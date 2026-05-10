@@ -2257,7 +2257,7 @@ function onToggleWarehouseManagement() {
     updateWarehouseBinVisibility();
 }
 
-function submitSellListing() {
+async function submitSellListing() {
     const title = document.getElementById('sellTitle')?.value.trim();
     const category = document.getElementById('sellCategory')?.value;
     const make = document.getElementById('sellMake')?.value.trim();
@@ -2376,14 +2376,17 @@ function submitSellListing() {
     }
 
     saveUserListings();
-    if (syncTarget) syncListingToSupabase(syncTarget);
+
+    const submitBtn = document.getElementById('sellSubmitBtn');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Publishing…'; }
+
+    if (syncTarget) await syncListingToSupabase(syncTarget);
+
     renderMainGrid();
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
 
-    const submitBtn = document.getElementById('sellSubmitBtn');
-    if (submitBtn) submitBtn.disabled = true;
-
+    if (submitBtn) submitBtn.textContent = 'List Part';
     const sellSuccess = document.getElementById('sellSuccessMsg');
     if (sellSuccess) sellSuccess.style.display = 'block';
     setTimeout(() => {
