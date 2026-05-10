@@ -2318,10 +2318,8 @@ function openItemDetail(partId) {
     if (detailEl && detailEl.classList.contains('active')) {
         // Already open — content has been refreshed above, no need to toggle
     } else {
-        // On desktop, drawers share the same column so don't stack — close others first.
-        // On mobile, keep any open parent drawer behind the detail overlay.
-        const parentOpen = window.innerWidth < 900 &&
-            [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
+        const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
+        if (parentOpen && detailEl) detailEl.style.zIndex = '3200'; // float above any open parent drawer
         toggleDrawer('detailOverlay', parentOpen);
     }
 }
@@ -2333,7 +2331,7 @@ function onDetailSellerClick() {
 
 function closeDetailOverlay() {
     const el = document.getElementById('detailOverlay');
-    if (el) el.classList.remove('active');
+    if (el) { el.classList.remove('active'); el.style.zIndex = ''; }
     syncBackdrop();
     history.pushState(null, '', location.pathname);
 }
