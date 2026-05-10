@@ -1924,6 +1924,22 @@ function hideSellError() {
     if (banner) banner.style.display = 'none';
 }
 
+function initSellVehicleDropdowns(make, model, year) {
+    const makeEl  = document.getElementById('sellMake');
+    const modelEl = document.getElementById('sellModel');
+    const yearEl  = document.getElementById('sellYear');
+    if (!makeEl || !modelEl || !yearEl) return;
+    makeEl.innerHTML  = buildMakeOptions(make || '');
+    modelEl.innerHTML = buildModelOptions(make || '', model || '');
+    yearEl.innerHTML  = buildYearOptions(year || '');
+}
+
+function onSellMakeChange() {
+    const make  = document.getElementById('sellMake')?.value || '';
+    const modelEl = document.getElementById('sellModel');
+    if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
+}
+
 function openSellOverlay() {
     if (!userIsSignedIn) {
         openAuthDrawer(openSellOverlay);
@@ -1933,6 +1949,7 @@ function openSellOverlay() {
     currentEditingListingId = null;
     currentEditStatus = null;
     resetSellForm();
+    initSellVehicleDropdowns('', '', '');
     const title = document.getElementById('sellOverlayTitle');
     const submit = document.getElementById('sellSubmitBtn');
     if (title) title.textContent = 'LIST A PART';
@@ -1945,13 +1962,7 @@ function openSellOverlay() {
 
 function listFromWanted(make, model, year) {
     openSellOverlay();
-    // Pre-fill vehicle fitment so the seller only needs to add photos, price and description
-    const makeEl  = document.getElementById('sellMake');
-    const modelEl = document.getElementById('sellModel');
-    const yearEl  = document.getElementById('sellYear');
-    if (makeEl)  makeEl.value  = make;
-    if (modelEl) modelEl.value = model;
-    if (yearEl)  yearEl.value  = year;
+    initSellVehicleDropdowns(make, model, year);
 }
 
 function selectListingStatus(status) {
@@ -2048,9 +2059,9 @@ function openEditListing(listingId) {
 
     document.getElementById('sellTitle').value = listing.title || '';
     document.getElementById('sellCategory').value = listing.category || '';
-    document.getElementById('sellMake').value = listing.fits?.[0]?.make || '';
-    document.getElementById('sellModel').value = listing.fits?.[0]?.model || '';
-    document.getElementById('sellYear').value = listing.year || '';
+    initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '');
+    const variantEl = document.getElementById('sellVariant');
+    if (variantEl) variantEl.value = listing.fits?.[0]?.variant || '';
     document.getElementById('sellPostcode').value = listing.postcode || '';
     document.getElementById('sellLocation').value = listing.loc || '';
     document.getElementById('sellPickup').checked = !!listing.pickup;
@@ -2197,7 +2208,7 @@ function resetSellForm() {
     currentEditingListingId = null;
     sellListingImages = [];
     const fields = [
-        'sellTitle', 'sellCategory', 'sellMake', 'sellModel', 'sellYear', 'sellPostcode', 'sellLocation', 'sellPrice', 'sellCondition', 'sellDescription'
+        'sellTitle', 'sellCategory', 'sellPostcode', 'sellLocation', 'sellPrice', 'sellCondition', 'sellDescription', 'sellVariant'
     ];
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -2265,6 +2276,7 @@ async function submitSellListing() {
     const make = document.getElementById('sellMake')?.value.trim();
     const model = document.getElementById('sellModel')?.value.trim();
     const year = document.getElementById('sellYear')?.value.trim();
+    const variant = document.getElementById('sellVariant')?.value.trim() || null;
     const postcode = document.getElementById('sellPostcode')?.value.trim();
     const location = document.getElementById('sellLocation')?.value.trim();
     const pickup = document.getElementById('sellPickup')?.checked;
@@ -2302,7 +2314,7 @@ async function submitSellListing() {
     }
     hideSellError();
 
-    const fits = (make && model) ? [{ make: make.trim(), model: model.trim() }] : [];
+    const fits = (make && model) ? [{ make: make.trim(), model: model.trim(), ...(variant ? { variant } : {}) }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
     const stockNumber = document.getElementById('sellStockNumber')?.value.trim() || null;
     const odoRaw = document.getElementById('sellOdometer')?.value.trim().replace(/\D/g, '');
