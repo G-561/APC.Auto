@@ -955,7 +955,7 @@ header {
 .item-img {
     width: 100%;
     aspect-ratio: 4/3;
-    object-fit: contain;
+    object-fit: cover;
     background: #f4f4f4;
     display: block;
     margin: 0;
