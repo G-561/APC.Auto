@@ -2283,23 +2283,16 @@ function openItemDetail(partId) {
 
     if (part.isPro) {
         const sellerParts = collectFooter(allActive.filter(p => p.seller === part.seller), FOOTER_TARGET);
+        const need = FOOTER_TARGET - sellerParts.length;
+        const catFill = need > 0 ? collectFooter(allActive.filter(p => p.category === part.category), need) : [];
+        const stillNeed = need - catFill.length;
+        const recentFill = stillNeed > 0 ? collectFooter(allActive, stillNeed) : [];
+        const allStrip = [...sellerParts, ...catFill, ...recentFill];
         html += `<div class="detail-footer-label">
             MORE FROM ${escapeHtml(part.seller.toUpperCase())}
             <span onclick="openStorefront(${part.id})" style="color:var(--apc-orange);font-weight:900;cursor:pointer;font-size:10px;">VISIT STORE →</span>
         </div>
-        <div class="detail-footer-strip">${buildStrip(sellerParts)}</div>`;
-
-        // Fill remainder with similar/recent
-        if (sellerParts.length < FOOTER_TARGET) {
-            const catFill  = collectFooter(allActive.filter(p => p.category === part.category), FOOTER_TARGET - sellerParts.length);
-            const remaining = FOOTER_TARGET - sellerParts.length - catFill.length;
-            const recentFill = remaining > 0 ? collectFooter(allActive, remaining) : [];
-            const fillParts = [...catFill, ...recentFill];
-            if (fillParts.length) {
-                html += `<div class="detail-footer-label" style="margin-top:12px;">YOU MIGHT ALSO LIKE</div>
-                <div class="detail-footer-strip">${buildStrip(fillParts)}</div>`;
-            }
-        }
+        <div class="detail-footer-strip">${buildStrip(allStrip)}</div>`;
     } else {
         const catParts    = collectFooter(allActive.filter(p => p.category === part.category), FOOTER_TARGET);
         const remaining   = FOOTER_TARGET - catParts.length;
