@@ -2887,6 +2887,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') sendChatMessage();
         });
     }
+
+    // Restore session on page load + react to sign in / sign out events
+    sb.auth.onAuthStateChange(async (event, session) => {
+        if (session?.user) {
+            const { data: profile } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+            const name = profile?.display_name || session.user.email.split('@')[0];
+            const tier = profile?.is_pro ? 'pro' : 'standard';
+            signIn(name, tier, false, session.user.email);
+        } else if (event === 'SIGNED_OUT') {
+            userIsSignedIn = false;
+            currentUserName = null;
+            currentUserTier = null;
+            renderAccountState();
+        }
+    });
 });
 
 // --- GARAGE: vehicle data model + persistence ---
@@ -4420,89 +4439,73 @@ function openAuthDrawer(returnAction = null, mode = 'signin') {
     toggleDrawer('authDrawer');
 }
 
-function handleSignInSubmit() {
-    const email = document.getElementById('authEmail')?.value.trim() || '';
+async function handleSignInSubmit() {
+    const email    = document.getElementById('authEmail')?.value.trim() || '';
     const password = document.getElementById('authPassword')?.value;
-    const remember = document.getElementById('authRememberMe')?.checked;
-    if (!email || !password) {
-        showAuthError('Enter your email and password to sign in.');
-        return;
-    }
-    hideAuthError();
+    if (!email || !password) { showAuthError('Enter your email and password to sign in.'); return; }
+    showAuthError('Signing in…');
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { showAuthError(error.message); return; }
     document.getElementById('authPassword').value = '';
-    const userName = email.split('@')[0] || 'Member';
-    signIn(userName, 'standard', remember, email);
+    hideAuthError();
     toggleDrawer('authDrawer');
-    if (authReturnAction) {
-        const nextAction = authReturnAction;
-        authReturnAction = null;
-        nextAction();
-    }
+    if (authReturnAction) { const next = authReturnAction; authReturnAction = null; next(); }
 }
 
-function handleSignUpPersonalSubmit() {
+async function handleSignUpPersonalSubmit() {
     const name     = document.getElementById('authNamePersonal')?.value.trim();
     const email    = document.getElementById('authEmailPersonal')?.value.trim() || '';
     const password = document.getElementById('authPasswordPersonal')?.value;
-    const remember = document.getElementById('authRememberPersonal')?.checked;
+    if (!name || !email || !password) { showAuthError('Please enter your name, email and password.'); return; }
+    showAuthError('Creating account…');
+    const { error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { display_name: name, is_pro: false } }
+    });
+    if (error) { showAuthError(error.message); return; }
     document.getElementById('authPasswordPersonal').value = '';
-    if (!name || !email || !password) {
-        showAuthError('Please enter your name, email and password to sign up.');
-        return;
-    }
     hideAuthError();
-    signIn(name, 'standard', remember, email);
     toggleDrawer('authDrawer');
-    if (authReturnAction) {
-        const nextAction = authReturnAction;
-        authReturnAction = null;
-        nextAction();
-    } else {
-        setTimeout(showWelcomeModal, 350);
-    }
+    showToast('Account created! Check your email to confirm.');
+    if (authReturnAction) { const next = authReturnAction; authReturnAction = null; next(); }
+    else { setTimeout(showWelcomeModal, 350); }
 }
 
-function handleSignUpProSubmit() {
+async function handleSignUpProSubmit() {
     const name         = document.getElementById('authNamePro')?.value.trim();
     const businessName = document.getElementById('authBusinessNamePro')?.value.trim();
     const abnRaw       = document.getElementById('authAbnPro')?.value.trim();
     const email        = document.getElementById('authEmailPro')?.value.trim() || '';
     const password     = document.getElementById('authPasswordPro')?.value;
-    const remember     = document.getElementById('authRememberPro')?.checked;
-    document.getElementById('authPasswordPro').value = '';
-
     if (!name || !businessName || !abnRaw || !email || !password) {
-        showAuthError('Please fill in all fields including your Business Name and ABN.');
-        return;
+        showAuthError('Please fill in all fields including your Business Name and ABN.'); return;
     }
     const abnDigits = abnRaw.replace(/\s/g, '');
     if (!/^\d{11}$/.test(abnDigits)) {
-        showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).');
-        return;
+        showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).'); return;
     }
-    hideAuthError();
-
+    showAuthError('Creating Pro account…');
+    const { error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits } }
+    });
+    if (error) { showAuthError(error.message); return; }
+    document.getElementById('authPasswordPro').value = '';
     userSettings.businessName = businessName;
     userSettings.abn = abnDigits;
     saveUserSettings();
-
-    signIn(name, 'pro', remember, email);
+    hideAuthError();
     toggleDrawer('authDrawer');
-    if (authReturnAction) {
-        const nextAction = authReturnAction;
-        authReturnAction = null;
-        nextAction();
-    } else {
-        showToast('Welcome to APC Pro! Your 3-month free trial has started.');
-        setTimeout(showWelcomeModal, 350);
-    }
+    showToast('Pro account created! Check your email to confirm.');
+    if (authReturnAction) { const next = authReturnAction; authReturnAction = null; next(); }
+    else { setTimeout(showWelcomeModal, 350); }
 }
 
-function onSignOut() {
+async function onSignOut() {
+    await sb.auth.signOut();
     userIsSignedIn = false;
     currentUserName = null;
     currentUserTier = null;
-    // Preserve remembered login state so the user can sign back in faster.
     closeAccountMenu();
     renderAccountState();
 }
