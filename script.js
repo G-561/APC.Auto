@@ -651,7 +651,7 @@ async function syncListingToSupabase(localListing) {
                 if (!urls.length) return;
                 await sb.from('listing_images').delete().eq('listing_id', listingId);
                 await sb.from('listing_images').insert(
-                    urls.map((url, i) => ({ listing_id: listingId, url, position: i, is_primary: i === 0 }))
+                    urls.map((url, i) => ({ listing_id: listingId, storage_path: url, position: i }))
                 );
                 localListing.images = urls;
                 saveUserListings();
@@ -672,7 +672,7 @@ async function loadUserListingsFromSupabase(userId) {
     try {
         const { data: rows, error } = await sb
             .from('listings')
-            .select('*, listing_images(url, position, is_primary), listing_vehicles(make, model)')
+            .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
             .eq('seller_id', userId)
             .order('created_at', { ascending: false });
         if (error) { showToast('Fetch error: ' + error.message); return; }
@@ -681,7 +681,7 @@ async function loadUserListingsFromSupabase(userId) {
         rows.forEach(r => {
             const images = (r.listing_images || [])
                 .sort((a, b) => a.position - b.position)
-                .map(img => img.url)
+                .map(img => img.storage_path)
                 .filter(Boolean);
             const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
             const existing = userListings.find(l => l.supabaseId === r.id);
