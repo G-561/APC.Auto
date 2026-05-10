@@ -1219,6 +1219,29 @@ header {
     flex-shrink: 0;
 }
 
+/* Floating close button — desktop detail overlay only, hidden on mobile */
+.detail-float-close {
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    font-size: 22px;
+    font-weight: 300;
+    color: #555;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.detail-float-close:hover { background: #fff; color: #111; }
+
 .back-btn {
     font-size: 18px;
     cursor: pointer;
@@ -3735,7 +3758,9 @@ header {
     .detail-seller-col-card { display: flex !important; }
     #detailSellerSection { display: none !important; }
     /* With seller section hidden, push × to the right — !important overrides inline style */
-    #detailOverlay .drawer-header { justify-content: flex-end !important; border-bottom: none !important; }
+    #detailOverlay .drawer-header { display: none !important; }
+    #detailScrollArea { height: 100% !important; }
+    .detail-float-close { display: flex; }
 
     /* Storefront: same centre-panel positioning as detail overlay */
     #storefrontDrawer {
