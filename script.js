@@ -604,7 +604,7 @@ async function uploadListingImagesToStorage(listingUUID, base64Images) {
 async function syncListingToSupabase(localListing) {
     try {
         const { data: { session } } = await sb.auth.getSession();
-        if (!session?.user) return;
+        if (!session?.user) { showToast('Sync skipped: not signed in'); return; }
 
         const row = {
             seller_id: session.user.id,
@@ -2376,7 +2376,7 @@ function submitSellListing() {
     }
 
     saveUserListings();
-    if (userIsSignedIn && syncTarget) syncListingToSupabase(syncTarget);
+    if (syncTarget) syncListingToSupabase(syncTarget);
     renderMainGrid();
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
