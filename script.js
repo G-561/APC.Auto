@@ -182,11 +182,10 @@ function saveRecentlyViewed() {
 }
 const _navPairs = {
     homeNavItem:    'dsbHomeItem',
-    garageNavItem:  'dsbGarageItem',
     recentNavItem:  'dsbRecentItem',
     inboxNavItem:   'desktopInboxItem',
     dsbHomeItem:    'homeNavItem',
-    dsbGarageItem:  'garageNavItem',
+    dsbGarageItem:  null,
     dsbRecentItem:  'recentNavItem',
     desktopInboxItem: 'inboxNavItem',
 };
