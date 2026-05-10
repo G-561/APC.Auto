@@ -1,4 +1,4 @@
-const CACHE = 'apc-v1';
+const CACHE = 'apc-v2';
 const CORE = [
     './index.html',
     './style.css',
