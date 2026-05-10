@@ -1629,17 +1629,31 @@ function renderWantedSearchResults(mainGrid) {
 }
 
 // --- RENDER MY PARTS ---
+function setListingStatus(id, status) {
+    const part = userListings.find(p => p.id === id);
+    if (!part) return;
+    if (status === null || status === undefined) delete part.status;
+    else part.status = status;
+    saveUserListings();
+    renderMainGrid();
+    renderMyParts();
+    if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+    showToast(status === 'pending' ? 'Marked as Pending' : status === 'sold' ? 'Marked as Sold' : 'Listing relisted as Active');
+}
+
 function renderMyParts() {
     const myPartsList = document.getElementById('myPartsList');
     if (!myPartsList) return;
 
     myPartsList.innerHTML = '';
-    const mySeller = getCurrentSellerName();
     const query = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
     const myParts = userListings.filter(part =>
-        part.status !== 'sold' && part.status !== 'removed' &&
+        part.status !== 'removed' &&
         (!query || part.title.toLowerCase().includes(query))
-    );
+    ).sort((a, b) => {
+        const w = s => s === 'sold' ? 2 : s === 'pending' ? 1 : 0;
+        return w(a.status) - w(b.status);
+    });
 
     if (myParts.length === 0) {
         myPartsList.innerHTML = query
@@ -1653,21 +1667,26 @@ function renderMyParts() {
     }
 
     myParts.forEach(part => {
+        const isSold    = part.status === 'sold';
+        const isPending = part.status === 'pending';
+
         const row = document.createElement('div');
-        row.className = 'my-part-row';
+        row.className = 'my-part-row' + (isSold ? ' sold' : '');
 
         const thumb = document.createElement('img');
         thumb.src = part.images[0];
         thumb.className = 'my-part-thumb';
-        thumb.style.cursor = 'pointer';
-        thumb.onclick = (e) => { e.stopPropagation(); openItemDetail(part.id); };
+        if (!isSold) {
+            thumb.style.cursor = 'pointer';
+            thumb.onclick = (e) => { e.stopPropagation(); openItemDetail(part.id); };
+        }
 
         const info = document.createElement('div');
         info.className = 'my-part-info';
 
         const title = document.createElement('div');
         title.className = 'my-part-title';
-        title.textContent = part.title;   // textContent — safe, no XSS risk
+        title.textContent = part.title;
 
         const meta = document.createElement('div');
         meta.className = 'my-part-meta';
@@ -1677,15 +1696,15 @@ function renderMyParts() {
         price.textContent = `$${part.price}`;
 
         const badge = document.createElement('div');
-        badge.className = 'my-part-badge';
-        badge.textContent = 'ACTIVE';
+        badge.className = 'my-part-badge' + (isPending ? ' pending' : isSold ? ' sold' : '');
+        badge.textContent = isPending ? 'PENDING' : isSold ? 'SOLD' : 'ACTIVE';
 
         meta.appendChild(price);
         meta.appendChild(badge);
         info.appendChild(title);
         info.appendChild(meta);
 
-        if (currentUserTier === 'pro') {
+        if (currentUserTier === 'pro' && !isSold) {
             const saves = document.createElement('div');
             saves.className = 'my-part-saves';
             saves.textContent = `♥ ${part.saves || 0} save${(part.saves || 0) === 1 ? '' : 's'}`;
@@ -1705,28 +1724,49 @@ function renderMyParts() {
             info.appendChild(stockEl);
         }
 
-        const editBtn = document.createElement('button');
-        editBtn.className = 'my-part-edit-btn';
-        editBtn.textContent = 'EDIT';
-        editBtn.onclick = (e) => {
-            e.stopPropagation();
-            openEditListing(part.id);
-        };
+        const actions = document.createElement('div');
+        actions.className = 'my-part-actions';
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'my-part-delete-btn';
-        deleteBtn.textContent = 'DELETE';
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (confirm('Delete this listing?')) {
-                deleteListing(part.id);
-            }
-        };
+        if (isSold) {
+            const relistBtn = document.createElement('button');
+            relistBtn.className = 'my-part-action-btn my-part-btn-relist';
+            relistBtn.textContent = 'RELIST';
+            relistBtn.onclick = (e) => { e.stopPropagation(); setListingStatus(part.id, null); };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'my-part-action-btn my-part-btn-delete';
+            deleteBtn.textContent = 'DELETE';
+            deleteBtn.onclick = (e) => { e.stopPropagation(); if (confirm('Delete this listing?')) deleteListing(part.id); };
+
+            actions.appendChild(relistBtn);
+            actions.appendChild(deleteBtn);
+        } else {
+            const editBtn = document.createElement('button');
+            editBtn.className = 'my-part-action-btn my-part-btn-edit';
+            editBtn.textContent = 'EDIT';
+            editBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
+
+            const pendingBtn = document.createElement('button');
+            pendingBtn.className = 'my-part-action-btn my-part-btn-pending' + (isPending ? ' active' : '');
+            pendingBtn.textContent = isPending ? 'UNPEND' : 'PENDING';
+            pendingBtn.onclick = (e) => { e.stopPropagation(); setListingStatus(part.id, isPending ? null : 'pending'); };
+
+            const soldBtn = document.createElement('button');
+            soldBtn.className = 'my-part-action-btn my-part-btn-sold';
+            soldBtn.textContent = 'SOLD';
+            soldBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm('Mark this listing as sold?')) setListingStatus(part.id, 'sold');
+            };
+
+            actions.appendChild(editBtn);
+            actions.appendChild(pendingBtn);
+            actions.appendChild(soldBtn);
+        }
 
         row.appendChild(thumb);
         row.appendChild(info);
-        row.appendChild(editBtn);
-        row.appendChild(deleteBtn);
+        row.appendChild(actions);
         myPartsList.appendChild(row);
     });
 }
