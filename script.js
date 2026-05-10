@@ -1764,9 +1764,13 @@ function renderMyParts() {
             actions.appendChild(soldBtn);
         }
 
+        const rightCol = document.createElement('div');
+        rightCol.className = 'my-part-right';
+        rightCol.appendChild(info);
+        rightCol.appendChild(actions);
+
         row.appendChild(thumb);
-        row.appendChild(info);
-        row.appendChild(actions);
+        row.appendChild(rightCol);
         myPartsList.appendChild(row);
     });
 }
