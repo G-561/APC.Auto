@@ -2318,7 +2318,10 @@ function openItemDetail(partId) {
     if (detailEl && detailEl.classList.contains('active')) {
         // Already open — content has been refreshed above, no need to toggle
     } else {
-        const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
+        // On desktop, drawers share the same column so don't stack — close others first.
+        // On mobile, keep any open parent drawer behind the detail overlay.
+        const parentOpen = window.innerWidth < 900 &&
+            [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
         toggleDrawer('detailOverlay', parentOpen);
     }
 }
