@@ -593,10 +593,10 @@ async function uploadListingImagesToStorage(listingUUID, base64Images) {
             const ext = blob.type.includes('png') ? 'png' : 'jpg';
             const path = `${listingUUID}/${i}.${ext}`;
             const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: blob.type, upsert: true });
-            if (error) { console.warn('Image upload:', error.message); continue; }
+            if (error) { showToast('Storage error: ' + error.message); continue; }
             const { data } = sb.storage.from('listing-images').getPublicUrl(path);
             urls.push(data.publicUrl);
-        } catch (e) { console.warn('Image upload exception:', e); }
+        } catch (e) { showToast('Storage exception: ' + (e.message || e)); }
     }
     return urls.filter(Boolean);
 }
@@ -654,7 +654,7 @@ async function syncListingToSupabase(localListing) {
                 );
                 localListing.images = urls;
                 saveUserListings();
-            }).catch(e => console.warn('Image upload:', e));
+            }).catch(e => showToast('Image sync error: ' + (e.message || e)));
         }
 
         if (localListing.fits?.length) {
