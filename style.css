@@ -1188,6 +1188,8 @@ header {
 }
 /* Detail overlay always stacks on top of any other open drawer */
 #detailOverlay { z-index: 3150; }
+/* Inbox and chat sit above the detail overlay so Message Seller works from a listing */
+#inboxDrawer, #chatDrawer, #messageDetailDrawer { z-index: 3200; }
 /* Filter drawer sits below the header on all screen sizes */
 #filterDrawer { z-index: 2000; }
 .drawer.active {
