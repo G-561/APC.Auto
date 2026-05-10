@@ -2086,7 +2086,6 @@ function openItemDetail(partId) {
     const dotsContainer = document.getElementById('carouselDots');
     if (carousel) {
         carousel.innerHTML = '';
-        carousel.scrollLeft = 0;
         part.images.forEach((src, i) => {
             const img = document.createElement('img');
             img.src = src;
@@ -2095,6 +2094,8 @@ function openItemDetail(partId) {
             img.onclick = () => openDetailImageViewer(src, part.images, i);
             carousel.appendChild(img);
         });
+        // Reset AFTER images are in the DOM so scroll-snap doesn't ignore it
+        carousel.scrollTo({ left: 0, behavior: 'instant' });
     }
     if (dotsContainer) {
         dotsContainer.innerHTML = '';
