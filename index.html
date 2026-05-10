@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1017,6 +1017,30 @@
                     </div>
                 </div>
 
+                <!-- MANAGE SECTION — only visible when editing an existing listing -->
+                <div id="manageSection" class="manage-section" style="display:none;">
+                    <div class="filter-section">
+                        <h4>Listing Status</h4>
+                        <div class="manage-status-pills">
+                            <button class="status-pill" id="statusPillActive"  onclick="selectListingStatus('active')">● Active</button>
+                            <button class="status-pill" id="statusPillPending" onclick="selectListingStatus('pending')">● Pending</button>
+                            <button class="status-pill" id="statusPillSold"    onclick="selectListingStatus('sold')">● Sold</button>
+                        </div>
+                    </div>
+                    <div id="rateBuyerSection" class="rate-buyer-section" style="display:none;">
+                        <h4>Rate Your Buyer</h4>
+                        <div class="rate-stars-row" id="rateBuyerStars"></div>
+                        <div class="input-group" style="margin-top:12px;">
+                            <label>Buyer's name <span style="font-weight:400;color:#aaa;">optional</span></label>
+                            <input id="rateBuyerName" type="text" placeholder="e.g. John D.">
+                        </div>
+                        <div class="input-group" style="margin-top:10px;">
+                            <label>Note <span style="font-weight:400;color:#aaa;">optional</span></label>
+                            <input id="rateBuyerNote" type="text" placeholder="e.g. Quick payment, great buyer">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="action-container"><button id="sellSubmitBtn" class="btn-full-action" onclick="submitSellListing()">LIST PART NOW</button></div>
             </div>
 
@@ -1996,7 +2020,7 @@
     </div>
 </div>
 
-<script src="script.js?v=13"></script>
+<script src="script.js?v=14"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

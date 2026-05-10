@@ -6,6 +6,8 @@ let proSearchOn    = true;           // when user is pro, controls FIND PARTS / 
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let currentOpenPartId = null;  // tracks which part detail is open
 let currentEditingListingId = null; // edit mode for Sell form
+let currentEditStatus = null;       // status selected in manage section
+let currentBuyerRating = 0;        // star rating selected in rate-buyer section
 let authReturnAction = null; // optional callback after sign-in
 let authMode = 'signin';
 let sortOrder = 'none';  // 'none' | 'asc' | 'desc'
@@ -1688,89 +1690,30 @@ function renderMyParts() {
         title.className = 'my-part-title';
         title.textContent = part.title;
 
-        const meta = document.createElement('div');
-        meta.className = 'my-part-meta';
+        const sub = document.createElement('div');
+        sub.className = 'my-part-sub';
 
-        const price = document.createElement('div');
+        const price = document.createElement('span');
         price.className = 'my-part-price';
         price.textContent = `$${part.price}`;
 
-        const badge = document.createElement('div');
+        const badge = document.createElement('span');
         badge.className = 'my-part-badge' + (isPending ? ' pending' : isSold ? ' sold' : '');
         badge.textContent = isPending ? 'PENDING' : isSold ? 'SOLD' : 'ACTIVE';
 
-        meta.appendChild(price);
-        meta.appendChild(badge);
+        sub.appendChild(price);
+        sub.appendChild(badge);
         info.appendChild(title);
-        info.appendChild(meta);
+        info.appendChild(sub);
 
-        if (currentUserTier === 'pro' && !isSold) {
-            const saves = document.createElement('div');
-            saves.className = 'my-part-saves';
-            saves.textContent = `♥ ${part.saves || 0} save${(part.saves || 0) === 1 ? '' : 's'}`;
-            info.appendChild(saves);
-        }
-
-        if (part.apcId) {
-            const apcIdEl = document.createElement('div');
-            apcIdEl.className = 'my-part-apc-id';
-            apcIdEl.textContent = 'Item ID: ' + part.apcId;
-            info.appendChild(apcIdEl);
-        }
-        if (part.stockNumber) {
-            const stockEl = document.createElement('div');
-            stockEl.className = 'my-part-stock-num';
-            stockEl.textContent = 'Stock #: ' + part.stockNumber;
-            info.appendChild(stockEl);
-        }
-
-        const actions = document.createElement('div');
-        actions.className = 'my-part-actions';
-
-        if (isSold) {
-            const relistBtn = document.createElement('button');
-            relistBtn.className = 'my-part-action-btn my-part-btn-relist';
-            relistBtn.textContent = 'RELIST';
-            relistBtn.onclick = (e) => { e.stopPropagation(); setListingStatus(part.id, null); };
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'my-part-action-btn my-part-btn-delete';
-            deleteBtn.textContent = 'DELETE';
-            deleteBtn.onclick = (e) => { e.stopPropagation(); if (confirm('Delete this listing?')) deleteListing(part.id); };
-
-            actions.appendChild(relistBtn);
-            actions.appendChild(deleteBtn);
-        } else {
-            const editBtn = document.createElement('button');
-            editBtn.className = 'my-part-action-btn my-part-btn-edit';
-            editBtn.textContent = 'EDIT';
-            editBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
-
-            const pendingBtn = document.createElement('button');
-            pendingBtn.className = 'my-part-action-btn my-part-btn-pending' + (isPending ? ' active' : '');
-            pendingBtn.textContent = isPending ? 'UNPEND' : 'PENDING';
-            pendingBtn.onclick = (e) => { e.stopPropagation(); setListingStatus(part.id, isPending ? null : 'pending'); };
-
-            const soldBtn = document.createElement('button');
-            soldBtn.className = 'my-part-action-btn my-part-btn-sold';
-            soldBtn.textContent = 'SOLD';
-            soldBtn.onclick = (e) => {
-                e.stopPropagation();
-                if (confirm('Mark this listing as sold?')) setListingStatus(part.id, 'sold');
-            };
-
-            actions.appendChild(editBtn);
-            actions.appendChild(pendingBtn);
-            actions.appendChild(soldBtn);
-        }
-
-        const rightCol = document.createElement('div');
-        rightCol.className = 'my-part-right';
-        rightCol.appendChild(info);
-        rightCol.appendChild(actions);
+        const manageBtn = document.createElement('button');
+        manageBtn.className = 'my-part-manage-btn';
+        manageBtn.textContent = 'MANAGE';
+        manageBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
 
         row.appendChild(thumb);
-        row.appendChild(rightCol);
+        row.appendChild(info);
+        row.appendChild(manageBtn);
         myPartsList.appendChild(row);
     });
 }
@@ -1794,11 +1737,14 @@ function openSellOverlay() {
     }
 
     currentEditingListingId = null;
+    currentEditStatus = null;
     resetSellForm();
     const title = document.getElementById('sellOverlayTitle');
     const submit = document.getElementById('sellSubmitBtn');
     if (title) title.textContent = 'LIST A PART';
     if (submit) submit.textContent = 'LIST PART NOW';
+    const manageSection = document.getElementById('manageSection');
+    if (manageSection) manageSection.style.display = 'none';
     updateSellFittingToggleVisibility();
     toggleDrawer('sellOverlay');
 }
@@ -1812,6 +1758,30 @@ function listFromWanted(make, model, year) {
     if (makeEl)  makeEl.value  = make;
     if (modelEl) modelEl.value = model;
     if (yearEl)  yearEl.value  = year;
+}
+
+function selectListingStatus(status) {
+    currentEditStatus = status;
+    ['active', 'pending', 'sold'].forEach(s => {
+        const pill = document.getElementById('statusPill' + s.charAt(0).toUpperCase() + s.slice(1));
+        if (pill) pill.className = 'status-pill' + (s === status ? ` pill-selected-${s}` : '');
+    });
+    const rateSec = document.getElementById('rateBuyerSection');
+    if (rateSec) rateSec.style.display = status === 'sold' ? '' : 'none';
+}
+
+function renderBuyerStars(selected) {
+    currentBuyerRating = selected || 0;
+    const container = document.getElementById('rateBuyerStars');
+    if (!container) return;
+    container.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+        const star = document.createElement('span');
+        star.className = 'rate-star' + (i <= currentBuyerRating ? ' filled' : '');
+        star.textContent = '★';
+        star.onclick = () => renderBuyerStars(i);
+        container.appendChild(star);
+    }
 }
 
 function openEditListing(listingId) {
@@ -1848,14 +1818,27 @@ function openEditListing(listingId) {
 
     renderSellImagePreviews();
 
-    const title = document.getElementById('sellOverlayTitle');
-    const submit = document.getElementById('sellSubmitBtn');
-    if (title) title.textContent = 'EDIT LISTING';
-    if (submit) submit.textContent = 'UPDATE LISTING';
+    const titleEl = document.getElementById('sellOverlayTitle');
+    const submit  = document.getElementById('sellSubmitBtn');
+    if (titleEl) titleEl.textContent = 'MANAGE LISTING';
+    if (submit)  submit.textContent  = 'SAVE CHANGES';
+
+    // Show manage section and populate status + buyer rating
+    const manageSection = document.getElementById('manageSection');
+    if (manageSection) manageSection.style.display = '';
+    const statusStr = listing.status || 'active';
+    selectListingStatus(statusStr);
+    const br = listing.buyerRating || {};
+    renderBuyerStars(br.stars || 0);
+    const nameEl = document.getElementById('rateBuyerName');
+    const noteEl = document.getElementById('rateBuyerNote');
+    if (nameEl) nameEl.value = br.buyerName || '';
+    if (noteEl) noteEl.value = br.note || '';
+
     updateSellFittingToggleVisibility();
     const sellOverlayEl = document.getElementById('sellOverlay');
-    if (sellOverlayEl) sellOverlayEl.style.zIndex = '3200'; // float above myPartsDrawer (3100) and detailOverlay (3150)
-    toggleDrawer('sellOverlay', true);  // allowStack: keep myPartsDrawer open behind
+    if (sellOverlayEl) sellOverlayEl.style.zIndex = '3200';
+    toggleDrawer('sellOverlay', true);
 }
 
 function closeSellOverlay() {
@@ -2103,6 +2086,21 @@ function submitSellListing() {
     if (currentEditingListingId !== null) {
         const existing = userListings.find(l => l.id === currentEditingListingId);
         if (existing) {
+            // Apply status from manage section
+            if (currentEditStatus && currentEditStatus !== 'active') {
+                listingPayload.status = currentEditStatus;
+            } else {
+                delete existing.status;
+            }
+            // Save buyer rating if marked sold
+            if (currentEditStatus === 'sold' && currentBuyerRating > 0) {
+                listingPayload.buyerRating = {
+                    stars: currentBuyerRating,
+                    buyerName: document.getElementById('rateBuyerName')?.value.trim() || '',
+                    note: document.getElementById('rateBuyerNote')?.value.trim() || '',
+                    date: Date.now()
+                };
+            }
             Object.assign(existing, listingPayload, { date: Date.now() });
             message = 'Listing updated';
         } else {
