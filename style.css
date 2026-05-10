@@ -3735,7 +3735,7 @@ header {
     .detail-seller-col-card { display: flex !important; }
     #detailSellerSection { display: none !important; }
     /* With seller section hidden, push × to the right — !important overrides inline style */
-    #detailOverlay .drawer-header { justify-content: flex-end !important; }
+    #detailOverlay .drawer-header { justify-content: flex-end !important; border-bottom: none; }
 
     /* Storefront: same centre-panel positioning as detail overlay */
     #storefrontDrawer {
