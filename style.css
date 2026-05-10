@@ -3759,11 +3759,7 @@ header {
     #detailSellerSection { display: none !important; }
     /* With seller section hidden, push × to the right — !important overrides inline style */
     #detailOverlay .drawer-header { display: none !important; }
-    #detailScrollArea { height: 100% !important; }
-    #detailScrollArea::-webkit-scrollbar { width: 6px; }
-    #detailScrollArea::-webkit-scrollbar-track { margin-top: 56px; background: transparent; }
-    #detailScrollArea::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-    #detailScrollArea::-webkit-scrollbar-thumb:hover { background: #aaa; }
+    #detailScrollArea { margin-top: 56px !important; height: calc(100% - 56px) !important; }
     .detail-float-close { display: flex; }
 
     /* Storefront: same centre-panel positioning as detail overlay */
