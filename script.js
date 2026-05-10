@@ -1492,6 +1492,31 @@ function updateFilterChip() {
     updateHeaderOffset();
 }
 
+function initFilterVehicleDropdowns() {
+    const makeEl  = document.getElementById('filterMake');
+    const yearEl  = document.getElementById('filterYear');
+    if (makeEl && !makeEl.querySelector('option[value="Toyota"]')) {
+        makeEl.innerHTML = '<option value="">Any Make</option>' +
+            VEHICLE_MAKES.map(m => `<option value="${m}">${m}</option>`).join('');
+    }
+    if (yearEl && yearEl.options.length < 3) {
+        const current = new Date().getFullYear();
+        let html = '<option value="">Any Year</option>';
+        for (let y = current + 1; y >= 1950; y--) html += `<option value="${y}">${y}</option>`;
+        yearEl.innerHTML = html;
+    }
+}
+
+function onFilterMakeChange() {
+    const make    = document.getElementById('filterMake')?.value || '';
+    const modelEl = document.getElementById('filterModel');
+    if (modelEl) {
+        modelEl.innerHTML = '<option value="">Any Model</option>' +
+            getVehicleModels(make).map(m => `<option value="${m}">${m}</option>`).join('');
+    }
+    applyFiltersAndRender();
+}
+
 function applyFiltersAndRender() {
     getFilterValues();
     renderMainGrid();
@@ -1509,12 +1534,10 @@ function clearAllFilters() {
     // Reset DOM
     const categorySelect = document.querySelector('#filterDrawer select');
     if (categorySelect) categorySelect.value = 'all';
-    const makeInput = document.getElementById('filterMake');
-    if (makeInput) makeInput.value = '';
-    const modelInput = document.getElementById('filterModel');
-    if (modelInput) modelInput.value = '';
-    const yearSelect = document.getElementById('filterYear');
-    if (yearSelect) yearSelect.value = '';
+    const makeEl = document.getElementById('filterMake');
+    if (makeEl) { makeEl.value = ''; onFilterMakeChange(); }
+    const yearEl = document.getElementById('filterYear');
+    if (yearEl) yearEl.value = '';
     const stateSelect = document.getElementById('filterStateSelect');
     if (stateSelect) { stateSelect.value = 'all'; stateSelect.disabled = false; stateSelect.classList.remove('filter-input-disabled'); }
     const postcodeInput = document.getElementById('filterPostcode');
@@ -3628,10 +3651,9 @@ function viewSimilarToStale(partId) {
     activeFilters.model = '';
     const catSelect = document.querySelector('#filterDrawer select');
     if (catSelect) catSelect.value = part.category;
-    const makeInput = document.getElementById('filterMake');
-    if (makeInput) makeInput.value = part.fits && part.fits.length ? part.fits[0].make : '';
-    const modelInput = document.getElementById('filterModel');
-    if (modelInput) modelInput.value = '';
+    const partMake = part.fits && part.fits.length ? part.fits[0].make : '';
+    const makeEl = document.getElementById('filterMake');
+    if (makeEl) { makeEl.value = partMake; onFilterMakeChange(); }
     closeSavedPartsDrawer();
     renderMainGrid();
     window.scrollTo(0, 0);
@@ -5969,6 +5991,7 @@ function dashFmtDate(ts) {
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
     updateHeaderOffset();
+    initFilterVehicleDropdowns();
     renderMainGrid();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications
