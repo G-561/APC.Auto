@@ -645,6 +645,7 @@ async function syncListingToSupabase(localListing) {
         // Upload images + vehicle fits in the background — don't block the UI
         const base64Images = localListing.images || [];
         const hasBase64 = base64Images.some(img => img?.startsWith('data:'));
+        showToast(`Images: ${base64Images.length} total, hasBase64: ${hasBase64}`);
         if (hasBase64) {
             uploadListingImagesToStorage(listingId, base64Images).then(async urls => {
                 if (!urls.length) return;
