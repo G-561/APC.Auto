@@ -579,6 +579,150 @@ function loadUserListings() {
 function saveUserListings() {
     try { localStorage.setItem(LISTINGS_STORAGE_KEY, JSON.stringify(userListings)); } catch (e) {}
 }
+
+// --- SUPABASE LISTINGS SYNC ---
+
+async function uploadListingImagesToStorage(listingUUID, base64Images) {
+    const urls = [];
+    for (let i = 0; i < base64Images.length; i++) {
+        const b64 = base64Images[i];
+        if (!b64 || !b64.startsWith('data:')) { urls.push(b64); continue; }
+        try {
+            const res = await fetch(b64);
+            const blob = await res.blob();
+            const ext = blob.type.includes('png') ? 'png' : 'jpg';
+            const path = `${listingUUID}/${i}.${ext}`;
+            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: blob.type, upsert: true });
+            if (error) { console.warn('Image upload:', error.message); continue; }
+            const { data } = sb.storage.from('listing-images').getPublicUrl(path);
+            urls.push(data.publicUrl);
+        } catch (e) { console.warn('Image upload exception:', e); }
+    }
+    return urls.filter(Boolean);
+}
+
+async function syncListingToSupabase(localListing) {
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session?.user) return;
+
+        const row = {
+            seller_id: session.user.id,
+            title: localListing.title,
+            category: localListing.category,
+            price: localListing.price,
+            condition: localListing.condition || 'used',
+            description: localListing.description || null,
+            location: localListing.loc,
+            postcode: localListing.postcode || null,
+            pickup: !!localListing.pickup,
+            postage: !!localListing.postage,
+            open_to_offers: !!localListing.openToOffers,
+            status: localListing.status || 'active',
+            is_pro: !!localListing.isPro,
+            stock_number: localListing.stockNumber || null,
+            odometer: localListing.odometer || null,
+            warehouse_bin: localListing.warehouseBin || null,
+            quantity: localListing.quantity || 1,
+            apc_id: localListing.apcId,
+            fitting_available: !!localListing.fit,
+            fits_year: localListing.year || null,
+        };
+
+        let listingUUID;
+        if (localListing.supabaseId) {
+            const { error } = await sb.from('listings').update(row).eq('id', localListing.supabaseId);
+            if (error) { console.warn('Listing update:', error.message); return; }
+            listingUUID = localListing.supabaseId;
+        } else {
+            const { data, error } = await sb.from('listings').insert(row).select('id').single();
+            if (error) { console.warn('Listing insert:', error.message); return; }
+            listingUUID = data.id;
+            localListing.supabaseId = listingUUID;
+            saveUserListings();
+        }
+
+        // Upload images to Storage, replace base64 with public URLs
+        const base64Images = localListing.images || [];
+        const hasBase64 = base64Images.some(img => img?.startsWith('data:'));
+        if (hasBase64) {
+            const urls = await uploadListingImagesToStorage(listingUUID, base64Images);
+            if (urls.length) {
+                await sb.from('listing_images').delete().eq('listing_id', listingUUID);
+                await sb.from('listing_images').insert(
+                    urls.map((url, i) => ({ listing_id: listingUUID, url, position: i, is_primary: i === 0 }))
+                );
+                localListing.images = urls;
+                saveUserListings();
+            }
+        }
+
+        // Sync vehicle fits
+        if (localListing.fits?.length) {
+            await sb.from('listing_vehicles').delete().eq('listing_id', listingUUID);
+            await sb.from('listing_vehicles').insert(
+                localListing.fits.map(f => ({ listing_id: listingUUID, make: f.make, model: f.model }))
+            );
+        }
+    } catch (e) { console.warn('Supabase sync error:', e); }
+}
+
+async function loadUserListingsFromSupabase(userId) {
+    try {
+        const { data: rows, error } = await sb
+            .from('listings')
+            .select('*, listing_images(url, position, is_primary), listing_vehicles(make, model)')
+            .eq('seller_id', userId)
+            .order('created_at', { ascending: false });
+        if (error || !rows?.length) return;
+
+        rows.forEach(r => {
+            const images = (r.listing_images || [])
+                .sort((a, b) => a.position - b.position)
+                .map(img => img.url)
+                .filter(Boolean);
+            const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
+            const existing = userListings.find(l => l.supabaseId === r.id);
+
+            if (existing) {
+                Object.assign(existing, {
+                    title: r.title, category: r.category, price: r.price,
+                    condition: r.condition, description: r.description,
+                    loc: r.location, postcode: r.postcode,
+                    pickup: r.pickup, postage: r.postage,
+                    openToOffers: r.open_to_offers,
+                    status: r.status === 'active' ? undefined : r.status,
+                    isPro: r.is_pro, stockNumber: r.stock_number,
+                    odometer: r.odometer, warehouseBin: r.warehouse_bin,
+                    quantity: r.quantity || 1, apcId: r.apc_id,
+                    fit: r.fitting_available, year: r.fits_year, fits,
+                    ...(images.length ? { images } : {}),
+                });
+            } else {
+                userListings.push({
+                    id: nextPartId(), supabaseId: r.id, saves: 0,
+                    date: new Date(r.created_at).getTime(),
+                    apcId: r.apc_id, title: r.title, category: r.category,
+                    price: r.price, condition: r.condition,
+                    description: r.description, loc: r.location,
+                    postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+                    openToOffers: r.open_to_offers,
+                    status: r.status === 'active' ? undefined : r.status,
+                    isPro: r.is_pro, stockNumber: r.stock_number,
+                    odometer: r.odometer, warehouseBin: r.warehouse_bin,
+                    quantity: r.quantity || 1, fit: r.fitting_available,
+                    year: r.fits_year, seller: currentUserName || '',
+                    images: images.length ? images : [], fits,
+                });
+            }
+        });
+
+        saveUserListings();
+        renderMainGrid();
+        renderMyParts();
+    } catch (e) { console.warn('Load listings from Supabase:', e); }
+}
+
 function loadRememberedUser() {
     try {
         const raw = localStorage.getItem(REMEMBER_ME_KEY);
@@ -2192,6 +2336,7 @@ function submitSellListing() {
     };
 
     let message = 'Listing created';
+    let syncTarget = null;
     if (currentEditingListingId !== null) {
         const existing = userListings.find(l => l.id === currentEditingListingId);
         if (existing) {
@@ -2217,15 +2362,21 @@ function submitSellListing() {
                 };
             }
             Object.assign(existing, listingPayload, { date: Date.now() });
+            syncTarget = existing;
             message = 'Listing updated';
         } else {
-            userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload });
+            const newListing = { id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload };
+            userListings.push(newListing);
+            syncTarget = newListing;
         }
     } else {
-        userListings.push({ id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload });
+        const newListing = { id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload };
+        userListings.push(newListing);
+        syncTarget = newListing;
     }
 
     saveUserListings();
+    if (userIsSignedIn && syncTarget) syncListingToSupabase(syncTarget);
     renderMainGrid();
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
@@ -2899,6 +3050,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const name = profile?.display_name || session.user.email.split('@')[0];
             const tier = profile?.is_pro ? 'pro' : 'standard';
             signIn(name, tier, false, session.user.email);
+            loadUserListingsFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
             userIsSignedIn = false;
             currentUserName = null;
