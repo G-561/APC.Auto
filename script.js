@@ -700,9 +700,19 @@ function renderInboxConvList(filter) {
     const list = document.getElementById('inboxConvList');
     if (!list) return;
     const q = (filter || '').toLowerCase();
-    const filtered = q
+    const filtered = (q
         ? conversations.filter(c => c.with.toLowerCase().includes(q) || getConvPartTitle(c).toLowerCase().includes(q))
-        : conversations;
+        : [...conversations]
+    ).sort((a, b) => {
+        const weight = conv => {
+            const t = (conv.msgs[conv.msgs.length - 1] || {}).time || '';
+            if (t === 'Today') return 0;
+            if (t === 'Yesterday') return 1;
+            const di = ['Sun','Sat','Fri','Thu','Wed','Tue','Mon'].indexOf(t);
+            return di >= 0 ? 2 + di : 9;
+        };
+        return weight(a) - weight(b);
+    });
     if (!filtered.length) {
         const isSearch = !!filter;
         list.innerHTML = isSearch
@@ -3942,6 +3952,10 @@ let currentInboxTab = 'all';
 function onOpenInbox() {
     setActiveNav('inboxNavItem');
     updateInboxBadge();
+    // Always land on the conversation list, never a previously open thread
+    document.getElementById('chatDrawer')?.classList.remove('active');
+    document.getElementById('messageDetailDrawer')?.classList.remove('active');
+    activeConvId = null;
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
 }
