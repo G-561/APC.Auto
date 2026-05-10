@@ -642,27 +642,27 @@ async function syncListingToSupabase(localListing) {
             saveUserListings();
         }
 
-        // Upload images to Storage, replace base64 with public URLs
+        // Upload images + vehicle fits in the background — don't block the UI
         const base64Images = localListing.images || [];
         const hasBase64 = base64Images.some(img => img?.startsWith('data:'));
         if (hasBase64) {
-            const urls = await uploadListingImagesToStorage(listingId, base64Images);
-            if (urls.length) {
+            uploadListingImagesToStorage(listingId, base64Images).then(async urls => {
+                if (!urls.length) return;
                 await sb.from('listing_images').delete().eq('listing_id', listingId);
                 await sb.from('listing_images').insert(
                     urls.map((url, i) => ({ listing_id: listingId, url, position: i, is_primary: i === 0 }))
                 );
                 localListing.images = urls;
                 saveUserListings();
-            }
+            }).catch(e => console.warn('Image upload:', e));
         }
 
-        // Sync vehicle fits
         if (localListing.fits?.length) {
-            await sb.from('listing_vehicles').delete().eq('listing_id', listingId);
-            await sb.from('listing_vehicles').insert(
-                localListing.fits.map(f => ({ listing_id: listingId, make: f.make, model: f.model }))
-            );
+            sb.from('listing_vehicles').delete().eq('listing_id', listingId).then(() =>
+                sb.from('listing_vehicles').insert(
+                    localListing.fits.map(f => ({ listing_id: listingId, make: f.make, model: f.model }))
+                )
+            ).catch(e => console.warn('Vehicle fits sync:', e));
         }
     } catch (e) { showToast('Sync error: ' + (e.message || e)); }
 }
