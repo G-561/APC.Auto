@@ -592,9 +592,9 @@ async function uploadListingImagesToStorage(listingUUID, base64Images) {
             const blob = await res.blob();
             const ext = blob.type.includes('png') ? 'png' : 'jpg';
             const path = `${listingUUID}/${i}.${ext}`;
-            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: blob.type, upsert: true });
+            const { error } = await sb.storage.from('listing_images').upload(path, blob, { contentType: blob.type, upsert: true });
             if (error) { showToast('Storage error: ' + error.message); continue; }
-            const { data } = sb.storage.from('listing-images').getPublicUrl(path);
+            const { data } = sb.storage.from('listing_images').getPublicUrl(path);
             urls.push(data.publicUrl);
         } catch (e) { showToast('Storage exception: ' + (e.message || e)); }
     }
