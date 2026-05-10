@@ -624,21 +624,21 @@ async function syncListingToSupabase(localListing) {
             odometer: localListing.odometer || null,
             warehouse_bin: localListing.warehouseBin || null,
             quantity: localListing.quantity || 1,
-            apc_id: localListing.apcId,
+            apc_id: localListing.apcId || null,
             fitting_available: !!localListing.fit,
             fits_year: localListing.year || null,
         };
 
-        let listingUUID;
+        let listingId;
         if (localListing.supabaseId) {
             const { error } = await sb.from('listings').update(row).eq('id', localListing.supabaseId);
             if (error) { showToast('Sync error: ' + error.message); return; }
-            listingUUID = localListing.supabaseId;
+            listingId = localListing.supabaseId;
         } else {
             const { data, error } = await sb.from('listings').insert(row).select('id').single();
             if (error) { showToast('Sync error: ' + error.message); return; }
-            listingUUID = data.id;
-            localListing.supabaseId = listingUUID;
+            listingId = data.id;
+            localListing.supabaseId = listingId;
             saveUserListings();
         }
 
@@ -646,11 +646,11 @@ async function syncListingToSupabase(localListing) {
         const base64Images = localListing.images || [];
         const hasBase64 = base64Images.some(img => img?.startsWith('data:'));
         if (hasBase64) {
-            const urls = await uploadListingImagesToStorage(listingUUID, base64Images);
+            const urls = await uploadListingImagesToStorage(listingId, base64Images);
             if (urls.length) {
-                await sb.from('listing_images').delete().eq('listing_id', listingUUID);
+                await sb.from('listing_images').delete().eq('listing_id', listingId);
                 await sb.from('listing_images').insert(
-                    urls.map((url, i) => ({ listing_id: listingUUID, url, position: i, is_primary: i === 0 }))
+                    urls.map((url, i) => ({ listing_id: listingId, url, position: i, is_primary: i === 0 }))
                 );
                 localListing.images = urls;
                 saveUserListings();
@@ -659,9 +659,9 @@ async function syncListingToSupabase(localListing) {
 
         // Sync vehicle fits
         if (localListing.fits?.length) {
-            await sb.from('listing_vehicles').delete().eq('listing_id', listingUUID);
+            await sb.from('listing_vehicles').delete().eq('listing_id', listingId);
             await sb.from('listing_vehicles').insert(
-                localListing.fits.map(f => ({ listing_id: listingUUID, make: f.make, model: f.model }))
+                localListing.fits.map(f => ({ listing_id: listingId, make: f.make, model: f.model }))
             );
         }
     } catch (e) { showToast('Sync error: ' + (e.message || e)); }
@@ -695,12 +695,13 @@ async function loadUserListingsFromSupabase(userId) {
                     isPro: r.is_pro, stockNumber: r.stock_number,
                     odometer: r.odometer, warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, apcId: r.apc_id,
-                    fit: r.fitting_available, year: r.fits_year, fits,
+                    fit: r.fitting_available, year: r.fits_year,
+                    saves: r.saves_count || 0, fits,
                     ...(images.length ? { images } : {}),
                 });
             } else {
                 userListings.push({
-                    id: nextPartId(), supabaseId: r.id, saves: 0,
+                    id: nextPartId(), supabaseId: r.id, saves: r.saves_count || 0,
                     date: new Date(r.created_at).getTime(),
                     apcId: r.apc_id, title: r.title, category: r.category,
                     price: r.price, condition: r.condition,
