@@ -3760,6 +3760,7 @@ header {
     /* With seller section hidden, push × to the right — !important overrides inline style */
     #detailOverlay .drawer-header { display: none !important; }
     #detailScrollArea { height: 100% !important; }
+    #detailScrollArea::-webkit-scrollbar-track { margin-top: 56px; }
     .detail-float-close { display: flex; }
 
     /* Storefront: same centre-panel positioning as detail overlay */
