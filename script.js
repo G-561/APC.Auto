@@ -632,11 +632,11 @@ async function syncListingToSupabase(localListing) {
         let listingUUID;
         if (localListing.supabaseId) {
             const { error } = await sb.from('listings').update(row).eq('id', localListing.supabaseId);
-            if (error) { console.warn('Listing update:', error.message); return; }
+            if (error) { showToast('Sync error: ' + error.message); return; }
             listingUUID = localListing.supabaseId;
         } else {
             const { data, error } = await sb.from('listings').insert(row).select('id').single();
-            if (error) { console.warn('Listing insert:', error.message); return; }
+            if (error) { showToast('Sync error: ' + error.message); return; }
             listingUUID = data.id;
             localListing.supabaseId = listingUUID;
             saveUserListings();
@@ -664,7 +664,7 @@ async function syncListingToSupabase(localListing) {
                 localListing.fits.map(f => ({ listing_id: listingUUID, make: f.make, model: f.model }))
             );
         }
-    } catch (e) { console.warn('Supabase sync error:', e); }
+    } catch (e) { showToast('Sync error: ' + (e.message || e)); }
 }
 
 async function loadUserListingsFromSupabase(userId) {
