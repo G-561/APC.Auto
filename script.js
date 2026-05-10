@@ -675,7 +675,8 @@ async function loadUserListingsFromSupabase(userId) {
             .select('*, listing_images(url, position, is_primary), listing_vehicles(make, model)')
             .eq('seller_id', userId)
             .order('created_at', { ascending: false });
-        if (error || !rows?.length) return;
+        if (error) { showToast('Fetch error: ' + error.message); return; }
+        if (!rows?.length) return;
 
         rows.forEach(r => {
             const images = (r.listing_images || [])
@@ -722,7 +723,7 @@ async function loadUserListingsFromSupabase(userId) {
         saveUserListings();
         renderMainGrid();
         renderMyParts();
-    } catch (e) { console.warn('Load listings from Supabase:', e); }
+    } catch (e) { showToast('Load error: ' + (e.message || e)); }
 }
 
 function loadRememberedUser() {
