@@ -629,6 +629,8 @@ function getInitialConversations() {
             {id:3,sent:false,text:'Would you take $70 for it?',                         time:'Mon',       clock:'9:45 am'},
             {id:4,sent:true, text:'Best I can do is $75 — fits 2019+ perfectly.',       time:'Mon',       clock:'10:02 am'},
             {id:5,sent:false,text:'Done! Can I pick up Saturday morning?',              time:'Today',     clock:'8:03 am'},
+            {id:6,sent:false,text:'Actually, would you consider a formal offer?',       time:'Today',     clock:'8:15 am'},
+            {id:7,sent:false,text:'',time:'Today',clock:'8:16 am', offerCard:{offerId:101,partTitle:'Toyota Hiace Door Mirror (Left)',partImg:'images/hiace.mirror.jpg',listedPrice:95,offerPrice:72,buyerNote:'Happy to pick up this weekend',status:'pending'}},
         ]},
         { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:2,  msgs:[
             {id:1,sent:false,text:'Hi! Is the Lotus spoiler still for sale?',           time:'Yesterday', clock:'2:11 pm'},
@@ -728,7 +730,9 @@ function renderInboxConvList(filter) {
     }
     list.innerHTML = filtered.map(c => {
         const last    = c.msgs[c.msgs.length - 1];
-        const preview = last ? ((last.sent ? 'You: ' : '') + (last.photo ? '📷 Photo' : last.text)) : '';
+        const preview = last
+            ? (last.sent ? 'You: ' : '') + (last.offerCard ? `💰 Offer: $${last.offerCard.offerPrice}` : last.photo ? '📷 Photo' : last.text)
+            : '';
         return `
             <div class="inbox-conv-item${c.unread?' unread':''}${activeConvId===c.id?' active':''}${c.flagged?' flagged':''}" data-conv-id="${c.id}" onclick="openInboxConv(${c.id})">
                 <button class="inbox-conv-del-btn" onclick="event.stopPropagation(); deleteConversation(${c.id})" title="Delete">×</button>
@@ -771,6 +775,40 @@ function openInboxConv(id) {
     setTimeout(() => document.getElementById('inboxReplyInput')?.focus(), 300);
 }
 
+function buildOfferCardHTML(o, sent, convId, msgIdx) {
+    const statusHTML = o.status !== 'pending'
+        ? `<div class="offer-card-status ${o.status}">${
+            o.status === 'accepted'  ? '✓ Offer Accepted' :
+            o.status === 'declined'  ? '✕ Offer Declined' :
+            `↩ Countered at $${o.counterPrice}`}</div>`
+        : '';
+    const actionsHTML = (!sent && o.status === 'pending')
+        ? `<div class="offer-card-actions" id="offer-actions-${convId}-${msgIdx}">
+               <button class="offer-action-btn offer-accept"  onclick="acceptOfferCard(${convId},${msgIdx})">ACCEPT</button>
+               <button class="offer-action-btn offer-decline" onclick="declineOfferCard(${convId},${msgIdx})">DECLINE</button>
+               <button class="offer-action-btn offer-counter" onclick="showCounterForm(${convId},${msgIdx})">COUNTER</button>
+           </div>
+           <div class="offer-counter-form" id="offer-counter-${convId}-${msgIdx}" style="display:none;">
+               <input type="number" class="offer-counter-input" id="offer-counter-input-${convId}-${msgIdx}" placeholder="Counter price $">
+               <button class="offer-action-btn offer-accept" style="flex:0;padding:8px 12px;" onclick="submitCounter(${convId},${msgIdx})">SEND</button>
+           </div>`
+        : (sent && o.status === 'pending' ? `<div class="offer-card-awaiting">Awaiting seller response…</div>` : '');
+    return `<div class="offer-card">
+        <div class="offer-card-header">
+            <img src="${escapeHtml(o.partImg)}" class="offer-card-img" alt="">
+            <div>
+                <div class="offer-card-part-title">${escapeHtml(o.partTitle)}</div>
+                <div class="offer-card-listed">Listed: $${o.listedPrice}</div>
+            </div>
+        </div>
+        <div class="offer-card-body">
+            <div class="offer-card-amount">$${o.offerPrice}<span>${o.isCounter ? 'COUNTER OFFER' : 'OFFER'}</span></div>
+            ${o.buyerNote ? `<div class="offer-card-note">"${escapeHtml(o.buyerNote)}"</div>` : ''}
+            ${statusHTML}${actionsHTML}
+        </div>
+    </div>`;
+}
+
 function renderInboxMsgs(conv) {
     const box = document.getElementById('inboxMsgList');
     if (!box) return;
@@ -779,15 +817,20 @@ function renderInboxMsgs(conv) {
     box.innerHTML = conv.msgs.map((m, idx) => {
         let divider = '';
         if (m.time !== lastDay) { lastDay = m.time; divider = `<div class="inbox-date-divider">${m.time}</div>`; }
-        const content = m.photo ? `<img src="${m.photo}" alt="Photo">` : escapeHtml(m.text);
-        const delBtn  = `<button class="inbox-msg-del" onclick="deleteInboxMsg(${conv.id},${idx})" title="Delete">×</button>`;
-        const initial = m.sent ? me.charAt(0).toUpperCase() : conv.with.charAt(0).toUpperCase();
+        const isOffer  = !!m.offerCard;
+        const content  = isOffer
+            ? buildOfferCardHTML(m.offerCard, m.sent, conv.id, idx)
+            : (m.photo ? `<img src="${m.photo}" alt="Photo">` : escapeHtml(m.text));
+        const delBtn   = `<button class="inbox-msg-del" onclick="deleteInboxMsg(${conv.id},${idx})" title="Delete">×</button>`;
+        const initial  = m.sent ? me.charAt(0).toUpperCase() : conv.with.charAt(0).toUpperCase();
+        const colClass = isOffer ? 'inbox-msg-col offer-col' : 'inbox-msg-col';
+        const bubClass = isOffer ? 'inbox-msg-bubble offer-bubble' : 'inbox-msg-bubble';
         return `${divider}
             <div class="inbox-msg-row ${m.sent?'sent':'received'}" ontouchstart="this.classList.toggle('del-visible')">
                 ${!m.sent ? delBtn : ''}
                 <div class="inbox-msg-avatar">${initial}</div>
-                <div class="inbox-msg-col">
-                    <div class="inbox-msg-bubble">${content}</div>
+                <div class="${colClass}">
+                    <div class="${bubClass}">${content}</div>
                     <div class="inbox-msg-time">${m.clock}</div>
                 </div>
                 ${m.sent ? delBtn : ''}
@@ -5256,26 +5299,97 @@ function submitOffer() {
     const part  = getPartById(currentOpenPartId);
     if (!part) return;
     const price = parseFloat(document.getElementById('offerPriceInput').value);
-    if (!price || price < 1)          { showToast('Please enter a valid offer amount (minimum $1)'); return; }
-    if (price >= part.price)          { showToast(`Offer must be below the listed price of $${part.price}`); return; }
+    if (!price || price < 1)  { showToast('Please enter a valid offer amount (minimum $1)'); return; }
+    if (price >= part.price)  { showToast(`Offer must be below the listed price of $${part.price}`); return; }
     const note  = document.getElementById('offerNoteInput').value.trim();
+
     const offer = {
-        id:           nextOfferId(),
-        partId:       part.id,
-        partTitle:    part.title,
-        partImg:      part.images[0],
-        listedPrice:  part.price,
-        offerPrice:   price,
-        buyerNote:    note,
-        buyer:        currentUserName || 'Buyer',
-        date:         new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
-        status:       'pending',
-        counterPrice: null
+        id: nextOfferId(), partId: part.id, partTitle: part.title,
+        partImg: part.images[0], listedPrice: part.price, offerPrice: price,
+        buyerNote: note, buyer: currentUserName || 'Buyer',
+        date: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status: 'pending', counterPrice: null
     };
     offersDb.push(offer);
     saveOffers();
+
+    // Route offer into inbox conversation with seller
+    let conv = conversations.find(c => c.partId === part.id && c.with === part.seller);
+    if (!conv) {
+        conv = { id: nextConvId(), with: part.seller, partId: part.id, unread: false, msgs: [] };
+        conversations.push(conv);
+    }
+    conv.msgs.push({
+        id: nextMsgId(conv), sent: true, time: 'Today', clock: nowClock(),
+        text: `I'd like to offer $${price} for your ${part.title}.`,
+        offerCard: {
+            offerId: offer.id, partTitle: part.title, partImg: part.images[0],
+            listedPrice: part.price, offerPrice: price, buyerNote: note, status: 'pending'
+        }
+    });
+    saveConversations();
+    updateInboxBadge();
+
     closeOfferSheet();
-    showToast(`Offer of $${price} submitted!`);
+    showToast(`Offer of $${price} sent to ${part.seller}!`);
+    onOpenInbox();
+    setTimeout(() => openInboxConv(conv.id), 220);
+}
+
+function acceptOfferCard(convId, msgIdx) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    const msg = conv.msgs[msgIdx];
+    if (!msg?.offerCard) return;
+    msg.offerCard.status = 'accepted';
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, time: 'Today', clock: nowClock(), text: `Offer accepted! Let's arrange the sale.` });
+    saveConversations();
+    renderInboxMsgs(conv);
+    renderInboxConvList();
+    showToast('Offer accepted!');
+}
+
+function declineOfferCard(convId, msgIdx) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    const msg = conv.msgs[msgIdx];
+    if (!msg?.offerCard) return;
+    msg.offerCard.status = 'declined';
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, time: 'Today', clock: nowClock(), text: `Thanks for your offer, but I'll pass on this one.` });
+    saveConversations();
+    renderInboxMsgs(conv);
+    renderInboxConvList();
+    showToast('Offer declined.');
+}
+
+function showCounterForm(convId, msgIdx) {
+    document.getElementById(`offer-actions-${convId}-${msgIdx}`)?.style.setProperty('display','none');
+    document.getElementById(`offer-counter-${convId}-${msgIdx}`)?.style.setProperty('display','flex');
+    document.getElementById(`offer-counter-input-${convId}-${msgIdx}`)?.focus();
+}
+
+function submitCounter(convId, msgIdx) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    const msg = conv.msgs[msgIdx];
+    if (!msg?.offerCard) return;
+    const input = document.getElementById(`offer-counter-input-${convId}-${msgIdx}`);
+    const counterPrice = parseFloat(input?.value);
+    if (!counterPrice || counterPrice < 1) { showToast('Enter a valid counter price'); return; }
+    msg.offerCard.status = 'countered';
+    msg.offerCard.counterPrice = counterPrice;
+    conv.msgs.push({
+        id: nextMsgId(conv), sent: true, time: 'Today', clock: nowClock(),
+        text: `I can do $${counterPrice} — happy to arrange from there.`,
+        offerCard: {
+            ...msg.offerCard, offerPrice: counterPrice,
+            status: 'pending', isCounter: true, counterPrice: null
+        }
+    });
+    saveConversations();
+    renderInboxMsgs(conv);
+    renderInboxConvList();
+    showToast(`Counter offer of $${counterPrice} sent.`);
 }
 
 function acceptOffer(offerId) {
