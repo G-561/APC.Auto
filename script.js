@@ -1784,6 +1784,68 @@ function renderBuyerStars(selected) {
     }
 }
 
+function renderBuyerPicker(listingId, currentName) {
+    const container = document.getElementById('rateBuyerPicker');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const enquirers = [...new Set(
+        conversations.filter(c => c.partId === listingId).map(c => c.with)
+    )];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'buyer-picker';
+
+    if (enquirers.length > 0) {
+        enquirers.forEach(name => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'buyer-chip' + (name === currentName ? ' selected' : '');
+            chip.textContent = name;
+            chip.onclick = () => {
+                wrap.querySelectorAll('.buyer-chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                const inp = container.querySelector('.buyer-chip-input');
+                if (inp) inp.value = '';
+            };
+            wrap.appendChild(chip);
+        });
+        // "Someone else" fallback input
+        const other = document.createElement('button');
+        other.type = 'button';
+        other.className = 'buyer-chip' + (!currentName || enquirers.includes(currentName) ? '' : ' selected');
+        other.textContent = 'Other…';
+        other.onclick = () => {
+            wrap.querySelectorAll('.buyer-chip').forEach(c => c.classList.remove('selected'));
+            other.classList.add('selected');
+            inp.style.display = '';
+            inp.focus();
+        };
+        wrap.appendChild(other);
+
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'buyer-chip-input';
+        inp.placeholder = 'Enter buyer name';
+        inp.style.display = (!currentName || enquirers.includes(currentName)) ? 'none' : '';
+        inp.value = (!currentName || enquirers.includes(currentName)) ? '' : currentName;
+        inp.id = 'rateBuyerName';
+        wrap.appendChild(inp);
+    } else {
+        // No conversations — plain text input
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'buyer-chip-input';
+        inp.placeholder = 'e.g. John D.';
+        inp.value = currentName || '';
+        inp.id = 'rateBuyerName';
+        inp.style.display = '';
+        wrap.appendChild(inp);
+    }
+
+    container.appendChild(wrap);
+}
+
 function openEditListing(listingId) {
     const listing = userListings.find(l => l.id === listingId);
     if (!listing) return;
@@ -1830,9 +1892,8 @@ function openEditListing(listingId) {
     selectListingStatus(statusStr);
     const br = listing.buyerRating || {};
     renderBuyerStars(br.stars || 0);
-    const nameEl = document.getElementById('rateBuyerName');
+    renderBuyerPicker(listingId, br.buyerName || '');
     const noteEl = document.getElementById('rateBuyerNote');
-    if (nameEl) nameEl.value = br.buyerName || '';
     if (noteEl) noteEl.value = br.note || '';
 
     updateSellFittingToggleVisibility();
@@ -2094,9 +2155,15 @@ function submitSellListing() {
             }
             // Save buyer rating if marked sold
             if (currentEditStatus === 'sold' && currentBuyerRating > 0) {
+                // Prefer selected chip; fall back to text input
+                const selectedChip = document.querySelector('#rateBuyerPicker .buyer-chip.selected:not(.other-chip)');
+                const textInput = document.getElementById('rateBuyerName');
+                const buyerName = (selectedChip && selectedChip.textContent !== 'Other…')
+                    ? selectedChip.textContent.trim()
+                    : (textInput?.value.trim() || '');
                 listingPayload.buyerRating = {
                     stars: currentBuyerRating,
-                    buyerName: document.getElementById('rateBuyerName')?.value.trim() || '',
+                    buyerName,
                     note: document.getElementById('rateBuyerNote')?.value.trim() || '',
                     date: Date.now()
                 };

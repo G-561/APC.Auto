@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1031,8 +1031,8 @@
                         <h4>Rate Your Buyer</h4>
                         <div class="rate-stars-row" id="rateBuyerStars"></div>
                         <div class="input-group" style="margin-top:12px;">
-                            <label>Buyer's name <span style="font-weight:400;color:#aaa;">optional</span></label>
-                            <input id="rateBuyerName" type="text" placeholder="e.g. John D.">
+                            <label>Who bought it?</label>
+                            <div id="rateBuyerPicker"></div>
                         </div>
                         <div class="input-group" style="margin-top:10px;">
                             <label>Note <span style="font-weight:400;color:#aaa;">optional</span></label>
@@ -2020,7 +2020,7 @@
     </div>
 </div>
 
-<script src="script.js?v=14"></script>
+<script src="script.js?v=15"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
