@@ -1649,6 +1649,8 @@ function renderMyParts() {
         const thumb = document.createElement('img');
         thumb.src = part.images[0];
         thumb.className = 'my-part-thumb';
+        thumb.style.cursor = 'pointer';
+        thumb.onclick = (e) => { e.stopPropagation(); openItemDetail(part.id); };
 
         const info = document.createElement('div');
         info.className = 'my-part-info';
@@ -1798,7 +1800,7 @@ function openEditListing(listingId) {
     if (submit) submit.textContent = 'UPDATE LISTING';
     updateSellFittingToggleVisibility();
     const sellOverlayEl = document.getElementById('sellOverlay');
-    if (sellOverlayEl) sellOverlayEl.style.zIndex = '2010'; // float above any open drawer
+    if (sellOverlayEl) sellOverlayEl.style.zIndex = '3200'; // float above myPartsDrawer (3100) and detailOverlay (3150)
     toggleDrawer('sellOverlay', true);  // allowStack: keep myPartsDrawer open behind
 }
 
