@@ -939,8 +939,54 @@ async function loadConversationsFromSupabase(userId) {
         saveConversations();
         renderInboxConvList();
         updateInboxBadge();
+        subscribeToRealtimeMessages();
     } catch (e) { console.warn('Load conversations:', e); }
 }
+
+// ── SUPABASE REALTIME ─────────────────────────────────────────
+let _realtimeChannel = null;
+
+function subscribeToRealtimeMessages() {
+    if (!currentUserId) return;
+    if (_realtimeChannel) { sb.removeChannel(_realtimeChannel); _realtimeChannel = null; }
+
+    _realtimeChannel = sb.channel('inbox-' + currentUserId)
+        .on('postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'messages' },
+            (payload) => {
+                const msg = payload.new;
+                if (!msg) return;
+                if (msg.sender_id === currentUserId) return; // own message already shown
+
+                const conv = conversations.find(c => c.supabaseConvId === msg.conversation_id);
+                if (!conv) return;
+
+                conv.msgs.push({
+                    id: nextMsgId(conv),
+                    sent: false,
+                    text: msg.text || '',
+                    ...(msg.photo_url ? { photo: msg.photo_url } : {}),
+                    time: formatMsgDate(msg.created_at || new Date().toISOString()),
+                    clock: formatMsgTime(msg.created_at || new Date().toISOString()),
+                });
+                conv.unread = true;
+                saveConversations();
+
+                if (activeConvId === conv.id) renderInboxMsgs(conv);
+                renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+                updateInboxBadge();
+
+                const inboxOpen = document.getElementById('inboxDrawer')?.classList.contains('active');
+                if (!inboxOpen) showToast(`New message from ${conv.with}`);
+            }
+        )
+        .subscribe();
+}
+
+function unsubscribeRealtime() {
+    if (_realtimeChannel) { sb.removeChannel(_realtimeChannel); _realtimeChannel = null; }
+}
+
 
 function loadRememberedUser() {
     try {
@@ -3405,6 +3451,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadUserListingsFromSupabase(session.user.id);
             loadConversationsFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
+            unsubscribeRealtime();
             userIsSignedIn = false;
             currentUserName = null;
             currentUserTier = null;
