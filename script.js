@@ -1350,12 +1350,14 @@ function toggleListingPending() {
     const listing = userListings.find(l => l.id === conv.partId);
     if (!listing) { showToast('Listing not found'); return; }
     listing.status = listing.status === 'pending' ? undefined : 'pending';
+    const newStatus = listing.status || 'active';
     saveUserListings();
     syncInboxPendingBtn();
     renderMainGrid();
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
-    showToast(listing.status === 'pending' ? 'Listing marked as Pending' : 'Pending status removed');
+    showToast(newStatus === 'pending' ? 'Listing marked as Pending' : 'Pending status removed');
+    syncListingStatusToSupabase(listing, newStatus);
 }
 
 function clearListingPending(partId) {
@@ -2151,16 +2153,25 @@ function renderWantedSearchResults(mainGrid) {
 }
 
 // --- RENDER MY PARTS ---
+async function syncListingStatusToSupabase(listing, status) {
+    if (!listing.supabaseId) return;
+    const row = { status: status || 'active' };
+    if (status === 'sold') row.sold_at = new Date().toISOString();
+    if (status === 'active') row.sold_at = null;
+    await sb.from('listings').update(row).eq('id', listing.supabaseId);
+}
+
 function setListingStatus(id, status) {
     const part = userListings.find(p => p.id === id);
     if (!part) return;
-    if (status === null || status === undefined) delete part.status;
+    if (status === null || status === undefined) { delete part.status; status = 'active'; }
     else part.status = status;
     saveUserListings();
     renderMainGrid();
     renderMyParts();
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
     showToast(status === 'pending' ? 'Marked as Pending' : status === 'sold' ? 'Marked as Sold' : 'Listing relisted as Active');
+    syncListingStatusToSupabase(part, status);
 }
 
 function confirmDeleteListing(id) {
@@ -6019,14 +6030,23 @@ function declineMockOffer(mockId) {
 }
 
 function markSold(partId) {
-    if (!confirm('Mark this listing as sold?')) return;
     const listing = userListings.find(l => l.id === partId);
     if (!listing) return;
-    listing.status   = 'sold';
-    listing.soldDate = Date.now();
-    saveUserListings();
-    renderDashboard();
-    showToast('Listing marked as sold');
+    showConfirmDialog(
+        'Mark as Sold',
+        `Mark "${listing.title}" as sold? It will move to your sold history.`,
+        'Mark Sold',
+        () => {
+            listing.status   = 'sold';
+            listing.soldDate = Date.now();
+            saveUserListings();
+            renderMainGrid();
+            renderMyParts();
+            renderDashboard();
+            showToast('Listing marked as sold');
+            syncListingStatusToSupabase(listing, 'sold');
+        }
+    );
 }
 
 function relistPart(partId) {
@@ -6035,8 +6055,11 @@ function relistPart(partId) {
     listing.status   = 'active';
     listing.soldDate = null;
     saveUserListings();
+    renderMainGrid();
+    renderMyParts();
     renderDashboard();
-    showToast('Listing relisted');
+    showToast('Listing relisted as active');
+    syncListingStatusToSupabase(listing, 'active');
 }
 
 // --- PRO DASHBOARD ---
