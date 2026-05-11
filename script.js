@@ -1711,7 +1711,15 @@ function nextPartId() {
     return ids.length ? Math.max(...ids) + 1 : 1;
 }
 function getAllParts() {
-    return [...partDatabase, ...userListings].filter(p => p.status !== 'sold' && p.status !== 'removed');
+    const seen = new Set();
+    // userListings first so owner's copy wins over partDatabase copy on dedup
+    return [...userListings, ...partDatabase].filter(p => {
+        if (p.status === 'sold' || p.status === 'removed') return false;
+        const key = p.supabaseId || p.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 function findPartAnywhere(id) {
     return [...partDatabase, ...userListings].find(p => p.id === id);
@@ -3737,7 +3745,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Restore session on page load + react to sign in / sign out events
     sb.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
             currentUserId = session.user.id;
             // Sign in immediately with email fallback so UI updates without waiting for profile fetch
             const emailName = session.user.email.split('@')[0];
