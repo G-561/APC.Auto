@@ -3718,20 +3718,21 @@ function submitAddVehicle() {
 // Remove a vehicle (used later from vehicle detail/edit)
 function deleteVehicle(id) {
     const vehicle = myVehicles.find(v => v.id === id);
-    const hasWanted = myWanted.some(w => w.vehicleId === id);
-    const msg = hasWanted
-        ? `Remove this vehicle? All ${myWanted.filter(w => w.vehicleId === id).length} wanted part(s) for it will also be removed.`
+    const wantedCount = myWanted.filter(w => w.vehicleId === id).length;
+    const msg = wantedCount
+        ? `Remove this vehicle? The ${wantedCount} wanted part(s) linked to it will also be removed.`
         : 'Remove this vehicle from your garage?';
-    if (!confirm(msg)) return;
-    myVehicles = myVehicles.filter(v => v.id !== id);
-    myWanted = myWanted.filter(w => w.vehicleId !== id);
-    saveVehicles();
-    saveWanted();
-    if (currentVehicleId === id) {
-        currentVehicleId = null;
-        toggleDrawer('vehicleDetailDrawer');
-    }
-    renderGarage();
+    showConfirmDialog('Remove Vehicle', msg, 'Remove', () => {
+        myVehicles = myVehicles.filter(v => v.id !== id);
+        myWanted   = myWanted.filter(w => w.vehicleId !== id);
+        saveVehicles();
+        saveWanted();
+        const vdd = document.getElementById('vehicleDetailDrawer');
+        if (vdd) vdd.classList.remove('active');
+        if (currentVehicleId === id) currentVehicleId = null;
+        renderGarage();
+        syncBackdrop();
+    });
 }
 
 
