@@ -2880,7 +2880,7 @@ function printSellLabel(listing) {
 </div>`;
     const qrEl = document.getElementById('sellLabelQr');
     if (qrEl && window.QRCode) {
-        const qrText = apcId + '\n' + (listing.title || '') + '\nBin: ' + (listing.warehouseBin || 'N/A') + '\nPrice: $' + listing.price;
+        const qrText = [apcId, listing.title || '', listing.stockNumber ? 'Stock: ' + listing.stockNumber : '', condition].filter(Boolean).join('\n');
         new QRCode(qrEl, { text: qrText, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
     }
     document.body.classList.add('printing-sell-label');
@@ -5925,7 +5925,8 @@ function printPartLabel(partId) {
     if (qrEl) {
         qrEl.innerHTML = '';
         const apcId  = part.apcId || ('APC-' + part.id);
-        const qrText = apcId + '\n' + part.title + '\nBin: ' + (part.warehouseBin || 'N/A') + '\nPrice: $' + part.price;
+        const condLabel = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[part.condition] || part.condition || '';
+        const qrText = [apcId, part.title, part.stockNumber ? 'Stock: ' + part.stockNumber : '', condLabel].filter(Boolean).join('\n');
         new QRCode(qrEl, { text: qrText, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
     }
 
