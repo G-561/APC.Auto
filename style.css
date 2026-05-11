@@ -2732,6 +2732,7 @@ header {
 .shared-choice-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .shared-choice-box .choice-item { justify-content: flex-start; }
 .choice-item { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.choice-item input[type="checkbox"] { accent-color: var(--apc-orange); width: 17px; height: 17px; cursor: pointer; flex-shrink: 0; }
 
 /* Workshop filter — collapsible panel */
 .ws-filter-toggle-row { margin-bottom: 10px; }
