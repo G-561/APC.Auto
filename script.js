@@ -583,17 +583,41 @@ function saveUserListings() {
 
 // --- SUPABASE LISTINGS SYNC ---
 
+function compressBase64(base64, maxPx, quality) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => {
+            let w = img.width, h = img.height;
+            if (w > maxPx || h > maxPx) {
+                if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+                else { w = Math.round(w * maxPx / h); h = maxPx; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(base64);
+        img.src = base64;
+    });
+}
+
+function thumbUrl(src, width = 400) {
+    if (!src || !src.includes('/storage/v1/object/public/')) return src;
+    return src.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + `?width=${width}&quality=65`;
+}
+
 async function uploadListingImagesToStorage(listingUUID, base64Images) {
     const urls = [];
     for (let i = 0; i < base64Images.length; i++) {
         const b64 = base64Images[i];
         if (!b64 || !b64.startsWith('data:')) { urls.push(b64); continue; }
         try {
-            const res = await fetch(b64);
+            const compressed = await compressBase64(b64, 1600, 0.88);
+            const res = await fetch(compressed);
             const blob = await res.blob();
-            const ext = blob.type.includes('png') ? 'png' : 'jpg';
-            const path = `${listingUUID}/${i}.${ext}`;
-            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: blob.type, upsert: true });
+            const path = `${listingUUID}/${i}.jpg`;
+            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
             if (error) { showToast('Storage error: ' + error.message); continue; }
             const { data } = sb.storage.from('listing-images').getPublicUrl(path);
             urls.push(data.publicUrl);
@@ -676,7 +700,7 @@ async function loadPublicListingsFromSupabase() {
             .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
             .eq('status', 'active')
             .order('created_at', { ascending: false })
-            .limit(100);
+            .limit(40);
         if (error || !rows?.length) return;
 
         let added = false;
@@ -1871,7 +1895,7 @@ function buildCardHTML(part) {
 
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
-            <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="lazy">
+            <img class="item-img" src="${thumbUrl(part.images[0])}" alt="${part.title}" loading="lazy">
             ${pendingBanner}
             <div class="item-info">
                 <div class="price-row">
@@ -1974,9 +1998,7 @@ function renderMainGrid() {
         updateGridHeading('Recently Listed', filtered.length);
     }
 
-    filtered.forEach(part => {
-        mainGrid.innerHTML += buildCardHTML(part);
-    });
+    mainGrid.innerHTML = filtered.map(buildCardHTML).join('');
 }
 
 // Returns true if this seller already has a listing covering the wanted request.
