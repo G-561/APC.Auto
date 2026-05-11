@@ -116,9 +116,10 @@ header {
     font-size: 14px;
     font-weight: 900;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    overflow: hidden;
+    box-shadow: 0 0 0 2px #F7941D, 0 0 10px rgba(247,148,29,0.45);
 }
-.pill-avatar.pro { background: var(--apc-blue); }
+.pill-avatar.pro { background: var(--apc-blue); box-shadow: 0 0 0 2px #007AFF, 0 0 10px rgba(0,122,255,0.45); }
 
 /* ACCOUNT MENU AVATAR — shared by drawer + dropdown */
 .account-menu-avatar {
