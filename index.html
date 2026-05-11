@@ -1656,18 +1656,16 @@
     <div class="drawer-content">
         <div class="filter-section">
             <h4>Vehicle</h4>
-            <div class="input-row-flex">
-                <div class="input-group"><label>Make *</label><input type="text" id="vehMake" placeholder="e.g. Toyota"></div>
-                <div class="input-group"><label>Model *</label><input type="text" id="vehModel" placeholder="e.g. Hiace"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 90px; gap:8px; margin-bottom:8px;">
+                <div class="input-group" style="margin:0;"><label>Make *</label><select id="vehMake" onchange="onVehMakeChange()"><option value="">Make</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Model *</label><select id="vehModel"><option value="">Model</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Year *</label><select id="vehYear"><option value="">Year</option></select></div>
             </div>
-            <div class="input-row-flex">
-                <div class="input-group"><label>Year *</label><input type="number" id="vehYear" placeholder="2019" min="1900" max="2030"></div>
-                <div class="input-group"><label>Variant</label><input type="text" id="vehVariant" placeholder="e.g. GTti, LWB"></div>
-            </div>
+            <div class="input-group"><label>Variant</label><input type="text" id="vehVariant" placeholder="e.g. GTti, LWB, Turbo"></div>
         </div>
         <div class="filter-section">
             <h4>Optional</h4>
-            <div class="input-group"><label>Nickname</label><input type="text" id="vehNickname" placeholder="e.g. Daily driver"></div>
+            <div class="input-group"><label>Nickname</label><input type="text" id="vehNickname" placeholder="e.g. Daily driver, Track car"></div>
             <div class="input-group"><label>VIN</label><input type="text" id="vehVin" placeholder="17-character VIN" maxlength="17"></div>
         </div>
         <div class="action-container"><button class="btn-full-action" onclick="submitAddVehicle()">SAVE VEHICLE</button></div>

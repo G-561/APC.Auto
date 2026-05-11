@@ -3607,7 +3607,6 @@ document.addEventListener('DOMContentLoaded', () => {
 const VEHICLES_STORAGE_KEY = 'apc.vehicles.v1';
 let myVehicles = loadVehicles();
 let editingVehicleId = null;
-let primaryVehicleId = Number(localStorage.getItem('apcPrimaryVehicle')) || null;
 
 function loadVehicles() {
     try {
@@ -3630,15 +3629,32 @@ function onOpenGarage() {
 }
 
 // Open the Add Vehicle form on top of the garage drawer
+function initVehicleDropdowns(make, model, year) {
+    const makeEl  = document.getElementById('vehMake');
+    const modelEl = document.getElementById('vehModel');
+    const yearEl  = document.getElementById('vehYear');
+    if (!makeEl || !modelEl || !yearEl) return;
+    makeEl.innerHTML  = buildMakeOptions(make || '');
+    modelEl.innerHTML = buildModelOptions(make || '', model || '');
+    yearEl.innerHTML  = buildYearOptions(year || '');
+}
+
+function onVehMakeChange() {
+    const make    = document.getElementById('vehMake')?.value || '';
+    const modelEl = document.getElementById('vehModel');
+    if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
+}
+
 function onAddVehicleClick() {
     editingVehicleId = null;
     const title = document.querySelector('#addVehicleDrawer .drawer-header span');
     if (title) title.textContent = 'ADD VEHICLE';
-    ['vehMake','vehModel','vehYear','vehVariant','vehNickname','vehVin'].forEach(id => {
+    initVehicleDropdowns('', '', '');
+    ['vehVariant','vehNickname','vehVin'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
-    toggleDrawer('addVehicleDrawer', true);  // stack — keeps garage open underneath
+    toggleDrawer('addVehicleDrawer', true);
 }
 
 function openEditVehicleDrawer(id) {
@@ -3647,9 +3663,7 @@ function openEditVehicleDrawer(id) {
     editingVehicleId = id;
     const title = document.querySelector('#addVehicleDrawer .drawer-header span');
     if (title) title.textContent = 'EDIT VEHICLE';
-    document.getElementById('vehMake').value     = v.make     || '';
-    document.getElementById('vehModel').value    = v.model    || '';
-    document.getElementById('vehYear').value     = v.year     || '';
+    initVehicleDropdowns(v.make || '', v.model || '', v.year || '');
     document.getElementById('vehVariant').value  = v.variant  || '';
     document.getElementById('vehNickname').value = v.nickname || '';
     document.getElementById('vehVin').value      = v.vin      || '';
@@ -3672,15 +3686,11 @@ function submitAddVehicle() {
     const nickname = document.getElementById('vehNickname').value.trim();
     const vin      = document.getElementById('vehVin').value.trim();
 
-    if (!make || !model || !yearStr) {
-        showToast('Make, Model and Year are required.');
+    if (!make || !model) {
+        showToast('Make and Model are required.');
         return;
     }
-    const year = Number(yearStr);
-    if (!Number.isFinite(year) || year < 1900 || year > 2030) {
-        showToast('Please enter a valid 4-digit year (1900–2030).');
-        return;
-    }
+    const year = yearStr ? Number(yearStr) : '';
 
     if (editingVehicleId) {
         const idx = myVehicles.findIndex(v => v.id === editingVehicleId);
@@ -3724,11 +3734,6 @@ function deleteVehicle(id) {
     renderGarage();
 }
 
-function setPrimaryVehicle(id) {
-    primaryVehicleId = (primaryVehicleId === id) ? null : id;
-    try { localStorage.setItem('apcPrimaryVehicle', primaryVehicleId ?? ''); } catch(e) {}
-    renderGarage();
-}
 
 // Render the garage list — XSS-safe via createElement + textContent
 function renderGarage() {
@@ -3737,86 +3742,44 @@ function renderGarage() {
     list.innerHTML = '';
 
     if (myVehicles.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'garage-empty';
-        empty.innerHTML = `
-            <div class="ico">🏠</div>
-            <div class="title">Your garage is empty</div>
-            <div class="sub">Add a vehicle and we'll show you parts that fit, plus notify you when wanted parts come up for sale.</div>`;
-        list.appendChild(empty);
+        list.innerHTML = `
+            <div class="garage-empty">
+                <div class="ico">🏠</div>
+                <div class="title">Your garage is empty</div>
+                <div class="sub">Add a vehicle and we'll show you parts that fit, plus notify you when wanted parts come up for sale.</div>
+            </div>`;
+        const detail = document.getElementById('garageInlineDetail');
+        if (detail) detail.style.display = 'none';
         return;
     }
 
-    const sorted = [...myVehicles].sort((a, b) => {
-        if (a.id === primaryVehicleId) return -1;
-        if (b.id === primaryVehicleId) return 1;
-        return 0;
+    myVehicles.forEach(v => {
+        const meta = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ');
+        const row = document.createElement('div');
+        row.className = 'garage-row';
+        row.dataset.vehicleId = v.id;
+        row.onclick = () => selectGarageVehicle(v.id);
+        row.innerHTML = `
+            <div class="garage-row-info">
+                <div class="garage-row-name">${v.make} ${v.model}</div>
+                ${meta ? `<div class="garage-row-meta">${meta}</div>` : ''}
+            </div>
+            <div class="garage-row-actions">
+                <button class="garage-row-edit" onclick="event.stopPropagation(); openEditVehicleDrawer(${v.id})">Edit</button>
+                <button class="garage-row-delete" onclick="event.stopPropagation(); deleteVehicle(${v.id})">×</button>
+            </div>`;
+        list.appendChild(row);
     });
 
-    sorted.forEach(v => {
-        const isPrimary = v.id === primaryVehicleId;
-
-        const card = document.createElement('div');
-        card.className = 'vehicle-card' + (isPrimary ? ' vehicle-card-primary' : '');
-        card.dataset.vehicleId = v.id;
-        card.onclick = () => selectGarageVehicle(v.id);
-
-        // Edit — top left
-        const editBtn = document.createElement('button');
-        editBtn.className = 'vehicle-tile-edit';
-        editBtn.textContent = '✏️';
-        editBtn.onclick = (e) => { e.stopPropagation(); openEditVehicleDrawer(v.id); };
-
-        // Delete — top right
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'vehicle-delete';
-        deleteBtn.textContent = '×';
-        deleteBtn.onclick = (e) => { e.stopPropagation(); deleteVehicle(v.id); };
-
-        // Name + meta
-        const info = document.createElement('div');
-        info.className = 'vehicle-card-info';
-
-        const name = document.createElement('div');
-        name.className = 'vehicle-card-name';
-        name.textContent = `${v.make} ${v.model}`;
-
-        const meta = document.createElement('div');
-        meta.className = 'vehicle-card-meta';
-        meta.textContent = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
-
-        info.appendChild(name);
-        info.appendChild(meta);
-
-        // Star — bottom left
-        const starBtn = document.createElement('button');
-        starBtn.className = 'vehicle-star-btn' + (isPrimary ? ' active' : '');
-        starBtn.textContent = isPrimary ? '★' : '☆';
-        starBtn.title = isPrimary ? 'Remove as primary' : 'Set as primary vehicle';
-        starBtn.onclick = (e) => { e.stopPropagation(); setPrimaryVehicle(v.id); };
-
-        card.appendChild(editBtn);
-        card.appendChild(deleteBtn);
-        card.appendChild(info);
-        card.appendChild(starBtn);
-        list.appendChild(card);
-    });
-
-    // Auto-select primary vehicle or first in list
-    const autoId = (primaryVehicleId && myVehicles.find(v => v.id === primaryVehicleId))
-        ? primaryVehicleId
-        : sorted[0]?.id;
-    if (autoId) selectGarageVehicle(autoId);
+    if (myVehicles[0]) selectGarageVehicle(myVehicles[0].id);
 }
 
 function selectGarageVehicle(vehicleId) {
     currentVehicleId  = vehicleId;
     currentVehicleTab = 'wanted';
-
-    document.querySelectorAll('#garageVehicleList .vehicle-card').forEach(c => {
-        c.classList.toggle('vehicle-card-selected', Number(c.dataset.vehicleId) === vehicleId);
+    document.querySelectorAll('#garageVehicleList .garage-row').forEach(r => {
+        r.classList.toggle('garage-row-selected', Number(r.dataset.vehicleId) === vehicleId);
     });
-
     renderGarageInlineDetail();
 }
 
