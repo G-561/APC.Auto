@@ -1736,8 +1736,13 @@
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 80px; gap:8px;">
                 <div class="input-group" style="margin:0;"><label>Make</label><select id="wantedMake" onchange="onWantedMakeChange()"><option value="">Make</option></select></div>
-                <div class="input-group" style="margin:0;"><label>Model</label><select id="wantedModel"><option value="">Model</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Model</label><select id="wantedModel" onchange="checkWantedGaragePrompt()"><option value="">Model</option></select></div>
                 <div class="input-group" style="margin:0;"><label>Year</label><select id="wantedYear"><option value="">Year</option></select></div>
+            </div>
+            <!-- Inline add-to-garage prompt -->
+            <div id="wantedGaragePrompt" style="display:none; margin-top:10px; background:#fff8ee; border:1.5px solid rgba(247,148,29,0.3); border-radius:10px; padding:10px 14px; align-items:center; justify-content:space-between; gap:10px;">
+                <span id="wantedGaragePromptText" style="font-size:12px; font-weight:700; color:#555; flex:1;"></span>
+                <button onclick="saveWantedVehicleToGarage()" style="background:var(--apc-orange); border:none; color:white; font-size:11px; font-weight:800; padding:6px 14px; border-radius:20px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">+ Add to Garage</button>
             </div>
         </div>
 

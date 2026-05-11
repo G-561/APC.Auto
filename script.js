@@ -2373,12 +2373,30 @@ function initWantedVehicleDropdowns(make, model, year) {
     makeEl.innerHTML  = buildMakeOptions(make || '');
     modelEl.innerHTML = buildModelOptions(make || '', model || '');
     yearEl.innerHTML  = buildYearOptions(year || '');
+    checkWantedGaragePrompt();
 }
 
 function onWantedMakeChange() {
     const make    = document.getElementById('wantedMake')?.value || '';
     const modelEl = document.getElementById('wantedModel');
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
+    checkWantedGaragePrompt();
+}
+
+function checkWantedGaragePrompt() {
+    const make  = document.getElementById('wantedMake')?.value || '';
+    const model = document.getElementById('wantedModel')?.value || '';
+    const prompt = document.getElementById('wantedGaragePrompt');
+    const label  = document.getElementById('wantedGaragePromptText');
+    if (!prompt) return;
+    if (!make || !model) { prompt.style.display = 'none'; return; }
+    const alreadyIn = myVehicles.some(v =>
+        v.make.toLowerCase() === make.toLowerCase() &&
+        v.model.toLowerCase() === model.toLowerCase()
+    );
+    if (alreadyIn) { prompt.style.display = 'none'; return; }
+    if (label) label.textContent = `${make} ${model} isn't in your garage yet.`;
+    prompt.style.display = 'flex';
 }
 
 function openSellOverlay() {
@@ -4458,6 +4476,7 @@ function saveWantedVehicleToGarage() {
     saveVehicles();
     renderGarage();
     populateWantedGarageChips(make, model, year);
+    checkWantedGaragePrompt();
     showToast(`${make} ${model} saved to garage`);
 }
 
