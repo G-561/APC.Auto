@@ -4420,6 +4420,19 @@ function renderWantedList() {
     if (!body) return;
     body.innerHTML = '';
 
+    // Purge any entries with no part name (orphaned vehicle-only rows)
+    const blanks = myWanted.filter(w => !w.partName);
+    if (blanks.length) {
+        blanks.forEach(w => {
+            myWanted = myWanted.filter(x => x.id !== w.id);
+            if (w.supabaseId && currentUserId) {
+                sb.from('wanted_parts').delete().eq('id', w.supabaseId)
+                  .then(({ error }) => { if (error) console.warn('wanted purge:', error.message); });
+            }
+        });
+        saveWanted();
+    }
+
     if (!myWanted.length) {
         body.innerHTML = `
             <div style="text-align:center; padding:48px 20px; color:#aaa;">
@@ -4456,11 +4469,11 @@ function renderWantedList() {
             hdr.textContent = 'Watching';
             body.appendChild(hdr);
         }
-        const vehicleKeys = [...new Set(watching.filter(w => w.make).map(w => `${w.make}||${w.model}||${w.year}`))];
+        const vehicleKeys = [...new Set(watching.filter(w => w.make).map(w => `${w.make}||${w.model}||${String(w.year||'')}` ))];
         const noVehicle   = watching.filter(w => !w.make);
         const groups = vehicleKeys.map(key => {
             const [make, model, year] = key.split('||');
-            return { label: `${make} ${model}${year ? ' ' + year : ''}`, items: watching.filter(w => w.make === make && w.model === model && w.year === year) };
+            return { label: `${make} ${model}${year ? ' ' + year : ''}`, items: watching.filter(w => w.make === make && w.model === model && String(w.year||'') === year) };
         });
         if (noVehicle.length) groups.push({ label: 'No vehicle specified', items: noVehicle });
 
