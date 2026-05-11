@@ -3706,7 +3706,7 @@ function sendChatImage(event) {
     if (input) input.focus();
 }
 
-// Allow sending chat with Enter key
+// Allow sending chat with Enter key + auth form Enter-to-submit
 document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chatInput');
     if (chatInput) {
@@ -3714,6 +3714,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') sendChatMessage();
         });
     }
+
+    // Enter key on any sign-in field submits the form
+    ['authEmail', 'authPassword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignInSubmit(); });
+    });
+
+    // Enter key on any personal sign-up field submits
+    ['authNamePersonal', 'authEmailPersonal', 'authPasswordPersonal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignUpPersonalSubmit(); });
+    });
+
+    // Enter key on any Pro sign-up field submits
+    ['authNamePro', 'authBusinessNamePro', 'authAbnPro', 'authEmailPro', 'authPasswordPro'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignUpProSubmit(); });
+    });
 
     // Restore session on page load + react to sign in / sign out events
     sb.auth.onAuthStateChange((event, session) => {
