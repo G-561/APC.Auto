@@ -645,6 +645,9 @@ async function syncListingToSupabase(localListing) {
             postage: !!localListing.postage,
             open_to_offers: !!localListing.openToOffers,
             status: localListing.status || 'active',
+            sold_at: localListing.status === 'sold'
+                ? (localListing.soldDate ? new Date(localListing.soldDate).toISOString() : new Date().toISOString())
+                : null,
             is_pro: !!localListing.isPro,
             stock_number: localListing.stockNumber || null,
             odometer: localListing.odometer || null,
@@ -2937,8 +2940,12 @@ async function submitSellListing() {
             // Apply status from manage section
             if (currentEditStatus && currentEditStatus !== 'active') {
                 listingPayload.status = currentEditStatus;
+                if (currentEditStatus === 'sold' && !existing.soldDate) {
+                    listingPayload.soldDate = Date.now();
+                }
             } else {
                 delete existing.status;
+                listingPayload.soldDate = null;
             }
             // Save buyer rating if marked sold
             if (currentEditStatus === 'sold' && currentBuyerRating > 0) {
