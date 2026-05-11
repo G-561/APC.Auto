@@ -1023,7 +1023,7 @@ async function loadWantedFromSupabase(userId) {
             const existing = myWanted.find(w => w.supabaseId === r.id);
             if (existing) {
                 Object.assign(existing, {
-                    partName: r.part_name || '', make: r.make || '', model: r.model || '',
+                    partName: r.part_name || r.title || '', make: r.make || '', model: r.model || '',
                     year: r.year || '', maxPrice: r.max_price || null, category: r.category || '',
                     mutedNotifications: !!r.muted_notifications
                 });
@@ -1031,7 +1031,7 @@ async function loadWantedFromSupabase(userId) {
                 myWanted.push({
                     id: nextWantedId(),
                     supabaseId: r.id,
-                    partName: r.part_name || '',
+                    partName: r.part_name || r.title || '',
                     make: r.make || '', model: r.model || '', year: r.year || '',
                     maxPrice: r.max_price || null, category: r.category || '',
                     mutedNotifications: !!r.muted_notifications,
@@ -4365,6 +4365,7 @@ function addWanted(partName, make, model, year, maxPrice, category) {
     if (currentUserId) {
         sb.from('wanted_parts').insert({
             user_id: currentUserId,
+            title: partName,
             part_name: partName,
             make: make || '', model: model || '', year: year || '',
             max_price: maxPrice || null, category: category || '',
