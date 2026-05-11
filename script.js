@@ -870,7 +870,7 @@ async function loadConversationsFromSupabase(userId) {
     try {
         const { data: rows, error } = await sb
             .from('conversations')
-            .select('*, messages(id, sender_id, sender_name, text, created_at)')
+            .select('*, messages(id, sender_id, sender_name, text, photo_url, created_at)')
             .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
