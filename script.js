@@ -395,6 +395,7 @@ function renderProfilePicPreview() {
     if (img) { img.src = pic; img.style.display = pic ? 'block' : 'none'; }
     if (ini) { ini.style.display = pic ? 'none' : ''; ini.textContent = initial; }
     if (removeBtn) removeBtn.style.display = pic ? '' : 'none';
+    renderAccountState();
 }
 
 function renderLogoPreview() {
@@ -5682,7 +5683,9 @@ function renderAccountState() {
 
     const initial = (currentUserName || 'G').charAt(0).toUpperCase();
     const isMobile = window.innerWidth < 900;
-    const avatarHTML = `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${initial}</span>`;
+    const pic = userSettings.profilePic || '';
+    const avatarInner = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
+    const avatarHTML = `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${avatarInner}</span>`;
 
     const signUpPrompt = document.getElementById('signUpPrompt');
     const searchModePill = document.getElementById('searchModeToggle');
@@ -5710,8 +5713,13 @@ function renderAccountState() {
                                  currentUserTier === 'standard' ? 'APC Standard member' : '';
     }
     if (menuAvatar) {
-        menuAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
-        menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
+        if (pic) {
+            menuAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            menuAvatar.style.background = 'transparent';
+        } else {
+            menuAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
+            menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
+        }
     }
     if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'standard') ? 'flex' : 'none';
     const settingsUpgradeNudge = document.getElementById('settingsUpgradeNudge');
@@ -5745,8 +5753,13 @@ function renderAccountState() {
     const ddDash    = document.getElementById('acctDdDashboard');
     const ddSwitch  = document.getElementById('proSearchSwitchDd');
     if (ddAvatar) {
-        ddAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
-        ddAvatar.style.background = isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
+        if (pic) {
+            ddAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            ddAvatar.style.background = 'transparent';
+        } else {
+            ddAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
+            ddAvatar.style.background = isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
+        }
     }
     if (ddName)    ddName.textContent = currentUserName || 'Guest';
     if (ddTier) {
