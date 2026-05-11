@@ -3841,7 +3841,7 @@ header {
         bottom: auto !important;
         border-radius: 16px !important;
         box-shadow: 0 8px 40px rgba(0,0,0,0.22) !important;
-        z-index: 2100;
+        z-index: 3250;
     }
 
     /* All full-screen drawers: centre column between sidebars */
