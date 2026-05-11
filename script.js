@@ -6655,4 +6655,3 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
     });
 });
-li
