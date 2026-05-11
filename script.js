@@ -1393,7 +1393,7 @@ function closeInboxThread() {
     document.getElementById('inboxThreadCol').classList.remove('slide-in');
 }
 
-function sendInboxMessage() {
+async function sendInboxMessage() {
     const input = document.getElementById('inboxReplyInput');
     const text  = input?.value.trim();
     if (!text || activeConvId === null) return;
@@ -1404,10 +1404,13 @@ function sendInboxMessage() {
     saveConversations();
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
     renderInboxMsgs(conv);
-    if (conv.supabaseConvId && currentUserId) {
+    if (!currentUserId) return;
+    const ok = await ensureSupabaseConversation(conv);
+    if (!ok) { showToast('Message saved locally — sync failed'); return; }
+    try {
         const isBuyer = conv.buyerId === currentUserId;
-        syncMessageToSupabase(conv.supabaseConvId, text, isBuyer);
-    }
+        await syncMessageToSupabase(conv.supabaseConvId, text, isBuyer);
+    } catch (e) { showToast('Send failed: ' + (e.message || e)); }
 }
 
 function sendInboxPhoto(event) {
@@ -1669,7 +1672,7 @@ function renderTrashList() {
 }
 function filterInboxConvs(val) { renderInboxConvList(val); }
 function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
-function inboxHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendInboxMessage();} }
+function inboxHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); e.stopPropagation(); sendInboxMessage(); } }
 
 function loadInboxItems() {
     try {
