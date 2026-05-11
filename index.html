@@ -993,6 +993,19 @@
                     </div>
                 </div>
 
+                <div id="sellPrintLabelSection" style="display:none;">
+                    <div class="sell-toggle-row">
+                        <div>
+                            <div class="sell-toggle-label">Print Label After Listing</div>
+                            <div class="sell-toggle-sub">Opens print dialog immediately after the part is published</div>
+                        </div>
+                        <label class="settings-toggle">
+                            <input type="checkbox" id="sellPrintLabel">
+                            <span class="settings-toggle-track"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- MANAGE SECTION — only visible when editing an existing listing -->
                 <div id="manageSection" class="manage-section" style="display:none;">
                     <div class="filter-section">
@@ -1998,7 +2011,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="vehicles.js?v=3"></script>
-<script src="script.js?v=50"></script>
+<script src="script.js?v=51"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

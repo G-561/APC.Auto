@@ -2648,6 +2648,8 @@ function resetSellForm() {
     if (fitting) fitting.checked = false;
     const offersToggle = document.getElementById('sellOpenToOffers');
     if (offersToggle) offersToggle.checked = false;
+    const printToggle = document.getElementById('sellPrintLabel');
+    if (printToggle) printToggle.checked = false;
     const qtyInput = document.getElementById('sellQuantity');
     if (qtyInput) qtyInput.value = '';
     const binInput = document.getElementById('sellWarehouseBin');
@@ -2686,6 +2688,8 @@ function updateWarehouseBinVisibility() {
     if (!section) return;
     const warehouseOn = userIsSignedIn && currentUserTier === 'pro' && !!userSettings.warehouseManagement;
     section.style.display = warehouseOn ? 'block' : 'none';
+    const printSection = document.getElementById('sellPrintLabelSection');
+    if (printSection) printSection.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'block' : 'none';
 }
 
 function onToggleWarehouseManagement() {
@@ -2827,11 +2831,65 @@ async function submitSellListing() {
     if (submitBtn) submitBtn.textContent = 'List Part';
     const sellSuccess = document.getElementById('sellSuccessMsg');
     if (sellSuccess) sellSuccess.style.display = 'block';
+
+    const printLabel = currentUserTier === 'pro' && document.getElementById('sellPrintLabel')?.checked;
+    if (printLabel && syncTarget) printPartLabel(syncTarget);
+
     setTimeout(() => {
         if (sellSuccess) sellSuccess.style.display = 'none';
         closeSellOverlay();
         if (submitBtn) submitBtn.disabled = false;
     }, 1500);
+}
+
+function printPartLabel(listing) {
+    const fits = (listing.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal';
+    const condition = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[listing.condition] || listing.condition || '';
+    const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${listing.warehouseBin}</strong></td></tr>` : '';
+    const year = listing.year ? `<tr><td>Year</td><td>${listing.year}</td></tr>` : '';
+
+    const html = `<!DOCTYPE html><html><head><title>Part Label</title>
+<style>
+  @page { size: A6 landscape; margin: 8mm; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; }
+  body { width:100%; }
+  .label { border: 2px solid #222; border-radius: 6px; padding: 10px 12px; }
+  .header { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #222; padding-bottom:8px; margin-bottom:8px; }
+  .brand { font-size:18px; font-weight:900; color:#f7941d; letter-spacing:-0.5px; }
+  .apc-id { font-size:11px; color:#555; text-align:right; }
+  .title { font-size:14px; font-weight:800; margin-bottom:8px; line-height:1.3; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  td { padding:3px 6px 3px 0; vertical-align:top; }
+  td:first-child { color:#555; width:70px; white-space:nowrap; }
+  .price-row { margin-top:8px; border-top:2px solid #222; padding-top:8px; display:flex; align-items:baseline; gap:6px; }
+  .price { font-size:22px; font-weight:900; }
+  .price-label { font-size:11px; color:#555; }
+  @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+</style></head><body>
+<div class="label">
+  <div class="header">
+    <div class="brand">AUTO PARTS CONNECTION</div>
+    <div class="apc-id">${listing.apcId || ''}<br><span style="font-size:10px;color:#aaa;">${date}</span></div>
+  </div>
+  <div class="title">${listing.title || ''}</div>
+  <table>
+    <tr><td>Condition</td><td>${condition}</td></tr>
+    <tr><td>Fits</td><td>${fits}</td></tr>
+    ${year}
+    ${bin}
+    ${listing.stockNumber ? `<tr><td>Stock #</td><td>${listing.stockNumber}</td></tr>` : ''}
+  </table>
+  <div class="price-row">
+    <span class="price">$${listing.price}</span>
+    <span class="price-label">Listed price</span>
+  </div>
+</div>
+<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>
+</body></html>`;
+
+    const w = window.open('', '_blank', 'width=600,height=400');
+    if (w) { w.document.write(html); w.document.close(); }
 }
 
 // --- DYNAMIC ITEM DETAIL ---
@@ -6491,4 +6549,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
     });
 });
-l
+li
