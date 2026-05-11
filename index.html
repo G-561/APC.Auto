@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=34">
+    <link rel="stylesheet" href="style.css?v=35">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -31,8 +31,7 @@
     <header style="padding-bottom: 10px; position: relative;">
         <div class="header-top">
             <div class="logo-main" onclick="closeDashboard(); closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);" style="cursor:pointer;"><img src="images/APC.logo.png" alt="APC Logo"></div>
-            <button id="searchModeToggle" class="search-mode-pill" onclick="toggleSearchMode()" style="display:none;">Search Wanted</button>
-            <div id="accountPillZone">
+<div id="accountPillZone">
                 <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
                 <div id="signUpPrompt" class="sign-up-prompt">Not a member? <a href="#" class="sign-up-link" onclick="openAuthDrawer(null,'signup');return false;">Sign up free</a></div>
             </div>
@@ -2022,7 +2021,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="vehicles.js?v=3"></script>
-<script src="script.js?v=57"></script>
+<script src="script.js?v=58"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
