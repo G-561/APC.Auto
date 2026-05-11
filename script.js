@@ -3779,6 +3779,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         signIn(name, tier, false, session.user.email);
                     }
                 });
+            loadPublicListingsFromSupabase();
             loadUserListingsFromSupabase(session.user.id);
             loadConversationsFromSupabase(session.user.id);
             loadVehiclesFromSupabase(session.user.id);
@@ -3790,7 +3791,16 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserName = null;
             currentUserTier = null;
             currentUserId = null;
+            // Clear all user-specific data so it doesn't bleed into the next account on the same device
+            userListings.splice(0); saveUserListings();
+            conversations.splice(0); saveConversations();
+            myVehicles.splice(0); saveVehicles();
+            myWanted.splice(0); saveWanted();
+            savedParts.clear(); persistSavedParts();
             renderAccountState();
+            renderMainGrid();
+            renderMyParts();
+            renderInboxConvList();
         }
     });
 });
