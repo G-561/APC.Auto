@@ -3856,13 +3856,22 @@ function deleteVehicle(id) {
         : 'Remove this vehicle from your garage?';
     showConfirmDialog('Remove Vehicle', msg, 'Remove', () => {
         const toDelete = myVehicles.find(v => v.id === id);
+        const linkedWanted = myWanted.filter(w => w.vehicleId === id);
         myVehicles = myVehicles.filter(v => v.id !== id);
         myWanted   = myWanted.filter(w => w.vehicleId !== id);
         saveVehicles();
         saveWanted();
-        if (toDelete?.supabaseId && currentUserId) {
-            sb.from('vehicles').delete().eq('id', toDelete.supabaseId)
-              .then(({ error }) => { if (error) console.warn('vehicle delete:', error.message); });
+        if (currentUserId) {
+            if (toDelete?.supabaseId) {
+                sb.from('vehicles').delete().eq('id', toDelete.supabaseId)
+                  .then(({ error }) => { if (error) console.warn('vehicle delete:', error.message); });
+            }
+            linkedWanted.forEach(w => {
+                if (w.supabaseId) {
+                    sb.from('wanted_parts').delete().eq('id', w.supabaseId)
+                      .then(({ error }) => { if (error) console.warn('wanted delete (vehicle):', error.message); });
+                }
+            });
         }
         if (currentVehicleId === id) currentVehicleId = null;
         renderGarage();
