@@ -5193,6 +5193,14 @@ function confirmUpgrade() {
     // Production: route to payment gateway here
     currentUserTier = 'pro';
     proSearchOn = true;
+
+    // Persist so sign-out/sign-in restores Pro tier
+    if (window.sb && currentUserId) {
+        sb.from('profiles').upsert({ id: currentUserId, is_pro: true }, { onConflict: 'id' });
+    }
+    const remembered = loadRememberedUser();
+    if (remembered) saveRememberedUser({ ...remembered, tier: 'pro' });
+
     closeUpgradeModal();
     renderAccountState();
     if (document.getElementById('workshopDrawer')?.classList.contains('active')) {
