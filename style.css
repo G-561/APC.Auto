@@ -956,6 +956,7 @@ header {
     width: 100%;
     aspect-ratio: 4/3;
     object-fit: cover;
+    object-position: center top;
     background: #f4f4f4;
     display: block;
     margin: 0;
