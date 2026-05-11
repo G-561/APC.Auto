@@ -3080,16 +3080,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Restore session on page load + react to sign in / sign out events
-    sb.auth.onAuthStateChange(async (event, session) => {
+    sb.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
-            const { data: profile } = await sb
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-            const name = profile?.display_name || session.user.email.split('@')[0];
-            const tier = profile?.is_pro ? 'pro' : 'standard';
-            signIn(name, tier, false, session.user.email);
+            // Sign in immediately with email fallback so UI updates without waiting for profile fetch
+            const emailName = session.user.email.split('@')[0];
+            signIn(emailName, 'standard', false, session.user.email);
+            // Fetch real name + tier in background
+            sb.from('profiles').select('*').eq('id', session.user.id).single()
+                .then(({ data: profile }) => {
+                    if (profile) {
+                        const name = profile.display_name || emailName;
+                        const tier = profile.is_pro ? 'pro' : 'standard';
+                        signIn(name, tier, false, session.user.email);
+                    }
+                });
             loadUserListingsFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
             userIsSignedIn = false;
