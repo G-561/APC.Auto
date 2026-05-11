@@ -5695,12 +5695,12 @@ function renderAccountState() {
         if (searchModePill) searchModePill.style.display = 'none';
         if (signUpPrompt) signUpPrompt.style.display = '';
     } else if (currentUserTier === 'pro') {
-        pill.classList.add('signed-in');
+        pill.classList.add('signed-in', 'tier-pro');
         pill.innerHTML = avatarHTML;
         if (searchModePill) searchModePill.style.display = proSearchOn ? '' : 'none';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
     } else {
-        pill.classList.add('signed-in');
+        pill.classList.add('signed-in', 'tier-standard');
         pill.innerHTML = avatarHTML;
         if (searchModePill) searchModePill.style.display = 'none';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
