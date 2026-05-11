@@ -3556,20 +3556,24 @@ header {
         border-radius: 8px;
     }
     .account-pill.signed-in {
-        background: white;
-        border: 1.5px solid #e8e8e8;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        border-radius: 10px;
-        padding: 5px 12px 5px 5px;
+        background: #f8f8f8;
+        border: none;
+        box-shadow: 0 0 0 3px #F7941D, 0 0 14px rgba(247,148,29,0.5);
+        border-radius: 24px;
+        padding: 5px 10px;
+        justify-content: center;
         color: var(--apc-charcoal);
         font-size: 13px;
         text-transform: none;
         letter-spacing: 0;
-        gap: 8px;
-        transition: border-color 0.15s, box-shadow 0.15s;
+        gap: 0;
+        transition: box-shadow 0.15s;
+    }
+    .account-pill.signed-in.tier-pro {
+        box-shadow: 0 0 0 3px #007AFF, 0 0 14px rgba(0,122,255,0.5);
     }
     .pill-avatar { width: 32px; height: 32px; font-size: 13px; }
-    .account-pill.signed-in:hover .pill-avatar { box-shadow: 0 3px 10px rgba(0,0,0,0.2); transform: scale(1.06); transition: box-shadow 0.15s, transform 0.15s; }
+    .account-pill.signed-in:hover .pill-avatar { transform: scale(1.06); transition: transform 0.15s; }
 
     /* Right panel: below top bar + header */
     .desktop-right-panel { top: 140px; bottom: 0; } /* fallback — overridden by updateHeaderOffset() */
