@@ -1466,22 +1466,6 @@ header {
     margin: 14px 0;
 }
 
-.veh-edit-btn {
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.35);
-    color: white;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    flex-shrink: 0;
-    font-family: inherit;
-    transition: background 0.15s;
-}
-.veh-edit-btn:hover { background: rgba(255,255,255,0.28); }
-
-
 .garage-empty {
     text-align: center;
     padding: 40px 20px;
@@ -1490,23 +1474,6 @@ header {
 .garage-empty .ico { font-size: 56px; margin-bottom: 8px; }
 .garage-empty .title { font-weight: 800; font-size: 16px; color: var(--apc-charcoal); margin-bottom: 4px; }
 .garage-empty .sub { font-size: 13px; line-height: 1.4; max-width: 260px; margin: 0 auto; }
-
-/* VEHICLE DETAIL — banner, segmented toggle, tab content */
-.vehicle-banner {
-    background: #ffffff;
-    border: 1px solid #ebebeb;
-    border-left: 4px solid var(--apc-orange);
-    color: #1a1a1a;
-    padding: 14px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.vehicle-banner .ico { font-size: 34px; }
-.vehicle-banner .name { font-size: 17px; font-weight: 800; color: #1a1a1a; }
-.vehicle-banner .meta { font-size: 11px; color: #888; margin-top: 2px; }
 
 .segmented-control {
     display: flex;
@@ -3796,7 +3763,6 @@ header {
     /* All full-screen drawers: centre column between sidebars */
     #detailOverlay,
     #garageDrawer,
-    #vehicleDetailDrawer,
     #wantedListDrawer,
     #savedPartsDrawer,
     #profileDrawer,

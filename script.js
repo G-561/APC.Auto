@@ -3671,11 +3671,6 @@ function openEditVehicleDrawer(id) {
 }
 
 // Back to garage from vehicle detail
-function onBackToGarage() {
-    const drawer = document.getElementById('vehicleDetailDrawer');
-    if (drawer) drawer.classList.remove('active');
-    document.body.style.overflow = 'hidden';  // keep hidden since garage is still open
-}
 
 // Validate + save the new vehicle
 function submitAddVehicle() {
@@ -3727,8 +3722,6 @@ function deleteVehicle(id) {
         myWanted   = myWanted.filter(w => w.vehicleId !== id);
         saveVehicles();
         saveWanted();
-        const vdd = document.getElementById('vehicleDetailDrawer');
-        if (vdd) vdd.classList.remove('active');
         if (currentVehicleId === id) currentVehicleId = null;
         renderGarage();
         syncBackdrop();
@@ -4586,87 +4579,9 @@ function partFitsVehicle(part, vehicle) {
 }
 
 function openVehicleDetail(vehicleId) {
-    const v = myVehicles.find(x => x.id === vehicleId);
-    if (!v) return;
-    currentVehicleId  = vehicleId;
-    currentVehicleTab = 'wanted';
-
-    document.getElementById('vehDetailHeaderTitle').textContent = `${v.make} ${v.model}`;
-    document.getElementById('vehDetailBannerName').textContent  = `${v.make} ${v.model}`;
-    document.getElementById('vehDetailBannerMeta').textContent  =
-        [v.year, v.variant, v.nickname].filter(Boolean).join(' · ') || '—';
-    const editBtn = document.getElementById('vehDetailEditBtn');
-    if (editBtn) editBtn.onclick = () => openEditVehicleDrawer(vehicleId);
-
-    setVehicleTab('wanted');
-    toggleDrawer('vehicleDetailDrawer', true);  // stack on top of garage drawer
-}
-
-function setVehicleTab(tab) {
-    currentVehicleTab = tab;
-    document.querySelectorAll('#vehicleDetailDrawer .seg').forEach(s => {
-        s.classList.toggle('active', s.dataset.tab === tab);
-    });
-    renderGarageTab();
-}
-
-function renderVehicleTab() {
-    const c = document.getElementById('vehDetailTabContent');
-    if (!c) return;
-    const v = myVehicles.find(x => x.id === currentVehicleId);
-    if (!v) { c.innerHTML = ''; return; }
-
-    c.innerHTML = '';
-
-    if (currentVehicleTab === 'wanted') {
-        const vehicleWanted = myWanted.filter(w =>
-            w.vehicleId === currentVehicleId ||
-            (w.make && v && w.make.toLowerCase() === v.make.toLowerCase() &&
-             w.model.toLowerCase() === v.model.toLowerCase() &&
-             (!w.year || !v.year || String(w.year) === String(v.year)))
-        );
-        if (!vehicleWanted.length) {
-            c.appendChild(buildVehicleEmpty(
-                '🔍',
-                `No wanted parts for your ${v.make} ${v.model} yet.\nAdd parts you're looking for to get notified when they're listed.`,
-                { label: 'ADD WANTED PART', onClick: () => openAddWantedForVehicle(currentVehicleId) }
-            ));
-            return;
-        }
-        const addRow = document.createElement('div');
-        addRow.style.cssText = 'display:flex; justify-content:flex-end; padding: 0 0 10px 0;';
-        const addBtn = document.createElement('button');
-        addBtn.textContent = '+ Add Wanted';
-        addBtn.style.cssText = 'background:none; border:1px solid var(--apc-orange); color:var(--apc-orange); padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; cursor:pointer;';
-        addBtn.onclick = () => openAddWantedForVehicle(currentVehicleId);
-        addRow.appendChild(addBtn);
-        c.appendChild(addRow);
-        c.appendChild(buildWantedGrid(vehicleWanted));
-
-    } else if (currentVehicleTab === 'saved') {
-        const savedFitting = getAllParts().filter(p => savedParts.has(p.id) && p.fits?.length > 0 && partFitsVehicle(p, v));
-        if (!savedFitting.length) {
-            c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.\nTap the heart on any listing to save it.`));
-            return;
-        }
-        c.appendChild(buildPartsGrid(savedFitting));
-
-    } else if (currentVehicleTab === 'matches') {
-        const vehicleWanted = myWanted.filter(w =>
-            w.vehicleId === currentVehicleId ||
-            (w.make && v && w.make.toLowerCase() === v.make.toLowerCase() &&
-             w.model.toLowerCase() === v.model.toLowerCase() &&
-             (!w.year || !v.year || String(w.year) === String(v.year)))
-        );
-        const matchingParts = getAllParts().filter(p =>
-            vehicleWanted.some(w => wantedMatchesPart(w, p))
-        );
-        if (!matchingParts.length) {
-            c.appendChild(buildVehicleEmpty('🔔', `No new matches for your ${v.make} ${v.model} wanted parts yet.\nWe'll notify you when parts come up for sale.`));
-            return;
-        }
-        c.appendChild(buildPartsGrid(matchingParts));
-    }
+    if (!myVehicles.find(v => v.id === vehicleId)) return;
+    toggleDrawer('garageDrawer');
+    selectGarageVehicle(vehicleId);
 }
 
 function buildPartsGrid(parts) {
@@ -5795,7 +5710,6 @@ function updateHeaderOffset() {
     const detailOverlay    = document.getElementById('detailOverlay');
     const storefrontDrawer = document.getElementById('storefrontDrawer');
     const garageDrawer        = document.getElementById('garageDrawer');
-    const vehicleDetailDrawer = document.getElementById('vehicleDetailDrawer');
     const addVehicleDrawer    = document.getElementById('addVehicleDrawer');
     const addWantedDrawer     = document.getElementById('addWantedDrawer');
     const savedPartsDrawer    = document.getElementById('savedPartsDrawer');
@@ -5834,7 +5748,6 @@ function updateHeaderOffset() {
             if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
             if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
             if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
-            if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
             // addVehicleDrawer + addWantedDrawer are floating cards — top is fixed at 50% via CSS, not offset-driven
             if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
             if (savedPartsDrawer)     savedPartsDrawer.style.top     = totalH + 'px';

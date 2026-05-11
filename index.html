@@ -1687,33 +1687,6 @@
     </div>
 </div>
 
-<!-- ADD WANTED — modal for adding wanted parts -->
-<!-- VEHICLE DETAIL — stacks on top of garage; segmented toggle inside -->
-<div id="vehicleDetailDrawer" class="drawer">
-    <div class="drawer-header">
-        <div class="back-btn" onclick="onBackToGarage()">‹ Garage</div>
-        <span id="vehDetailHeaderTitle">Vehicle</span>
-    </div>
-    <div class="drawer-content" style="background: #f4f4f4; padding: 12px;">
-        <div class="vehicle-banner">
-            <div class="ico" id="vehDetailBannerIco">🚗</div>
-            <div style="flex:1;">
-                <div class="name" id="vehDetailBannerName">Vehicle</div>
-                <div class="meta" id="vehDetailBannerMeta">—</div>
-            </div>
-            <button id="vehDetailEditBtn" class="veh-edit-btn">✏️ Edit</button>
-        </div>
-
-        <div class="segmented-control">
-            <div class="seg active" data-tab="wanted"  onclick="setVehicleTab('wanted')">Wanted</div>
-            <div class="seg"        data-tab="saved"   onclick="setVehicleTab('saved')">Saved</div>
-            <div class="seg"        data-tab="matches" onclick="setVehicleTab('matches')">Matches</div>
-        </div>
-
-        <div id="vehDetailTabContent"></div>
-    </div>
-</div>
-
 <!-- ADD WANTED — floating card -->
 <div id="addWantedDrawer" class="drawer">
     <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px 14px; border-bottom:1px solid #f0f0f0;">
