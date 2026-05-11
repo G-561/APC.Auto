@@ -7,6 +7,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let userIsSignedIn = false;          // starts logged out — header shows "Sign In" pill
 let currentUserName = null;          // e.g. "Gary"
 let currentUserTier = null;          // 'standard' | 'pro'
+let currentUserId = null;            // Supabase UUID of signed-in user
 let proSearchOn    = true;           // when user is pro, controls FIND PARTS / FIND WANTED bar
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let currentOpenPartId = null;  // tracks which part detail is open
@@ -687,7 +688,7 @@ async function loadPublicListingsFromSupabase() {
                 .map(img => img.storage_path).filter(Boolean);
             const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
             partDatabase.push({
-                id: nextPartId(), supabaseId: r.id,
+                id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
                 saves: r.saves_count || 0,
                 date: new Date(r.created_at).getTime(),
                 apcId: r.apc_id, title: r.title, category: r.category,
@@ -746,12 +747,13 @@ async function loadUserListingsFromSupabase(userId) {
                     odometer: r.odometer, warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, apcId: r.apc_id,
                     fit: r.fitting_available, year: r.fits_year,
-                    saves: r.saves_count || 0, fits,
+                    saves: r.saves_count || 0, sellerId: r.seller_id, fits,
                     ...(images.length ? { images } : {}),
                 });
             } else {
                 userListings.push({
-                    id: nextPartId(), supabaseId: r.id, saves: r.saves_count || 0,
+                    id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
+                    saves: r.saves_count || 0,
                     date: new Date(r.created_at).getTime(),
                     apcId: r.apc_id, title: r.title, category: r.category,
                     price: r.price, condition: r.condition,
@@ -772,6 +774,121 @@ async function loadUserListingsFromSupabase(userId) {
         renderMainGrid();
         renderMyParts();
     } catch (e) { showToast('Load error: ' + (e.message || e)); }
+}
+
+// ── SUPABASE MESSAGES ─────────────────────────────────────────
+function formatMsgDate(isoString) {
+    const d = new Date(isoString);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 86400000) return 'Today';
+    if (diff < 172800000) return 'Yesterday';
+    return d.toLocaleDateString('en-AU', { weekday: 'short' });
+}
+function formatMsgTime(isoString) {
+    const d = new Date(isoString);
+    let h = d.getHours(), m = d.getMinutes();
+    const ap = h >= 12 ? 'pm' : 'am';
+    h = h % 12 || 12;
+    return `${h}:${String(m).padStart(2, '0')} ${ap}`;
+}
+
+async function syncNewConversationToSupabase(conv) {
+    if (!currentUserId) return;
+    const part = findPartAnywhere(conv.partId);
+    if (!part?.supabaseId || !part.sellerId) return;
+
+    const { data, error } = await sb.from('conversations').insert({
+        listing_id: part.supabaseId,
+        buyer_id: currentUserId,
+        seller_id: part.sellerId,
+        buyer_name: currentUserName,
+        seller_name: part.seller || null,
+        listing_title: part.title,
+        unread_buyer: false,
+        unread_seller: true,
+    }).select('id').single();
+
+    if (error) { console.warn('Conv sync error:', error.message); return; }
+    conv.supabaseConvId = data.id;
+    conv.buyerId = currentUserId;
+    saveConversations();
+
+    const firstMsg = conv.msgs[0];
+    if (firstMsg) {
+        await sb.from('messages').insert({
+            conversation_id: data.id,
+            sender_id: currentUserId,
+            sender_name: currentUserName,
+            text: firstMsg.text,
+        });
+    }
+}
+
+async function syncMessageToSupabase(supabaseConvId, text, isBuyer) {
+    if (!currentUserId || !supabaseConvId) return;
+    await sb.from('messages').insert({
+        conversation_id: supabaseConvId,
+        sender_id: currentUserId,
+        sender_name: currentUserName,
+        text,
+    });
+    await sb.from('conversations').update({
+        last_message_at: new Date().toISOString(),
+        unread_buyer: !isBuyer,
+        unread_seller: !!isBuyer,
+    }).eq('id', supabaseConvId);
+}
+
+async function loadConversationsFromSupabase(userId) {
+    try {
+        const { data: rows, error } = await sb
+            .from('conversations')
+            .select('*, messages(id, sender_id, sender_name, text, created_at)')
+            .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+            .order('last_message_at', { ascending: false, nullsFirst: false });
+
+        if (error || !rows?.length) return;
+
+        rows.forEach(r => {
+            const isBuyer = r.buyer_id === userId;
+            const otherName = isBuyer ? (r.seller_name || 'Seller') : (r.buyer_name || 'Buyer');
+            const msgs = (r.messages || [])
+                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                .map((m, idx) => ({
+                    id: idx + 1,
+                    sent: m.sender_id === userId,
+                    text: m.text || '',
+                    time: formatMsgDate(m.created_at),
+                    clock: formatMsgTime(m.created_at),
+                }));
+
+            const existing = conversations.find(c => c.supabaseConvId === r.id);
+            if (existing) {
+                existing.msgs = msgs;
+                existing.with = otherName;
+                existing.unread = isBuyer ? !!r.unread_buyer : !!r.unread_seller;
+            } else {
+                const part = [...partDatabase, ...userListings].find(p => p.supabaseId === r.listing_id);
+                conversations.unshift({
+                    id: nextConvId(),
+                    supabaseConvId: r.id,
+                    buyerId: r.buyer_id,
+                    sellerId: r.seller_id,
+                    with: otherName,
+                    isPro: false,
+                    unread: isBuyer ? !!r.unread_buyer : !!r.unread_seller,
+                    partId: part?.id || r.listing_id,
+                    partTitle: r.listing_title || 'Part',
+                    msgs,
+                });
+            }
+        });
+
+        saveConversations();
+        renderInboxConvList();
+        updateInboxBadge();
+    } catch (e) { console.warn('Load conversations:', e); }
 }
 
 function loadRememberedUser() {
@@ -1055,6 +1172,10 @@ function sendInboxMessage() {
     saveConversations();
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
     renderInboxMsgs(conv);
+    if (conv.supabaseConvId && currentUserId) {
+        const isBuyer = conv.buyerId === currentUserId;
+        syncMessageToSupabase(conv.supabaseConvId, text, isBuyer);
+    }
 }
 
 function sendInboxPhoto(event) {
@@ -3097,10 +3218,12 @@ function sendContactMessage() {
     // Create conversation and add the opening message
     const conv = { id: nextConvId(), with: seller, isPro, unread: false, partId, ...(partTitle && { partTitle }), msgs: [] };
     conv.msgs.push({ id: 1, sent: true, text, time: 'Today', clock: nowClock() });
+    if (currentUserId) conv.buyerId = currentUserId;
     conversations.unshift(conv);
     saveConversations();
     updateInboxBadge();
     _lastSentConvId = conv.id;
+    syncNewConversationToSupabase(conv);
 
     // Switch to confirmation state — no auto-close, user chooses next action
     const compose = document.getElementById('contactCardCompose');
@@ -3193,6 +3316,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Restore session on page load + react to sign in / sign out events
     sb.auth.onAuthStateChange((event, session) => {
         if (session?.user) {
+            currentUserId = session.user.id;
             // Sign in immediately with email fallback so UI updates without waiting for profile fetch
             const emailName = session.user.email.split('@')[0];
             signIn(emailName, 'standard', false, session.user.email);
@@ -3206,10 +3330,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             loadUserListingsFromSupabase(session.user.id);
+            loadConversationsFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
             userIsSignedIn = false;
             currentUserName = null;
             currentUserTier = null;
+            currentUserId = null;
             renderAccountState();
         }
     });
