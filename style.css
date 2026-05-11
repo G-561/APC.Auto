@@ -4537,7 +4537,7 @@ header {
 .inbox-reply-bar { padding: 10px 12px; border-top: 1px solid #eee; display: flex; align-items: flex-end; gap: 8px; background: white; flex-shrink: 0; }
 
 /* OFFER CARD — inside inbox thread */
-.inbox-msg-col.offer-col { max-width: 92%; }
+.inbox-msg-col.offer-col { max-width: 96%; width: 320px; }
 .offer-bubble {
     padding: 0 !important;
     background: white !important;
