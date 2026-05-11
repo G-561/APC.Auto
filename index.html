@@ -322,7 +322,7 @@
 
             <div style="padding: 20px 15px 5px 15px; display: flex; align-items: center; justify-content: space-between;">
                 <div id="detailPrice" style="font-size: 28px; font-weight: 900; color: #007AFF;">$0.00</div>
-                <div onclick="handleMessageSeller()" style="background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <div id="detailFittingCTA" onclick="handleMessageSeller()" style="display:none; background: rgba(0, 122, 255, 0.08); border: 1px solid rgba(0, 122, 255, 0.2); padding: 5px 12px; border-radius: 20px; align-items: center; gap: 6px; cursor: pointer;">
                     <span style="font-size: 12px;">🛠️</span>
                     <span style="font-size: 10px; font-weight: 800; color: #007AFF; text-transform: uppercase; letter-spacing: 0.5px;">Fitting Available</span>
                 </div>
@@ -1239,7 +1239,7 @@
                             <div class="settings-row-label">Fitting Available by default</div>
                             <div class="settings-row-sub">Show fitting on all new listings</div>
                         </div>
-                        <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting"><span class="settings-toggle-track"></span></label>
+                        <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting" onchange="saveSettingsToggle('defaultFitting', this.checked)"><span class="settings-toggle-track"></span></label>
                     </div>
                     <div class="settings-row">
                         <div>

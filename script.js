@@ -475,7 +475,8 @@ function renderSettingsDrawer() {
         settingNotifyNewListings:   'notifyNewListings',
         settingPrivacySuburb:       'privacySuburbOnly',
         settingPrivacyPublic:       'privacyPublicProfile',
-        settingWarehouseManagement: 'warehouseManagement'
+        settingWarehouseManagement: 'warehouseManagement',
+        proSettingDefaultFitting:   'defaultFitting'
     };
     Object.entries(toggleMap).forEach(([elId, key]) => {
         const el = document.getElementById(elId);
@@ -2563,6 +2564,8 @@ function openSellOverlay() {
     currentEditingListingId = null;
     currentEditStatus = null;
     resetSellForm();
+    const fitting = document.getElementById('sellFittingAvailable');
+    if (fitting && currentUserTier === 'pro' && userSettings.defaultFitting) fitting.checked = true;
     initSellVehicleDropdowns('', '', '');
     const title = document.getElementById('sellOverlayTitle');
     const submit = document.getElementById('sellSubmitBtn');
@@ -3221,6 +3224,8 @@ function openItemDetail(partId) {
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
     const detailTradeBadge = document.getElementById('detailTradeBadge');
     if (detailTradeBadge) detailTradeBadge.style.display = part.tradeOnly ? 'inline-block' : 'none';
+    const detailFittingCTA = document.getElementById('detailFittingCTA');
+    if (detailFittingCTA) detailFittingCTA.style.display = part.fit ? 'flex' : 'none';
 
     // Info col seller card (desktop — shown via CSS)
     const colAvatar  = document.getElementById('detailSellerColAvatar');
