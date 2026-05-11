@@ -1044,9 +1044,10 @@ async function loadWantedFromSupabase(userId) {
         const unsynced = myWanted.filter(w => !w.supabaseId);
         for (const w of unsynced) {
             const { data, error: e } = await sb.from('wanted_parts').insert({
-                user_id: userId, part_name: w.partName || '', make: w.make || '',
-                model: w.model || '', year: w.year || '', max_price: w.maxPrice || null,
-                category: w.category || '', muted_notifications: !!w.mutedNotifications
+                user_id: userId, title: w.partName || '', part_name: w.partName || '',
+                make: w.make || '', model: w.model || '', year: w.year || '',
+                max_price: w.maxPrice || null, category: w.category || '',
+                muted_notifications: !!w.mutedNotifications
             }).select('id').single();
             if (!e && data) w.supabaseId = data.id;
         }
