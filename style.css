@@ -95,14 +95,15 @@ header {
     border-radius: 8px;
 }
 .account-pill.signed-in {
-    background: #fff;
+    background: #f8f8f8;
     padding: 6px 10px;
     border-radius: 24px;
     border: none;
-    box-shadow: 0 0 0 2px #F7941D, 0 0 12px rgba(247,148,29,0.4);
+    justify-content: center;
+    box-shadow: 0 0 0 3px #F7941D, 0 0 14px rgba(247,148,29,0.5);
 }
 .account-pill.signed-in.tier-pro {
-    box-shadow: 0 0 0 2px #007AFF, 0 0 12px rgba(0,122,255,0.4);
+    box-shadow: 0 0 0 3px #007AFF, 0 0 14px rgba(0,122,255,0.5);
 }
 .pill-avatar {
     width: 34px; height: 34px;
