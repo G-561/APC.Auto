@@ -761,9 +761,11 @@ async function loadUserListingsFromSupabase(userId) {
                 .map(img => img.storage_path)
                 .filter(Boolean);
             const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
-            const existing = userListings.find(l => l.supabaseId === r.id);
+            const existing = userListings.find(l => l.supabaseId === r.id)
+                || (r.apc_id && userListings.find(l => !l.supabaseId && l.apcId === r.apc_id));
 
             if (existing) {
+                if (!existing.supabaseId) { existing.supabaseId = r.id; }
                 Object.assign(existing, {
                     title: r.title, category: r.category, price: r.price,
                     condition: r.condition, description: r.description,
