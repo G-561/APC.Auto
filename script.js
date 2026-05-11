@@ -2848,28 +2848,47 @@ function printSellLabel(listing) {
     const fits = (listing.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal';
     const condition = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[listing.condition] || listing.condition || '';
     const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const apcId = listing.apcId || ('APC-' + listing.id);
     const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${listing.warehouseBin}</strong></td></tr>` : '';
     const year = listing.year ? `<tr><td>Year</td><td>${listing.year}</td></tr>` : '';
     area.innerHTML = `
 <div class="sell-label">
   <div class="sell-header">
     <div class="sell-brand">AUTO PARTS CONNECTION</div>
-    <div class="sell-apc-id">${listing.apcId || ''}<br><span style="font-size:10px;color:#aaa;">${date}</span></div>
+    <div class="sell-date">${date}</div>
   </div>
-  <div class="sell-title">${listing.title || ''}</div>
-  <table>
-    <tr><td>Condition</td><td>${condition}</td></tr>
-    <tr><td>Fits</td><td>${fits}</td></tr>
-    ${year}${bin}
-    ${listing.stockNumber ? `<tr><td>Stock #</td><td>${listing.stockNumber}</td></tr>` : ''}
-  </table>
-  <div class="sell-price-row">
-    <span class="sell-price">$${listing.price}</span>
-    <span class="sell-price-label">Listed price</span>
+  <div class="sell-body">
+    <div class="sell-left">
+      <div class="sell-title">${listing.title || ''}</div>
+      <table>
+        <tr><td>Item No.</td><td><strong>${apcId}</strong></td></tr>
+        <tr><td>Condition</td><td>${condition}</td></tr>
+        <tr><td>Fits</td><td>${fits}</td></tr>
+        ${year}${bin}
+        ${listing.stockNumber ? `<tr><td>Stock #</td><td>${listing.stockNumber}</td></tr>` : ''}
+      </table>
+      <div class="sell-price-row">
+        <span class="sell-price">$${listing.price}</span>
+        <span class="sell-price-label">Listed price</span>
+      </div>
+    </div>
+    <div class="sell-right">
+      <div id="sellLabelQr"></div>
+      <div class="sell-qr-id">${apcId}</div>
+    </div>
   </div>
 </div>`;
+    const qrEl = document.getElementById('sellLabelQr');
+    if (qrEl && window.QRCode) {
+        const qrText = apcId + '\n' + (listing.title || '') + '\nBin: ' + (listing.warehouseBin || 'N/A') + '\nPrice: $' + listing.price;
+        new QRCode(qrEl, { text: qrText, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
+    }
+    document.body.classList.add('printing-sell-label');
     window.print();
-    window.addEventListener('afterprint', () => { area.innerHTML = ''; }, { once: true });
+    window.addEventListener('afterprint', () => {
+        document.body.classList.remove('printing-sell-label');
+        area.innerHTML = '';
+    }, { once: true });
 }
 
 // --- DYNAMIC ITEM DETAIL ---
