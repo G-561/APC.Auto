@@ -1946,7 +1946,7 @@ function escapeHtml(text) {
         .replace(/'/g, '&#39;');
 }
 
-function buildCardHTML(part) {
+function buildCardHTML(part, eager = false) {
     // Only part.id goes into the onclick — never unsanitised user content
     const fittingLabel = part.fit
         ? `<span class="fitting-pill">FITTING AVAILABLE</span>`
@@ -1966,7 +1966,7 @@ function buildCardHTML(part) {
 
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
-            <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="lazy">
+            <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
             ${pendingBanner}
             <div class="item-info">
                 <div class="price-row">
@@ -2085,7 +2085,7 @@ function renderMainGrid() {
         updateGridHeading('Recently Listed', filtered.length);
     }
 
-    mainGrid.innerHTML = filtered.map(buildCardHTML).join('');
+    mainGrid.innerHTML = filtered.map((part, i) => buildCardHTML(part, i < 6)).join('');
 }
 
 // Returns true if this seller already has a listing covering the wanted request.
