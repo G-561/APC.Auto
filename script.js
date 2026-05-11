@@ -896,9 +896,9 @@ async function loadConversationsFromSupabase(userId) {
             .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
-        if (error || !rows?.length) return;
+        if (error) { subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
 
-        rows.forEach(r => {
+        (rows || []).forEach(r => {
             const isBuyer = r.buyer_id === userId;
             const otherName = isBuyer ? (r.seller_name || 'Seller') : (r.buyer_name || 'Buyer');
             const msgs = (r.messages || [])
@@ -939,9 +939,9 @@ async function loadConversationsFromSupabase(userId) {
         saveConversations();
         renderInboxConvList();
         updateInboxBadge();
-        subscribeToRealtimeMessages();
-        subscribeToRealtimeListings();
     } catch (e) { console.warn('Load conversations:', e); }
+    subscribeToRealtimeMessages();
+    subscribeToRealtimeListings();
 }
 
 // ── SUPABASE: VEHICLES, WANTED, SAVED LISTINGS ───────────────
