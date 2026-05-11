@@ -3777,7 +3777,8 @@ header {
     #authDrawer { width: 420px !important; }
 
     /* Add Wanted — floating card, centred both axes */
-    #addWantedDrawer {
+    #addWantedDrawer,
+    #addVehicleDrawer {
         left: 50% !important;
         right: auto !important;
         width: 480px !important;
