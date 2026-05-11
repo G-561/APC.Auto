@@ -937,6 +937,7 @@ async function loadConversationsFromSupabase(userId) {
                 .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
                 .map((m, idx) => ({
                     id: idx + 1,
+                    supabaseMsgId: m.id,
                     sent: m.sender_id === userId,
                     text: m.text || '',
                     ...(m.photo_url  ? { photo: m.photo_url }       : {}),
@@ -1100,6 +1101,23 @@ function subscribeToRealtimeMessages() {
 
     _realtimeChannel = sb.channel('inbox-' + currentUserId)
         .on('postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'messages' },
+            (payload) => {
+                const msg = payload.new;
+                if (!msg?.offer_data) return;
+                for (const conv of conversations) {
+                    const localMsg = conv.msgs.find(m => m.supabaseMsgId === msg.id);
+                    if (localMsg?.offerCard) {
+                        localMsg.offerCard = msg.offer_data;
+                        saveConversations();
+                        if (activeConvId === conv.id) renderInboxMsgs(conv);
+                        renderInboxConvList();
+                        break;
+                    }
+                }
+            }
+        )
+        .on('postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'messages' },
             (payload) => {
                 const msg = payload.new;
@@ -1111,6 +1129,7 @@ function subscribeToRealtimeMessages() {
 
                 conv.msgs.push({
                     id: nextMsgId(conv),
+                    supabaseMsgId: msg.id,
                     sent: false,
                     text: msg.text || '',
                     ...(msg.photo_url  ? { photo: msg.photo_url }     : {}),
@@ -6208,6 +6227,7 @@ function acceptOfferCard(convId, msgIdx) {
     showToast('Offer accepted!');
     if (conv.supabaseConvId && currentUserId) {
         const isBuyer = conv.buyerId === currentUserId;
+        if (msg.supabaseMsgId) sb.from('messages').update({ offer_data: msg.offerCard }).eq('id', msg.supabaseMsgId);
         syncMessageToSupabase(conv.supabaseConvId, responseText, isBuyer);
     }
 }
@@ -6226,6 +6246,7 @@ function declineOfferCard(convId, msgIdx) {
     showToast('Offer declined.');
     if (conv.supabaseConvId && currentUserId) {
         const isBuyer = conv.buyerId === currentUserId;
+        if (msg.supabaseMsgId) sb.from('messages').update({ offer_data: msg.offerCard }).eq('id', msg.supabaseMsgId);
         syncMessageToSupabase(conv.supabaseConvId, responseText, isBuyer);
     }
 }
@@ -6257,6 +6278,7 @@ function submitCounter(convId, msgIdx) {
     renderInboxConvList();
     showToast(`Counter offer of $${counterPrice} sent.`);
     if (conv.supabaseConvId && currentUserId) {
+        if (msg.supabaseMsgId) sb.from('messages').update({ offer_data: msg.offerCard }).eq('id', msg.supabaseMsgId);
         syncOfferMessageToSupabase(conv, counterText, counterOfferData);
     }
 }
