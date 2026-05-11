@@ -5834,8 +5834,7 @@ function updateHeaderOffset() {
             if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
             if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
             if (vehicleDetailDrawer)  vehicleDetailDrawer.style.top  = totalH + 'px';
-            if (addVehicleDrawer)     addVehicleDrawer.style.top     = totalH + 'px';
-            // addWantedDrawer is a floating card — top is fixed at 50% via CSS, not offset-driven
+            // addVehicleDrawer + addWantedDrawer are floating cards — top is fixed at 50% via CSS, not offset-driven
             if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
             if (savedPartsDrawer)     savedPartsDrawer.style.top     = totalH + 'px';
             if (settingsDrawer)       settingsDrawer.style.top       = totalH + 'px';
