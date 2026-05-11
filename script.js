@@ -715,6 +715,15 @@ async function loadUserListingsFromSupabase(userId) {
             .eq('seller_id', userId)
             .order('created_at', { ascending: false });
         if (error) { showToast('Fetch error: ' + error.message); return; }
+
+        // Remove local listings that were deleted from Supabase
+        const supabaseIds = new Set((rows || []).map(r => r.id));
+        const hadCount = userListings.length;
+        userListings.splice(0, userListings.length,
+            ...userListings.filter(l => !l.supabaseId || supabaseIds.has(l.supabaseId))
+        );
+        if (userListings.length !== hadCount) { saveUserListings(); renderMainGrid(); renderMyParts(); }
+
         if (!rows?.length) return;
 
         rows.forEach(r => {
