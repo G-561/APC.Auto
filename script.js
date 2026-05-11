@@ -847,15 +847,17 @@ async function syncOfferMessageToSupabase(conv, offerText, offerData) {
     }).eq('id', conv.supabaseConvId);
 }
 
-async function syncPhotoMessageToSupabase(supabaseConvId, base64, isBuyer) {
-    if (!currentUserId || !supabaseConvId) return;
+async function syncPhotoMessageToSupabase(conv, base64, isBuyer) {
+    const ok = await ensureSupabaseConversation(conv);
+    if (!ok || !currentUserId) return;
+    const supabaseConvId = conv.supabaseConvId;
     try {
         // Convert base64 to blob and upload
         const res = await fetch(base64);
         const blob = await res.blob();
         const path = `chat/${supabaseConvId}/${Date.now()}.jpg`;
         const { error: upErr } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
-        if (upErr) { console.warn('Photo upload:', upErr.message); return; }
+        if (upErr) { showToast('Photo upload failed: ' + upErr.message); return; }
         const { data: { publicUrl } } = sb.storage.from('listing-images').getPublicUrl(path);
 
         await sb.from('messages').insert({
@@ -1436,9 +1438,9 @@ function sendInboxPhoto(event) {
             renderInboxConvList();
             renderInboxMsgs(conv);
 
-            if (conv.supabaseConvId && currentUserId) {
+            if (currentUserId) {
                 const isBuyer = conv.buyerId === currentUserId;
-                syncPhotoMessageToSupabase(conv.supabaseConvId, compressed, isBuyer);
+                syncPhotoMessageToSupabase(conv, compressed, isBuyer);
             }
         };
         img.onerror = () => showToast('Could not load photo');
@@ -1707,7 +1709,7 @@ function getAllParts() {
     });
 }
 function findPartAnywhere(id) {
-    return [...partDatabase, ...userListings].find(p => p.id === id);
+    return [...partDatabase, ...userListings].find(p => p.id === id || p.supabaseId === id);
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
