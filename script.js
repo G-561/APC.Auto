@@ -5013,9 +5013,7 @@ function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '
     currentUserName = name;
     currentUserTier = tier;
     if (remember) {
-        saveRememberedUser({ name, tier, email });
-    } else {
-        clearRememberedUser();
+        saveRememberedUser({ name, email });
     }
     renderAccountState();
 }
@@ -5189,24 +5187,30 @@ function selectUpgradePlan(plan) {
     document.getElementById('planAnnual').classList.toggle('upgrade-plan-active',  plan === 'annual');
 }
 
-function confirmUpgrade() {
-    // Production: route to payment gateway here
+async function confirmUpgrade() {
+    if (!currentUserId) { showToast('Please sign in first.'); return; }
+
+    const btn = document.getElementById('confirmUpgradeBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
+
+    const { error } = await sb.from('profiles')
+        .upsert({ id: currentUserId, is_pro: true }, { onConflict: 'id' });
+
+    if (error) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Start Free Trial →'; }
+        showToast('Could not activate Pro — please try again.');
+        console.error('Upgrade error:', error.message);
+        return;
+    }
+
     currentUserTier = 'pro';
     proSearchOn = true;
-
-    // Persist so sign-out/sign-in restores Pro tier
-    if (window.sb && currentUserId) {
-        sb.from('profiles').upsert({ id: currentUserId, is_pro: true }, { onConflict: 'id' });
-    }
-    const remembered = loadRememberedUser();
-    if (remembered) saveRememberedUser({ ...remembered, tier: 'pro' });
-
     closeUpgradeModal();
     renderAccountState();
     if (document.getElementById('workshopDrawer')?.classList.contains('active')) {
         renderWorkshopProfile();
     }
-    showToast('Your 3-month Pro trial has started! 🎉');
+    showToast('Pro activated! Welcome to APC Pro.');
 }
 
 function closeUpgradeModal() {
