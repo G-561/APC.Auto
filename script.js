@@ -10,6 +10,7 @@ let currentUserTier = null;          // 'standard' | 'pro'
 let currentUserId = null;            // Supabase UUID of signed-in user
 let proSearchOn    = true;           // when user is pro, controls FIND PARTS / FIND WANTED bar
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
+let gridShownCount   = 20;
 let currentOpenPartId = null;  // tracks which part detail is open
 let currentEditingListingId = null; // edit mode for Sell form
 let currentEditStatus = null;       // status selected in manage section
@@ -2153,10 +2154,11 @@ function renderSkeletonGrid(count = 8) {
     mainGrid.innerHTML = Array(count).fill(card).join('');
 }
 
-function renderMainGrid() {
+function renderMainGrid(keepOffset = false) {
     const mainGrid = document.getElementById('mainGrid');
     if (!mainGrid) return;
 
+    if (!keepOffset) gridShownCount = 20;
     mainGrid.innerHTML = '';
     recordSearch(activeFilters.search);
 
@@ -2206,7 +2208,21 @@ function renderMainGrid() {
         updateGridHeading('Recently Listed', filtered.length);
     }
 
-    mainGrid.innerHTML = filtered.map((part, i) => buildCardHTML(part, i < 6)).join('');
+    const visible = filtered.slice(0, gridShownCount);
+    mainGrid.innerHTML = visible.map((part, i) => buildCardHTML(part, i < 6)).join('');
+
+    if (filtered.length > gridShownCount) {
+        const remaining = filtered.length - gridShownCount;
+        const loadMoreWrap = document.createElement('div');
+        loadMoreWrap.style.cssText = 'grid-column:1/-1; text-align:center; padding:24px 0 12px;';
+        loadMoreWrap.innerHTML = `<button class="load-more-btn" onclick="loadMoreListings()">Load More &nbsp;·&nbsp; ${remaining} more</button>`;
+        mainGrid.appendChild(loadMoreWrap);
+    }
+}
+
+function loadMoreListings() {
+    gridShownCount += 20;
+    renderMainGrid(true);
 }
 
 // Returns true if this seller already has a listing covering the wanted request.
