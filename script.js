@@ -2560,7 +2560,7 @@ function handleSellImageFiles(event) {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
 
-    files.slice(0, 5 - sellListingImages.length).forEach(file => {
+    files.slice(0, 6 - sellListingImages.length).forEach(file => {
         if (!file.type.startsWith('image/')) return;
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -2577,7 +2577,7 @@ function renderSellImagePreviews() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    const maxPhotos = 5;
+    const maxPhotos = 6;
     for (let index = 0; index < maxPhotos; index++) {
         const box = document.createElement('div');
         box.style.cssText = 'aspect-ratio: 1/1; border: 2px dashed var(--apc-orange); border-radius: 12px; background: #fafafa; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;';
