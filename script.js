@@ -825,6 +825,32 @@ async function syncNewConversationToSupabase(conv) {
     }
 }
 
+async function syncPhotoMessageToSupabase(supabaseConvId, base64, isBuyer) {
+    if (!currentUserId || !supabaseConvId) return;
+    try {
+        // Convert base64 to blob and upload
+        const res = await fetch(base64);
+        const blob = await res.blob();
+        const path = `chat/${supabaseConvId}/${Date.now()}.jpg`;
+        const { error: upErr } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+        if (upErr) { console.warn('Photo upload:', upErr.message); return; }
+        const { data: { publicUrl } } = sb.storage.from('listing-images').getPublicUrl(path);
+
+        await sb.from('messages').insert({
+            conversation_id: supabaseConvId,
+            sender_id: currentUserId,
+            sender_name: currentUserName,
+            text: '',
+            photo_url: publicUrl,
+        });
+        await sb.from('conversations').update({
+            last_message_at: new Date().toISOString(),
+            unread_buyer: !isBuyer,
+            unread_seller: !!isBuyer,
+        }).eq('id', supabaseConvId);
+    } catch(e) { console.warn('Photo msg sync:', e); }
+}
+
 async function syncMessageToSupabase(supabaseConvId, text, isBuyer) {
     if (!currentUserId || !supabaseConvId) return;
     await sb.from('messages').insert({
@@ -859,6 +885,7 @@ async function loadConversationsFromSupabase(userId) {
                     id: idx + 1,
                     sent: m.sender_id === userId,
                     text: m.text || '',
+                    ...(m.photo_url ? { photo: m.photo_url } : {}),
                     time: formatMsgDate(m.created_at),
                     clock: formatMsgTime(m.created_at),
                 }));
@@ -1181,17 +1208,41 @@ function sendInboxMessage() {
 function sendInboxPhoto(event) {
     const file = event.target.files[0];
     if (!file || activeConvId === null) return;
+    event.target.value = '';
+
     const reader = new FileReader();
     reader.onload = (e) => {
-        const conv = conversations.find(c => c.id === activeConvId);
-        if (!conv) return;
-        conv.msgs.push({ id: nextMsgId(conv), sent: true, text: '', photo: e.target.result, time: 'Today', clock: nowClock() });
-        saveConversations();
-        renderInboxConvList();
-        renderInboxMsgs(conv);
+        // Compress via canvas to handle large mobile photos
+        const img = new Image();
+        img.onload = () => {
+            const MAX = 1200;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+                if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+                else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const compressed = canvas.toDataURL('image/jpeg', 0.8);
+
+            const conv = conversations.find(c => c.id === activeConvId);
+            if (!conv) return;
+            conv.msgs.push({ id: nextMsgId(conv), sent: true, text: '', photo: compressed, time: 'Today', clock: nowClock() });
+            saveConversations();
+            renderInboxConvList();
+            renderInboxMsgs(conv);
+
+            if (conv.supabaseConvId && currentUserId) {
+                const isBuyer = conv.buyerId === currentUserId;
+                syncPhotoMessageToSupabase(conv.supabaseConvId, compressed, isBuyer);
+            }
+        };
+        img.onerror = () => showToast('Could not load photo');
+        img.src = e.target.result;
     };
+    reader.onerror = () => showToast('Could not read photo');
     reader.readAsDataURL(file);
-    event.target.value = '';
 }
 
 function deleteInboxMsg(convId, msgIdx) {
