@@ -11,6 +11,7 @@ let currentUserId = null;            // Supabase UUID of signed-in user
 let proSearchOn    = true;           // when user is pro, controls FIND PARTS / FIND WANTED bar
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let gridShownCount   = 20;
+function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
 let currentOpenPartId = null;  // tracks which part detail is open
 let currentEditingListingId = null; // edit mode for Sell form
 let currentEditStatus = null;       // status selected in manage section
@@ -2158,7 +2159,7 @@ function renderMainGrid(keepOffset = false) {
     const mainGrid = document.getElementById('mainGrid');
     if (!mainGrid) return;
 
-    if (!keepOffset) gridShownCount = 20;
+    if (!keepOffset) gridShownCount = gridPageSize();
     mainGrid.innerHTML = '';
     recordSearch(activeFilters.search);
 
@@ -2221,7 +2222,7 @@ function renderMainGrid(keepOffset = false) {
 }
 
 function loadMoreListings() {
-    gridShownCount += 20;
+    gridShownCount += gridPageSize();
     renderMainGrid(true);
 }
 
