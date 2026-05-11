@@ -701,10 +701,9 @@ async function loadPublicListingsFromSupabase() {
             .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(40);
-        if (error || !rows?.length) return;
+        if (error) { renderMainGrid(); return; }
 
-        let added = false;
-        rows.forEach(r => {
+        (rows || []).forEach(r => {
             if (partDatabase.some(p => p.supabaseId === r.id)) return;
             if (userListings.some(l => l.supabaseId === r.id)) return;
             const images = (r.listing_images || [])
@@ -726,10 +725,9 @@ async function loadPublicListingsFromSupabase() {
                 seller: r.seller_name || 'Seller',
                 images: images.length ? images : [], fits,
             });
-            added = true;
         });
-        if (added) renderMainGrid();
-    } catch (e) { console.warn('Load public listings:', e); }
+        renderMainGrid();
+    } catch (e) { console.warn('Load public listings:', e); renderMainGrid(); }
 }
 
 async function loadUserListingsFromSupabase(userId) {
@@ -1991,6 +1989,22 @@ function goHome() {
 }
 
 // --- RENDER MAIN HOME GRID ---
+function renderSkeletonGrid(count = 8) {
+    const mainGrid = document.getElementById('mainGrid');
+    if (!mainGrid) return;
+    const card = `
+        <div class="skeleton-card">
+            <div class="skeleton-line skeleton-img"></div>
+            <div class="skeleton-info">
+                <div class="skeleton-line skeleton-price"></div>
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-title2"></div>
+                <div class="skeleton-line skeleton-loc"></div>
+            </div>
+        </div>`;
+    mainGrid.innerHTML = Array(count).fill(card).join('');
+}
+
 function renderMainGrid() {
     const mainGrid = document.getElementById('mainGrid');
     if (!mainGrid) return;
@@ -6353,7 +6367,7 @@ function dashFmtDate(ts) {
 document.addEventListener('DOMContentLoaded', () => {
     updateHeaderOffset();
     initFilterVehicleDropdowns();
-    renderMainGrid();
+    renderSkeletonGrid();
     loadPublicListingsFromSupabase();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications

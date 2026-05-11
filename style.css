@@ -961,9 +961,33 @@ header {
     margin: 0;
 }
 
-.item-info { 
+.item-info {
     padding: 8px;
 }
+
+/* ── Skeleton loading cards ─────────────────────────────── */
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position:  600px 0; }
+}
+.skeleton-card {
+    background: white;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.skeleton-line {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 600px 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 4px;
+}
+.skeleton-img  { width: 100%; aspect-ratio: 4/3; border-radius: 0; }
+.skeleton-info { padding: 8px; display: flex; flex-direction: column; gap: 7px; }
+.skeleton-price { height: 16px; width: 55px; }
+.skeleton-title { height: 13px; width: 88%; }
+.skeleton-title2 { height: 13px; width: 65%; }
+.skeleton-loc   { height: 11px; width: 48%; margin-top: 2px; }
 
 .price-row {
     display: flex;
