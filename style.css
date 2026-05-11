@@ -953,7 +953,7 @@ header {
     width: 100%;
     aspect-ratio: 4/3;
     object-fit: contain;
-    background: #f0f0f0;
+    background: #ffffff;
     display: block;
     margin: 0;
 }
