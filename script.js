@@ -1465,7 +1465,24 @@ function deleteInboxMsg(convId, msgIdx) {
 function viewConvListing() {
     const conv = conversations.find(c => c.id === activeConvId);
     if (!conv || !conv.partId || conv.partId === 'general') { showToast('No listing linked to this conversation'); return; }
-    const part = findPartAnywhere(conv.partId);
+    // Also try matching by supabaseConvId's listing_id directly
+    let part = findPartAnywhere(conv.partId);
+    if (!part && conv.supabaseConvId) {
+        // partId may be stale — re-fetch from supabase conversation record
+        sb.from('conversations').select('listing_id').eq('id', conv.supabaseConvId).single()
+            .then(({ data }) => {
+                if (data?.listing_id) {
+                    conv.partId = data.listing_id;
+                    saveConversations();
+                    const p = findPartAnywhere(data.listing_id);
+                    if (p) openItemDetail(p.id);
+                    else showToast('Listing no longer available');
+                } else {
+                    showToast('Listing no longer available');
+                }
+            });
+        return;
+    }
     if (!part) { showToast('Listing no longer available'); return; }
     openItemDetail(part.id);
 }
