@@ -37,6 +37,7 @@ const VEHICLE_DB = {
   "Mahindra":    ["Pik Up","Roxor","Scorpio","XUV300"],
   "Maserati":    ["Ghibli","Ghibli Hybrid","Grancabrio","Granturismo","Levante","Quattroporte"],
   "Mazda":       ["2","3","6","BT-50","CX-3","CX-30","CX-5","CX-60","CX-70","CX-8","CX-80","CX-9","MX-3","MX-5","MX-6","MX-30","MPV","RX-7","RX-8","Tribute"],
+  "McLaren":      ["540C","570S","570GT","600LT","620R","650S","675LT","720S","750S","765LT","Artura","Elva","GT","MP4-12C","P1","Senna"],
   "Mercedes-Benz":["A-Class","AMG GT","B-Class","C-Class","CLA","CLS","E-Class","EQA","EQB","EQC","EQE","EQS","G-Class","GLA","GLB","GLC","GLE","GLS","S-Class","SL","SLC","SLK","Sprinter","V-Class","Vito","X-Class"],
   "MG":          ["3","4","HS","Marvel R","RX5","ZS","ZST"],
   "MINI":        ["Clubman","Convertible","Countryman","Hatch","Paceman"],
