@@ -940,6 +940,7 @@ async function loadConversationsFromSupabase(userId) {
         renderInboxConvList();
         updateInboxBadge();
         subscribeToRealtimeMessages();
+        subscribeToRealtimeListings();
     } catch (e) { console.warn('Load conversations:', e); }
 }
 
@@ -1119,8 +1120,49 @@ function subscribeToRealtimeMessages() {
         .subscribe();
 }
 
+let _realtimeListingsChannel = null;
+
+function subscribeToRealtimeListings() {
+    if (!currentUserId) return;
+    if (_realtimeListingsChannel) { sb.removeChannel(_realtimeListingsChannel); _realtimeListingsChannel = null; }
+
+    _realtimeListingsChannel = sb.channel('listings-feed')
+        .on('postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'listings' },
+            (payload) => {
+                const r = payload.new;
+                if (!r || r.status !== 'active') return;
+                if (r.seller_id === currentUserId) return; // own listing already in userListings
+                if (partDatabase.some(p => p.supabaseId === r.id)) return;
+                if (userListings.some(l => l.supabaseId === r.id)) return;
+                // Fetch images separately then add to grid
+                sb.from('listing_images').select('storage_path, position').eq('listing_id', r.id)
+                    .order('position').then(({ data: imgs }) => {
+                        const images = (imgs || []).map(i => i.storage_path).filter(Boolean);
+                        partDatabase.unshift({
+                            id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
+                            saves: 0, date: new Date(r.created_at).getTime(),
+                            apcId: r.apc_id, title: r.title, category: r.category,
+                            price: r.price, condition: r.condition,
+                            description: r.description, loc: r.location,
+                            postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+                            openToOffers: r.open_to_offers, isPro: r.is_pro,
+                            stockNumber: r.stock_number, odometer: r.odometer,
+                            warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
+                            fit: r.fitting_available, year: r.fits_year,
+                            seller: r.seller_name || 'Seller',
+                            images: images.length ? images : [], fits: [],
+                        });
+                        renderMainGrid();
+                    });
+            }
+        )
+        .subscribe();
+}
+
 function unsubscribeRealtime() {
     if (_realtimeChannel) { sb.removeChannel(_realtimeChannel); _realtimeChannel = null; }
+    if (_realtimeListingsChannel) { sb.removeChannel(_realtimeListingsChannel); _realtimeListingsChannel = null; }
 }
 
 
