@@ -2365,6 +2365,22 @@ function onSellMakeChange() {
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
 }
 
+function initWantedVehicleDropdowns(make, model, year) {
+    const makeEl  = document.getElementById('wantedMake');
+    const modelEl = document.getElementById('wantedModel');
+    const yearEl  = document.getElementById('wantedYear');
+    if (!makeEl || !modelEl || !yearEl) return;
+    makeEl.innerHTML  = buildMakeOptions(make || '');
+    modelEl.innerHTML = buildModelOptions(make || '', model || '');
+    yearEl.innerHTML  = buildYearOptions(year || '');
+}
+
+function onWantedMakeChange() {
+    const make    = document.getElementById('wantedMake')?.value || '';
+    const modelEl = document.getElementById('wantedModel');
+    if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
+}
+
 function openSellOverlay() {
     if (!userIsSignedIn) {
         openAuthDrawer(openSellOverlay);
@@ -4466,17 +4482,13 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear, prefi
                 // Deselect
                 selectedWantedVehicleId = null;
                 chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
-                document.getElementById('wantedMake').value  = '';
-                document.getElementById('wantedModel').value = '';
-                document.getElementById('wantedYear').value  = '';
+                initWantedVehicleDropdowns('', '', '');
             } else {
                 // Select
                 selectedWantedVehicleId = v.id;
                 chips.querySelectorAll('.wanted-garage-chip').forEach(c => c.classList.remove('active'));
                 chip.classList.add('active');
-                document.getElementById('wantedMake').value  = v.make;
-                document.getElementById('wantedModel').value = v.model;
-                document.getElementById('wantedYear').value  = v.year;
+                initWantedVehicleDropdowns(v.make, v.model, v.year);
             }
         });
         const shouldPreselect = prefillVehicleId
@@ -4495,11 +4507,9 @@ function populateWantedGarageChips(prefillMake, prefillModel, prefillYear, prefi
 function openAddWantedFromList() {
     document.getElementById('wantedPartName').value = '';
     document.getElementById('wantedMaxPrice').value = '';
-    document.getElementById('wantedMake').value  = '';
-    document.getElementById('wantedModel').value = '';
-    document.getElementById('wantedYear').value  = '';
     const catEl = document.getElementById('wantedCategory');
     if (catEl) catEl.value = '';
+    initWantedVehicleDropdowns('', '', '');
     populateWantedGarageChips();
     toggleDrawer('addWantedDrawer', true);
 }
@@ -4515,10 +4525,7 @@ function onAddWantedFromSearch() {
     const prefillModel = (document.getElementById('filterModel')?.value || '').trim();
     const prefillYear  = (document.getElementById('filterYear')?.value  || '').trim();
 
-    document.getElementById('wantedMake').value  = prefillMake;
-    document.getElementById('wantedModel').value = prefillModel;
-    document.getElementById('wantedYear').value  = prefillYear;
-
+    initWantedVehicleDropdowns(prefillMake, prefillModel, prefillYear);
     populateWantedGarageChips(prefillMake, prefillModel, prefillYear);
     toggleDrawer('addWantedDrawer');
 }
@@ -4527,9 +4534,7 @@ function openAddWantedForVehicle(vehicleId) {
     const v = myVehicles.find(x => x.id === vehicleId);
     document.getElementById('wantedPartName').value = '';
     document.getElementById('wantedMaxPrice').value = '';
-    document.getElementById('wantedMake').value  = v ? v.make  : '';
-    document.getElementById('wantedModel').value = v ? v.model : '';
-    document.getElementById('wantedYear').value  = v ? v.year  : '';
+    initWantedVehicleDropdowns(v?.make || '', v?.model || '', v?.year || '');
     populateWantedGarageChips(null, null, null, vehicleId);
     toggleDrawer('addWantedDrawer', true);
 }
