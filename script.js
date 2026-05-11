@@ -43,36 +43,7 @@ let activeFilters = {
 // Each part now has a stable `id` field so lookups never break if the array is reordered.
 // `images` is an array so the carousel can show real photos per part.
 // `fits` = which vehicles a part suits. Empty array = universal (fits anything).
-const partDatabase = [
-    { id: 1, title: "Genuine Toyota Hiace Left Side Mirror (2019+)", price: 85, images: ["images/hiace.mirror.jpg", "images/hiace.handle.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 14, date: 1738540800000, openToOffers: true, warehouseBin: 'A1-S3', condition: 'used' },
-    { id: 2, title: "Lotus Elise S2 GT Track Spoiler", price: 850, images: ["images/elise.wing.jpg", "images/elise.diffuser.jpg", "images/elise.exhaust.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 22, date: 1741046400000, openToOffers: true, warehouseBin: 'B2-S1', condition: 'used' },
-    { id: 3, title: "Toyota Hiace Tail Light Assembly (Current)", price: 145, images: ["images/hiace.taillight.webp", "images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1742688000000, warehouseBin: 'A1-S4', condition: 'used' },
-    { id: 4, title: "Custom 3D Printed Racing Center Caps (Set of 4)", price: 40, images: ["images/elise.wheel.jpg", "images/elise.rims.jpg", "images/commodore.wheels.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "wheels", fits: [], saves: 31, date: 1743724800000, condition: 'new_aftermarket' },
-    { id: 5, title: "Toyota Hiace Sliding Door Handle", price: 35, images: ["images/hiace.handle.jpg", "images/hiace.mirror.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1744502400000, status: 'sold', condition: 'used' },
-    { id: 6, title: "Lotus Elise Sport Steering Wheel", price: 320, images: ["images/elise.steering.wheel.jpeg", "images/dash.mount.jpg", "images/gauge.pod.jpg", "images/elise.seat.jpg"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 18, date: 1745107200000, openToOffers: true, condition: 'used' },
-    { id: 7, title: "Performance Brake Calipers (Front Set)", price: 450, images: ["images/elise.brake.pads.jpg", "images/elise.rims.jpg", "images/elise.wheel.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "brakes", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 9, date: 1745712000000, condition: 'used' },
-    { id: 8, title: "Universal Cold Air Intake Kit", price: 120, images: ["images/Elise.scoops.webp", "images/turbo.webp", "images/1KD.engine.webp"], loc: "BRISBANE, QLD", fit: false, seller: "Alex T.", isPro: false, category: "engine", fits: [], saves: 27, date: 1746057600000, condition: 'new_aftermarket' },
-    { id: 9, title: "Toyota Hiace 1KD-FTV Turbocharger", price: 650, images: ["images/hiace.turbo.jpg", "images/turbo.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, tradeOnly: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 19, date: 1736899200000, warehouseBin: 'C3-S2', condition: 'used' },
-    { id: 10, title: "Lotus Elise S2 Carbon Rear Diffuser", price: 480, images: ["images/elise.diffuser.jpg", "images/elise.exhaust.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 11, date: 1737590400000, status: 'sold', condition: 'used' },
-    { id: 11, title: "Toyota Hiace Tow Bar Heavy Duty", price: 220, images: ["images/hiace.towbar.webp", "images/hiace.bumper.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Jason M.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 7, date: 1738108800000, condition: 'new_aftermarket' },
-    { id: 12, title: "Toyota 1KD-FTV Engine Complete Low Kms", price: 2800, images: ["images/1KD.engine.webp", "images/hiace.turbo.jpg", "images/hiace.alternator.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, tradeOnly: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 34, date: 1739318400000, warehouseBin: 'C1-S1', condition: 'used' },
-    { id: 13, title: "Lotus Elise S2 Left Headlight", price: 380, images: ["images/elise.headlight.jpg", "images/elise.wing.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "lighting", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 15, date: 1740009600000, condition: 'used' },
-    { id: 14, title: "Toyota Hiace Steering Rack Reconditioned", price: 295, images: ["images/hiace.steeringrack.jpg", "images/1KD.engine.webp"], loc: "SYDNEY, NSW", fit: true, seller: "Tom K.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 5, date: 1740528000000, condition: 'refurbished' },
-    { id: 15, title: "Lotus Elise S2 Soft Top Hood", price: 550, images: ["images/elise.soft.top.jpg", "images/elise.seat.jpg"], loc: "PERTH, WA", fit: false, seller: "Chris B.", isPro: true, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 21, date: 1741219200000, condition: 'used' },
-    { id: 16, title: "Toyota Hiace 80A Alternator", price: 180, images: ["images/hiace.alternator.webp", "images/1KD.engine.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 9, date: 1741910400000, condition: 'used' },
-    { id: 17, title: "Holden Commodore VE 18\" Wheels Set of 4", price: 620, images: ["images/commodore.wheels.webp", "images/elise.rims.jpg"], loc: "MELBOURNE, VIC", fit: false, seller: "Dave R.", isPro: false, category: "wheels", fits: [{ make: 'Holden', model: 'Commodore' }], saves: 16, date: 1742601600000, condition: 'used' },
-    { id: 18, title: "Toyota Hiace 1KD Injector Set (4 cyl)", price: 750, images: ["images/hiace.injector.webp", "images/1KD.engine.webp", "images/hiace.turbo.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 12, date: 1743292800000, condition: 'used' },
-    { id: 19, title: "Toyota Hiace Front Grille 2014+", price: 95, images: ["images/hiace.grille.jpg", "images/hiace.bumper.jpg", "images/hiace.mirror.jpg"], loc: "BRISBANE, QLD", fit: false, seller: "Sam T.", isPro: false, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 4, date: 1743897600000, condition: 'used' },
-    { id: 20, title: "Toyota Hiace Front Bumper Bar", price: 185, images: ["images/hiace.bumper.jpg", "images/hiace.grille.jpg"], loc: "ADELAIDE, SA", fit: true, seller: "Gary S.", isPro: true, category: "body", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 8, date: 1744329600000, condition: 'used' },
-    { id: 21, title: "Lotus Elise S2 Recaro Racing Seat", price: 420, images: ["images/elise.seat.jpg", "images/elise.steering.wheel.jpeg", "images/elise.rims.jpg"], loc: "ADELAIDE, SA", fit: false, seller: "Lee P.", isPro: false, category: "interior", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 17, date: 1744761600000, condition: 'used' },
-    { id: 22, title: "Universal Garrett-Style Performance Turbo", price: 890, images: ["images/turbo.webp", "images/Elise.scoops.webp", "images/1KD.engine.webp"], loc: "SYDNEY, NSW", fit: true, seller: "Alex T.", isPro: true, category: "engine", fits: [], saves: 28, date: 1745366400000, condition: 'new_aftermarket' },
-    { id: 23, title: "Toyota Hiace Cargo Barrier (Van)", price: 110, images: ["images/hiace.cargo.barrier.webp", "images/hiace.floormats.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: true, category: "interior", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 6, date: 1745625600000, condition: 'new_aftermarket' },
-    { id: 24, title: "Toyota Hiace Floor Mats Full Set", price: 55, images: ["images/hiace.floormats.webp", "images/hiace.cargo.barrier.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: false, category: "interior", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 3, date: 1745884800000, condition: 'new_oem' },
-    { id: 25, title: "Toyota Hiace Oil & Fuel Filter Service Kit", price: 45, images: ["images/hiace.oilfilter.jpg", "images/hiace.fuel.filter.jpg", "images/hiace.filter.webp"], loc: "ADELAIDE, SA", fit: false, seller: "Gary S.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 3, date: 1745971200000, condition: 'new_oem' },
-    { id: 26, title: "Lotus Elise S2 Exhaust System", price: 680, images: ["images/elise.exhaust.jpg", "images/elise.diffuser.jpg"], loc: "MELBOURNE, VIC", fit: true, seller: "Mike D.", isPro: true, category: "engine", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 23, date: 1745798400000, condition: 'used' },
-    { id: 27, title: "Lotus Elise S2 Alloy Wheels (Set of 4)", price: 1100, images: ["images/elise.rims.jpg", "images/elise.wheel.jpg", "images/commodore.wheels.webp"], loc: "SYDNEY, NSW", fit: false, seller: "Sarah J.", isPro: false, category: "wheels", fits: [{ make: 'Lotus', model: 'Elise' }], saves: 29, date: 1745193600000, condition: 'used' },
-    { id: 28, title: "Toyota Hiace Fuel Injector (Single)", price: 130, images: ["images/hiace.fuel.filter.jpg", "images/hiace.injector.webp"], loc: "PERTH, WA", fit: false, seller: "Mick O.", isPro: false, category: "engine", fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 2, date: 1744070400000, condition: 'refurbished' }
-];
+const partDatabase = [];
 
 // --- OFFERS ---
 const OFFERS_KEY = 'apc.offers.v1';
@@ -566,10 +537,7 @@ let userListings = loadUserListings();
 let sellListingImages = [];
 
 function getInitialUserListings() {
-    return [
-        { id: 9001, title: 'Toyota Hiace KDH 2KD Turbocharger — Low KM', price: 480, images: ['images/hiace.turbo.jpg'], loc: 'ADELAIDE, SA', postcode: '5000', seller: 'Gary S.', isPro: true, category: 'engine', fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 3, date: Date.now() - 3 * 24 * 60 * 60 * 1000, condition: 'used', description: 'Pulled from a 2016 KDH200 at 98,000km. Shaft play is minimal, no cracks on housing. Ready to bolt on.', pickup: true, postage: true },
-        { id: 9002, title: 'Toyota Hiace Power Steering Rack — Complete Unit', price: 220, images: ['images/hiace.steeringrack.jpg'], loc: 'ADELAIDE, SA', postcode: '5000', seller: 'Gary S.', isPro: true, category: 'engine', fits: [{ make: 'Toyota', model: 'Hiace' }], saves: 1, date: Date.now() - 1 * 24 * 60 * 60 * 1000, condition: 'used', description: 'Complete rack and pinion unit from a 2018 Hiace. No leaks, smooth operation. Suits LWB and SLWB.', pickup: true, postage: false },
-    ];
+    return [];
 }
 
 function loadUserListings() {
@@ -1204,52 +1172,7 @@ function purgeTrashedConversations() {
     if (trashedConversations.length !== before) saveTrash();
 }
 function getInitialConversations() {
-    return [
-        { id:1, with:'Dave R.',            isPro:false, unread:true,  partId:1,  msgs:[
-            {id:1,sent:false,text:'Hey, is the Hiace mirror still available?',          time:'Mon',       clock:'9:14 am'},
-            {id:2,sent:true, text:'Yes still available — good condition, no cracks.',   time:'Mon',       clock:'9:32 am'},
-            {id:3,sent:false,text:'Would you take $70 for it?',                         time:'Mon',       clock:'9:45 am'},
-            {id:4,sent:true, text:'Best I can do is $75 — fits 2019+ perfectly.',       time:'Mon',       clock:'10:02 am'},
-            {id:5,sent:false,text:'Done! Can I pick up Saturday morning?',              time:'Today',     clock:'8:03 am'},
-            {id:6,sent:false,text:'Actually, would you consider a formal offer?',       time:'Today',     clock:'8:15 am'},
-            {id:7,sent:false,text:'',time:'Today',clock:'8:16 am', offerCard:{offerId:101,partTitle:'Toyota Hiace Door Mirror (Left)',partImg:'images/hiace.mirror.jpg',listedPrice:95,offerPrice:72,buyerNote:'Happy to pick up this weekend',status:'pending'}},
-        ]},
-        { id:2, with:'Sarah J.',           isPro:false, unread:true,  partId:2,  msgs:[
-            {id:1,sent:false,text:'Hi! Is the Lotus spoiler still for sale?',           time:'Yesterday', clock:'2:11 pm'},
-            {id:2,sent:true, text:'Yes — genuine factory item, excellent condition.',   time:'Yesterday', clock:'2:45 pm'},
-            {id:3,sent:false,text:'Does it come with the mounting hardware?',           time:'Yesterday', clock:'3:02 pm'},
-        ]},
-        { id:3, with:'Tom K.',             isPro:false, unread:false, partId:12, msgs:[
-            {id:1,sent:false,text:'Interested in the 1KD engine — km reading?',        time:'Wed',       clock:'11:20 am'},
-            {id:2,sent:true, text:'156,000km, ran perfectly when pulled. Fully tested.',time:'Wed',       clock:'11:55 am'},
-            {id:3,sent:false,text:'Can you do $2,600?',                                 time:'Wed',       clock:'12:10 pm'},
-            {id:4,sent:true, text:"Best is $2,700 — includes the turbo.",               time:'Wed',       clock:'12:18 pm'},
-            {id:5,sent:false,text:'Fair enough! Can you arrange freight from Adelaide?',time:'Wed',       clock:'1:30 pm'},
-        ]},
-        { id:4, with:'Brett (Parts Plus)', isPro:true,  unread:true,  partId:9,  msgs:[
-            {id:1,sent:false,text:"Do you have more Hiace turbos? We'd buy 3 if available.", time:'Thu', clock:'8:50 am'},
-            {id:2,sent:true, text:"2 in stock now. Can source more — what's your timeline?", time:'Thu', clock:'9:15 am'},
-            {id:3,sent:false,text:'No rush, within a month. Price firm on $650 each?',       time:'Thu', clock:'9:28 am'},
-        ]},
-        { id:5, with:'Lee P.',             isPro:false, unread:false, partId:13, msgs:[
-            {id:1,sent:false,text:'Is the Elise headlight driver or passenger side?',   time:'Tue',      clock:'4:45 pm'},
-            {id:2,sent:true, text:"Left (driver's side). Fits S2 models 2001–2011.",    time:'Tue',      clock:'5:10 pm'},
-            {id:3,sent:false,text:"Perfect — exactly what I need. I'll be in touch!",   time:'Tue',      clock:'5:22 pm'},
-        ]},
-        { id:6, with:'Marcus W.',          isPro:false, unread:true,  partId:9001, msgs:[
-            {id:1,sent:false,text:'Hi — is the KDH turbo still available?',                       time:'Yesterday', clock:'10:05 am'},
-            {id:2,sent:true, text:'Yes still here. Pulled clean, very low shaft play.',            time:'Yesterday', clock:'10:28 am'},
-            {id:3,sent:false,text:'Would you take $420 posted to Brisbane?',                       time:'Yesterday', clock:'10:44 am'},
-            {id:4,sent:true, text:'Best I can do is $450 posted — can box it up today.',           time:'Yesterday', clock:'11:02 am'},
-            {id:5,sent:false,text:"Deal — I'll pay this afternoon. Can you hold it?",              time:'Today',     clock:'8:15 am'},
-            {id:6,sent:true, text:"Held for you. Send payment to the email in my profile.",        time:'Today',     clock:'8:41 am'},
-        ]},
-        { id:7, with:'Priya N.',           isPro:false, unread:true,  partId:9002, msgs:[
-            {id:1,sent:false,text:'Does the steering rack suit a 2019 SLWB Hiace?',               time:'Today',     clock:'1:15 pm'},
-            {id:2,sent:true, text:'Yes — suits 2014–2021 LWB and SLWB, petrol and diesel.',       time:'Today',     clock:'1:38 pm'},
-            {id:3,sent:false,text:'Great. Any chance of pick-up this weekend in Adelaide?',        time:'Today',     clock:'1:52 pm'},
-        ]},
-    ];
+    return [];
 }
 function nextConvId() { return conversations.length ? Math.max(...conversations.map(c=>c.id))+1 : 1; }
 function nextMsgId(conv) { return conv.msgs.length ? Math.max(...conv.msgs.map(m=>m.id))+1 : 1; }
