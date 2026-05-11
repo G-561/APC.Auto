@@ -975,9 +975,8 @@ async function loadVehiclesFromSupabase(userId) {
             .eq('user_id', userId)
             .order('created_at', { ascending: true });
         if (error) { console.warn('vehicles load:', error.message); return; }
-        if (!rows?.length) return;
 
-        rows.forEach(r => {
+        (rows || []).forEach(r => {
             const existing = myVehicles.find(v => v.supabaseId === r.id);
             if (existing) {
                 Object.assign(existing, {
@@ -1017,9 +1016,8 @@ async function loadWantedFromSupabase(userId) {
             .eq('user_id', userId)
             .order('id', { ascending: true });
         if (error) { console.warn('wanted_parts load:', error.message); return; }
-        if (!rows?.length) return;
 
-        rows.forEach(r => {
+        (rows || []).forEach(r => {
             const existing = myWanted.find(w => w.supabaseId === r.id);
             if (existing) {
                 Object.assign(existing, {
