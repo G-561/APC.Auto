@@ -1015,7 +1015,7 @@ async function loadWantedFromSupabase(userId) {
             .from('wanted_parts')
             .select('*')
             .eq('user_id', userId)
-            .order('created_at', { ascending: true });
+            .order('id', { ascending: true });
         if (error) { console.warn('wanted_parts load:', error.message); return; }
         if (!rows?.length) return;
 
@@ -1024,18 +1024,20 @@ async function loadWantedFromSupabase(userId) {
             if (existing) {
                 Object.assign(existing, {
                     partName: r.part_name || r.title || '', make: r.make || '', model: r.model || '',
-                    year: r.year || '', maxPrice: r.max_price || null, category: r.category || '',
-                    mutedNotifications: !!r.muted_notifications
+                    year: r.year ? String(r.year) : '', maxPrice: r.max_price || r.budget_max || null,
+                    category: r.category || '', mutedNotifications: !!r.muted_notifications
                 });
             } else {
                 myWanted.push({
                     id: nextWantedId(),
                     supabaseId: r.id,
                     partName: r.part_name || r.title || '',
-                    make: r.make || '', model: r.model || '', year: r.year || '',
-                    maxPrice: r.max_price || null, category: r.category || '',
+                    make: r.make || '', model: r.model || '',
+                    year: r.year ? String(r.year) : '',
+                    maxPrice: r.max_price || r.budget_max || null,
+                    category: r.category || '',
                     mutedNotifications: !!r.muted_notifications,
-                    createdAt: r.created_at
+                    createdAt: new Date().toISOString()
                 });
             }
         });
@@ -1045,9 +1047,10 @@ async function loadWantedFromSupabase(userId) {
         for (const w of unsynced) {
             const { data, error: e } = await sb.from('wanted_parts').insert({
                 user_id: userId, title: w.partName || '', part_name: w.partName || '',
-                make: w.make || '', model: w.model || '', year: w.year || '',
-                max_price: w.maxPrice || null, category: w.category || '',
-                muted_notifications: !!w.mutedNotifications
+                status: 'active', make: w.make || '', model: w.model || '',
+                year: w.year ? Number(w.year) : null,
+                max_price: w.maxPrice || null, budget_max: w.maxPrice || null,
+                category: w.category || '', muted_notifications: !!w.mutedNotifications
             }).select('id').single();
             if (!e && data) w.supabaseId = data.id;
         }
@@ -4368,9 +4371,11 @@ function addWanted(partName, make, model, year, maxPrice, category) {
             user_id: currentUserId,
             title: partName,
             part_name: partName,
-            make: make || '', model: model || '', year: year || '',
-            max_price: maxPrice || null, category: category || '',
-            muted_notifications: false
+            status: 'active',
+            make: make || '', model: model || '',
+            year: year ? Number(year) : null,
+            max_price: maxPrice || null, budget_max: maxPrice || null,
+            category: category || '', muted_notifications: false
         }).select('id').single()
           .then(({ data, error }) => {
               if (error) console.warn('wanted insert:', error.message);
