@@ -1900,6 +1900,61 @@ function setListingStatus(id, status) {
     showToast(status === 'pending' ? 'Marked as Pending' : status === 'sold' ? 'Marked as Sold' : 'Listing relisted as Active');
 }
 
+function confirmDeleteListing(id) {
+    const part = userListings.find(p => p.id === id);
+    if (!part) return;
+    showConfirmDialog(
+        'Delete Listing',
+        `Are you sure you want to delete "${part.title}"? This cannot be undone.`,
+        'Delete',
+        () => deleteListing(id)
+    );
+}
+
+async function deleteListing(id) {
+    const idx = userListings.findIndex(p => p.id === id);
+    if (idx === -1) return;
+    const part = userListings[idx];
+    userListings.splice(idx, 1);
+    saveUserListings();
+    renderMainGrid();
+    renderMyParts();
+    if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+    showToast('Listing deleted');
+    if (part.supabaseId) {
+        try {
+            await sb.from('listing_images').delete().eq('listing_id', part.supabaseId);
+            await sb.from('listings').delete().eq('id', part.supabaseId);
+        } catch (e) { console.warn('Supabase delete error:', e); }
+    }
+}
+
+function showConfirmDialog(title, message, confirmLabel, onConfirm) {
+    const existing = document.getElementById('apcConfirmDialog');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'apcConfirmDialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+    box.innerHTML = `
+        <div style="font-weight:800;font-size:17px;margin-bottom:10px;color:#111;">${escapeHtml(title)}</div>
+        <div style="font-size:14px;color:#555;margin-bottom:24px;line-height:1.5;">${escapeHtml(message)}</div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="apcConfirmCancel" style="padding:10px 20px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:14px;cursor:pointer;">Cancel</button>
+            <button id="apcConfirmOk" style="padding:10px 20px;border:none;border-radius:8px;background:#e53935;color:#fff;font-weight:700;font-size:14px;cursor:pointer;">${escapeHtml(confirmLabel)}</button>
+        </div>`;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    document.getElementById('apcConfirmCancel').onclick = () => overlay.remove();
+    document.getElementById('apcConfirmOk').onclick = () => { overlay.remove(); onConfirm(); };
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+}
+
 function renderMyParts() {
     const myPartsList = document.getElementById('myPartsList');
     if (!myPartsList) return;
@@ -1968,9 +2023,16 @@ function renderMyParts() {
         manageBtn.textContent = 'MANAGE';
         manageBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'my-part-delete-btn';
+        deleteBtn.textContent = '×';
+        deleteBtn.title = 'Delete listing';
+        deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
+
         row.appendChild(thumb);
         row.appendChild(info);
         row.appendChild(manageBtn);
+        row.appendChild(deleteBtn);
         myPartsList.appendChild(row);
     });
 }

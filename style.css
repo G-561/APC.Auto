@@ -3046,6 +3046,23 @@ header {
     flex-shrink: 0;
     letter-spacing: 0.3px;
 }
+.my-part-delete-btn {
+    border: none;
+    background: #fee2e2;
+    color: #e53935;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 400;
+}
+.my-part-delete-btn:hover { background: #e53935; color: #fff; }
 
 /* MANAGE LISTING — status pills + rate buyer (edit mode only) */
 .manage-section {
