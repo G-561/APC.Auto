@@ -1164,7 +1164,7 @@ function renderInboxMsgs(conv) {
         const isOffer  = !!m.offerCard;
         const content  = isOffer
             ? buildOfferCardHTML(m.offerCard, m.sent, conv.id, idx)
-            : (m.photo ? `<img src="${m.photo}" alt="Photo" style="cursor:zoom-in;" onclick="openLightbox('${m.photo.replace(/'/g,"\\'")}')">` : escapeHtml(m.text));
+            : (m.photo ? `<img src="${m.photo}" alt="Photo" style="cursor:zoom-in;" onclick="openDetailImageViewer('${m.photo.replace(/'/g,"\\'")}')">` : escapeHtml(m.text));
         const delBtn   = `<button class="inbox-msg-del" onclick="deleteInboxMsg(${conv.id},${idx})" title="Delete">×</button>`;
         const initial  = m.sent ? me.charAt(0).toUpperCase() : conv.with.charAt(0).toUpperCase();
         const colClass = isOffer ? 'inbox-msg-col offer-col' : 'inbox-msg-col';
@@ -2997,7 +2997,7 @@ function openDetailImageViewer(src, images, idx) {
     }
 
     image.src = _lightboxImages[_lightboxIdx];
-    lightbox.style.zIndex = '9999';
+    lightbox.style.zIndex = '19999';
     lightbox.classList.add('active');
     updateLightboxNav();
     // Allow pinch-to-zoom on the lightbox image
