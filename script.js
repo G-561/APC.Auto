@@ -1966,7 +1966,7 @@ function buildCardHTML(part) {
 
     return `
         <div class="item-card" onclick="openItemDetail(${part.id})">
-            <img class="item-img" src="${thumbUrl(part.images[0])}" alt="${part.title}" loading="lazy">
+            <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="lazy">
             ${pendingBanner}
             <div class="item-info">
                 <div class="price-row">
