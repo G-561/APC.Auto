@@ -2728,8 +2728,8 @@ async function submitSellListing() {
     }
 
     const numericPrice = Number(price);
-    if (!Number.isFinite(numericPrice) || numericPrice < 1) {
-        showSellError('Enter a valid price (minimum $1).');
+    if (!Number.isFinite(numericPrice) || numericPrice < 1 || numericPrice > 9999999) {
+        showSellError('Enter a valid price between $1 and $9,999,999.');
         return;
     }
     if (title.length > 120) {

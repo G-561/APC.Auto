@@ -950,7 +950,7 @@
                 <div class="filter-section">
                     <h4>Pricing & Condition</h4>
                     <div class="input-row-flex" style="margin-bottom: 10px;">
-                        <div class="input-group"><label>Price ($)</label><input id="sellPrice" type="number" placeholder="0.00"></div>
+                        <div class="input-group"><label>Price ($)</label><input id="sellPrice" type="number" placeholder="0.00" min="1" max="9999999"></div>
                         <div class="input-group">
                             <label>Condition</label>
                             <select id="sellCondition">
@@ -1999,7 +1999,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="vehicles.js?v=3"></script>
-<script src="script.js?v=47"></script>
+<script src="script.js?v=48"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
