@@ -672,7 +672,7 @@ async function loadPublicListingsFromSupabase() {
         const { data: rows, error } = await sb
             .from('listings')
             .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
-            .eq('status', 'active')
+            .in('status', ['active', 'pending'])
             .order('created_at', { ascending: false })
             .limit(40);
         if (error) { renderMainGrid(); return; }
@@ -697,6 +697,7 @@ async function loadPublicListingsFromSupabase() {
                 warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
                 fit: r.fitting_available, year: r.fits_year,
                 seller: r.seller_name || 'Seller',
+                status: r.status === 'active' ? undefined : r.status,
                 images: images.length ? images : [], fits,
             });
         });
@@ -1133,7 +1134,7 @@ function subscribeToRealtimeListings() {
             { event: 'INSERT', schema: 'public', table: 'listings' },
             (payload) => {
                 const r = payload.new;
-                if (!r || r.status !== 'active') return;
+                if (!r || (r.status !== 'active' && r.status !== 'pending')) return;
                 if (r.seller_id === currentUserId) return; // own listing already in userListings
                 if (partDatabase.some(p => p.supabaseId === r.id)) return;
                 if (userListings.some(l => l.supabaseId === r.id)) return;
