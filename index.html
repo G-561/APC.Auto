@@ -656,6 +656,17 @@
             <div class="filter-drawer-close dh-close" onclick="toggleDrawer('filterDrawer')">×</div>
         </div>
 
+        <!-- PRO ONLY: search mode toggle — Parts vs Wanted -->
+        <div id="filterProModeSection" style="display:none;">
+            <div class="filter-section" style="padding-bottom:12px; border-bottom:1px solid #eee; margin-bottom:4px;">
+                <h4>Find</h4>
+                <div class="radius-seg-control">
+                    <div class="radius-seg active" id="filterSegParts" onclick="setSearchMode('parts')">Parts</div>
+                    <div class="radius-seg" id="filterSegWanted" onclick="setSearchMode('wanted')">Wanted</div>
+                </div>
+            </div>
+        </div>
+
         <div class="filter-section">
             <h4>Part Category</h4>
             <div class="input-group">
@@ -2011,7 +2022,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="vehicles.js?v=3"></script>
-<script src="script.js?v=56"></script>
+<script src="script.js?v=57"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

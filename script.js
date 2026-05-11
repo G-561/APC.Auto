@@ -5731,6 +5731,7 @@ function renderAccountState() {
     if (proSearchSwitch) proSearchSwitch.classList.toggle('on', proSearchOn);
     if (searchModePill) searchModePill.style.display = (proSearchOn && currentUserTier === 'pro') ? '' : 'none';
     if (!proSearchOn && currentSearchMode === 'wanted') setSearchMode('parts');
+    syncSearchModePill();
     const isPro = userIsSignedIn && currentUserTier === 'pro';
     const dtbDash   = document.getElementById('dtbDashboard');
     const amenuDash = document.getElementById('amenuDashboard');
@@ -5874,16 +5875,21 @@ function setSearchMode(mode) {
 function syncSearchModePill() {
     const pill  = document.getElementById('searchModeToggle');
     const input = document.getElementById('mainSearchInput');
-    if (!pill) return;
-    if (currentSearchMode === 'wanted') {
-        pill.textContent = 'Search Parts';
-        pill.classList.add('mode-wanted');
-        if (input) input.placeholder = "Search members' wanted lists...";
-    } else {
-        pill.textContent = 'Search Wanted';
-        pill.classList.remove('mode-wanted');
-        if (input) input.placeholder = 'Search parts for sale...';
+    const isWanted = currentSearchMode === 'wanted';
+    if (pill) {
+        pill.textContent = isWanted ? 'Search Parts' : 'Search Wanted';
+        pill.classList.toggle('mode-wanted', isWanted);
     }
+    if (input) input.placeholder = isWanted ? "Search members' wanted lists..." : 'Search parts for sale...';
+
+    // Filter sidebar segmented control (desktop + mobile filter drawer)
+    const proSection = document.getElementById('filterProModeSection');
+    const segParts   = document.getElementById('filterSegParts');
+    const segWanted  = document.getElementById('filterSegWanted');
+    const showProMode = userIsSignedIn && currentUserTier === 'pro' && proSearchOn;
+    if (proSection) proSection.style.display = showProMode ? '' : 'none';
+    if (segParts)  segParts.classList.toggle('active', !isWanted);
+    if (segWanted) segWanted.classList.toggle('active',  isWanted);
 }
 
 // --- DEBOUNCE UTILITY ---
