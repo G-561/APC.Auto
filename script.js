@@ -5194,7 +5194,8 @@ async function confirmUpgrade() {
     if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
 
     const { error } = await sb.from('profiles')
-        .upsert({ id: currentUserId, is_pro: true }, { onConflict: 'id' });
+        .update({ is_pro: true })
+        .eq('id', currentUserId);
 
     if (error) {
         if (btn) { btn.disabled = false; btn.textContent = 'Start Free Trial →'; }
