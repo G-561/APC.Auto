@@ -627,6 +627,7 @@ async function syncListingToSupabase(localListing) {
             apc_id: localListing.apcId || null,
             fitting_available: !!localListing.fit,
             fits_year: localListing.year || null,
+            seller_name: localListing.seller || null,
         };
 
         let listingId;
@@ -665,6 +666,45 @@ async function syncListingToSupabase(localListing) {
             ).catch(e => console.warn('Vehicle fits sync:', e));
         }
     } catch (e) { showToast('Sync error: ' + (e.message || e)); }
+}
+
+async function loadPublicListingsFromSupabase() {
+    try {
+        const { data: rows, error } = await sb
+            .from('listings')
+            .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (error || !rows?.length) return;
+
+        let added = false;
+        rows.forEach(r => {
+            if (partDatabase.some(p => p.supabaseId === r.id)) return;
+            if (userListings.some(l => l.supabaseId === r.id)) return;
+            const images = (r.listing_images || [])
+                .sort((a, b) => a.position - b.position)
+                .map(img => img.storage_path).filter(Boolean);
+            const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
+            partDatabase.push({
+                id: nextPartId(), supabaseId: r.id,
+                saves: r.saves_count || 0,
+                date: new Date(r.created_at).getTime(),
+                apcId: r.apc_id, title: r.title, category: r.category,
+                price: r.price, condition: r.condition,
+                description: r.description, loc: r.location,
+                postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+                openToOffers: r.open_to_offers, isPro: r.is_pro,
+                stockNumber: r.stock_number, odometer: r.odometer,
+                warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
+                fit: r.fitting_available, year: r.fits_year,
+                seller: r.seller_name || 'Seller',
+                images: images.length ? images : [], fits,
+            });
+            added = true;
+        });
+        if (added) renderMainGrid();
+    } catch (e) { console.warn('Load public listings:', e); }
 }
 
 async function loadUserListingsFromSupabase(userId) {
@@ -5997,6 +6037,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateHeaderOffset();
     initFilterVehicleDropdowns();
     renderMainGrid();
+    loadPublicListingsFromSupabase();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications
     const remembered = loadRememberedUser();
