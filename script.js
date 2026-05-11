@@ -966,6 +966,121 @@ async function loadConversationsFromSupabase(userId) {
     } catch (e) { console.warn('Load conversations:', e); }
 }
 
+// ── SUPABASE: VEHICLES, WANTED, SAVED LISTINGS ───────────────
+async function loadVehiclesFromSupabase(userId) {
+    try {
+        const { data: rows, error } = await sb
+            .from('vehicles')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true });
+        if (error) { console.warn('vehicles load:', error.message); return; }
+        if (!rows?.length) return;
+
+        rows.forEach(r => {
+            const existing = myVehicles.find(v => v.supabaseId === r.id);
+            if (existing) {
+                Object.assign(existing, {
+                    make: r.make || '', model: r.model || '', year: r.year || '',
+                    variant: r.variant || '', nickname: r.nickname || '', vin: r.vin || ''
+                });
+            } else {
+                myVehicles.push({
+                    id: nextVehicleId(),
+                    supabaseId: r.id,
+                    make: r.make || '', model: r.model || '', year: r.year || '',
+                    variant: r.variant || '', nickname: r.nickname || '', vin: r.vin || ''
+                });
+            }
+        });
+
+        // Push any pre-existing local vehicles that have no supabaseId yet
+        const unsynced = myVehicles.filter(v => !v.supabaseId);
+        for (const v of unsynced) {
+            const { data, error: e } = await sb.from('vehicles').insert({
+                user_id: userId, make: v.make, model: v.model, year: String(v.year || ''),
+                variant: v.variant || '', nickname: v.nickname || '', vin: v.vin || ''
+            }).select('id').single();
+            if (!e && data) v.supabaseId = data.id;
+        }
+
+        saveVehicles();
+        renderGarage();
+    } catch (e) { console.warn('loadVehiclesFromSupabase:', e); }
+}
+
+async function loadWantedFromSupabase(userId) {
+    try {
+        const { data: rows, error } = await sb
+            .from('wanted_parts')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true });
+        if (error) { console.warn('wanted_parts load:', error.message); return; }
+        if (!rows?.length) return;
+
+        rows.forEach(r => {
+            const existing = myWanted.find(w => w.supabaseId === r.id);
+            if (existing) {
+                Object.assign(existing, {
+                    partName: r.part_name || '', make: r.make || '', model: r.model || '',
+                    year: r.year || '', maxPrice: r.max_price || null, category: r.category || '',
+                    mutedNotifications: !!r.muted_notifications
+                });
+            } else {
+                myWanted.push({
+                    id: nextWantedId(),
+                    supabaseId: r.id,
+                    partName: r.part_name || '',
+                    make: r.make || '', model: r.model || '', year: r.year || '',
+                    maxPrice: r.max_price || null, category: r.category || '',
+                    mutedNotifications: !!r.muted_notifications,
+                    createdAt: r.created_at
+                });
+            }
+        });
+
+        // Push any pre-existing local wanted parts with no supabaseId
+        const unsynced = myWanted.filter(w => !w.supabaseId);
+        for (const w of unsynced) {
+            const { data, error: e } = await sb.from('wanted_parts').insert({
+                user_id: userId, part_name: w.partName || '', make: w.make || '',
+                model: w.model || '', year: w.year || '', max_price: w.maxPrice || null,
+                category: w.category || '', muted_notifications: !!w.mutedNotifications
+            }).select('id').single();
+            if (!e && data) w.supabaseId = data.id;
+        }
+
+        saveWanted();
+        if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
+    } catch (e) { console.warn('loadWantedFromSupabase:', e); }
+}
+
+async function loadSavedListingsFromSupabase(userId) {
+    try {
+        const { data: rows, error } = await sb
+            .from('saved_listings')
+            .select('listing_id')
+            .eq('user_id', userId);
+        if (error) { console.warn('saved_listings load:', error.message); return; }
+        if (!rows?.length) return;
+
+        let changed = false;
+        rows.forEach(r => {
+            const part = [...partDatabase, ...userListings].find(p => p.supabaseId === r.listing_id);
+            if (part && !savedParts.has(part.id)) {
+                savedParts.add(part.id);
+                changed = true;
+            }
+        });
+        if (changed) {
+            persistSavedParts();
+            renderMainGrid();
+            if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
+        }
+    } catch (e) { console.warn('loadSavedListingsFromSupabase:', e); }
+}
+
 // ── SUPABASE REALTIME ─────────────────────────────────────────
 let _realtimeChannel = null;
 
@@ -3592,6 +3707,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             loadUserListingsFromSupabase(session.user.id);
             loadConversationsFromSupabase(session.user.id);
+            loadVehiclesFromSupabase(session.user.id);
+            loadWantedFromSupabase(session.user.id);
+            loadSavedListingsFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
             unsubscribeRealtime();
             userIsSignedIn = false;
@@ -3692,16 +3810,31 @@ function submitAddVehicle() {
         if (idx !== -1) {
             myVehicles[idx] = { ...myVehicles[idx], make, model, year,
                 variant: variant||'', nickname: nickname||'', vin: vin||'' };
+            if (currentUserId && myVehicles[idx].supabaseId) {
+                sb.from('vehicles').update({
+                    make, model, year: String(year||''),
+                    variant: variant||'', nickname: nickname||'', vin: vin||''
+                }).eq('id', myVehicles[idx].supabaseId)
+                  .then(({ error }) => { if (error) console.warn('vehicle update:', error.message); });
+            }
         }
         editingVehicleId = null;
     } else {
-        myVehicles.push({
-            id: nextVehicleId(),
-            make, model, year,
-            variant:  variant  || '',
-            nickname: nickname || '',
-            vin:      vin      || ''
-        });
+        const newV = {
+            id: nextVehicleId(), make, model, year,
+            variant: variant||'', nickname: nickname||'', vin: vin||''
+        };
+        myVehicles.push(newV);
+        if (currentUserId) {
+            sb.from('vehicles').insert({
+                user_id: currentUserId, make, model, year: String(year||''),
+                variant: variant||'', nickname: nickname||'', vin: vin||''
+            }).select('id').single()
+              .then(({ data, error }) => {
+                  if (error) console.warn('vehicle insert:', error.message);
+                  else if (data) { newV.supabaseId = data.id; saveVehicles(); }
+              });
+        }
     }
     saveVehicles();
     renderGarage();
@@ -3718,10 +3851,15 @@ function deleteVehicle(id) {
         ? `Remove this vehicle? The ${wantedCount} wanted part(s) linked to it will also be removed.`
         : 'Remove this vehicle from your garage?';
     showConfirmDialog('Remove Vehicle', msg, 'Remove', () => {
+        const toDelete = myVehicles.find(v => v.id === id);
         myVehicles = myVehicles.filter(v => v.id !== id);
         myWanted   = myWanted.filter(w => w.vehicleId !== id);
         saveVehicles();
         saveWanted();
+        if (toDelete?.supabaseId && currentUserId) {
+            sb.from('vehicles').delete().eq('id', toDelete.supabaseId)
+              .then(({ error }) => { if (error) console.warn('vehicle delete:', error.message); });
+        }
         if (currentVehicleId === id) currentVehicleId = null;
         renderGarage();
         syncBackdrop();
@@ -3975,6 +4113,21 @@ function toggleSavedPart(partId, btn) {
         renderMyParts();
     }
     persistSavedParts();
+    if (currentUserId) {
+        const part = getPartById(partId);
+        if (part?.supabaseId) {
+            if (wasSaved) {
+                sb.from('saved_listings').delete()
+                  .eq('user_id', currentUserId).eq('listing_id', part.supabaseId)
+                  .then(({ error }) => { if (error) console.warn('unsave listing:', error.message); });
+            } else {
+                sb.from('saved_listings').upsert(
+                    { user_id: currentUserId, listing_id: part.supabaseId },
+                    { onConflict: 'user_id,listing_id' }
+                ).then(({ error }) => { if (error) console.warn('save listing:', error.message); });
+            }
+        }
+    }
     syncDetailSaveButton(partId);
     renderMainGrid(); // refresh saved indicators on cards
     if (currentVehicleId && currentVehicleTab === 'saved') renderGarageTab();
@@ -4196,7 +4349,7 @@ function restoreDismissedMatches(wantedId) {
 
 // Add a new wanted entry
 function addWanted(partName, make, model, year, maxPrice, category) {
-    myWanted.push({
+    const newW = {
         id: nextWantedId(),
         partName,
         make:     make     || '',
@@ -4206,15 +4359,34 @@ function addWanted(partName, make, model, year, maxPrice, category) {
         category: category || '',
         mutedNotifications: false,
         createdAt: new Date().toISOString()
-    });
+    };
+    myWanted.push(newW);
     saveWanted();
+    if (currentUserId) {
+        sb.from('wanted_parts').insert({
+            user_id: currentUserId,
+            part_name: partName,
+            make: make || '', model: model || '', year: year || '',
+            max_price: maxPrice || null, category: category || '',
+            muted_notifications: false
+        }).select('id').single()
+          .then(({ data, error }) => {
+              if (error) console.warn('wanted insert:', error.message);
+              else if (data) { newW.supabaseId = data.id; saveWanted(); }
+          });
+    }
 }
 
 // Delete a wanted entry
 function deleteWanted(id) {
     if (!confirm('Remove this wanted part?')) return;
+    const toDelete = myWanted.find(w => w.id === id);
     myWanted = myWanted.filter(w => w.id !== id);
     saveWanted();
+    if (toDelete?.supabaseId && currentUserId) {
+        sb.from('wanted_parts').delete().eq('id', toDelete.supabaseId)
+          .then(({ error }) => { if (error) console.warn('wanted delete:', error.message); });
+    }
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
     renderProfile();
