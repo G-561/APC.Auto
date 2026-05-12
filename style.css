@@ -1577,8 +1577,8 @@ header {
 }
 .wanted-row-name {
     font-size: 14px; font-weight: 700; color: #222;
-    flex: 1; min-width: 0;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    min-width: 0;
+    word-break: break-word;
 }
 .wanted-row-chips {
     display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap;
