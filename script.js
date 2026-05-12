@@ -1701,11 +1701,7 @@ function saveInboxItems() {
     try { localStorage.setItem(INBOX_STORAGE_KEY, JSON.stringify(inboxItems)); } catch (e) {}
 }
 function getInitialInboxItems() {
-    return [
-        { id: 1, type: 'messages', icon: '💬', title: 'New message from Gary S.', meta: 'About your brake pads listing', unread: true, flagged: false },
-        { id: 2, type: 'messages', icon: '💬', title: 'Message from Sarah J.', meta: 'Interested in your Elise parts', unread: true, flagged: false },
-        { id: 3, type: 'matches', icon: '🔔', title: 'Match found for "Lotus Elise" Wanted', meta: '2 parts available', unread: true, flagged: false }
-    ];
+    return [];
 }
 function nextInboxItemId() {
     return inboxItems.length ? Math.max(...inboxItems.map(i => i.id)) + 1 : 1;
@@ -6434,7 +6430,7 @@ function renderDashboard() {
     const myListings = userListings.filter(p => p.status !== 'removed');
     const totalSaves = myListings.reduce((s, p) => s + (p.saves || 0), 0);
     const revenue    = dashMockData.closedSales.reduce((s, p) => s + p.price, 0);
-    const unread     = parseInt(document.getElementById('inboxBadgeTopBar')?.textContent || '0') || 2;
+    const unread     = conversations.filter(c => c.unread).length;
 
     const welcome = document.getElementById('dashWelcome');
     if (welcome) welcome.textContent = `Welcome back, ${currentUserName || 'Pro'} — here\'s your business overview`;
