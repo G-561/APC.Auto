@@ -4995,9 +4995,10 @@ let currentInboxTab = 'all';
 function onOpenInbox() {
     setActiveNav('inboxNavItem');
     updateInboxBadge();
-    // Always land on the conversation list, never a previously open thread
     document.getElementById('chatDrawer')?.classList.remove('active');
     document.getElementById('messageDetailDrawer')?.classList.remove('active');
+    document.getElementById('inboxConvCol')?.classList.remove('slide-away');
+    document.getElementById('inboxThreadCol')?.classList.remove('slide-in');
     activeConvId = null;
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
