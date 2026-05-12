@@ -1211,13 +1211,6 @@
                     <div class="settings-pro-section-hdr">Search & Discovery</div>
                     <div class="settings-row">
                         <div>
-                            <div class="settings-row-label">Pro Search — Find Wanted</div>
-                            <div class="settings-row-sub">Search active buyer requests and match your stock</div>
-                        </div>
-                        <label class="settings-toggle"><input type="checkbox" id="settingProSearch" onchange="onToggleProSearch()"><span class="settings-toggle-track"></span></label>
-                    </div>
-                    <div class="settings-row">
-                        <div>
                             <div class="settings-row-label">Trade Only — Pro buyers only</div>
                             <div class="settings-row-sub">Your listings are hidden from the public</div>
                         </div>
@@ -1896,7 +1889,6 @@
         </div>
         <div class="amenu-section">
             <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">Upgrade to APC Pro ›</button>
-            <button class="account-menu-item activate-search" id="accountMenuActivate" style="display:none;" onclick="onToggleProSearch(event)">Pro Search <span class="switch" id="proSearchSwitch"></span></button>
         </div>
         <div class="amenu-section">
             <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')">Help &amp; Support <span class="account-menu-chevron">›</span></button>
@@ -1930,7 +1922,6 @@
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
         <button class="acct-dd-item acct-dd-upgrade" id="acctDdUpgrade" onclick="onUpgradeToPro(); closeAccountDropdown()">Upgrade to APC Pro ›</button>
-        <button class="acct-dd-item acct-dd-activate" id="acctDdActivate" style="display:none;" onclick="onToggleProSearch(event)">Pro Search <span class="switch" id="proSearchSwitchDd"></span></button>
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">

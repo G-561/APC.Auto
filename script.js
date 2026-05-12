@@ -8,7 +8,6 @@ let userIsSignedIn = false;          // starts logged out — header shows "Sign
 let currentUserName = null;          // e.g. "Gary"
 let currentUserTier = null;          // 'standard' | 'pro'
 let currentUserId = null;            // Supabase UUID of signed-in user
-let proSearchOn    = true;           // when user is pro, controls FIND PARTS / FIND WANTED bar
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let gridShownCount   = 20;
 function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
@@ -457,8 +456,6 @@ function renderSettingsDrawer() {
     const nameEl     = document.getElementById('settingsDisplayName');
     const locEl      = document.getElementById('settingsLocation');
     const proSection = document.getElementById('settingsProSection');
-    const proToggle  = document.getElementById('settingProSearch');
-
     if (nameEl) nameEl.value = currentUserName || '';
     if (locEl)  locEl.value  = userSettings.location || '';
     renderProfilePicPreview();
@@ -466,7 +463,6 @@ function renderSettingsDrawer() {
     const isPro = currentUserTier === 'pro';
     const proBlock = document.getElementById('settingsProBlock');
     if (proBlock) proBlock.style.display = isPro ? 'block' : 'none';
-    if (proToggle)  proToggle.checked = proSearchOn;
 
     const toggleMap = {
         settingNotifyWanted:        'notifyWantedMatch',
@@ -5382,7 +5378,6 @@ async function confirmUpgrade() {
     }
 
     currentUserTier = 'pro';
-    proSearchOn = true;
     closeUpgradeModal();
     renderAccountState();
     if (document.getElementById('workshopDrawer')?.classList.contains('active')) {
@@ -5411,12 +5406,6 @@ function closeWelcomeModal() {
     localStorage.setItem('apcWelcomeSeen', '1');
 }
 
-// Pro-only: turn the FIND PARTS / FIND WANTED bar on/off
-function onToggleProSearch(e) {
-    if (e) e.stopPropagation();
-    proSearchOn = !proSearchOn;
-    renderAccountState();
-}
 
 let userTradeOnly = false;
 function onToggleTradeOnly(src) {
@@ -5864,8 +5853,6 @@ function renderAccountState() {
     const menuStatus     = document.getElementById('accountMenuStatus');
     const menuAvatar     = document.getElementById('accountMenuAvatar');
     const menuUpgrade    = document.getElementById('accountMenuUpgrade');
-    const menuActivate   = document.getElementById('accountMenuActivate');
-    const proSearchSwitch = document.getElementById('proSearchSwitch');
 
     if (!pill) return;
 
@@ -5887,7 +5874,7 @@ function renderAccountState() {
     } else if (currentUserTier === 'pro') {
         pill.classList.add('signed-in', 'tier-pro');
         pill.innerHTML = avatarHTML;
-        if (searchModePill) searchModePill.style.display = proSearchOn ? '' : 'none';
+        if (searchModePill) searchModePill.style.display = '';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
     } else {
         pill.classList.add('signed-in', 'tier-standard');
@@ -5914,13 +5901,7 @@ function renderAccountState() {
     if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'standard') ? 'flex' : 'none';
     const settingsUpgradeNudge = document.getElementById('settingsUpgradeNudge');
     if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'standard') ? 'block' : 'none';
-    if (menuActivate) {
-        menuActivate.style.display = (currentUserTier === 'pro') ? 'flex' : 'none';
-        menuActivate.classList.toggle('on', proSearchOn);
-    }
-    if (proSearchSwitch) proSearchSwitch.classList.toggle('on', proSearchOn);
-    if (searchModePill) searchModePill.style.display = (proSearchOn && currentUserTier === 'pro') ? '' : 'none';
-    if (!proSearchOn && currentSearchMode === 'wanted') setSearchMode('parts');
+    if (searchModePill) searchModePill.style.display = (currentUserTier === 'pro') ? '' : 'none';
     syncSearchModePill();
     const isPro = userIsSignedIn && currentUserTier === 'pro';
     const dtbDash   = document.getElementById('dtbDashboard');
@@ -5940,9 +5921,7 @@ function renderAccountState() {
     const ddName    = document.getElementById('acctDdName');
     const ddTier    = document.getElementById('acctDdTier');
     const ddUpgrade = document.getElementById('acctDdUpgrade');
-    const ddActivate= document.getElementById('acctDdActivate');
     const ddDash    = document.getElementById('acctDdDashboard');
-    const ddSwitch  = document.getElementById('proSearchSwitchDd');
     if (ddAvatar) {
         if (pic) {
             ddAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
@@ -5958,14 +5937,12 @@ function renderAccountState() {
         ddTier.classList.toggle('pro', isPro);
     }
     if (ddUpgrade)  ddUpgrade.style.display  = (currentUserTier === 'standard') ? 'flex' : 'none';
-    if (ddActivate) { ddActivate.style.display = isPro ? 'flex' : 'none'; ddActivate.classList.toggle('on', proSearchOn); }
     if (ddDash)     ddDash.style.display      = isPro ? 'flex' : 'none';
-    if (ddSwitch)   ddSwitch.classList.toggle('on', proSearchOn);
 
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
     updateWarehouseBinVisibility();
-    if (!userIsSignedIn || currentUserTier !== 'pro' || !proSearchOn) {
+    if (!userIsSignedIn || currentUserTier !== 'pro') {
         currentSearchMode = 'parts';
         setSearchMode('parts');
     }
@@ -6073,7 +6050,7 @@ function syncSearchModePill() {
     const proSection = document.getElementById('filterProModeSection');
     const segParts   = document.getElementById('filterSegParts');
     const segWanted  = document.getElementById('filterSegWanted');
-    const showProMode = userIsSignedIn && currentUserTier === 'pro' && proSearchOn;
+    const showProMode = userIsSignedIn && currentUserTier === 'pro';
     if (proSection) proSection.style.display = showProMode ? '' : 'none';
     if (segParts)  segParts.classList.toggle('active', !isWanted);
     if (segWanted) segWanted.classList.toggle('active',  isWanted);
