@@ -1088,13 +1088,34 @@ function subscribeToRealtimeMessages() {
         )
         .on('postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'messages' },
-            (payload) => {
+            async (payload) => {
                 const msg = payload.new;
                 if (!msg) return;
                 if (msg.sender_id === currentUserId) return; // own message already shown
 
-                const conv = conversations.find(c => c.supabaseConvId === msg.conversation_id);
-                if (!conv) return;
+                let conv = conversations.find(c => c.supabaseConvId === msg.conversation_id);
+                if (!conv) {
+                    // New conversation the recipient hasn't loaded yet — fetch and create it
+                    const { data: convRow } = await sb.from('conversations')
+                        .select('*').eq('id', msg.conversation_id).single();
+                    if (!convRow) return;
+                    const isBuyer = convRow.buyer_id === currentUserId;
+                    const otherName = isBuyer ? (convRow.seller_name || 'Seller') : (convRow.buyer_name || 'Buyer');
+                    const part = [...partDatabase, ...userListings].find(p => p.supabaseId === convRow.listing_id);
+                    conv = {
+                        id: nextConvId(),
+                        supabaseConvId: convRow.id,
+                        buyerId: convRow.buyer_id,
+                        sellerId: convRow.seller_id,
+                        with: otherName,
+                        isPro: false,
+                        unread: false,
+                        partId: part?.id || convRow.listing_id,
+                        partTitle: convRow.listing_title || 'Part',
+                        msgs: [],
+                    };
+                    conversations.unshift(conv);
+                }
 
                 conv.msgs.push({
                     id: nextMsgId(conv),
