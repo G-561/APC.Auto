@@ -1312,6 +1312,7 @@ function openInboxConv(id) {
     if (withEl)  withEl.textContent  = conv.with;
     if (titleEl) titleEl.textContent = part ? part.title : (conv.partTitle || '');
     if (priceEl) priceEl.textContent = part ? '$' + part.price : '';
+    document.getElementById('inboxMsgList')?.classList.remove('times-visible');
     renderInboxMsgs(conv);
     syncInboxPendingBtn();
     document.getElementById('inboxThreadEmpty').style.display = 'none';
@@ -1373,7 +1374,7 @@ function renderInboxMsgs(conv) {
         const colClass = isOffer ? 'inbox-msg-col offer-col' : 'inbox-msg-col';
         const bubClass = isOffer ? 'inbox-msg-bubble offer-bubble' : 'inbox-msg-bubble';
         return `${divider}
-            <div class="inbox-msg-row ${m.sent?'sent':'received'}" ontouchstart="this.classList.toggle('del-visible')">
+            <div class="inbox-msg-row ${m.sent?'sent':'received'}" ontouchstart="msgRowTouchStart(event)" ontouchend="msgRowTouchEnd(event,this)">
                 ${!m.sent ? delBtn : ''}
                 <div class="inbox-msg-avatar">${initial}</div>
                 <div class="${colClass}">
@@ -1384,6 +1385,22 @@ function renderInboxMsgs(conv) {
             </div>`;
     }).join('');
     box.scrollTop = box.scrollHeight;
+}
+
+let _msgTouchStartX = 0;
+function msgRowTouchStart(e) {
+    _msgTouchStartX = e.touches[0].clientX;
+}
+function msgRowTouchEnd(e, row) {
+    const dx = e.changedTouches[0].clientX - _msgTouchStartX;
+    const list = document.getElementById('inboxMsgList');
+    if (Math.abs(dx) < 15) {
+        row.classList.toggle('del-visible');
+    } else if (dx < -40) {
+        if (list) list.classList.add('times-visible');
+    } else if (dx > 40) {
+        if (list) list.classList.remove('times-visible');
+    }
 }
 
 function closeInboxThread() {

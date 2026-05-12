@@ -4528,7 +4528,8 @@ header {
 .inbox-msg-row.received .inbox-msg-bubble { background: white; color: #222; border: 1px solid #eee; border-bottom-left-radius: 4px; }
 .inbox-msg-row.sent .inbox-msg-bubble { background: var(--apc-orange); color: white; border-bottom-right-radius: 4px; }
 .inbox-msg-bubble img { max-width: 180px; max-height: 180px; border-radius: 9px; display: block; }
-.inbox-msg-time { font-size: 10px; color: #bbb; margin-top: 3px; }
+.inbox-msg-time { font-size: 10px; color: #bbb; margin-top: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.2s ease, opacity 0.2s ease, margin-top 0.2s ease; }
+#inboxMsgList.times-visible .inbox-msg-time { max-height: 20px; opacity: 1; margin-top: 3px; }
 .inbox-msg-del { opacity: 0; background: none; border: none; font-size: 16px; color: #ccc; cursor: pointer; padding: 0 2px; align-self: center; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
 .inbox-msg-del:hover { color: #FF3B30; }
 .inbox-msg-row:hover .inbox-msg-del { opacity: 1; }
