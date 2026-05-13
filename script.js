@@ -3401,10 +3401,10 @@ function openItemDetail(partId, _restoring = false) {
             detailMsgBtn.innerHTML     = '✉️ MESSAGE SELLER';
             detailMsgBtn.disabled      = false;
             detailMsgBtn.onclick       = handleMessageSeller;
-            detailMsgBtn.style.background  = '';
-            detailMsgBtn.style.color       = '';
-            detailMsgBtn.style.boxShadow   = '';
-            detailMsgBtn.style.cursor      = '';
+            detailMsgBtn.style.background  = 'var(--apc-orange)';
+            detailMsgBtn.style.color       = 'white';
+            detailMsgBtn.style.boxShadow   = '0 4px 12px rgba(255,152,0,0.2)';
+            detailMsgBtn.style.cursor      = 'pointer';
         }
     }
 
