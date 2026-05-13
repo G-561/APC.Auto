@@ -1603,7 +1603,7 @@ function viewConvListing() {
                     conv.partId = data.listing_id;
                     saveConversations();
                     const p = findPartAnywhere(data.listing_id);
-                    if (p) openItemDetail(p.id);
+                    if (p) openItemDetail(p.id, false, true);
                     else showToast('Listing no longer available');
                 } else {
                     showToast('Listing no longer available');
@@ -1612,7 +1612,7 @@ function viewConvListing() {
         return;
     }
     if (!part) { showToast('Listing no longer available'); return; }
-    openItemDetail(part.id);
+    openItemDetail(part.id, false, true);
 }
 
 function syncInboxPendingBtn() {
@@ -3253,11 +3253,11 @@ function printSellLabel(listing) {
 }
 
 // --- DYNAMIC ITEM DETAIL ---
-function openItemDetail(partId, _restoring = false) {
+function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     const part = getPartById(partId) || findPartAnywhere(partId);
     if (!part) return;
 
-    const fromInbox   = document.getElementById('inboxDrawer')?.classList.contains('active');
+    const fromInbox   = _fromInbox || document.getElementById('inboxDrawer')?.classList.contains('active');
     const inStoreView = _detailHistory.length > 0;
 
     // Push current listing to history when opening a new one from within the storefront
