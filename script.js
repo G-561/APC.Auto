@@ -3274,12 +3274,12 @@ function openItemDetail(partId, _restoring = false) {
     const dotsContainer = document.getElementById('carouselDots');
     if (carousel) {
         carousel.innerHTML = '';
-        part.images.forEach((src, i) => {
+        (part.images || []).forEach((src, i) => {
             const img = document.createElement('img');
             img.src = src;
             img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;';
             img.alt = part.title;
-            img.onclick = () => openDetailImageViewer(src, part.images, i);
+            img.onclick = () => openDetailImageViewer(src, part.images || [], i);
             carousel.appendChild(img);
         });
         // Reset AFTER images are in the DOM so scroll-snap doesn't ignore it
@@ -3287,8 +3287,8 @@ function openItemDetail(partId, _restoring = false) {
     }
     if (dotsContainer) {
         dotsContainer.innerHTML = '';
-        if (part.images.length > 1) {
-            part.images.forEach((_, idx) => {
+        if ((part.images || []).length > 1) {
+            (part.images || []).forEach((_, idx) => {
                 const dot = document.createElement('div');
                 dot.className = 'carousel-dot' + (idx === 0 ? ' active' : '');
                 dot.onclick = (e) => {
@@ -3313,7 +3313,7 @@ function openItemDetail(partId, _restoring = false) {
     }
     if (desktopThumbs) {
         desktopThumbs.innerHTML = '';
-        part.images.forEach((src, i) => {
+        (part.images || []).forEach((src, i) => {
             const thumb = document.createElement('img');
             thumb.src = src;
             thumb.alt = part.title;
@@ -3428,7 +3428,7 @@ function openItemDetail(partId, _restoring = false) {
             el.style.background  = 'transparent';
             el.style.boxShadow   = 'none';
         } else {
-            el.textContent       = part.seller.charAt(0).toUpperCase();
+            el.textContent       = (part.seller || '?').charAt(0).toUpperCase();
             el.style.background  = tierBg;
             el.style.boxShadow   = tierShadow;
         }
@@ -3520,7 +3520,7 @@ function openItemDetail(partId, _restoring = false) {
         const recentFill = stillNeed > 0 ? collectFooter(allActive, stillNeed) : [];
         const allStrip = [...sellerParts, ...catFill, ...recentFill];
         html += `<div class="detail-footer-label">
-            MORE FROM ${escapeHtml(part.seller.toUpperCase())}
+            MORE FROM ${escapeHtml((part.seller || '').toUpperCase())}
             <span onclick="openStorefront(${part.id})" style="color:var(--apc-orange);font-weight:900;cursor:pointer;font-size:10px;">VISIT STORE →</span>
         </div>
         <div class="detail-footer-strip">${buildStrip(allStrip)}</div>`;
