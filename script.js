@@ -1968,18 +1968,22 @@ function syncBackdrop() {
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
 }
 
-// Lift inbox above the on-screen keyboard on mobile using the Visual Viewport API
+// Shrink inbox to visual viewport height when keyboard opens on mobile
 function syncInboxToKeyboard() {
     if (window.innerWidth >= 900) return;
     const drawer = document.getElementById('inboxDrawer');
     if (!drawer) return;
     const vv = window.visualViewport;
     if (!vv) return;
-    const keyboardH = Math.max(0, window.innerHeight - vv.height);
-    drawer.style.bottom = keyboardH > 10 ? keyboardH + 'px' : '';
-    if (keyboardH > 0) {
+    const kbOpen = vv.height < window.innerHeight - 50;
+    if (kbOpen) {
+        drawer.style.height = Math.round(vv.height) + 'px';
+        drawer.style.bottom = 'auto';
         const msgList = document.getElementById('inboxMsgList');
         if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 60);
+    } else {
+        drawer.style.height = '';
+        drawer.style.bottom = '';
     }
 }
 
