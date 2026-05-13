@@ -1968,20 +1968,24 @@ function syncBackdrop() {
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
 }
 
-// Shrink inbox to visual viewport height when keyboard opens on mobile
+// Keep inbox pinned to the visual viewport when the keyboard opens on iOS/Android.
+// iOS Safari scrolls the page on input focus (vv.offsetTop > 0), so we must
+// reposition both top and height to match the visual viewport exactly.
 function syncInboxToKeyboard() {
     if (window.innerWidth >= 900) return;
     const drawer = document.getElementById('inboxDrawer');
-    if (!drawer) return;
+    if (!drawer || !drawer.classList.contains('active')) return;
     const vv = window.visualViewport;
     if (!vv) return;
     const kbOpen = vv.height < window.innerHeight - 50;
     if (kbOpen) {
-        drawer.style.height = Math.round(vv.height) + 'px';
+        drawer.style.top    = Math.round(vv.offsetTop)  + 'px';
+        drawer.style.height = Math.round(vv.height)     + 'px';
         drawer.style.bottom = 'auto';
         const msgList = document.getElementById('inboxMsgList');
-        if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 60);
+        if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 80);
     } else {
+        drawer.style.top    = '';
         drawer.style.height = '';
         drawer.style.bottom = '';
     }
