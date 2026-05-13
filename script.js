@@ -1968,6 +1968,26 @@ function syncBackdrop() {
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
 }
 
+// Lift inbox above the on-screen keyboard on mobile using the Visual Viewport API
+function syncInboxToKeyboard() {
+    if (window.innerWidth >= 900) return;
+    const drawer = document.getElementById('inboxDrawer');
+    if (!drawer) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    drawer.style.bottom = keyboardH ? keyboardH + 'px' : '';
+    if (keyboardH > 0) {
+        const msgList = document.getElementById('inboxMsgList');
+        if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 60);
+    }
+}
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncInboxToKeyboard);
+    window.visualViewport.addEventListener('scroll', syncInboxToKeyboard);
+}
+
 function closeTopDrawer() {
     const openDrawers = Array.from(document.querySelectorAll('.drawer.active'))
         .filter(d => !(d.id === 'filterDrawer' && window.innerWidth >= 900));

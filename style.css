@@ -3664,6 +3664,8 @@ header {
     .drawer.active { box-shadow: -4px 0 40px rgba(0,0,0,0.18); }
     #accountMenuDrawer { width: 360px; }
     #filterDrawer { right: auto; width: 240px; box-shadow: none; }
+    /* Inbox: float off the bottom edge so the reply bar isn't flush against the screen */
+    #inboxDrawer { bottom: 18px; border-radius: 0 0 14px 14px; }
 
     /* Sell overlay: full card-drawer, two-column form layout */
     #sellOverlay {
