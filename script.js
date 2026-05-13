@@ -1429,6 +1429,15 @@ function closeInboxThread() {
     document.getElementById('inboxThreadCol').classList.remove('slide-in');
 }
 
+function closeInboxOrThread() {
+    const threadCol = document.getElementById('inboxThreadCol');
+    if (threadCol && threadCol.classList.contains('slide-in')) {
+        closeInboxThread();
+    } else {
+        toggleDrawer('inboxDrawer');
+    }
+}
+
 async function sendInboxMessage() {
     const input = document.getElementById('inboxReplyInput');
     const text  = input?.value.trim();

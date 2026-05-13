@@ -4506,7 +4506,6 @@ header {
     padding: 11px 14px; border-bottom: 1px solid #eee;
     display: flex; align-items: center; gap: 10px; background: white; flex-shrink: 0;
 }
-.inbox-back-btn { display: none; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--apc-blue); padding: 0 4px 0 0; line-height: 1; }
 .inbox-thread-thumb { width: 46px; height: 46px; border-radius: 9px; object-fit: cover; border: 1px solid #eee; flex-shrink: 0; }
 .inbox-thread-meta { flex: 1; min-width: 0; }
 .inbox-thread-with { font-size: 11px; font-weight: 700; color: #888; }
@@ -4654,7 +4653,6 @@ header {
     .inbox-thread-col { position: absolute; inset: 0; transform: translateX(100%); transition: transform 0.28s ease; z-index: 2; }
     .inbox-thread-col.slide-in { transform: translateX(0); }
     .inbox-two-panel { position: relative; overflow: hidden; }
-    .inbox-back-btn { display: block; }
 }
 
 /* Dashboard — label button */

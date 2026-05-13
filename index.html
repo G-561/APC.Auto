@@ -1759,7 +1759,7 @@
 <div id="inboxDrawer" class="drawer">
     <div class="drawer-header">
         <span>Messages</span>
-        <div class="dh-close" onclick="toggleDrawer('inboxDrawer')">×</div>
+        <div class="dh-close" onclick="closeInboxOrThread()">×</div>
     </div>
     <div class="drawer-content inbox-drawer-content">
 
@@ -1798,7 +1798,6 @@
 
                 <div id="inboxThreadContent" style="display:none; flex-direction:column; height:100%; overflow:hidden;">
                     <div class="inbox-thread-hdr">
-                        <button class="inbox-back-btn" onclick="closeInboxThread()">←</button>
                         <img id="inboxThreadThumb" class="inbox-thread-thumb" src="" alt="">
                         <div class="inbox-thread-meta">
                             <div id="inboxThreadWith" class="inbox-thread-with"></div>
