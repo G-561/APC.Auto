@@ -10,6 +10,7 @@ const VEHICLE_DB = {
   "Cupra":       ["Ateca","Born","Formentor","Leon"],
   "Daewoo":      ["Kalos","Lacetti","Leganza","Matiz","Nubira"],
   "Daihatsu":    ["Applause","Charade","Copen","Cuore","Delta","Feroza","Gran Move","Move","Rocky","Sirion","Terios","YRV"],
+  "Datsun":      ["120Y","1200","1600","180B","200B","240Z","260Z","280Z","280ZX","Bluebird","Cherry","Fairlady","Laurel","Patrol","Stanza","Sunny","Ute"],
   "Dodge":       ["Caliber","Challenger","Charger","Durango","Journey","Nitro","Ram","Viper"],
   "Ferrari":     ["296","458","488","812","California","F8","GTC4 Lusso","Portofino","Roma","SF90"],
   "Fiat":        ["124 Spider","500","500L","500X","Bravo","Doblo","Ducato","Fiorino","Panda","Punto","Scudo","Tipo"],
