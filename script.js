@@ -3538,6 +3538,8 @@ function openItemDetail(partId, _restoring = false) {
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
 
     const detailEl = document.getElementById('detailOverlay');
+    if (detailEl) detailEl.classList.toggle('chat-card', !!fromInbox);
+
     if (detailEl && detailEl.classList.contains('active')) {
         if (_restoring) {
             detailEl.style.zIndex = ''; // drop back below store so store is visible on top
@@ -3564,7 +3566,7 @@ function closeDetailOverlay() {
     }
     _detailHistory = [];
     const el = document.getElementById('detailOverlay');
-    if (el) { el.classList.remove('active'); el.style.zIndex = ''; }
+    if (el) { el.classList.remove('active', 'chat-card'); el.style.zIndex = ''; }
     syncBackdrop();
     history.pushState(null, '', location.pathname);
 }
