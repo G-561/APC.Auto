@@ -1213,6 +1213,7 @@ header {
     height: auto !important;
     border-radius: 16px !important;
     box-shadow: 0 8px 50px rgba(0,0,0,0.3) !important;
+    z-index: 3300 !important;
 }
 #detailOverlay.chat-card .detail-sell-yours-block,
 #detailOverlay.chat-card #sellYoursMobile { display: none !important; }
