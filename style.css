@@ -1219,6 +1219,24 @@ header {
     margin: 10px auto 0;
     flex-shrink: 0;
 }
+/* On desktop, chat-card resets to a centred floating sheet (not the full centre column) */
+@media (min-width: 900px) {
+    #detailOverlay.chat-card {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+        width: 520px !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+    #detailOverlay.chat-card #detailScrollArea {
+        display: flex !important;
+        grid-template-columns: unset !important;
+        height: 100% !important;
+        overflow-y: auto !important;
+    }
+}
+
 /* Inbox and chat sit above the detail overlay so Message Seller works from a listing */
 #inboxDrawer, #chatDrawer, #messageDetailDrawer { z-index: 3200; }
 /* Filter drawer sits below the header on all screen sizes */
