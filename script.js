@@ -3243,7 +3243,7 @@ function printSellLabel(listing) {
 
 // --- DYNAMIC ITEM DETAIL ---
 function openItemDetail(partId) {
-    const part = getPartById(partId);
+    const part = getPartById(partId) || findPartAnywhere(partId);
     if (!part) return;
     currentOpenPartId = partId;
     addToRecentlyViewed(partId);
@@ -3497,7 +3497,7 @@ function openItemDetail(partId) {
         // Already open — content has been refreshed above, no need to toggle
     } else {
         const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
-        if (parentOpen && detailEl) detailEl.style.zIndex = '3200'; // float above any open parent drawer
+        if (parentOpen && detailEl) detailEl.style.zIndex = '3250'; // float above inbox/chat (z-index 3200)
         toggleDrawer('detailOverlay', parentOpen);
     }
 }
