@@ -1390,6 +1390,11 @@ function openInboxConv(id) {
     conv.unread = false;
     saveConversations();
     updateInboxBadge();
+    if (currentUserId && conv.supabaseConvId) {
+        const isBuyer = conv.buyerId === currentUserId;
+        sb.from('conversations').update(isBuyer ? { unread_buyer: false } : { unread_seller: false })
+          .eq('id', conv.supabaseConvId).then(() => {});
+    }
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
     const part  = findPartAnywhere(conv.partId);
     const thumb = document.getElementById('inboxThreadThumb');
