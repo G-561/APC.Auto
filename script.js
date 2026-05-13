@@ -3373,7 +3373,8 @@ function openItemDetail(partId, _restoring = false) {
     const detailVisitStoreBtn = document.getElementById('detailVisitStoreBtn');
     const isOwnListing = part.seller === getCurrentSellerName();
     const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
-    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings) ? '' : 'none';
+    const inStoreView = _detailHistory.length > 0;
+    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings && !inStoreView) ? '' : 'none';
 
     // 3. Update the seller header in the overlay
     const sellerHeaderName = document.getElementById('detailSellerName');
@@ -3497,7 +3498,7 @@ function openItemDetail(partId, _restoring = false) {
         <div class="detail-footer-strip">${buildStrip(allFill)}</div>`;
     }
 
-    footer.innerHTML = html;
+    footer.innerHTML = inStoreView ? '' : html;
 
     const detailScrollArea = document.getElementById('detailScrollArea');
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
