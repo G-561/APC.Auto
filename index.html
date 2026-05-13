@@ -922,7 +922,7 @@
                     <h4>Vehicle Details</h4>
                     <div class="input-row-flex">
                         <div class="input-group"><label>Make</label><select id="sellMake" onchange="onSellMakeChange()"><option value="">Make</option></select></div>
-                        <div class="input-group"><label>Model</label><select id="sellModel"><option value="">Model</option></select></div>
+                        <div class="input-group"><label>Model</label><select id="sellModel" onchange="onSellModelChange()"><option value="">Model</option></select></div>
                         <div class="input-group"><label>Year</label><select id="sellYear"><option value="">Year</option></select></div>
                     </div>
                     <div class="input-group" style="margin-top:10px;">
@@ -1665,7 +1665,7 @@
             <h4>Vehicle</h4>
             <div style="display:grid; grid-template-columns:1fr 1fr 90px; gap:8px; margin-bottom:8px;">
                 <div class="input-group" style="margin:0;"><label>Make *</label><select id="vehMake" onchange="onVehMakeChange()"><option value="">Make</option></select></div>
-                <div class="input-group" style="margin:0;"><label>Model *</label><select id="vehModel"><option value="">Model</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Model *</label><select id="vehModel" onchange="onVehModelChange()"><option value="">Model</option></select></div>
                 <div class="input-group" style="margin:0;"><label>Year *</label><select id="vehYear"><option value="">Year</option></select></div>
             </div>
             <div class="input-group"><label>Variant</label><input type="text" id="vehVariant" placeholder="e.g. GTti, LWB, Turbo"></div>
@@ -1713,7 +1713,7 @@
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr 80px; gap:8px;">
                 <div class="input-group" style="margin:0;"><label>Make</label><select id="wantedMake" onchange="onWantedMakeChange()"><option value="">Make</option></select></div>
-                <div class="input-group" style="margin:0;"><label>Model</label><select id="wantedModel" onchange="checkWantedGaragePrompt()"><option value="">Model</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Model</label><select id="wantedModel" onchange="onWantedModelChange()"><option value="">Model</option></select></div>
                 <div class="input-group" style="margin:0;"><label>Year</label><select id="wantedYear"><option value="">Year</option></select></div>
             </div>
             <!-- Inline add-to-garage prompt -->

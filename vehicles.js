@@ -588,6 +588,26 @@ function buildYearOptions(selectedYear) {
     return html;
 }
 
+// Trim the year list to the min–max span of a model's known generations.
+// Falls back to the full list if no range data exists for this make/model.
+function buildYearOptionsForModel(make, model, selectedYear) {
+    if (!make || !model) return buildYearOptions(selectedYear);
+    const ranges = VEHICLE_YEAR_RANGES?.[make]?.[model];
+    if (!ranges || !ranges.length) return buildYearOptions(selectedYear);
+    const minYear = Math.min(...ranges.map(([f]) => f));
+    const maxYear = Math.max(...ranges.map(([, t]) => t));
+    const cap = new Date().getFullYear() + 1;
+    const top = Math.min(maxYear, cap);
+    // If a previously-selected year is now out of range, drop it silently
+    const sel = (selectedYear && Number(selectedYear) >= minYear && Number(selectedYear) <= maxYear)
+        ? selectedYear : '';
+    let html = '<option value="">Year</option>';
+    for (let y = top; y >= minYear; y--) {
+        html += `<option value="${y}"${sel == y ? ' selected' : ''}>${y}</option>`;
+    }
+    return html;
+}
+
 function buildMakeOptions(selectedMake) {
     let html = '<option value="">Make</option>';
     VEHICLE_MAKES.forEach(make => {
