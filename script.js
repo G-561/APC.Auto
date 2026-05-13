@@ -3361,7 +3361,7 @@ function openItemDetail(partId, _restoring = false) {
     const offerSection = document.getElementById('detailOfferSection');
     if (offerSection) {
         const isOwnListing = userIsSignedIn && ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName());
-        offerSection.style.display = (part.openToOffers && !isOwnListing) ? 'block' : 'none';
+        offerSection.style.display = (part.openToOffers && !isOwnListing && !fromInbox) ? 'block' : 'none';
     }
 
     const detailSellerSection = document.getElementById('detailSellerSection');
@@ -3381,11 +3381,12 @@ function openItemDetail(partId, _restoring = false) {
     const isOwnListing = userIsSignedIn && ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName());
     const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
     const inStoreView = _detailHistory.length > 0;
-    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings && !inStoreView) ? '' : 'none';
+    const fromInbox   = document.getElementById('inboxDrawer')?.classList.contains('active');
+    if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings && !inStoreView && !fromInbox) ? '' : 'none';
 
     const detailMsgBtn = document.getElementById('detailMsgBtn');
     if (detailMsgBtn) {
-        if (lockDetails) {
+        if (lockDetails || fromInbox) {
             detailMsgBtn.style.display = 'none';
         } else if (isOwnListing) {
             detailMsgBtn.style.display = '';
@@ -3454,7 +3455,8 @@ function openItemDetail(partId, _restoring = false) {
     const workshopSection = document.getElementById('detailWorkshopSection');
     const workshopHeadline = document.getElementById('detailWorkshopHeadline');
     const workshopCards = document.getElementById('detailWorkshopCards');
-    if (workshopSection && workshopHeadline && workshopCards) {
+    if (workshopSection) workshopSection.style.display = fromInbox ? 'none' : '';
+    if (workshopSection && workshopHeadline && workshopCards && !fromInbox) {
         const isUniversal = !part.fits || part.fits.length === 0;
         if (isUniversal) {
             const shuffled = [...workshopDatabase].sort(() => Math.random() - 0.5).slice(0, 3);
@@ -3530,7 +3532,7 @@ function openItemDetail(partId, _restoring = false) {
         <div class="detail-footer-strip">${buildStrip(allFill)}</div>`;
     }
 
-    footer.innerHTML = inStoreView ? '' : html;
+    footer.innerHTML = (inStoreView || fromInbox) ? '' : html;
 
     const detailScrollArea = document.getElementById('detailScrollArea');
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
