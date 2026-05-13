@@ -982,11 +982,20 @@ async function loadConversationsFromSupabase(userId) {
                     clock: formatMsgTime(m.created_at),
                 }));
 
+            // If flagged unread but the last message was sent by this user, they've clearly read it — auto-clear
+            let isUnread = isBuyer ? !!r.unread_buyer : !!r.unread_seller;
+            if (isUnread && msgs.length > 0 && msgs[msgs.length - 1].sent) {
+                isUnread = false;
+                sb.from('conversations')
+                  .update(isBuyer ? { unread_buyer: false } : { unread_seller: false })
+                  .eq('id', r.id).then(() => {});
+            }
+
             const existing = conversations.find(c => c.supabaseConvId === r.id);
             if (existing) {
                 existing.msgs = msgs;
                 existing.with = otherName;
-                existing.unread = isBuyer ? !!r.unread_buyer : !!r.unread_seller;
+                existing.unread = isUnread;
             } else {
                 const part = [...partDatabase, ...userListings].find(p => p.supabaseId === r.listing_id);
                 conversations.unshift({
@@ -996,7 +1005,7 @@ async function loadConversationsFromSupabase(userId) {
                     sellerId: r.seller_id,
                     with: otherName,
                     isPro: false,
-                    unread: isBuyer ? !!r.unread_buyer : !!r.unread_seller,
+                    unread: isUnread,
                     partId: part?.id || r.listing_id,
                     partTitle: r.listing_title || 'Part',
                     msgs,
