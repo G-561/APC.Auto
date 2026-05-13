@@ -829,7 +829,7 @@ async function loadUserListingsFromSupabase(userId) {
                     isPro: r.is_pro, stockNumber: r.stock_number,
                     odometer: r.odometer, warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, fit: r.fitting_available,
-                    year: r.fits_year, seller: currentUserName || '',
+                    year: r.fits_year, seller: r.seller_name || currentUserName || '',
                     images: images.length ? images : [], fits,
                 });
             }
@@ -3360,7 +3360,7 @@ function openItemDetail(partId, _restoring = false) {
     // Show "Make an Offer" button only when the part has offers enabled and the viewer isn't the seller
     const offerSection = document.getElementById('detailOfferSection');
     if (offerSection) {
-        const isOwnListing = userIsSignedIn && part.seller === getCurrentSellerName();
+        const isOwnListing = userIsSignedIn && ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName());
         offerSection.style.display = (part.openToOffers && !isOwnListing) ? 'block' : 'none';
     }
 
@@ -3378,7 +3378,7 @@ function openItemDetail(partId, _restoring = false) {
     if (detailSellerColCard) detailSellerColCard.classList.toggle('locked', lockDetails);
     if (detailSignInPrompt)  detailSignInPrompt.style.display  = lockDetails ? ''      : 'none';
     const detailVisitStoreBtn = document.getElementById('detailVisitStoreBtn');
-    const isOwnListing = part.seller === getCurrentSellerName();
+    const isOwnListing = userIsSignedIn && ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName());
     const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
     const inStoreView = _detailHistory.length > 0;
     if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings && !inStoreView) ? '' : 'none';
