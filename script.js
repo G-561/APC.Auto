@@ -1741,7 +1741,8 @@ function deleteConversation(id) {
         updateTrashBadge();
         if (conv.supabaseConvId && currentUserId) {
             const flag = conv.buyerId === currentUserId ? { hidden_by_buyer: true } : { hidden_by_seller: true };
-            sb.from('conversations').update(flag).eq('id', conv.supabaseConvId).then(() => {});
+            sb.from('conversations').update(flag).eq('id', conv.supabaseConvId)
+                .then(({ error }) => { if (error) showToast('Delete sync failed: ' + error.message); else showToast('Conversation hidden'); });
         }
     }
     conversations = conversations.filter(c => c.id !== id);
