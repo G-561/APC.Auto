@@ -315,6 +315,8 @@
             <div id="detailPendingBanner" class="detail-pending-banner" style="display:none;">⏳ PENDING SALE — enquiries still welcome</div>
 
             <div class="mobile-carousel" style="position: relative; width: 100%; overflow: hidden;">
+                <button class="carousel-arrow carousel-arrow-prev" onclick="carouselStep(-1)" aria-label="Previous image">&#8249;</button>
+                <button class="carousel-arrow carousel-arrow-next" onclick="carouselStep(1)" aria-label="Next image">&#8250;</button>
                 <div id="imageCarousel" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;">
                 </div>
                 <div id="carouselDots" class="carousel-dots"></div>

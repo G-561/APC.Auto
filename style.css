@@ -1217,6 +1217,29 @@ header {
 }
 #detailOverlay.chat-card .detail-sell-yours-block,
 #detailOverlay.chat-card #sellYoursMobile { display: none !important; }
+
+.carousel-arrow {
+    display: none;
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.carousel-arrow-prev { left: 8px; }
+.carousel-arrow-next { right: 8px; }
+#detailOverlay.chat-card .carousel-arrow { display: flex; }
+#detailOverlay.chat-card #imageCarousel { scrollbar-width: none; -ms-overflow-style: none; }
+#detailOverlay.chat-card #imageCarousel::-webkit-scrollbar { display: none; }
 /* On desktop, chat-card: centred 520px modal, single-column layout */
 @media (min-width: 900px) {
     #detailOverlay.chat-card {

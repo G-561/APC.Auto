@@ -3580,6 +3580,11 @@ function closeDetailOverlay() {
 let _lightboxImages = [];
 let _lightboxIdx    = 0;
 
+function carouselStep(dir) {
+    const carousel = document.getElementById('imageCarousel');
+    if (carousel) carousel.scrollBy({ left: dir * carousel.offsetWidth, behavior: 'smooth' });
+}
+
 function openDetailImageViewer(src, images, idx) {
     _lightboxImages = (images && images.length) ? images : [src];
     _lightboxIdx    = (idx !== undefined) ? idx : _lightboxImages.indexOf(src);
