@@ -2273,6 +2273,7 @@ function syncDetailSaveButton(partId) {
     // Desktop + mobile: SVG heart in info col actions row
     const btnInfo = document.getElementById('detailSaveBtnInfo');
     if (btnInfo) {
+        btnInfo.style.display = userIsSignedIn ? '' : 'none';
         btnInfo.classList.toggle('saved', isSaved);
         btnInfo.setAttribute('aria-label', isSaved ? 'Remove from saved' : 'Save listing');
     }
