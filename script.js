@@ -3389,16 +3389,18 @@ function openItemDetail(partId, _restoring = false) {
             detailMsgBtn.style.display = 'none';
         } else if (isOwnListing) {
             detailMsgBtn.style.display = '';
-            detailMsgBtn.textContent   = 'MY LISTING';
-            detailMsgBtn.disabled      = true;
-            detailMsgBtn.style.background  = '#e8e8e8';
-            detailMsgBtn.style.color       = '#aaa';
-            detailMsgBtn.style.boxShadow   = 'none';
-            detailMsgBtn.style.cursor      = 'default';
+            detailMsgBtn.innerHTML     = '✏️ EDIT LISTING';
+            detailMsgBtn.disabled      = false;
+            detailMsgBtn.style.background  = 'var(--apc-blue)';
+            detailMsgBtn.style.color       = 'white';
+            detailMsgBtn.style.boxShadow   = '0 4px 12px rgba(0,122,255,0.2)';
+            detailMsgBtn.style.cursor      = 'pointer';
+            detailMsgBtn.onclick           = () => openEditListing(part.id);
         } else {
             detailMsgBtn.style.display = '';
             detailMsgBtn.innerHTML     = '✉️ MESSAGE SELLER';
             detailMsgBtn.disabled      = false;
+            detailMsgBtn.onclick       = handleMessageSeller;
             detailMsgBtn.style.background  = '';
             detailMsgBtn.style.color       = '';
             detailMsgBtn.style.boxShadow   = '';
