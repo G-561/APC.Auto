@@ -3540,7 +3540,11 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
 
     const detailEl = document.getElementById('detailOverlay');
-    if (detailEl) detailEl.classList.toggle('chat-card', !!fromInbox);
+    if (detailEl) {
+        detailEl.classList.toggle('chat-card', !!fromInbox);
+        const mobileCarousel = detailEl.querySelector('.mobile-carousel');
+        if (mobileCarousel) mobileCarousel.style.display = fromInbox ? 'block' : '';
+    }
 
     if (detailEl && detailEl.classList.contains('active')) {
         if (_restoring) {
