@@ -3540,7 +3540,10 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (detailScrollArea) detailScrollArea.scrollTop = 0;
 
     const detailEl = document.getElementById('detailOverlay');
-    if (detailEl) detailEl.classList.toggle('chat-card', !!fromInbox);
+    if (detailEl) {
+        detailEl.classList.toggle('chat-card', !!fromInbox);
+        if (fromInbox) detailEl.style.top = ''; // clear inline top so CSS top:auto takes effect
+    }
 
     if (detailEl && detailEl.classList.contains('active')) {
         if (_restoring) {
@@ -3570,6 +3573,7 @@ function closeDetailOverlay() {
     const el = document.getElementById('detailOverlay');
     if (el) { el.classList.remove('active', 'chat-card'); el.style.zIndex = ''; }
     syncBackdrop();
+    updateHeaderOffset(); // restore inline top after chat-card mode may have cleared it
     history.pushState(null, '', location.pathname);
 }
 
