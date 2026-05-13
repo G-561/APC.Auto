@@ -3257,6 +3257,9 @@ function openItemDetail(partId, _restoring = false) {
     const part = getPartById(partId) || findPartAnywhere(partId);
     if (!part) return;
 
+    const fromInbox   = document.getElementById('inboxDrawer')?.classList.contains('active');
+    const inStoreView = _detailHistory.length > 0;
+
     // Push current listing to history when opening a new one from within the storefront
     const detailAlreadyOpen = document.getElementById('detailOverlay')?.classList.contains('active');
     if (!_restoring && detailAlreadyOpen && currentOpenPartId && currentOpenPartId !== partId) {
@@ -3307,9 +3310,9 @@ function openItemDetail(partId, _restoring = false) {
     const desktopMain  = document.getElementById('desktopMainImage');
     const desktopThumbs = document.getElementById('desktopThumbnails');
     if (desktopMain) {
-        desktopMain.src = part.images[0] || '';
+        desktopMain.src = (part.images && part.images[0]) || '';
         desktopMain.alt = part.title;
-        desktopMain.onclick = () => openDetailImageViewer(part.images[0], part.images, 0);
+        desktopMain.onclick = () => openDetailImageViewer((part.images || [])[0] || '', part.images || [], 0);
     }
     if (desktopThumbs) {
         desktopThumbs.innerHTML = '';
@@ -3321,7 +3324,7 @@ function openItemDetail(partId, _restoring = false) {
             thumb.onclick = () => {
                 if (desktopMain) {
                     desktopMain.src = src;
-                    desktopMain.onclick = () => openDetailImageViewer(src, part.images, i);
+                    desktopMain.onclick = () => openDetailImageViewer(src, part.images || [], i);
                 }
                 document.querySelectorAll('.desktop-thumb').forEach(t => t.classList.remove('active'));
                 thumb.classList.add('active');
@@ -3381,8 +3384,6 @@ function openItemDetail(partId, _restoring = false) {
     const detailVisitStoreBtn = document.getElementById('detailVisitStoreBtn');
     const isOwnListing = userIsSignedIn && ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName());
     const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
-    const inStoreView = _detailHistory.length > 0;
-    const fromInbox   = document.getElementById('inboxDrawer')?.classList.contains('active');
     if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings && !inStoreView && !fromInbox) ? '' : 'none';
 
     const detailMsgBtn = document.getElementById('detailMsgBtn');
