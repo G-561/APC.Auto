@@ -1234,6 +1234,7 @@ header {
         overflow-y: auto !important;
     }
     #detailOverlay.chat-card .desktop-detail-images { display: none !important; }
+    #detailOverlay.chat-card .mobile-carousel { display: block !important; }
 }
 
 /* Inbox and chat sit above the detail overlay so Message Seller works from a listing */
