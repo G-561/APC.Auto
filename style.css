@@ -456,8 +456,9 @@ header {
     font-weight: 800;
     font-size: 18px;
     color: white;
-    background: var(--apc-blue);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.18);
+    background: var(--apc-orange);
+    box-shadow: 0 6px 16px rgba(255,149,0,0.18);
+    overflow: hidden;
 }
 
 .seller-card-meta {

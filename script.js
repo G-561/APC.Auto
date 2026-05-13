@@ -3264,14 +3264,31 @@ function openItemDetail(partId) {
     const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
     if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings) ? '' : 'none';
 
-    // 3. Update the seller header in the overlay (was hardcoded to Gary)
-    // Amber header seller card (mobile)
+    // 3. Update the seller header in the overlay
     const sellerHeaderName = document.getElementById('detailSellerName');
     const sellerHeaderSub  = document.getElementById('detailSellerSub');
     const sellerAvatar     = document.getElementById('detailSellerAvatar');
     if (sellerHeaderName) sellerHeaderName.textContent = part.seller;
     if (sellerHeaderSub)  sellerHeaderSub.textContent  = '';
-    if (sellerAvatar)     sellerAvatar.textContent      = part.seller.charAt(0).toUpperCase();
+
+    // Avatar: show profile pic if own listing, otherwise tier-coloured initial
+    const sellerPic   = isOwnListing ? (userSettings.profilePic || '') : '';
+    const tierBg      = part.isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
+    const tierShadow  = part.isPro ? '0 6px 16px rgba(0,122,255,0.18)' : '0 6px 16px rgba(255,149,0,0.18)';
+    function applyAvatar(el) {
+        if (!el) return;
+        if (sellerPic) {
+            el.innerHTML = `<img src="${sellerPic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            el.style.background  = 'transparent';
+            el.style.boxShadow   = 'none';
+        } else {
+            el.textContent       = part.seller.charAt(0).toUpperCase();
+            el.style.background  = tierBg;
+            el.style.boxShadow   = tierShadow;
+        }
+    }
+    applyAvatar(sellerAvatar);
+
     const detailProBadge = document.getElementById('detailProBadge');
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
     const detailTradeBadge = document.getElementById('detailTradeBadge');
@@ -3279,11 +3296,11 @@ function openItemDetail(partId) {
     const detailFittingCTA = document.getElementById('detailFittingCTA');
     if (detailFittingCTA) detailFittingCTA.style.display = part.fit ? 'flex' : 'none';
 
-    // Info col seller card (desktop — shown via CSS)
-    const colAvatar  = document.getElementById('detailSellerColAvatar');
-    const colName    = document.getElementById('detailSellerColName');
+    // Info col seller card (desktop)
+    const colAvatar   = document.getElementById('detailSellerColAvatar');
+    const colName     = document.getElementById('detailSellerColName');
     const colProBadge = document.getElementById('detailProBadgeCol');
-    if (colAvatar) colAvatar.textContent = part.seller.charAt(0).toUpperCase();
+    applyAvatar(colAvatar);
     if (colName)   colName.textContent   = part.seller;
     if (colProBadge) colProBadge.style.display = part.isPro ? 'inline-block' : 'none';
 
@@ -4209,10 +4226,12 @@ function openStoreFromSaved(sellerName) {
     const part = [...partDatabase, ...userListings].find(p => p.seller === sellerName);
     const store = savedStores.find(s => s.sellerName === sellerName);
     closeSavedPartsDrawer();
+    const isOwnStore = sellerName === getCurrentSellerName();
+    const storeLogo  = isOwnStore ? (userSettings.profilePic || userSettings.businessLogo || '') : '';
     renderStorefront(
-        sellerName, store?.isPro || false,
-        userSettings.businessLogo || '', store?.businessName || '',
-        '', '', '', ''
+        sellerName, store?.isPro || (isOwnStore && currentUserTier === 'pro'),
+        storeLogo, store?.businessName || (isOwnStore ? userSettings.businessName || '' : ''),
+        '', isOwnStore ? userSettings.about || '' : '', isOwnStore ? userSettings.location || '' : '', ''
     );
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = sellerName;
@@ -5531,7 +5550,7 @@ function openMyStorefront() {
     renderStorefront(
         sellerName,
         currentUserTier === 'pro',
-        userSettings.businessLogo   || '',
+        userSettings.profilePic     || userSettings.businessLogo   || '',
         userSettings.businessName   || '',
         userSettings.abn            || '',
         userSettings.about          || '',
