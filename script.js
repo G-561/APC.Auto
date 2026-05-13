@@ -1975,8 +1975,8 @@ function syncInboxToKeyboard() {
     if (!drawer) return;
     const vv = window.visualViewport;
     if (!vv) return;
-    const keyboardH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    drawer.style.bottom = keyboardH ? keyboardH + 'px' : '';
+    const keyboardH = Math.max(0, window.innerHeight - vv.height);
+    drawer.style.bottom = keyboardH > 10 ? keyboardH + 'px' : '';
     if (keyboardH > 0) {
         const msgList = document.getElementById('inboxMsgList');
         if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 60);
