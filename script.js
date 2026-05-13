@@ -12,6 +12,7 @@ let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let gridShownCount   = 20;
 function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
 let currentOpenPartId = null;  // tracks which part detail is open
+let _detailHistory    = [];    // stack of part IDs for store → listing → back navigation
 let currentEditingListingId = null; // edit mode for Sell form
 let currentEditStatus = null;       // status selected in manage section
 let currentBuyerRating = 0;        // star rating selected in rate-buyer section
@@ -3242,11 +3243,20 @@ function printSellLabel(listing) {
 }
 
 // --- DYNAMIC ITEM DETAIL ---
-function openItemDetail(partId) {
+function openItemDetail(partId, _restoring = false) {
     const part = getPartById(partId) || findPartAnywhere(partId);
     if (!part) return;
+
+    // Push current listing to history when opening a new one from within the storefront
+    const detailAlreadyOpen = document.getElementById('detailOverlay')?.classList.contains('active');
+    if (!_restoring && detailAlreadyOpen && currentOpenPartId && currentOpenPartId !== partId) {
+        if (document.getElementById('storefrontDrawer')?.classList.contains('active')) {
+            _detailHistory.push(currentOpenPartId);
+        }
+    }
+
     currentOpenPartId = partId;
-    addToRecentlyViewed(partId);
+    if (!_restoring) addToRecentlyViewed(partId);
     history.pushState(null, '', '?item=' + partId);
 
     // 1. Carousel — images + dot indicators
@@ -3494,7 +3504,11 @@ function openItemDetail(partId) {
 
     const detailEl = document.getElementById('detailOverlay');
     if (detailEl && detailEl.classList.contains('active')) {
-        // Already open — content has been refreshed above, no need to toggle
+        if (_restoring) {
+            detailEl.style.zIndex = ''; // drop back below store so store is visible on top
+        } else if (document.getElementById('storefrontDrawer')?.classList.contains('active')) {
+            detailEl.style.zIndex = '3250'; // lift above store to show this listing
+        }
     } else {
         const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
         if (parentOpen && detailEl) detailEl.style.zIndex = '3250'; // float above inbox/chat (z-index 3200)
@@ -3508,6 +3522,12 @@ function onDetailSellerClick() {
 }
 
 function closeDetailOverlay() {
+    if (_detailHistory.length > 0) {
+        const prevId = _detailHistory.pop();
+        openItemDetail(prevId, true); // restore previous listing, leave overlay open
+        return;
+    }
+    _detailHistory = [];
     const el = document.getElementById('detailOverlay');
     if (el) { el.classList.remove('active'); el.style.zIndex = ''; }
     syncBackdrop();
