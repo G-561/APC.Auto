@@ -3376,14 +3376,35 @@ function openItemDetail(partId, _restoring = false) {
     }
     const detailSellerColCard = document.getElementById('detailSellerColCard');
     if (detailSellerColCard) detailSellerColCard.classList.toggle('locked', lockDetails);
-    const detailMsgBtn = document.getElementById('detailMsgBtn');
-    if (detailMsgBtn)        detailMsgBtn.style.display        = lockDetails ? 'none'  : '';
     if (detailSignInPrompt)  detailSignInPrompt.style.display  = lockDetails ? ''      : 'none';
     const detailVisitStoreBtn = document.getElementById('detailVisitStoreBtn');
     const isOwnListing = part.seller === getCurrentSellerName();
     const sellerHasOtherListings = getAllParts().some(p => p.id !== part.id && p.seller === part.seller && p.status !== 'sold' && p.status !== 'removed');
     const inStoreView = _detailHistory.length > 0;
     if (detailVisitStoreBtn) detailVisitStoreBtn.style.display = (userIsSignedIn && !isOwnListing && sellerHasOtherListings && !inStoreView) ? '' : 'none';
+
+    const detailMsgBtn = document.getElementById('detailMsgBtn');
+    if (detailMsgBtn) {
+        if (lockDetails) {
+            detailMsgBtn.style.display = 'none';
+        } else if (isOwnListing) {
+            detailMsgBtn.style.display = '';
+            detailMsgBtn.textContent   = 'MY LISTING';
+            detailMsgBtn.disabled      = true;
+            detailMsgBtn.style.background  = '#e8e8e8';
+            detailMsgBtn.style.color       = '#aaa';
+            detailMsgBtn.style.boxShadow   = 'none';
+            detailMsgBtn.style.cursor      = 'default';
+        } else {
+            detailMsgBtn.style.display = '';
+            detailMsgBtn.innerHTML     = '✉️ MESSAGE SELLER';
+            detailMsgBtn.disabled      = false;
+            detailMsgBtn.style.background  = '';
+            detailMsgBtn.style.color       = '';
+            detailMsgBtn.style.boxShadow   = '';
+            detailMsgBtn.style.cursor      = '';
+        }
+    }
 
     // 3. Update the seller header in the overlay
     const sellerHeaderName = document.getElementById('detailSellerName');
