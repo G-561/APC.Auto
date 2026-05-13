@@ -1092,9 +1092,16 @@
                     <span class="settings-row-label">Display Name</span>
                     <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name">
                 </div>
-                <div class="settings-row">
+                <div class="settings-row settings-row-location">
                     <span class="settings-row-label">Location</span>
-                    <input id="settingsLocation" class="settings-inline-input" type="text" placeholder="e.g. Adelaide, SA">
+                    <div class="location-picker-wrap">
+                        <input class="settings-inline-input loc-postcode-input" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                        <select class="settings-inline-input loc-suburb-select" style="display:none" onchange="onSuburbSelect(this)"></select>
+                        <div class="location-chip" style="display:none">
+                            <span class="location-chip-text"></span>
+                            <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Email')">
                     <span class="settings-row-label">Email</span>
@@ -1475,8 +1482,15 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>Address</label>
-                    <input type="text" id="proSettingLocation" placeholder="e.g. 42 Main Rd, Adelaide SA">
+                    <label>Location</label>
+                    <div class="location-picker-wrap">
+                        <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                        <select class="loc-suburb-select" style="display:none" onchange="onSuburbSelect(this)"></select>
+                        <div class="location-chip" style="display:none">
+                            <span class="location-chip-text"></span>
+                            <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>I am a</label>
@@ -1986,7 +2000,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="vehicles.js?v=3"></script>
-<script src="script.js?v=60"></script>
+<script src="postcodes.js?v=1"></script>
+<script src="script.js?v=61"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

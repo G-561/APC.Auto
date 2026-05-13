@@ -2094,6 +2094,69 @@ header {
     background: transparent;
     min-width: 0;
 }
+.location-picker-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+.loc-postcode-input {
+    width: 72px;
+    flex: none;
+    text-align: right;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #555;
+    background: transparent;
+    font-family: inherit;
+}
+.loc-suburb-select {
+    flex: 1;
+    max-width: 200px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: #333;
+    background: #fafafa;
+    outline: none;
+    font-family: inherit;
+    cursor: pointer;
+}
+.location-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f7ff;
+    border: 1px solid #bdd8f5;
+    border-radius: 20px;
+    padding: 3px 6px 3px 10px;
+    font-size: 13px;
+    color: #1a6fb8;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+}
+.location-chip-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.location-chip-clear {
+    background: none;
+    border: none;
+    font-size: 16px;
+    line-height: 1;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+.location-chip-clear:hover { color: #FF3B30; }
 .settings-save-btn {
     background: var(--apc-orange);
     color: white;

@@ -289,11 +289,79 @@ function saveSettingsName() {
     }
 }
 function saveSettingsLocation() {
-    const val = document.getElementById('settingsLocation')?.value.trim();
-    if (val !== undefined) {
-        userSettings.location = val || '';
-        saveUserSettings();
-    }
+    // Legacy — location now saved immediately via onSuburbSelect/clearLocationPicker
+}
+
+// ── POSTCODE / LOCATION PICKER ───────────────────────────────────────────────
+function onPostcodeInput(inputEl) {
+    const wrap   = inputEl.closest('.location-picker-wrap');
+    const sel    = wrap.querySelector('.loc-suburb-select');
+    const chip   = wrap.querySelector('.location-chip');
+    const val    = inputEl.value.replace(/\D/g, '');
+    inputEl.value = val;
+    sel.style.display  = 'none';
+    chip.style.display = 'none';
+    if (val.length !== 4) return;
+    const suburbs = (typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[val]) || [];
+    if (suburbs.length === 0) return;
+    sel.innerHTML = (suburbs.length > 1 ? '<option value="">Select suburb…</option>' : '') +
+        suburbs.map(([s, st]) => `<option value="${s}, ${st} ${val}">${s}, ${st}</option>`).join('');
+    sel.style.display = '';
+    if (suburbs.length === 1) onSuburbSelect(sel);
+}
+
+function onSuburbSelect(selectEl) {
+    const wrap = selectEl.closest('.location-picker-wrap');
+    const val  = selectEl.value;
+    if (!val) return;
+    _applyLocationToWrap(wrap, val);
+    userSettings.location = val;
+    saveUserSettings();
+    renderProfile();
+}
+
+function clearLocationPicker(wrap) {
+    const input = wrap.querySelector('.loc-postcode-input');
+    const sel   = wrap.querySelector('.loc-suburb-select');
+    const chip  = wrap.querySelector('.location-chip');
+    input.value        = '';
+    input.style.display = '';
+    sel.style.display  = 'none';
+    chip.style.display = 'none';
+    userSettings.location = '';
+    saveUserSettings();
+    renderProfile();
+}
+
+function _applyLocationToWrap(wrap, locationStr) {
+    const input    = wrap.querySelector('.loc-postcode-input');
+    const sel      = wrap.querySelector('.loc-suburb-select');
+    const chip     = wrap.querySelector('.location-chip');
+    const chipText = wrap.querySelector('.location-chip-text');
+    chipText.textContent = locationStr;
+    chip.style.display   = 'flex';
+    sel.style.display    = 'none';
+    input.style.display  = 'none';
+    // Pre-fill postcode in case user clears and re-enters
+    const pcMatch = locationStr.match(/\b(\d{4})\b/);
+    if (pcMatch) input.value = pcMatch[1];
+}
+
+function populateLocationPickers() {
+    const loc = userSettings.location || '';
+    document.querySelectorAll('.location-picker-wrap').forEach(wrap => {
+        const input = wrap.querySelector('.loc-postcode-input');
+        const sel   = wrap.querySelector('.loc-suburb-select');
+        const chip  = wrap.querySelector('.location-chip');
+        if (loc) {
+            _applyLocationToWrap(wrap, loc);
+        } else {
+            input.value        = '';
+            input.style.display = '';
+            sel.style.display  = 'none';
+            chip.style.display = 'none';
+        }
+    });
 }
 function saveSettingsAccount() {
     saveSettingsName();
@@ -454,10 +522,9 @@ function onMenuOpenSettings() {
 function renderSettingsDrawer() {
     renderProfile();
     const nameEl     = document.getElementById('settingsDisplayName');
-    const locEl      = document.getElementById('settingsLocation');
     const proSection = document.getElementById('settingsProSection');
     if (nameEl) nameEl.value = currentUserName || '';
-    if (locEl)  locEl.value  = userSettings.location || '';
+    populateLocationPickers();
     renderProfilePicPreview();
 
     const isPro = currentUserTier === 'pro';
@@ -5626,13 +5693,12 @@ function openWorkshopProfileEditor() {
     if (notice)        notice.style.display         = currentUserTier !== 'pro' ? 'block' : 'none';
     // Pre-fill unified profile fields
     const bizEl   = document.getElementById('proSettingBusinessName');
-    const locEl   = document.getElementById('proSettingLocation');
     const abnEl   = document.getElementById('proSettingABN');
     const aboutEl = document.getElementById('proSettingAbout');
     if (bizEl)   bizEl.value   = userSettings.businessName || '';
-    if (locEl)   locEl.value   = userSettings.location     || '';
     if (abnEl)   abnEl.value   = formatABN(userSettings.abn || '');
     if (aboutEl) aboutEl.value = userSettings.about        || '';
+    populateLocationPickers();
     // Business type selector
     const bizType = userSettings.businessType || 'supplier';
     document.querySelectorAll('#bizTypeControl .radius-seg').forEach(s => {
@@ -5687,7 +5753,6 @@ function submitWorkshopProfile() {
     }
     // Save unified profile to userSettings
     userSettings.businessName = document.getElementById('proSettingBusinessName')?.value.trim() || '';
-    userSettings.location     = document.getElementById('proSettingLocation')?.value.trim() || '';
     userSettings.abn          = document.getElementById('proSettingABN')?.value.trim() || '';
     userSettings.about        = document.getElementById('proSettingAbout')?.value.trim() || '';
     saveUserSettings();
