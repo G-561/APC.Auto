@@ -1497,8 +1497,9 @@ function closeInboxThread() {
 }
 
 function closeInboxOrThread() {
+    const isMobile = window.innerWidth < 900;
     const threadCol = document.getElementById('inboxThreadCol');
-    if (threadCol && threadCol.classList.contains('slide-in')) {
+    if (isMobile && threadCol && threadCol.classList.contains('slide-in')) {
         closeInboxThread();
     } else {
         toggleDrawer('inboxDrawer');
