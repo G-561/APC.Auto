@@ -2075,6 +2075,20 @@ function getFilteredParts() {
             const mdl = activeFilters.model;
             if (!part.fits.some(f => f.model?.toLowerCase().includes(mdl)) && !part.title.toLowerCase().includes(mdl)) return false;
         }
+        if (activeFilters.year && part.year) {
+            const searchYr = Number(activeFilters.year);
+            const partYr   = Number(part.year);
+            if (searchYr && partYr) {
+                const partMake  = part.fits?.[0]?.make  || '';
+                const partModel = part.fits?.[0]?.model || '';
+                const range = getVehicleYearRange(partMake, partModel, partYr);
+                if (range) {
+                    if (searchYr < range[0] || searchYr > range[1]) return false;
+                } else {
+                    if (partYr !== searchYr) return false;
+                }
+            }
+        }
         if (activeFilters.location !== 'all') {
             const stateCode = part.loc.split(',')[1]?.trim();
             if (stateCode !== activeFilters.location) return false;
@@ -2308,7 +2322,15 @@ function renderWantedSearchResults(mainGrid) {
                      !w.model.toLowerCase().includes(query)) return false;
         if (fMake  && !w.make.toLowerCase().includes(fMake))   return false;
         if (fModel && !w.model.toLowerCase().includes(fModel)) return false;
-        if (fYear  && w.year !== fYear)                        return false;
+        if (fYear) {
+            const searchYr = Number(fYear);
+            const wYr      = Number(w.year);
+            if (searchYr && wYr) {
+                const range = getVehicleYearRange(w.make, w.model, wYr);
+                const match = range ? (searchYr >= range[0] && searchYr <= range[1]) : (wYr === searchYr);
+                if (!match) return false;
+            }
+        }
         if (fCat !== 'all' && w.category !== fCat)             return false;
         if (fState !== 'all') {
             const stateCode = w.loc.split(',')[1]?.trim();
