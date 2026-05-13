@@ -966,7 +966,11 @@ async function loadConversationsFromSupabase(userId) {
 
         if (error) { subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
 
-        (rows || []).forEach(r => {
+        const visibleRows = (rows || []).filter(r =>
+            r.buyer_id === userId ? !r.hidden_by_buyer : !r.hidden_by_seller
+        );
+
+        visibleRows.forEach(r => {
             const isBuyer = r.buyer_id === userId;
             const otherName = isBuyer ? (r.seller_name || 'Seller') : (r.buyer_name || 'Buyer');
             const msgs = (r.messages || [])
@@ -1735,6 +1739,10 @@ function deleteConversation(id) {
         trashedConversations.unshift({ ...conv, deletedAt: Date.now() });
         saveTrash();
         updateTrashBadge();
+        if (conv.supabaseConvId && currentUserId) {
+            const flag = conv.buyerId === currentUserId ? { hidden_by_buyer: true } : { hidden_by_seller: true };
+            sb.from('conversations').update(flag).eq('id', conv.supabaseConvId).then(() => {});
+        }
     }
     conversations = conversations.filter(c => c.id !== id);
     if (activeConvId === id) {
@@ -1759,6 +1767,10 @@ function restoreConversation(id) {
     updateInboxBadge();
     updateTrashBadge();
     renderTrashList();
+    if (conv.supabaseConvId && currentUserId) {
+        const flag = conv.buyerId === currentUserId ? { hidden_by_buyer: false } : { hidden_by_seller: false };
+        sb.from('conversations').update(flag).eq('id', conv.supabaseConvId).then(() => {});
+    }
     showToast('Conversation restored');
 }
 function permanentDeleteConversation(id) {
