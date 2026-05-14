@@ -162,16 +162,16 @@ function saveRecentlyViewed() {
     try { localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(recentlyViewed)); } catch (e) {}
 }
 const _navPairs = {
-    homeNavItem:    'dsbHomeItem',
-    recentNavItem:  'dsbRecentItem',
-    inboxNavItem:   'desktopInboxItem',
-    dsbHomeItem:    'homeNavItem',
-    dsbGarageItem:  null,
-    dsbRecentItem:  'recentNavItem',
-    desktopInboxItem: 'inboxNavItem',
+    homeNavItem:      'dsbHomeItem',
+    recentNavItem:    'dsbRecentItem',
+    headerInboxBtn:   'desktopInboxItem',
+    dsbHomeItem:      'homeNavItem',
+    dsbGarageItem:    null,
+    dsbRecentItem:    'recentNavItem',
+    desktopInboxItem: 'headerInboxBtn',
 };
 function setActiveNav(el) {
-    document.querySelectorAll('.nav-item, .dsb-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.nav-item, .dsb-item, .header-inbox-btn').forEach(n => n.classList.remove('active'));
     const target = typeof el === 'string' ? document.getElementById(el) : el;
     if (target) {
         target.classList.add('active');
@@ -5253,7 +5253,7 @@ function showToastWithAction(msg, actionLabel, actionFn) {
 let currentInboxTab = 'all';
 
 function onOpenInbox() {
-    setActiveNav('inboxNavItem');
+    setActiveNav('headerInboxBtn');
     updateInboxBadge();
     document.getElementById('chatDrawer')?.classList.remove('active');
     document.getElementById('messageDetailDrawer')?.classList.remove('active');
@@ -6196,16 +6196,28 @@ function renderAccountState() {
     if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'standard') ? 'block' : 'none';
     if (searchModePill) searchModePill.style.display = (currentUserTier === 'pro') ? '' : 'none';
     syncSearchModePill();
+
+    // Update bottom nav profile circle
+    const navProfileCircle = document.getElementById('navProfileCircle');
+    if (navProfileCircle) {
+        if (!userIsSignedIn) {
+            navProfileCircle.className = 'nav-profile-circle signed-out';
+            navProfileCircle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>';
+        } else {
+            navProfileCircle.className = `nav-profile-circle${currentUserTier === 'pro' ? ' pro' : ''}`;
+            navProfileCircle.innerHTML = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
+        }
+    }
     const isPro = userIsSignedIn && currentUserTier === 'pro';
     const dtbDash   = document.getElementById('dtbDashboard');
     const amenuDash = document.getElementById('amenuDashboard');
     if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
     if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
 
-    const inboxNavItem     = document.getElementById('inboxNavItem');
+    const headerInboxBtn   = document.getElementById('headerInboxBtn');
     const dtbMessages      = document.getElementById('dtbMessages');
     const desktopInboxItem = document.getElementById('desktopInboxItem');
-    if (inboxNavItem)     inboxNavItem.style.display     = userIsSignedIn ? '' : 'none';
+    if (headerInboxBtn)   headerInboxBtn.style.display   = userIsSignedIn ? '' : 'none';
     if (dtbMessages)      dtbMessages.style.display      = userIsSignedIn ? '' : 'none';
     if (desktopInboxItem) desktopInboxItem.style.display = userIsSignedIn ? '' : 'none';
 

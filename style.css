@@ -54,6 +54,40 @@ header {
     gap: 10px;
 }
 
+/* === MOBILE HEADER INBOX BUTTON === */
+.header-inbox-btn {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--apc-charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.header-inbox-btn svg { display: block; }
+.header-inbox-btn.active svg { stroke: var(--apc-orange); }
+
+/* === NAV PROFILE CIRCLE (bottom nav) === */
+.nav-profile-circle {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--apc-orange);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 900;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.nav-profile-circle.pro { background: var(--apc-blue); }
+.nav-profile-circle.signed-out { background: #bbb; }
+
 /* === ACCOUNT PILL === */
 .account-pill {
     display: inline-flex;
@@ -1166,6 +1200,11 @@ header {
     font-size: 9px; 
     color: #888; 
     font-weight: 700; 
+}
+
+/* Mobile: hide account pill zone (profile goes to bottom nav circle) */
+@media (max-width: 899px) {
+    #accountPillZone { display: none !important; }
 }
 
 /* BOTTOM NAV */
@@ -3578,6 +3617,7 @@ header {
     .search-col .search-group { margin: 0; }
     #proSearchToggle { margin-top: 0; }
 
+    .header-inbox-btn { display: none !important; }
     #accountPillZone { order: 3; flex-shrink: 0; width: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 8px; }
     #accountPill    { width: auto; }
     .sign-up-prompt { display: block; }
@@ -3586,25 +3626,20 @@ header {
         padding: 11px 24px;
         border-radius: 8px;
     }
+    /* Desktop signed-in: just the avatar circle, no pill box */
     .account-pill.signed-in {
-        background: #f8f8f8;
+        background: transparent;
         border: none;
-        box-shadow: 0 0 0 2px #F7941D, 0 0 8px rgba(247,148,29,0.3);
-        border-radius: 24px;
-        padding: 5px 10px;
+        box-shadow: none;
+        border-radius: 50%;
+        padding: 4px;
         justify-content: center;
-        color: var(--apc-charcoal);
-        font-size: 13px;
-        text-transform: none;
-        letter-spacing: 0;
         gap: 0;
-        transition: box-shadow 0.15s;
+        transition: opacity 0.15s;
     }
-    .account-pill.signed-in.tier-pro {
-        box-shadow: 0 0 0 2px #007AFF, 0 0 8px rgba(0,122,255,0.3);
-    }
-    .pill-avatar { width: 32px; height: 32px; font-size: 13px; }
-    .account-pill.signed-in:hover .pill-avatar { transform: scale(1.06); transition: transform 0.15s; }
+    .account-pill.signed-in.tier-pro { box-shadow: none; }
+    .pill-avatar { width: 36px; height: 36px; font-size: 14px; }
+    .account-pill.signed-in:hover .pill-avatar { transform: scale(1.08); transition: transform 0.15s; }
 
     /* Right panel: below top bar + header */
     .desktop-right-panel { top: 140px; bottom: 0; } /* fallback — overridden by updateHeaderOffset() */

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=36">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -31,7 +31,12 @@
     <header style="padding-bottom: 10px; position: relative;">
         <div class="header-top">
             <div class="logo-main" onclick="closeDashboard(); closeTopDrawer(); renderMainGrid(); window.scrollTo(0,0);" style="cursor:pointer;"><img src="images/APC.logo.png" alt="APC Logo"></div>
-<div id="accountPillZone">
+            <!-- Mobile-only: inbox icon button in header -->
+            <button id="headerInboxBtn" class="header-inbox-btn" onclick="setActiveNav(this); onOpenInbox()" aria-label="Messages" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span id="inboxBadge" style="display:none; position:absolute; top:2px; right:2px; background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; white-space:nowrap;"></span>
+            </button>
+            <div id="accountPillZone">
                 <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
                 <div id="signUpPrompt" class="sign-up-prompt">Not a member? <a href="#" class="sign-up-link" onclick="openAuthDrawer(null,'signup');return false;">Sign up free</a></div>
             </div>
@@ -253,11 +258,8 @@
     <div class="nav-item active" id="homeNavItem" onclick="goHome()">Home</div>
     <div class="nav-item nav-sell" onclick="openSellOverlay()">Sell</div>
     <div class="nav-item" id="recentNavItem" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
-    <div class="nav-item" id="inboxNavItem" onclick="setActiveNav(this); onOpenInbox()">
-        <span style="position:relative; display:inline-block;">
-            Inbox
-            <span id="inboxBadge" style="display:none; position:absolute; top:-6px; left:100%; margin-left:2px; background:#FF3B30; color:white; font-size:9px; font-weight:800; border-radius:999px; padding:1px 5px; min-width:16px; text-align:center; white-space:nowrap;"></span>
-        </span>
+    <div class="nav-item" id="profileNavItem" onclick="onAccountPillClick(event)">
+        <span id="navProfileCircle" class="nav-profile-circle signed-out"></span>
     </div>
 </nav>
 
