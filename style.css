@@ -4770,7 +4770,7 @@ header {
 .inbox-msg-row.sent .inbox-msg-avatar { background: var(--apc-orange); color: white; }
 .inbox-msg-col { display: flex; flex-direction: column; max-width: 68%; }
 .inbox-msg-row.sent .inbox-msg-col { align-items: flex-end; }
-.inbox-msg-bubble { padding: 9px 12px; border-radius: 16px; font-size: 13px; line-height: 1.45; word-break: break-word; }
+.inbox-msg-bubble { padding: 9px 12px; border-radius: 16px; font-size: 14px; line-height: 1.45; word-break: break-word; }
 .inbox-msg-row.received .inbox-msg-bubble { background: white; color: #222; border: 1px solid #eee; border-bottom-left-radius: 4px; }
 .inbox-msg-row.sent .inbox-msg-bubble { background: var(--apc-orange); color: white; border-bottom-right-radius: 4px; }
 .inbox-msg-bubble img { max-width: 180px; max-height: 180px; border-radius: 9px; display: block; }
