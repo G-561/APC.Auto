@@ -149,6 +149,38 @@ function getDefaultWorkshopProfile() {
     };
 }
 
+const SERVICE_LABELS = {
+    generalService: 'General Servicing & Repairs',
+    logbook: 'Logbook Servicing',
+    engineDiag: 'Engine Diagnostics & Tuning',
+    engineRebuild: 'Engine Rebuilds & Overhauls',
+    transmission: 'Transmission & Drivetrain',
+    exhaust: 'Exhaust & Emissions',
+    timingBelt: 'Timing Belt & Chain',
+    brakes: 'Brake Machining & Upgrades',
+    suspension: 'Suspension & Steering',
+    wheelAlign: 'Wheel Alignment & Balancing',
+    tyreSupply: 'Tyre Supply & Fitting',
+    autoElectrical: 'Auto Electrical',
+    battery: 'Battery, Alternator & Starter',
+    aircon: 'Air Conditioning',
+    cooling: 'Cooling & Radiator',
+    autoSecurity: 'Security Systems & Accessories',
+    collision: 'Collision Repair & Panel Beating',
+    sprayPaint: 'Spray Painting & Refinishing',
+    pdr: 'Paintless Dent Removal',
+    autoGlass: 'Auto Glass',
+    trimming: 'Motor Trimming & Upholstery',
+};
+const CAT_LABELS = {
+    body: 'Body & Exterior', lighting: 'Lighting & Electrical',
+    engine: 'Engine & Drivetrain', wheels: 'Wheels & Suspension',
+    interior: 'Interior', brakes: 'Brakes',
+    cooling: 'Cooling & Heating', glass: 'Glass & Windows',
+    '4x4': '4x4 & Accessories', performance: 'Performance & Race',
+    audio: 'Audio & In-Car Tech', tools: 'Workshop Tools', other: 'Other',
+};
+
 const RECENTLY_VIEWED_KEY = 'apc.recentlyViewed.v1';
 const RECENTLY_VIEWED_MAX = 8;
 let recentlyViewed = loadRecentlyViewed();
@@ -3878,6 +3910,223 @@ function openStorefront(partId) {
     toggleDrawer('storefrontDrawer', true);
 }
 
+// --- WORKSHOP / SERVICE STOREFRONT ---
+
+function openWorkshopStorefront(data, fromBrowser = false) {
+    renderWorkshopStorefront(data);
+    const sfEl  = document.getElementById('storefrontDrawer');
+    const backBar = document.getElementById('storefrontBackBar');
+    if (sfEl) sfEl.style.zIndex = '';
+    if (backBar) backBar.style.display = 'none';
+    toggleDrawer('storefrontDrawer', true);
+}
+
+function renderWorkshopStorefront(data) {
+    const bizType = data.bizType || data.biz_type || data.type || 'service';
+    const name    = data.businessName || data.business_name || data.name || '';
+    const about   = data.about || data.specialty || '';
+    const loc     = data.location || data.loc || '';
+
+    // Reuse existing hero/identity render — pass empty sellerName so parts grid is blank
+    renderStorefront(
+        data.sellerName || '',
+        true,
+        data.logo || data.logo_url || '',
+        name,
+        data.abn || '',
+        about,
+        loc,
+        data.banner || data.banner_url || ''
+    );
+
+    // Contact button label
+    const msgBtn = document.getElementById('sfMsgBtn');
+    if (msgBtn) msgBtn.textContent = (bizType === 'service') ? 'Contact Workshop' : 'Message Seller';
+
+    // Address
+    const addrSec = document.getElementById('sfAddressSection');
+    const addrEl  = document.getElementById('sfAddress');
+    const addr = data.address || '';
+    if (addrSec) addrSec.style.display = addr ? '' : 'none';
+    if (addrEl)  addrEl.innerHTML = addr ? '📍 ' + addr : '';
+
+    // Services chips
+    const svcSec   = document.getElementById('sfServicesSection');
+    const svcChips = document.getElementById('sfServicesChips');
+    const services  = data.services || {};
+    let svcHTML = Object.entries(services)
+        .filter(([k, v]) => v && SERVICE_LABELS[k])
+        .map(([k]) => `<span class="sf-chip">${SERVICE_LABELS[k]}</span>`)
+        .join('');
+    if (data.wrecking) svcHTML += '<span class="sf-chip">Wrecking &amp; Dismantling</span>';
+    const showSvc = (bizType === 'service' || bizType === 'both') && svcHTML;
+    if (svcSec)   svcSec.style.display   = showSvc ? '' : 'none';
+    if (svcChips) svcChips.innerHTML      = svcHTML;
+
+    // Vehicle makes chips
+    const makesSec   = document.getElementById('sfMakesSection');
+    const makesChips = document.getElementById('sfMakesChips');
+    const vehiclesRaw = data.vehicles || data.vehicleTypes || data.vehicle_makes || [];
+    const makesArr = Array.isArray(vehiclesRaw)
+        ? vehiclesRaw
+        : String(vehiclesRaw).split(',').map(s => s.trim()).filter(Boolean);
+    if (makesSec)   makesSec.style.display   = makesArr.length ? '' : 'none';
+    if (makesChips) makesChips.innerHTML      = makesArr.map(m => `<span class="sf-chip">${m}</span>`).join('');
+
+    // Parts categories chips (supplier/both)
+    const catsSec  = document.getElementById('sfCatsSection');
+    const catsChips = document.getElementById('sfCatsChips');
+    const condEl    = document.getElementById('sfPartsCondition');
+    const cats = data.partsCategories || data.parts_categories || [];
+    const showCats = (bizType === 'supplier' || bizType === 'both') && cats.length;
+    if (catsSec)   catsSec.style.display  = showCats ? '' : 'none';
+    if (catsChips) catsChips.innerHTML    = cats.map(c => `<span class="sf-chip">${CAT_LABELS[c] || c}</span>`).join('');
+    if (condEl) {
+        const pt = data.partsType || data.parts_type || '';
+        condEl.textContent = pt === 'new' ? 'New parts only' : pt === 'used' ? 'Used / reconditioned parts' : pt === 'both' ? 'New & used parts' : '';
+    }
+
+    // Hide search + parts grid for service-only
+    const searchWrap = document.querySelector('#storefrontDrawer .sf-search-wrap');
+    const partsGrid  = document.getElementById('sellerPartsGrid');
+    const isService  = bizType === 'service';
+    if (searchWrap) searchWrap.style.display = isService ? 'none' : '';
+    if (partsGrid)  partsGrid.style.display  = isService ? 'none' : '';
+}
+
+// Fetch a workshop profile by userId from Supabase, then open their storefront
+async function handleStoreDeepLink(userId) {
+    if (!userId) return;
+    // Own profile — open from local data
+    if (userIsSignedIn && userId === currentUserId) {
+        openWorkshopStorefront({
+            ...workshopProfile,
+            businessName: userSettings.businessName,
+            about: userSettings.about,
+            abn: userSettings.abn,
+            bizType: userSettings.businessType || 'supplier',
+            logo: userSettings.businessLogo || userSettings.profilePic,
+            banner: userSettings.businessBanner,
+        });
+        return;
+    }
+    if (!sb) return;
+    const { data, error } = await sb.from('workshop_profiles').select('*').eq('user_id', userId).single();
+    if (error || !data) { showToast('Workshop profile not found'); return; }
+    openWorkshopStorefront({ ...data, bizType: data.biz_type });
+}
+
+// Sync workshop profile to Supabase after saving (Pro users)
+async function syncWorkshopProfileToSupabase() {
+    if (!userIsSignedIn || !currentUserId || !sb || currentUserTier !== 'pro') return;
+    await sb.from('workshop_profiles').upsert({
+        user_id:          currentUserId,
+        business_name:    userSettings.businessName || '',
+        about:            userSettings.about        || '',
+        address:          workshopProfile.address   || '',
+        abn:              userSettings.abn          || '',
+        biz_type:         userSettings.businessType || 'supplier',
+        services:         workshopProfile.services  || {},
+        vehicles:         workshopProfile.vehicles  || [],
+        parts_categories: workshopProfile.partsCategories || [],
+        parts_type:       workshopProfile.partsType || 'new',
+        wrecking:         workshopProfile.wrecking  || false,
+        wrecking_makes:   workshopProfile.wreckingMakes || [],
+        logo_url:         userSettings.businessLogo || userSettings.profilePic || '',
+        banner_url:       userSettings.businessBanner || '',
+        published:        true,
+    }, { onConflict: 'user_id' });
+}
+
+// --- APC BADGE GENERATOR ---
+
+function generateApcBadge() {
+    if (!userIsSignedIn || !currentUserId) return;
+    const storeUrl = `${location.origin}${location.pathname}?store=${currentUserId}`;
+    const linkEl = document.getElementById('badgeLinkText');
+    if (linkEl) linkEl.textContent = storeUrl;
+
+    // Generate QR silently into temp div, then composite onto canvas
+    const qrTemp = document.getElementById('badgeQrTemp');
+    if (qrTemp) {
+        qrTemp.innerHTML = '';
+        new QRCode(qrTemp, { text: storeUrl, width: 128, height: 128, colorDark: '#1a1a1a', colorLight: '#ffffff' });
+    }
+
+    // Draw badge canvas
+    const canvas = document.getElementById('apcBadgeCanvas');
+    if (!canvas) return;
+    const W = 460, H = 130;
+    canvas.width = W; canvas.height = H;
+    canvas.style.height = 'auto';
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#F7941D';
+    _roundRect(ctx, 0, 0, W, H, 12);
+    ctx.fill();
+
+    // Left text column
+    ctx.fillStyle = 'white';
+    ctx.font = '700 11px system-ui, -apple-system, sans-serif';
+    ctx.fillText('FIND US ON', 22, 36);
+    ctx.font = '900 46px system-ui, -apple-system, sans-serif';
+    ctx.fillText('APC', 20, 88);
+    ctx.font = '600 12px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillText('Auto Parts Connection', 22, 112);
+
+    // Business name if set
+    const biz = userSettings.businessName;
+    if (biz) {
+        ctx.fillStyle = 'white';
+        ctx.font = '700 12px system-ui, -apple-system, sans-serif';
+        ctx.fillText(biz, 130, 112);
+    }
+
+    // White QR box on right
+    ctx.fillStyle = 'white';
+    _roundRect(ctx, W - 140, 12, 128, 106, 8);
+    ctx.fill();
+    ctx.fillStyle = '#bbb';
+    ctx.font = '600 10px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Scan to view profile', W - 76, H - 6);
+    ctx.textAlign = 'left';
+
+    // Composite QR image after it renders
+    setTimeout(() => {
+        const qrImg = qrTemp?.querySelector('img') || qrTemp?.querySelector('canvas');
+        if (qrImg && canvas) {
+            const ctx2 = canvas.getContext('2d');
+            try { ctx2.drawImage(qrImg, W - 138, 14, 102, 90); } catch (e) {}
+        }
+    }, 200);
+}
+
+function _roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function downloadApcBadge() {
+    const canvas = document.getElementById('apcBadgeCanvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'find-us-on-apc.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
 // --- MESSAGING ---
 function closeChatDrawer() {
     const el = document.getElementById('chatDrawer');
@@ -5955,6 +6204,12 @@ function openWorkshopProfileEditor() {
     _updateMakesSummary('wreckingMakes', workshopProfile.wreckingMakes);
     renderLogoPreview();
     renderBannerPreview();
+    // Badge section — Pro users only
+    const badgeSec = document.getElementById('apcBadgeSection');
+    if (badgeSec) {
+        badgeSec.style.display = (currentUserTier === 'pro' && userIsSignedIn) ? 'block' : 'none';
+        if (currentUserTier === 'pro' && userIsSignedIn) generateApcBadge();
+    }
     toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {
@@ -5995,6 +6250,7 @@ function submitWorkshopProfile() {
         wreckingMakes: workshopProfile.wreckingMakes || [],
     };
     saveWorkshopProfile();
+    syncWorkshopProfileToSupabase();
     showToast('Profile saved');
     toggleDrawer('workshopDrawer');
 }
@@ -6159,7 +6415,7 @@ function buildSponsoredWorkshopCardHTML(workshop) {
             <div class="workshop-card-specialty">${workshop.specialty}</div>
             <div class="workshop-card-footer">
                 ${stars}
-                <button class="workshop-card-button" onclick="openWorkshopDetail(${workshop.id})">View →</button>
+                <button class="workshop-card-button" onclick="openWorkshopStorefront(workshopDatabase.find(w=>w.id===${workshop.id}), true)">View →</button>
             </div>
         </div>
     `;
@@ -7103,6 +7359,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Deep-link: if URL contains ?item=123, open that listing directly
     const itemParam = new URLSearchParams(location.search).get('item');
     if (itemParam) openItemDetail(Number(itemParam));
+
+    // Deep-link: if URL contains ?store=userId, open that workshop/supplier storefront
+    const storeParam = new URLSearchParams(location.search).get('store');
+    if (storeParam) handleStoreDeepLink(storeParam);
 
     // Lightbox keyboard navigation
     document.addEventListener('keydown', e => {

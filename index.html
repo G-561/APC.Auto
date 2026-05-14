@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=39">
+    <link rel="stylesheet" href="style.css?v=40">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -598,7 +598,7 @@
                 <span class="sf-bar-divider"></span>
                 <span class="sf-bar-stat">★ 4.9 Rating</span>
                 <span class="sf-bar-spacer"></span>
-                <button class="sf-msg-btn" onclick="handleGeneralEnquiry()">Message Seller</button>
+                <button class="sf-msg-btn" id="sfMsgBtn" onclick="handleGeneralEnquiry()">Message Seller</button>
                 <button id="sfSaveStoreBtn" class="sf-heart-btn" onclick="toggleSaveStore(currentStorefrontSeller, document.getElementById('sfBusinessName')?.textContent, document.getElementById('sfProBadge')?.style.display !== 'none')" title="Save this store">
                     <span class="sf-heart-icon">&#x2661;</span><span id="sfStatSaves" class="sf-bar-num sf-saves-count">0</span>
                 </button>
@@ -610,6 +610,30 @@
         <!-- About (Pro only) -->
         <div id="sfAboutSection" class="sf-about-section" style="display:none;">
             <div id="sfAboutText" class="sf-about-text"></div>
+        </div>
+
+        <!-- Address (service/workshop profiles) -->
+        <div id="sfAddressSection" class="sf-section" style="display:none;">
+            <div id="sfAddress" class="sf-address"></div>
+        </div>
+
+        <!-- Services offered (service/both type) -->
+        <div id="sfServicesSection" class="sf-section" style="display:none;">
+            <div class="sf-section-label">Services Offered</div>
+            <div id="sfServicesChips" class="sf-chips-wrap"></div>
+        </div>
+
+        <!-- Vehicle makes (service + supplier) -->
+        <div id="sfMakesSection" class="sf-section" style="display:none;">
+            <div class="sf-section-label">Vehicles We Work On</div>
+            <div id="sfMakesChips" class="sf-chips-wrap"></div>
+        </div>
+
+        <!-- Parts categories + condition (supplier/both) -->
+        <div id="sfCatsSection" class="sf-section" style="display:none;">
+            <div class="sf-section-label">Parts We Stock</div>
+            <div id="sfCatsChips" class="sf-chips-wrap"></div>
+            <div id="sfPartsCondition" class="sf-parts-condition"></div>
         </div>
 
         <!-- Search -->
@@ -1640,6 +1664,16 @@
 
             <div class="action-container">
                 <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE PROFILE</button>
+            </div>
+
+            <!-- APC Badge Generator — Pro only -->
+            <div id="apcBadgeSection" class="filter-section" style="display:none;">
+                <h4>My APC Badge</h4>
+                <p style="font-size:12px; color:#888; margin-bottom:14px;">Add this badge to your website or print materials so customers can find your APC profile with one scan.</p>
+                <canvas id="apcBadgeCanvas" style="width:100%; border-radius:12px; display:block; margin-bottom:12px;"></canvas>
+                <div id="badgeQrTemp" style="display:none;"></div>
+                <button class="btn-full-action" onclick="downloadApcBadge()" style="margin-bottom:8px;">Download Badge PNG</button>
+                <div id="badgeLinkText" style="font-size:11px; color:#aaa; text-align:center; word-break:break-all;"></div>
             </div>
         </div>
     </div>
