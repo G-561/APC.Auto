@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=37">
+    <link rel="stylesheet" href="style.css?v=38">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1485,15 +1485,8 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>Location</label>
-                    <div class="location-picker-wrap">
-                        <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                        <select class="loc-suburb-select" style="display:none" onchange="onSuburbSelect(this)"></select>
-                        <div class="location-chip" style="display:none">
-                            <span class="location-chip-text"></span>
-                            <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
-                        </div>
-                    </div>
+                    <label>Business Address</label>
+                    <input type="text" id="wsAddress" placeholder="e.g. 47 Richmond Road, Norwood SA 5067" autocomplete="street-address">
                 </div>
                 <div class="input-group">
                     <label>I am a</label>

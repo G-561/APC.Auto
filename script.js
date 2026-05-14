@@ -130,6 +130,7 @@ function saveWorkshopProfile() {
 function getDefaultWorkshopProfile() {
     return {
         vehicles: [],
+        address: '',
         services: {
             // Engine & Powertrain
             generalService: false, logbook: false, engineDiag: false, engineRebuild: false,
@@ -5910,7 +5911,8 @@ function openWorkshopProfileEditor() {
     if (bizEl)   bizEl.value   = userSettings.businessName || '';
     if (abnEl)   abnEl.value   = formatABN(userSettings.abn || '');
     if (aboutEl) aboutEl.value = userSettings.about        || '';
-    populateLocationPickers();
+    const wsAddressEl = document.getElementById('wsAddress');
+    if (wsAddressEl) wsAddressEl.value = workshopProfile.address || '';
     // Business type selector
     const bizType = userSettings.businessType || 'supplier';
     document.querySelectorAll('#bizTypeControl .radius-seg').forEach(s => {
@@ -5970,6 +5972,7 @@ function submitWorkshopProfile() {
     const getChk = id => document.getElementById(id)?.checked || false;
     workshopProfile = {
         vehicles: workshopProfile.vehicles || [],
+        address: document.getElementById('wsAddress')?.value.trim() || '',
         services: {
             generalService: getChk('wsGeneralService'), logbook: getChk('wsLogbook'),
             engineDiag: getChk('wsEngineDiag'),   engineRebuild: getChk('wsEngineRebuild'),
