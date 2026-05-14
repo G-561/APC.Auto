@@ -3600,7 +3600,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     const workshopSection = document.getElementById('detailWorkshopSection');
     const workshopHeadline = document.getElementById('detailWorkshopHeadline');
     const workshopCards = document.getElementById('detailWorkshopCards');
-    if (workshopSection) workshopSection.style.display = fromInbox ? 'none' : '';
+    if (workshopSection) workshopSection.style.display = (fromInbox || inStoreView) ? 'none' : '';
     if (workshopSection && workshopHeadline && workshopCards && !fromInbox) {
         const isUniversal = !part.fits || part.fits.length === 0;
         if (isUniversal) {
