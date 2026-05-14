@@ -1338,6 +1338,7 @@ header {
     max-height: 78vh !important;
     height: auto !important;
     border-radius: 16px !important;
+    overflow: hidden !important;
     box-shadow: 0 8px 50px rgba(0,0,0,0.3) !important;
     z-index: 3300 !important;
 }
