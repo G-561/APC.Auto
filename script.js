@@ -962,10 +962,11 @@ function formatMsgTime(isoString) {
 
 async function ensureSupabaseConversation(conv) {
     if (conv.supabaseConvId) return true;
-    if (!currentUserId) return false;
+    if (!currentUserId) { showToast('DBG: no userId'); return false; }
     const part = findPartAnywhere(conv.partId);
-    if (!part) { console.warn('ensureSupabaseConv: part not found', conv.partId); return false; }
-    if (!part.supabaseId || !part.sellerId) { console.warn('ensureSupabaseConv: part missing supabaseId or sellerId', part); return false; }
+    if (!part) { showToast('DBG: part not found (' + conv.partId + ')'); return false; }
+    if (!part.supabaseId) { showToast('DBG: no supabaseId on part'); return false; }
+    if (!part.sellerId)   { showToast('DBG: no sellerId on part'); return false; }
 
     const { data, error } = await sb.from('conversations').insert({
         listing_id: part.supabaseId,
