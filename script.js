@@ -5631,8 +5631,14 @@ function onOpenInbox() {
     document.getElementById('inboxConvCol')?.classList.remove('slide-away');
     document.getElementById('inboxThreadCol')?.classList.remove('slide-in');
     activeConvId = null;
+    document.getElementById('inboxThreadContent').style.display = 'none';
+    document.getElementById('inboxThreadEmpty').style.display = '';
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
+    // On desktop split-pane, auto-select the most recent conversation
+    if (window.innerWidth >= 768 && conversations.length > 0) {
+        setTimeout(() => openInboxConv(conversations[0].id), 50);
+    }
 }
 
 function updateInboxBadge() {
