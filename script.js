@@ -964,7 +964,8 @@ async function ensureSupabaseConversation(conv) {
     if (conv.supabaseConvId) return true;
     if (!currentUserId) return false;
     const part = findPartAnywhere(conv.partId);
-    if (!part?.supabaseId || !part.sellerId) return false;
+    if (!part) { console.warn('ensureSupabaseConv: part not found', conv.partId); return false; }
+    if (!part.supabaseId || !part.sellerId) { console.warn('ensureSupabaseConv: part missing supabaseId or sellerId', part); return false; }
 
     const { data, error } = await sb.from('conversations').insert({
         listing_id: part.supabaseId,
@@ -977,7 +978,7 @@ async function ensureSupabaseConversation(conv) {
         unread_seller: true,
     }).select('id').single();
 
-    if (error) { console.warn('Conv sync error:', error.message); return false; }
+    if (error) { console.warn('Conv sync error:', error.message); showToast('Sync error: ' + error.message); return false; }
     conv.supabaseConvId = data.id;
     conv.buyerId = currentUserId;
     saveConversations();
