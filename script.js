@@ -4043,31 +4043,37 @@ async function syncWorkshopProfileToSupabase() {
 function generateApcBadge() {
     if (!userIsSignedIn || !currentUserId) return;
 
-    // Always use the live GitHub Pages URL — file:// local paths are useless in a QR code
     const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
         ? 'https://g-561.github.io/APC.Auto/'
         : `${location.origin}${location.pathname}`;
     const storeUrl = `${baseUrl}?store=${currentUserId}`;
+    const biz = userSettings.businessName || '';
+
     const linkEl = document.getElementById('badgeLinkText');
     if (linkEl) linkEl.textContent = storeUrl;
 
-    // Generate QR silently into temp div, then composite onto canvas
+    // Generate QR into hidden div, then draw entire badge once QR image is ready
     const qrTemp = document.getElementById('badgeQrTemp');
     if (qrTemp) {
         qrTemp.innerHTML = '';
         new QRCode(qrTemp, { text: storeUrl, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff' });
     }
+    setTimeout(() => _drawApcBadgeCanvas(biz, qrTemp), 300);
+}
 
-    // Badge dimensions in CSS pixels
-    const W = 420, H = 126;
-    const dpr = window.devicePixelRatio || 1;
+function _drawApcBadgeCanvas(biz, qrTemp) {
     const canvas = document.getElementById('apcBadgeCanvas');
     if (!canvas) return;
+
+    const W = 420, H = 126;
+    const dpr = window.devicePixelRatio || 1;
     canvas.width  = W * dpr;
     canvas.height = H * dpr;
-    canvas.style.width  = W + 'px';
-    canvas.style.height = H + 'px';
+    canvas.style.width  = '300px';
+    canvas.style.height = '90px';
+
     const ctx = canvas.getContext('2d');
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any leftover transform from previous calls
     ctx.scale(dpr, dpr);
 
     // Background
@@ -4076,36 +4082,33 @@ function generateApcBadge() {
     ctx.fill();
 
     // Left text
-    const biz = userSettings.businessName || '';
     ctx.fillStyle = 'white';
     ctx.font = '700 11px system-ui, -apple-system, sans-serif';
     ctx.fillText('FIND US ON', 22, 32);
     ctx.font = '900 48px system-ui, -apple-system, sans-serif';
     ctx.fillText('APC', 18, 84);
-
-    // Business name below APC (or fallback tagline)
     ctx.font = biz ? '700 13px system-ui, -apple-system, sans-serif' : '600 11px system-ui, -apple-system, sans-serif';
     ctx.fillStyle = biz ? 'white' : 'rgba(255,255,255,0.7)';
     ctx.fillText(biz || 'Auto Parts Connection', 22, 108);
 
-    // White QR box on right
+    // White QR box
     const qx = W - 132, qy = 10, qs = 106;
     ctx.fillStyle = 'white';
     _roundRect(ctx, qx, qy, qs, qs, 8);
     ctx.fill();
+
+    // "Scan to view profile" label
     ctx.fillStyle = 'rgba(255,255,255,0.65)';
     ctx.font = '600 9px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Scan to view profile', qx + qs / 2, H - 4);
     ctx.textAlign = 'left';
 
-    // Composite QR after it renders
-    setTimeout(() => {
-        const qrImg = qrTemp?.querySelector('img') || qrTemp?.querySelector('canvas');
-        if (qrImg && canvas) {
-            try { canvas.getContext('2d').drawImage(qrImg, (qx + 3) * dpr / dpr, (qy + 3) * dpr / dpr, qs - 6, qs - 6); } catch (e) {}
-        }
-    }, 200);
+    // Draw QR image into the white box
+    const qrImg = qrTemp?.querySelector('img') || qrTemp?.querySelector('canvas');
+    if (qrImg) {
+        try { ctx.drawImage(qrImg, qx + 3, qy + 3, qs - 6, qs - 6); } catch (e) {}
+    }
 }
 
 function _roundRect(ctx, x, y, w, h, r) {
