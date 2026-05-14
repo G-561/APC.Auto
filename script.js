@@ -3401,7 +3401,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (!part) return;
 
     const fromInbox   = _fromInbox || document.getElementById('inboxDrawer')?.classList.contains('active');
-    const inStoreView = _detailHistory.length > 0;
+    const inStoreView = _detailHistory.length > 0 || document.getElementById('storefrontDrawer')?.classList.contains('active');
 
     // Push current listing to history when opening a new one from within the storefront
     const detailAlreadyOpen = document.getElementById('detailOverlay')?.classList.contains('active');
