@@ -145,6 +145,14 @@
 <div id="drawerBackdrop" onclick="closeTopDrawer()"></div>
 
 <div id="mainContentArea">
+    <div id="proDashboardBanner" style="display:none;">
+        <div class="pdb-icon">📊</div>
+        <div class="pdb-body">
+            <div class="pdb-title">Pro Dashboard available</div>
+            <div class="pdb-text">Full analytics, stock insights and listing management — open APC on desktop to access your dashboard.</div>
+        </div>
+        <button class="pdb-dismiss" onclick="dismissProDashboardBanner()">Got it</button>
+    </div>
     <div id="gridHeading" class="grid-heading" style="display:none;"></div>
     <div class="results-grid" id="mainGrid"></div>
 </div>
@@ -1988,7 +1996,7 @@
     </div>
     <div class="drawer-content" style="padding: 0;">
         <div class="amenu-section">
-            <button id="amenuDashboard" class="account-menu-item" onclick="openDashboard(); closeAccountMenu()" style="display:none;">My Dashboard <span class="account-menu-chevron">›</span></button>
+            <button id="amenuDashboard" class="account-menu-item" onclick="onDashboardMenuTap()" style="display:none;">My Dashboard <span class="amenu-desktop-badge">Desktop</span><span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onOpenGarage(); closeAccountMenu()">My Garage <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>

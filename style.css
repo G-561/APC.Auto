@@ -943,6 +943,50 @@ header {
 
 
 /* GRID HEADING — "Recently Listed" / "Results for X" */
+/* PRO DASHBOARD MOBILE BANNER */
+#proDashboardBanner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 10px 4px;
+    padding: 14px;
+    background: #fff;
+    border-radius: 14px;
+    border-left: 4px solid var(--apc-orange);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+.pdb-icon { font-size: 26px; flex-shrink: 0; }
+.pdb-body { flex: 1; min-width: 0; }
+.pdb-title { font-size: 13px; font-weight: 700; color: #1a1a1a; margin-bottom: 3px; }
+.pdb-text  { font-size: 12px; color: #666; line-height: 1.4; }
+.pdb-dismiss {
+    flex-shrink: 0;
+    background: var(--apc-orange);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.amenu-desktop-badge {
+    display: inline-block;
+    background: #e8e8e8;
+    color: #888;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 2px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+}
+@media (min-width: 900px) {
+    #proDashboardBanner { display: none !important; }
+    .amenu-desktop-badge { display: none; }
+}
+
 .grid-heading {
     display: flex;
     align-items: baseline;

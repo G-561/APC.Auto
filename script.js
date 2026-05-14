@@ -6632,6 +6632,7 @@ function renderAccountState() {
     if (ddUpgrade)  ddUpgrade.style.display  = (currentUserTier === 'standard') ? 'flex' : 'none';
     if (ddDash)     ddDash.style.display      = isPro ? 'flex' : 'none';
 
+    maybeShowProDashboardBanner();
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
     updateWarehouseBinVisibility();
@@ -7044,6 +7045,32 @@ function relistPart(partId) {
 }
 
 // --- PRO DASHBOARD ---
+
+const PRO_DASHBOARD_BANNER_KEY = 'apc.proDashBannerDismissed';
+
+function maybeShowProDashboardBanner() {
+    const banner = document.getElementById('proDashboardBanner');
+    if (!banner) return;
+    const isPro = userIsSignedIn && currentUserTier === 'pro';
+    const dismissed = localStorage.getItem(PRO_DASHBOARD_BANNER_KEY);
+    banner.style.display = (isPro && !dismissed && window.innerWidth < 900) ? 'flex' : 'none';
+}
+
+function dismissProDashboardBanner() {
+    localStorage.setItem(PRO_DASHBOARD_BANNER_KEY, '1');
+    const banner = document.getElementById('proDashboardBanner');
+    if (banner) banner.style.display = 'none';
+}
+
+function onDashboardMenuTap() {
+    if (window.innerWidth >= 900) {
+        openDashboard();
+        closeAccountMenu();
+    } else {
+        showToast('Your Pro Dashboard is available when you open APC on desktop');
+        closeAccountMenu();
+    }
+}
 
 function openDashboard() {
     if (window.innerWidth < 900) return;
