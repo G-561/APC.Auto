@@ -696,7 +696,7 @@
         <div class="filter-section">
             <h4>Part Category</h4>
             <div class="input-group">
-                <select onchange="applyFiltersAndRender()">
+                <select onchange="onFilterChange()">
                     <option value="all">All Categories</option>
                     <option value="body">Body & Exterior (Mirrors, Bumpers, Panels)</option>
                     <option value="lighting">Lighting & Electrical (Headlights, ECUs)</option>
@@ -725,13 +725,13 @@
             </div>
             <div class="input-group">
                 <label>Model</label>
-                <select id="filterModel" onchange="applyFiltersAndRender()" style="width:100%">
+                <select id="filterModel" onchange="onFilterChange()" style="width:100%">
                     <option value="">Any Model</option>
                 </select>
             </div>
             <div class="input-group">
                 <label>Year</label>
-                <select id="filterYear" onchange="applyFiltersAndRender()" style="width:100%">
+                <select id="filterYear" onchange="onFilterChange()" style="width:100%">
                     <option value="">Any Year</option>
                 </select>
             </div>
@@ -781,23 +781,23 @@
         <div class="filter-section">
             <h4>Condition</h4>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" id="filterCondNewOem" checked onchange="applyFiltersAndRender()"> New OEM</label>
-                <label class="choice-item"><input type="checkbox" id="filterCondNewAft" checked onchange="applyFiltersAndRender()"> New Aftermarket</label>
-                <label class="choice-item"><input type="checkbox" id="filterCondUsed" checked onchange="applyFiltersAndRender()"> Used</label>
-                <label class="choice-item"><input type="checkbox" id="filterCondRefurb" checked onchange="applyFiltersAndRender()"> Refurbished</label>
-                <label class="choice-item"><input type="checkbox" id="filterCondParts" checked onchange="applyFiltersAndRender()"> For Parts</label>
+                <label class="choice-item"><input type="checkbox" id="filterCondNewOem" checked onchange="onFilterChange()"> New OEM</label>
+                <label class="choice-item"><input type="checkbox" id="filterCondNewAft" checked onchange="onFilterChange()"> New Aftermarket</label>
+                <label class="choice-item"><input type="checkbox" id="filterCondUsed" checked onchange="onFilterChange()"> Used</label>
+                <label class="choice-item"><input type="checkbox" id="filterCondRefurb" checked onchange="onFilterChange()"> Refurbished</label>
+                <label class="choice-item"><input type="checkbox" id="filterCondParts" checked onchange="onFilterChange()"> For Parts</label>
             </div>
         </div>
 
         <div class="filter-section">
             <h4>Logistics & Seller</h4>
             <div class="shared-choice-box" style="margin-bottom: 8px;">
-                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Postage</label>
-                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Pickup</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="onFilterChange()"> Postage</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="onFilterChange()"> Pickup</label>
             </div>
             <div class="shared-choice-box">
-                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> Personal</label>
-                <label class="choice-item"><input type="checkbox" checked onchange="applyFiltersAndRender()"> APC Pro</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="onFilterChange()"> Personal</label>
+                <label class="choice-item"><input type="checkbox" checked onchange="onFilterChange()"> APC Pro</label>
             </div>
         </div>
 

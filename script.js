@@ -2252,7 +2252,7 @@ function onFilterMakeChange() {
         modelEl.innerHTML = '<option value="">Any Model</option>' +
             getVehicleModels(make).map(m => `<option value="${m}">${m}</option>`).join('');
     }
-    applyFiltersAndRender();
+    if (window.innerWidth >= 900) applyFiltersAndRender();
 }
 
 function applyFiltersAndRender() {
@@ -2260,6 +2260,12 @@ function applyFiltersAndRender() {
     renderMainGrid();
     updateFilterChip();
     if (window.innerWidth < 900) toggleDrawer('filterDrawer');
+}
+
+// Called by inline onchange on individual filter inputs — only auto-applies on desktop;
+// on mobile the user taps "Update Results" to apply manually.
+function onFilterChange() {
+    if (window.innerWidth >= 900) applyFiltersAndRender();
 }
 
 function applyFiltersLive() {
@@ -7396,10 +7402,9 @@ document.addEventListener('DOMContentLoaded', () => {
         filterBtn.onclick = applyFiltersAndRender;
     }
 
-    // Live filters on desktop — re-render instantly on any filter input change
-    document.querySelectorAll('#filterDrawer select, #filterDrawer input[type="checkbox"], #filterDrawer input[type="text"], #filterDrawer input[type="number"]').forEach(el => {
-        const evt = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
-        el.addEventListener(evt, () => {
+    // Live filters on desktop for text/number inputs (selects + checkboxes handled via inline onFilterChange())
+    document.querySelectorAll('#filterDrawer input[type="text"], #filterDrawer input[type="number"]').forEach(el => {
+        el.addEventListener('input', () => {
             if (window.innerWidth >= 900) applyFiltersAndRender();
         });
     });
