@@ -6563,7 +6563,7 @@ function renderAccountState() {
     if (navProfileCircle) {
         if (!userIsSignedIn) {
             navProfileCircle.className = 'nav-profile-circle signed-out';
-            navProfileCircle.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>';
+            navProfileCircle.innerHTML = 'Sign In';
         } else {
             navProfileCircle.className = `nav-profile-circle${currentUserTier === 'pro' ? ' pro' : ''}`;
             navProfileCircle.innerHTML = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;

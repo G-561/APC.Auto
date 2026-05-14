@@ -86,7 +86,16 @@ header {
     flex-shrink: 0;
 }
 .nav-profile-circle.pro { background: var(--apc-blue); }
-.nav-profile-circle.signed-out { background: #bbb; }
+.nav-profile-circle.signed-out {
+    background: var(--apc-orange);
+    border-radius: 20px;
+    width: auto;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.2px;
+}
 
 /* === ACCOUNT PILL === */
 .account-pill {
