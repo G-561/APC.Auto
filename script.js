@@ -962,11 +962,22 @@ function formatMsgTime(isoString) {
 
 async function ensureSupabaseConversation(conv) {
     if (conv.supabaseConvId) return true;
-    if (!currentUserId) { showToast('DBG: no userId'); return false; }
+    if (!currentUserId) return false;
     const part = findPartAnywhere(conv.partId);
-    if (!part) { showToast('DBG: part not found (' + conv.partId + ')'); return false; }
-    if (!part.supabaseId) { showToast('DBG: no supabaseId on part'); return false; }
-    if (!part.sellerId)   { showToast('DBG: no sellerId on part'); return false; }
+    if (!part?.supabaseId || !part.sellerId) return false;
+
+    // Conversation may already exist in Supabase (duplicate key guard)
+    const { data: existing } = await sb.from('conversations')
+        .select('id')
+        .eq('listing_id', part.supabaseId)
+        .eq('buyer_id', currentUserId)
+        .maybeSingle();
+    if (existing) {
+        conv.supabaseConvId = existing.id;
+        conv.buyerId = currentUserId;
+        saveConversations();
+        return true;
+    }
 
     const { data, error } = await sb.from('conversations').insert({
         listing_id: part.supabaseId,
