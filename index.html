@@ -1926,7 +1926,8 @@
                         </button>
                         <textarea id="inboxReplyInput" class="inbox-reply-input" rows="1" placeholder="Type a message…"
                             autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"
-                            oninput="inboxAutoResize(this)" onkeydown="inboxHandleKey(event)"></textarea>
+                            oninput="inboxAutoResize(this)" onkeydown="inboxHandleKey(event)"
+                            onfocus="if(document.getElementById('detailOverlay')?.classList.contains('chat-card'))closeDetailOverlay()"></textarea>
                         <button class="inbox-send-btn" onclick="sendInboxMessage()">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>
