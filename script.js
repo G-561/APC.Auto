@@ -1079,9 +1079,7 @@ async function loadConversationsFromSupabase(userId) {
             .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
-        if (error) { showToast('DBG convs: ' + error.message); subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
-
-        showToast('DBG: ' + (rows||[]).length + ' rows, ' + (rows||[]).filter(r => r.buyer_id===userId ? !r.hidden_by_buyer : !r.hidden_by_seller).length + ' visible');
+        if (error) { subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
 
         const visibleRows = (rows || []).filter(r =>
             r.buyer_id === userId ? !r.hidden_by_buyer : !r.hidden_by_seller
@@ -1117,6 +1115,7 @@ async function loadConversationsFromSupabase(userId) {
                 existing.msgs = msgs;
                 existing.with = otherName;
                 existing.unread = isUnread;
+                if (r.listing_id) existing.partId = r.listing_id; // correct any stale numeric partId
             } else {
                 const part = [...partDatabase, ...userListings].find(p => p.supabaseId === r.listing_id);
                 conversations.unshift({
@@ -1308,7 +1307,7 @@ function subscribeToRealtimeMessages() {
                         with: otherName,
                         isPro: false,
                         unread: false,
-                        partId: part?.id || convRow.listing_id,
+                        partId: convRow.listing_id || part?.id,
                         partTitle: convRow.listing_title || 'Part',
                         msgs: [],
                     };
