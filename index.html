@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=38">
+    <link rel="stylesheet" href="style.css?v=39">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1591,8 +1591,34 @@
                         </div>
                     </div>
                     <div class="input-group">
-                        <label>Parts specialties <span style="font-weight:400;color:#aaa;">optional</span></label>
-                        <input id="wsPartsSpecialties" type="text" placeholder="e.g. Engine components, suspension, body panels">
+                        <label>Parts categories <span style="font-weight:400;color:#aaa;">optional — select all that apply</span></label>
+                        <div class="shared-choice-box">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="body"> Body &amp; Exterior</label>
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="lighting"> Lighting &amp; Electrical</label>
+                        </div>
+                        <div class="shared-choice-box" style="margin-top:6px;">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="engine"> Engine &amp; Drivetrain</label>
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="wheels"> Wheels &amp; Suspension</label>
+                        </div>
+                        <div class="shared-choice-box" style="margin-top:6px;">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="interior"> Interior</label>
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="brakes"> Brakes</label>
+                        </div>
+                        <div class="shared-choice-box" style="margin-top:6px;">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="cooling"> Cooling &amp; Heating</label>
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="glass"> Glass &amp; Windows</label>
+                        </div>
+                        <div class="shared-choice-box" style="margin-top:6px;">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="4x4"> 4x4 &amp; Accessories</label>
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="performance"> Performance &amp; Race</label>
+                        </div>
+                        <div class="shared-choice-box" style="margin-top:6px;">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="audio"> Audio &amp; In-Car Tech</label>
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="tools"> Workshop Tools</label>
+                        </div>
+                        <div class="shared-choice-box" style="margin-top:6px;">
+                            <label class="choice-item"><input type="checkbox" class="ws-cat-cb" data-cat="other"> Other</label>
+                        </div>
                     </div>
                 </div>
 

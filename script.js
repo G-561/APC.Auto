@@ -143,7 +143,7 @@ function getDefaultWorkshopProfile() {
             collision: false, sprayPaint: false, pdr: false, autoGlass: false, trimming: false,
         },
         partsType: 'new',
-        partsSpecialties: '',
+        partsCategories: [],
         wrecking: false,
         wreckingMakes: [],
     };
@@ -5944,8 +5944,10 @@ function openWorkshopProfileEditor() {
     document.querySelectorAll('#partsTypeControl .radius-seg').forEach(s => {
         s.classList.toggle('active', s.dataset.pts === partsType);
     });
-    const partsSpecEl = document.getElementById('wsPartsSpecialties');
-    if (partsSpecEl) partsSpecEl.value = workshopProfile.partsSpecialties || '';
+    const partsCats = workshopProfile.partsCategories || [];
+    document.querySelectorAll('.ws-cat-cb').forEach(cb => {
+        cb.checked = partsCats.includes(cb.dataset.cat);
+    });
     const wreckingCb = document.getElementById('wsWrecking');
     if (wreckingCb) wreckingCb.checked = !!workshopProfile.wrecking;
     const wreckingMakesRow = document.getElementById('wsWreckingMakesRow');
@@ -5988,7 +5990,7 @@ function submitWorkshopProfile() {
             trimming: getChk('wsTrimming'),
         },
         partsType: document.querySelector('#partsTypeControl .radius-seg.active')?.dataset.pts || 'new',
-        partsSpecialties: document.getElementById('wsPartsSpecialties')?.value.trim() || '',
+        partsCategories: Array.from(document.querySelectorAll('.ws-cat-cb:checked')).map(cb => cb.dataset.cat),
         wrecking: getChk('wsWrecking'),
         wreckingMakes: workshopProfile.wreckingMakes || [],
     };
