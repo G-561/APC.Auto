@@ -6382,6 +6382,8 @@ function updateHeaderOffset() {
             if (profileDrawer)        profileDrawer.style.top        = totalH + 'px';
             if (myPartsDrawer)        myPartsDrawer.style.top        = totalH + 'px';
             if (workshopDrawer)       workshopDrawer.style.top       = totalH + 'px';
+            const vehicleMakesDrawer = document.getElementById('vehicleMakesDrawer');
+            if (vehicleMakesDrawer)   vehicleMakesDrawer.style.top   = totalH + 'px';
             if (recentlyViewedDrawer) recentlyViewedDrawer.style.top = totalH + 'px';
             if (inboxDrawer)          inboxDrawer.style.top          = totalH + 'px';
             if (messageDetailDrawer)  messageDetailDrawer.style.top  = totalH + 'px';

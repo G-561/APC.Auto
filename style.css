@@ -3981,6 +3981,7 @@ header {
     #profileDrawer,
     #myPartsDrawer,
     #workshopDrawer,
+    #vehicleMakesDrawer,
     #recentlyViewedDrawer,
     #messageDetailDrawer,
     #chatDrawer,
@@ -4010,6 +4011,7 @@ header {
     #inboxDrawer,
     #settingsDrawer,
     #workshopDrawer,
+    #vehicleMakesDrawer,
     #sellOverlay {
         bottom: 16px !important;
         border-radius: 16px !important;
