@@ -1079,7 +1079,9 @@ async function loadConversationsFromSupabase(userId) {
             .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
-        if (error) { subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
+        if (error) { showToast('DBG convs: ' + error.message); subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
+
+        showToast('DBG: ' + (rows||[]).length + ' rows, ' + (rows||[]).filter(r => r.buyer_id===userId ? !r.hidden_by_buyer : !r.hidden_by_seller).length + ' visible');
 
         const visibleRows = (rows || []).filter(r =>
             r.buyer_id === userId ? !r.hidden_by_buyer : !r.hidden_by_seller
