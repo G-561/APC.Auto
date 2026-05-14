@@ -5,9 +5,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // --- GLOBAL STATE ---
 let userIsSignedIn = false;          // starts logged out — header shows "Sign In" pill
-let currentUserName = null;          // e.g. "Gary"
-let currentUserTier = null;          // 'standard' | 'pro'
-let currentUserId = null;            // Supabase UUID of signed-in user
+let currentUserName  = null;          // e.g. "Gary"
+let currentUserTier  = null;          // 'standard' | 'pro'
+let currentUserId    = null;          // Supabase UUID of signed-in user
+let currentUserEmail = null;          // signed-in user's email
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let gridShownCount   = 20;
 function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
@@ -4437,9 +4438,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (event === 'SIGNED_OUT') {
             unsubscribeRealtime();
             userIsSignedIn = false;
-            currentUserName = null;
-            currentUserTier = null;
-            currentUserId = null;
+            currentUserName  = null;
+            currentUserTier  = null;
+            currentUserId    = null;
+            currentUserEmail = null;
             // Clear all user-specific data so it doesn't bleed into the next account on the same device
             userListings.splice(0); saveUserListings();
             conversations.splice(0); saveConversations();
@@ -5861,8 +5863,9 @@ function generateInboxNotifications() {
 // Sign in (stub — wire into real auth later). Always lands as Standard tier.
 function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '') {
     userIsSignedIn = true;
-    currentUserName = name;
-    currentUserTier = tier;
+    currentUserName  = name;
+    currentUserTier  = tier;
+    currentUserEmail = email || null;
     if (remember) {
         saveRememberedUser({ name, email });
     }
@@ -6192,6 +6195,40 @@ function renderProfile() {
 function onMenuPlaceholder(label) {
     closeAccountMenu();
     showToast(label + ' — coming soon.');
+}
+
+function openHelpDrawer() {
+    closeAccountMenu();
+    closeAccountDropdown();
+    // Pre-fill contact form if signed in
+    const nameEl  = document.getElementById('helpContactName');
+    const emailEl = document.getElementById('helpContactEmail');
+    if (nameEl  && currentUserName  && !nameEl.value)  nameEl.value  = currentUserName;
+    if (emailEl && currentUserEmail && !emailEl.value) emailEl.value = currentUserEmail;
+    toggleDrawer('helpDrawer', true);
+}
+
+function toggleFaq(btn) {
+    const answer = btn.nextElementSibling;
+    const isOpen = answer.classList.contains('open');
+    // Close all open items first
+    document.querySelectorAll('#helpFaqList .help-faq-a.open').forEach(a => a.classList.remove('open'));
+    document.querySelectorAll('#helpFaqList .help-faq-q.open').forEach(q => q.classList.remove('open'));
+    if (!isOpen) {
+        answer.classList.add('open');
+        btn.classList.add('open');
+    }
+}
+
+function submitHelpContact() {
+    const name  = document.getElementById('helpContactName')?.value.trim();
+    const email = document.getElementById('helpContactEmail')?.value.trim();
+    const msg   = document.getElementById('helpContactMsg')?.value.trim();
+    if (!email || !msg) { showToast('Please fill in your email and message'); return; }
+    const subject = encodeURIComponent('APC Support Request');
+    const body    = encodeURIComponent(`Name: ${name || 'Not provided'}\nEmail: ${email}\n\n${msg}`);
+    window.location.href = `mailto:support@autopartsconnection.com.au?subject=${subject}&body=${body}`;
+    showToast('Opening your email app…');
 }
 function onMenuOpenWorkshops() {
     if (!userIsSignedIn) {

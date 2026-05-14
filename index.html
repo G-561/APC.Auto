@@ -1191,7 +1191,7 @@
             <!-- HELP & LEGAL -->
             <div class="settings-section-label">Help &amp; Legal</div>
             <div class="settings-section">
-                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Help & Support')">
+                <div class="settings-row settings-row-tappable" onclick="openHelpDrawer()">
                     <span class="settings-row-label">Help &amp; Support</span>
                     <span class="settings-chevron">›</span>
                 </div>
@@ -2011,7 +2011,7 @@
             <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">Upgrade to APC Pro ›</button>
         </div>
         <div class="amenu-section">
-            <button class="account-menu-item" onclick="onMenuPlaceholder('Help & Support')">Help &amp; Support <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="openHelpDrawer()">Help &amp; Support <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item logout" onclick="onSignOut()">Sign Out</button>
         </div>
     </div>
@@ -2045,7 +2045,7 @@
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
-        <button class="acct-dd-item" onclick="onMenuPlaceholder('Help & Support'); closeAccountDropdown()">Help &amp; Support <span class="acct-dd-chevron">›</span></button>
+        <button class="acct-dd-item" onclick="openHelpDrawer(); closeAccountDropdown()">Help &amp; Support <span class="acct-dd-chevron">›</span></button>
         <button class="acct-dd-item acct-dd-signout" onclick="onSignOut(); closeAccountDropdown()">Sign Out</button>
     </div>
 </div>
@@ -2102,6 +2102,104 @@
             <div id="labelPrice" class="label-price"></div>
         </div>
         <button class="btn-full-action" onclick="window.print()" style="margin-top:16px;">&#128438; PRINT LABEL</button>
+    </div>
+</div>
+
+<!-- HELP & SUPPORT DRAWER -->
+<div id="helpDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>HELP &amp; SUPPORT</span>
+        <div class="dh-close" onclick="toggleDrawer('helpDrawer')">×</div>
+    </div>
+    <div class="drawer-content help-drawer-content">
+
+        <div class="help-section-title">Frequently Asked Questions</div>
+
+        <div class="help-faq-list" id="helpFaqList">
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    How do I list a part for sale?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">Tap <strong>Sell</strong> in the bottom navigation bar. Fill in the part details, add photos, set your price and tap <strong>Publish</strong>. Your listing will appear live on APC immediately.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    How do offers work?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">If a seller has enabled offers on their listing, you'll see a <strong>Make an Offer</strong> button. Submit your offer and the seller can accept, decline or counter it. All offer activity appears in your Messages inbox.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    How does messaging work?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">Tap <strong>Contact Seller</strong> on any listing to start a conversation. You'll need to be signed in. All your conversations are in your <strong>Messages</strong> inbox, accessible from the nav bar.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    Can I filter by my specific car?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">Yes. Tap the <strong>Filter</strong> button and select your Make, Model and Year. Results will narrow to parts listed as compatible with your vehicle.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    How do I arrange postage or pickup?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">Delivery is arranged directly between buyer and seller via the chat. Check the listing for postage and pickup availability, then use the messaging to confirm the details and payment.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    How do I report a listing?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">Open the listing and scroll to the bottom — you'll find a <strong>Report Listing</strong> option. Alternatively, contact us via the form below and include the listing details. We review all reports promptly.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    What is APC Pro?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">APC Pro is designed for businesses — wrecking yards, dealers and auto workshops. It unlocks bulk listing tools, a Pro Dashboard with analytics, stock management, warehouse bin tracking and more. Contact us to find out about upgrading.</div>
+            </div>
+
+            <div class="help-faq-item">
+                <button class="help-faq-q" onclick="toggleFaq(this)">
+                    How do I delete my account?
+                    <span class="help-faq-chevron">›</span>
+                </button>
+                <div class="help-faq-a">Send us a message using the contact form below with your registered email address and we'll take care of it within 2 business days.</div>
+            </div>
+
+        </div>
+
+        <div class="help-section-title" style="margin-top:28px;">Contact Us</div>
+        <div class="help-contact-form">
+            <div class="input-group">
+                <label>Your Name</label>
+                <input id="helpContactName" type="text" placeholder="Name" autocomplete="name">
+            </div>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input id="helpContactEmail" type="email" placeholder="your@email.com" autocomplete="email">
+            </div>
+            <div class="input-group">
+                <label>Message</label>
+                <textarea id="helpContactMsg" rows="4" placeholder="How can we help?"></textarea>
+            </div>
+            <button class="btn-full-action" onclick="submitHelpContact()">Send Message</button>
+        </div>
+
     </div>
 </div>
 
