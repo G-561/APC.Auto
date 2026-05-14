@@ -1072,6 +1072,7 @@ async function syncMessageToSupabase(supabaseConvId, text, isBuyer) {
 }
 
 async function loadConversationsFromSupabase(userId) {
+    showToast('DBG: loadConvs called, userId=' + (userId ? userId.slice(0,8) : 'null'));
     try {
         const { data: rows, error } = await sb
             .from('conversations')
