@@ -1072,7 +1072,6 @@ async function syncMessageToSupabase(supabaseConvId, text, isBuyer) {
 }
 
 async function loadConversationsFromSupabase(userId) {
-    showToast('DBG: loadConvs called, userId=' + (userId ? userId.slice(0,8) : 'null'));
     try {
         const { data: rows, error } = await sb
             .from('conversations')
@@ -1086,7 +1085,7 @@ async function loadConversationsFromSupabase(userId) {
             r.buyer_id === userId ? !r.hidden_by_buyer : !r.hidden_by_seller
         );
 
-        showToast('DBG: ' + (rows||[]).length + ' rows / ' + visibleRows.length + ' visible');
+        showToast('DBG: ' + (rows||[]).length + ' rows in Supabase, ' + visibleRows.length + ' visible');
 
         visibleRows.forEach(r => {
             const isBuyer = r.buyer_id === userId;
@@ -1139,7 +1138,6 @@ async function loadConversationsFromSupabase(userId) {
         saveConversations();
         renderInboxConvList();
         updateInboxBadge();
-        showToast('DBG: loaded ' + conversations.length + ' convs');
     } catch (e) { showToast('DBG catch: ' + e.message); console.warn('Load conversations:', e); }
     subscribeToRealtimeMessages();
     subscribeToRealtimeListings();
