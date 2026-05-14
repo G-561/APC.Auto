@@ -766,6 +766,46 @@ header {
     overflow: hidden;
     position: relative;
 }
+/* === VEHICLE MAKES PICKER === */
+.makes-picker-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fafafa;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    gap: 8px;
+}
+.makes-picker-btn:active { background: #f0f0f0; }
+.makes-summary { font-size: 13px; font-weight: 600; color: var(--apc-charcoal); flex: 1; }
+.makes-summary-empty { color: #bbb; font-weight: 500; }
+.makes-picker-chevron { font-size: 20px; color: #bbb; line-height: 1; }
+.makes-all-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0 10px;
+    font-size: 15px;
+    font-weight: 800;
+}
+.makes-all-label { font-size: 15px; font-weight: 800; color: var(--apc-charcoal); }
+.makes-all-hint { font-size: 12px; color: #aaa; padding-bottom: 10px; }
+.makes-separator { height: 1px; background: #ececec; margin: 0 0 8px; }
+.makes-list { display: flex; flex-direction: column; gap: 0; }
+.makes-item { padding: 11px 0; border-bottom: 1px solid #f4f4f4; font-size: 14px; }
+.makes-done-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 12px 16px;
+    background: white;
+    border-top: 1px solid #eee;
+}
+
 .ws-service-group { margin-bottom: 16px; }
 .input-group-row { display: flex; gap: 10px; align-items: flex-start; }
 .input-group-row .input-group { margin-bottom: 0; }

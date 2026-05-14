@@ -129,7 +129,7 @@ function saveWorkshopProfile() {
 }
 function getDefaultWorkshopProfile() {
     return {
-        vehicles: '',
+        vehicles: [],
         services: {
             // Engine & Powertrain
             generalService: false, logbook: false, engineDiag: false, engineRebuild: false,
@@ -144,7 +144,7 @@ function getDefaultWorkshopProfile() {
         partsType: 'new',
         partsSpecialties: '',
         wrecking: false,
-        wreckingMakes: '',
+        wreckingMakes: [],
     };
 }
 
@@ -504,6 +504,75 @@ function setPartsType(el, type) {
 function toggleWreckingMakes(cb) {
     const row = document.getElementById('wsWreckingMakesRow');
     if (row) row.style.display = cb.checked ? 'block' : 'none';
+}
+
+// --- VEHICLE MAKES PICKER ---
+let _activeMakesField = null;
+
+function openMakesDrawer(fieldKey) {
+    _activeMakesField = fieldKey;
+    // Build checklist once
+    const list = document.getElementById('makesList');
+    if (list && !list.querySelector('label')) {
+        const makes = Object.keys(VEHICLE_DB).sort();
+        list.innerHTML = makes.map(m =>
+            `<label class="choice-item makes-item"><input type="checkbox" class="make-cb" value="${m}" onchange="onMakeCheckChange()"> ${m}</label>`
+        ).join('');
+    }
+    // Pre-populate from profile
+    const current = workshopProfile[fieldKey];
+    const arr = Array.isArray(current) ? current
+                : (typeof current === 'string' && current) ? current.split(',').map(s => s.trim()).filter(Boolean)
+                : [];
+    const allCb = document.getElementById('makeCheckAll');
+    if (allCb) allCb.checked = arr.includes('All Makes');
+    document.querySelectorAll('.make-cb').forEach(cb => {
+        cb.checked = arr.includes(cb.value);
+    });
+    toggleDrawer('vehicleMakesDrawer', true);
+}
+
+function closeMakesDrawer() {
+    if (_activeMakesField) {
+        const allCb = document.getElementById('makeCheckAll');
+        const selected = (allCb && allCb.checked)
+            ? ['All Makes']
+            : Array.from(document.querySelectorAll('.make-cb:checked')).map(cb => cb.value);
+        workshopProfile[_activeMakesField] = selected;
+        _updateMakesSummary(_activeMakesField, selected);
+    }
+    document.getElementById('vehicleMakesDrawer')?.classList.remove('active');
+    _activeMakesField = null;
+}
+
+function onAllMakesToggle(cb) {
+    if (cb.checked) {
+        document.querySelectorAll('.make-cb').forEach(c => c.checked = false);
+    }
+}
+
+function onMakeCheckChange() {
+    const allCb = document.getElementById('makeCheckAll');
+    if (allCb) allCb.checked = false;
+}
+
+function _updateMakesSummary(fieldKey, makes) {
+    const summaryId = fieldKey === 'vehicles' ? 'vehicleMakesSummary' : 'wreckingMakesSummary';
+    const el = document.getElementById(summaryId);
+    if (!el) return;
+    if (!makes || makes.length === 0) {
+        el.textContent = 'Tap to select makes…';
+        el.classList.add('makes-summary-empty');
+    } else if (makes.includes('All Makes')) {
+        el.textContent = 'All Makes';
+        el.classList.remove('makes-summary-empty');
+    } else if (makes.length <= 4) {
+        el.textContent = makes.join(', ');
+        el.classList.remove('makes-summary-empty');
+    } else {
+        el.textContent = `${makes.slice(0, 3).join(', ')} +${makes.length - 3} more`;
+        el.classList.remove('makes-summary-empty');
+    }
 }
 
 function saveSettingsToggle(key, value) {
@@ -5866,8 +5935,8 @@ function openWorkshopProfileEditor() {
     setChk('wsCollision', svc.collision);     setChk('wsSprayPaint', svc.sprayPaint);
     setChk('wsPDR', svc.pdr);                setChk('wsAutoGlass', svc.autoGlass);
     setChk('wsTrimming', svc.trimming);
-    const vehiclesField = document.getElementById('workshopVehicles');
-    if (vehiclesField) vehiclesField.value = workshopProfile.vehicles || '';
+    // Makes picker summaries
+    _updateMakesSummary('vehicles', workshopProfile.vehicles);
     // Parts section
     const partsType = workshopProfile.partsType || 'new';
     document.querySelectorAll('#partsTypeControl .radius-seg').forEach(s => {
@@ -5879,8 +5948,7 @@ function openWorkshopProfileEditor() {
     if (wreckingCb) wreckingCb.checked = !!workshopProfile.wrecking;
     const wreckingMakesRow = document.getElementById('wsWreckingMakesRow');
     if (wreckingMakesRow) wreckingMakesRow.style.display = workshopProfile.wrecking ? 'block' : 'none';
-    const wreckingMakesEl = document.getElementById('wsWreckingMakes');
-    if (wreckingMakesEl) wreckingMakesEl.value = workshopProfile.wreckingMakes || '';
+    _updateMakesSummary('wreckingMakes', workshopProfile.wreckingMakes);
     renderLogoPreview();
     renderBannerPreview();
     toggleDrawer('workshopDrawer', true);
@@ -5901,7 +5969,7 @@ function submitWorkshopProfile() {
     saveUserSettings();
     const getChk = id => document.getElementById(id)?.checked || false;
     workshopProfile = {
-        vehicles: document.getElementById('workshopVehicles')?.value.trim() || '',
+        vehicles: workshopProfile.vehicles || [],
         services: {
             generalService: getChk('wsGeneralService'), logbook: getChk('wsLogbook'),
             engineDiag: getChk('wsEngineDiag'),   engineRebuild: getChk('wsEngineRebuild'),
@@ -5919,7 +5987,7 @@ function submitWorkshopProfile() {
         partsType: document.querySelector('#partsTypeControl .radius-seg.active')?.dataset.pts || 'new',
         partsSpecialties: document.getElementById('wsPartsSpecialties')?.value.trim() || '',
         wrecking: getChk('wsWrecking'),
-        wreckingMakes: document.getElementById('wsWreckingMakes')?.value.trim() || '',
+        wreckingMakes: workshopProfile.wreckingMakes || [],
     };
     saveWorkshopProfile();
     showToast('Profile saved');
@@ -5940,7 +6008,6 @@ function renderWorkshopProfile() {
 
     const nameField = document.getElementById('workshopName');
     const locationField = document.getElementById('workshopLocation');
-    const vehiclesField = document.getElementById('workshopVehicles');
     const descField = document.getElementById('workshopDescription');
     const servicePanel = document.getElementById('workshopServicePanel');
     const serviceFitment = document.getElementById('workshopServiceFitment');
@@ -5951,7 +6018,6 @@ function renderWorkshopProfile() {
 
     if (nameField) nameField.value = workshopProfile.name;
     if (locationField) locationField.value = workshopProfile.location;
-    if (vehiclesField) vehiclesField.value = workshopProfile.vehicles;
     if (descField) descField.value = workshopProfile.description;
     if (servicePanel) servicePanel.checked = workshopProfile.services.panel;
     if (serviceFitment) serviceFitment.checked = workshopProfile.services.fitment;

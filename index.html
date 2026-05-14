@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>APC | Auto Parts Connection</title>
-    <link rel="stylesheet" href="style.css?v=36">
+    <link rel="stylesheet" href="style.css?v=37">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1576,8 +1576,10 @@
 
                 <div class="input-group" style="margin-top:4px;">
                     <label>Vehicle makes you specialise in <span style="font-weight:400;color:#aaa;">optional</span></label>
-                    <input id="workshopVehicles" type="text" placeholder="e.g. Toyota, Subaru, Volkswagen">
-                    <div style="font-size:11px;color:#aaa;margin-top:4px;">Comma-separated — helps APC match your workshop to local buyers</div>
+                    <button type="button" class="makes-picker-btn" id="vehicleMakesBtn" onclick="openMakesDrawer('vehicles')">
+                        <span id="vehicleMakesSummary" class="makes-summary makes-summary-empty">Tap to select makes…</span>
+                        <span class="makes-picker-chevron">›</span>
+                    </button>
                 </div>
             </div>
 
@@ -1608,8 +1610,11 @@
                     </div>
                     <div class="input-group" id="wsWreckingMakesRow" style="display:none; margin-top:10px;">
                         <label>Vehicle makes currently in yard</label>
-                        <input id="wsWreckingMakes" type="text" placeholder="e.g. Toyota, Holden, Ford, Nissan">
-                        <div style="font-size:11px;color:#aaa;margin-top:4px;">Comma-separated — shown to buyers searching for your parts</div>
+                        <button type="button" class="makes-picker-btn" id="wreckingMakesBtn" onclick="openMakesDrawer('wreckingMakes')">
+                            <span id="wreckingMakesSummary" class="makes-summary makes-summary-empty">Tap to select makes…</span>
+                            <span class="makes-picker-chevron">›</span>
+                        </button>
+                        <div style="font-size:11px;color:#aaa;margin-top:4px;">Shown to buyers searching for your parts</div>
                     </div>
                 </div>
             </div>
@@ -1629,6 +1634,28 @@
     </div>
     <div class="drawer-content" style="padding:0;">
         <div id="workshopDetailContent"></div>
+    </div>
+</div>
+
+<!-- VEHICLE MAKES PICKER — slides in over workshop profile -->
+<div id="vehicleMakesDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>Select Vehicle Makes</span>
+        <div class="dh-close" onclick="closeMakesDrawer()">Done</div>
+    </div>
+    <div class="drawer-content" style="padding-bottom:80px;">
+        <label class="makes-all-row choice-item">
+            <input type="checkbox" id="makeCheckAll" onchange="onAllMakesToggle(this)">
+            <span class="makes-all-label">All Makes</span>
+        </label>
+        <div class="makes-all-hint">Select this if you work on any make of vehicle</div>
+        <div class="makes-separator"></div>
+        <div id="makesList" class="makes-list">
+            <!-- populated by openMakesDrawer() -->
+        </div>
+    </div>
+    <div class="makes-done-bar">
+        <button class="btn-full-action" onclick="closeMakesDrawer()">DONE</button>
     </div>
 </div>
 
