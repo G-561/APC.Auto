@@ -1125,7 +1125,7 @@ async function loadConversationsFromSupabase(userId) {
                     with: otherName,
                     isPro: false,
                     unread: isUnread,
-                    partId: part?.id || r.listing_id,
+                    partId: r.listing_id || part?.id,
                     partTitle: r.listing_title || 'Part',
                     msgs,
                 });
@@ -4244,7 +4244,7 @@ function handleMessageSeller() {
     if (!part) return;
 
     // If a conversation already exists for this part, go straight to the inbox thread
-    const existing = conversations.find(c => c.partId === currentOpenPartId);
+    const existing = conversations.find(c => c.partId === currentOpenPartId || (part.supabaseId && c.partId === part.supabaseId));
     if (existing) {
         toggleDrawer('inboxDrawer', true);
         switchInboxTab('chats');
@@ -4284,7 +4284,7 @@ function sendContactMessage() {
         if (!part) return;
         seller = part.seller;
         isPro  = !!part.isPro;
-        partId = currentOpenPartId;
+        partId = part.supabaseId || currentOpenPartId;
         partTitle = undefined;
     }
 
