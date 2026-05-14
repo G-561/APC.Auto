@@ -4179,7 +4179,10 @@ function closeStorefrontDrawer() {
 
 function handleGeneralEnquiry() {
     if (!userIsSignedIn) { openAuthDrawer(() => handleGeneralEnquiry()); return; }
-    const seller = currentStorefrontSeller;
+    // For service-only workshops with no parts, fall back to the displayed business name
+    const seller = currentStorefrontSeller
+        || document.getElementById('sfBusinessName')?.textContent?.trim()
+        || '';
     if (!seller) return;
 
     // If a general enquiry thread already exists with this seller, open it
@@ -4223,7 +4226,7 @@ function closeMessageDetailDrawer() {
 }
 
 function handleMessageSeller() {
-    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    if (!userIsSignedIn) { openAuthDrawer(() => handleMessageSeller()); return; }
     const part = getPartById(currentOpenPartId);
     if (!part) return;
 
