@@ -1666,14 +1666,12 @@
                 <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE PROFILE</button>
             </div>
 
-            <!-- APC Badge Generator — Pro only -->
-            <div id="apcBadgeSection" class="filter-section" style="display:none;">
-                <h4>My APC Badge</h4>
-                <p style="font-size:12px; color:#888; margin-bottom:14px;">Add this badge to your website or print materials so customers can find your APC profile with one scan.</p>
-                <canvas id="apcBadgeCanvas" style="width:100%; border-radius:12px; display:block; margin-bottom:12px;"></canvas>
-                <div id="badgeQrTemp" style="display:none;"></div>
-                <button class="btn-full-action" onclick="downloadApcBadge()" style="margin-bottom:8px;">Download Badge PNG</button>
-                <div id="badgeLinkText" style="font-size:11px; color:#aaa; text-align:center; word-break:break-all;"></div>
+            <!-- APC Badge trigger — Pro only -->
+            <div id="apcBadgeSection" style="display:none; margin-top:8px;">
+                <button class="apc-badge-trigger-btn" onclick="openApcBadgeModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Create your APC QR Badge
+                </button>
             </div>
         </div>
     </div>
@@ -1710,6 +1708,22 @@
     <div class="makes-done-bar">
         <button class="btn-full-action" onclick="closeMakesDrawer()">DONE</button>
     </div>
+</div>
+
+<!-- APC BADGE MODAL -->
+<div id="apcBadgeBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:4000; backdrop-filter:blur(2px);" onclick="closeApcBadgeModal()"></div>
+<div id="apcBadgeModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(360px,calc(100vw - 32px)); background:#fff; border-radius:20px; padding:24px; box-shadow:0 8px 50px rgba(0,0,0,0.28); z-index:4001;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-weight:700; font-size:16px;">Your APC QR Badge</span>
+        <button onclick="closeApcBadgeModal()" style="background:none; border:none; font-size:22px; line-height:1; cursor:pointer; color:#888; padding:0 4px;">&times;</button>
+    </div>
+    <p style="font-size:12px; color:#888; margin:0 0 18px;">Add this to your website or print materials so customers can scan to find your store.</p>
+    <div style="text-align:center; margin-bottom:16px;">
+        <canvas id="apcBadgeCanvas" style="border-radius:10px; display:inline-block;"></canvas>
+    </div>
+    <div id="badgeQrTemp" style="display:none;"></div>
+    <button class="btn-full-action" onclick="downloadApcBadge()" style="margin-bottom:10px;">Download PNG</button>
+    <div id="badgeLinkText" style="font-size:11px; color:#aaa; text-align:center; word-break:break-all;"></div>
 </div>
 
 <!-- GARAGE — list of user's vehicles, with add button at the bottom -->

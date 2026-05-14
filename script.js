@@ -3927,9 +3927,19 @@ function renderWorkshopStorefront(data) {
     const about   = data.about || data.specialty || '';
     const loc     = data.location || data.loc || '';
 
-    // Reuse existing hero/identity render — pass empty sellerName so parts grid is blank
+    // Resolve seller name: explicit field first, then look up from parts by user_id
+    let sellerName = data.sellerName || '';
+    const userId = data.user_id || data.userId;
+    if (!sellerName && userId) {
+        const match = getAllParts().find(p => p.sellerId === userId);
+        if (match) sellerName = match.seller;
+    }
+
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) grid.dataset.seller = sellerName;
+
     renderStorefront(
-        data.sellerName || '',
+        sellerName,
         true,
         data.logo || data.logo_url || '',
         name,
@@ -4007,6 +4017,8 @@ async function handleStoreDeepLink(userId) {
             bizType: userSettings.businessType || 'supplier',
             logo: userSettings.businessLogo || userSettings.profilePic,
             banner: userSettings.businessBanner,
+            sellerName: getCurrentSellerName(),
+            user_id: currentUserId,
         });
         return;
     }
@@ -4132,6 +4144,21 @@ function downloadApcBadge() {
     link.download = 'find-us-on-apc.png';
     link.href = canvas.toDataURL('image/png');
     link.click();
+}
+
+function openApcBadgeModal() {
+    const modal    = document.getElementById('apcBadgeModal');
+    const backdrop = document.getElementById('apcBadgeBackdrop');
+    if (modal)    modal.style.display    = 'block';
+    if (backdrop) backdrop.style.display = 'block';
+    generateApcBadge();
+}
+
+function closeApcBadgeModal() {
+    const modal    = document.getElementById('apcBadgeModal');
+    const backdrop = document.getElementById('apcBadgeBackdrop');
+    if (modal)    modal.style.display    = 'none';
+    if (backdrop) backdrop.style.display = 'none';
 }
 
 // --- MESSAGING ---
@@ -6211,12 +6238,9 @@ function openWorkshopProfileEditor() {
     _updateMakesSummary('wreckingMakes', workshopProfile.wreckingMakes);
     renderLogoPreview();
     renderBannerPreview();
-    // Badge section — Pro users only
+    // Badge trigger button — Pro users only
     const badgeSec = document.getElementById('apcBadgeSection');
-    if (badgeSec) {
-        badgeSec.style.display = (currentUserTier === 'pro' && userIsSignedIn) ? 'block' : 'none';
-        if (currentUserTier === 'pro' && userIsSignedIn) generateApcBadge();
-    }
+    if (badgeSec) badgeSec.style.display = (currentUserTier === 'pro' && userIsSignedIn) ? 'block' : 'none';
     toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {

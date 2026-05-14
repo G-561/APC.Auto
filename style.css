@@ -825,6 +825,23 @@ header {
     border-top: 1px solid #eee;
 }
 
+.apc-badge-trigger-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 16px;
+    background: #fff7ee;
+    border: 1.5px solid var(--apc-orange);
+    border-radius: 12px;
+    color: var(--apc-orange);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.apc-badge-trigger-btn:hover { background: #ffecd4; }
+
 .ws-service-group { margin-bottom: 16px; }
 .input-group-row { display: flex; gap: 10px; align-items: flex-start; }
 .input-group-row .input-group { margin-bottom: 0; }
