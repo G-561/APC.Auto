@@ -1079,11 +1079,13 @@ async function loadConversationsFromSupabase(userId) {
             .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
-        if (error) { subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
+        if (error) { showToast('DBG load err: ' + error.message); subscribeToRealtimeMessages(); subscribeToRealtimeListings(); return; }
 
         const visibleRows = (rows || []).filter(r =>
             r.buyer_id === userId ? !r.hidden_by_buyer : !r.hidden_by_seller
         );
+
+        showToast('DBG: ' + (rows||[]).length + ' rows / ' + visibleRows.length + ' visible');
 
         visibleRows.forEach(r => {
             const isBuyer = r.buyer_id === userId;
@@ -1136,7 +1138,8 @@ async function loadConversationsFromSupabase(userId) {
         saveConversations();
         renderInboxConvList();
         updateInboxBadge();
-    } catch (e) { console.warn('Load conversations:', e); }
+        showToast('DBG: loaded ' + conversations.length + ' convs');
+    } catch (e) { showToast('DBG catch: ' + e.message); console.warn('Load conversations:', e); }
     subscribeToRealtimeMessages();
     subscribeToRealtimeListings();
 }
