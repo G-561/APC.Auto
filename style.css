@@ -5058,3 +5058,23 @@ header {
     color: #1a1a1a;
 }
 .help-contact-form textarea:focus { border-color: var(--apc-orange); }
+
+/* PULL-TO-DISMISS drag handle */
+.detail-drag-handle-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0 4px;
+    background: var(--apc-amber);
+    cursor: grab;
+}
+.detail-drag-handle {
+    width: 36px;
+    height: 4px;
+    background: rgba(0,0,0,0.18);
+    border-radius: 2px;
+}
+#detailOverlay.chat-card .detail-drag-handle-bar { display: none; }
+@media (min-width: 900px) {
+    .detail-drag-handle-bar { display: none; }
+}
