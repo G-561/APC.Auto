@@ -646,19 +646,7 @@ function recordSearch(term) {
     saveSearchDemand(data.filter(d => d.ts > cutoff).slice(-3000));
 }
 
-// Seed platform-level demand data for demo — represents aggregated APC-wide searches
-const _demandSeed = [
-    { term: 'Commodore VE engine',       count: 14 },
-    { term: 'Hiace sliding door',         count: 11 },
-    { term: 'Falcon BA gearbox',          count: 9  },
-    { term: 'Hilux differential',         count: 8  },
-    { term: 'Golf GTI exhaust',           count: 7  },
-    { term: 'LandCruiser 200 snorkel',    count: 6  },
-    { term: 'Elise front clam',           count: 5  },
-    { term: 'Triton gearbox',             count: 4  },
-    { term: 'WRX STI seats',              count: 3  },
-    { term: 'Camry ABS pump',             count: 2  },
-];
+const _demandSeed = [];
 
 function getDemandReport() {
     const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
@@ -7224,8 +7212,18 @@ function renderDemandWidget() {
     if (!card) return;
 
     const report = getDemandReport();
-    const maxCount = report[0]?.count || 1;
     const monthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    if (!report.length) {
+        card.innerHTML = `
+            <div class="dash-card-hdr">
+                <span class="dash-card-title">Search Demand</span>
+                <span class="dash-card-meta">${monthLabel}</span>
+            </div>
+            <div class="dash-empty-state" style="padding:20px 0;">No search data yet — demand trends will appear here as buyers search APC.</div>
+        `;
+        return;
+    }
+    const maxCount = report[0].count;
 
     // Find how many top terms have no matching listings
     const gaps = report.filter(r => {
