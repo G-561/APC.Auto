@@ -2807,7 +2807,15 @@ function hideSellError() {
     if (banner) banner.style.display = 'none';
 }
 
-function initSellVehicleDropdowns(make, model, year) {
+function _refreshSellSeries(make, model, year, selected) {
+    const html  = buildSeriesOptions(make || '', model || '', year || '', selected || '');
+    const group = document.getElementById('sellVariantGroup');
+    const sel   = document.getElementById('sellVariant');
+    if (group) group.style.display = html ? '' : 'none';
+    if (sel)   sel.innerHTML       = html || '<option value="">Select series</option>';
+}
+
+function initSellVehicleDropdowns(make, model, year, variant) {
     const makeEl  = document.getElementById('sellMake');
     const modelEl = document.getElementById('sellModel');
     const yearEl  = document.getElementById('sellYear');
@@ -2815,6 +2823,7 @@ function initSellVehicleDropdowns(make, model, year) {
     makeEl.innerHTML  = buildMakeOptions(make || '');
     modelEl.innerHTML = buildModelOptions(make || '', model || '');
     yearEl.innerHTML  = buildYearOptionsForModel(make || '', model || '', year || '');
+    _refreshSellSeries(make, model, year, variant);
 }
 
 function onSellMakeChange() {
@@ -2823,6 +2832,7 @@ function onSellMakeChange() {
     const yearEl  = document.getElementById('sellYear');
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
     if (yearEl)  yearEl.innerHTML  = buildYearOptions('');
+    _refreshSellSeries(make, '', '', '');
 }
 
 function onSellModelChange() {
@@ -2830,6 +2840,14 @@ function onSellModelChange() {
     const model = document.getElementById('sellModel')?.value || '';
     const yearEl = document.getElementById('sellYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
+    _refreshSellSeries(make, model, '', '');
+}
+
+function onSellYearChange() {
+    const make  = document.getElementById('sellMake')?.value || '';
+    const model = document.getElementById('sellModel')?.value || '';
+    const year  = document.getElementById('sellYear')?.value  || '';
+    _refreshSellSeries(make, model, year, '');
 }
 
 function initWantedVehicleDropdowns(make, model, year) {
@@ -2997,9 +3015,7 @@ function openEditListing(listingId) {
 
     document.getElementById('sellTitle').value = listing.title || '';
     document.getElementById('sellCategory').value = listing.category || '';
-    initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '');
-    const variantEl = document.getElementById('sellVariant');
-    if (variantEl) variantEl.value = listing.fits?.[0]?.variant || '';
+    initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '', listing.fits?.[0]?.variant || '');
     document.getElementById('sellPostcode').value = listing.postcode || '';
     document.getElementById('sellLocation').value = listing.loc || '';
     document.getElementById('sellPickup').checked = !!listing.pickup;
@@ -3154,6 +3170,8 @@ function resetSellForm() {
         if (el.tagName.toLowerCase() === 'select' || el.tagName.toLowerCase() === 'input') el.value = '';
         if (el.tagName.toLowerCase() === 'textarea') el.value = '';
     });
+    const variantGroup = document.getElementById('sellVariantGroup');
+    if (variantGroup) variantGroup.style.display = 'none';
     const pickup = document.getElementById('sellPickup');
     const postage = document.getElementById('sellPostage');
     const fitting = document.getElementById('sellFittingAvailable');

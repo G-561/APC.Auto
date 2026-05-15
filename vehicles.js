@@ -624,3 +624,27 @@ function buildModelOptions(make, selectedModel) {
     });
     return html;
 }
+
+// Returns series options for models that have named generations (e.g. Commodore VB, Falcon XA, 3 Series E30).
+// Returns '' if no series data exists for this make/model combination.
+function buildSeriesOptions(make, model, year, selected) {
+    if (!make || !model) return '';
+    const prefix = model + ' ';
+    let seriesList = (VEHICLE_MAKES[make] || [])
+        .filter(m => m.startsWith(prefix))
+        .map(m => m.slice(prefix.length));
+    if (year && seriesList.length) {
+        const yr = parseInt(year);
+        seriesList = seriesList.filter(s => {
+            const ranges = VEHICLE_YEAR_RANGES[model + ' ' + s];
+            if (!ranges) return true;
+            return ranges.some(([start, end]) => yr >= start && yr <= end);
+        });
+    }
+    if (!seriesList.length) return '';
+    let html = '<option value="">Select series</option>';
+    seriesList.forEach(s => {
+        html += `<option value="${s}"${s === selected ? ' selected' : ''}>${s}</option>`;
+    });
+    return html;
+}

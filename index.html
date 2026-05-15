@@ -916,11 +916,11 @@
                     <div class="input-row-flex">
                         <div class="input-group"><label>Make</label><select id="sellMake" onchange="onSellMakeChange()"><option value="">Make</option></select></div>
                         <div class="input-group"><label>Model</label><select id="sellModel" onchange="onSellModelChange()"><option value="">Model</option></select></div>
-                        <div class="input-group"><label>Year</label><select id="sellYear"><option value="">Year</option></select></div>
+                        <div class="input-group"><label>Year</label><select id="sellYear" onchange="onSellYearChange()"><option value="">Year</option></select></div>
                     </div>
-                    <div class="input-group" style="margin-top:10px;">
-                        <label>Series / Variant <span style="font-weight:400;color:#aaa;">optional</span></label>
-                        <input id="sellVariant" type="text" placeholder="e.g. XR6, ZR, Turbo, AWD" maxlength="60">
+                    <div class="input-group" id="sellVariantGroup" style="margin-top:10px; display:none;">
+                        <label>Series <span style="font-weight:400;color:#aaa;">optional</span></label>
+                        <select id="sellVariant"><option value="">Select series</option></select>
                     </div>
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
                         <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
