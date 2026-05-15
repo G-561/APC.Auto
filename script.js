@@ -870,6 +870,7 @@ async function loadPublicListingsFromSupabase() {
             });
         });
         renderMainGrid();
+        refreshInboxThreadHeader();
     } catch (e) { console.warn('Load public listings:', e); renderMainGrid(); }
 }
 
@@ -941,6 +942,7 @@ async function loadUserListingsFromSupabase(userId) {
         saveUserListings();
         renderMainGrid();
         renderMyParts();
+        refreshInboxThreadHeader();
     } catch (e) { showToast('Load error: ' + (e.message || e)); }
 }
 
@@ -1059,12 +1061,13 @@ async function syncPhotoMessageToSupabase(conv, base64, isBuyer) {
 
 async function syncMessageToSupabase(supabaseConvId, text, isBuyer) {
     if (!currentUserId || !supabaseConvId) return;
-    await sb.from('messages').insert({
+    const { error } = await sb.from('messages').insert({
         conversation_id: supabaseConvId,
         sender_id: currentUserId,
         sender_name: currentUserName,
         text,
     });
+    if (error) throw new Error(error.message);
     await sb.from('conversations').update({
         last_message_at: new Date().toISOString(),
         unread_buyer: !isBuyer,
@@ -1138,6 +1141,7 @@ async function loadConversationsFromSupabase(userId) {
         saveConversations();
         renderInboxConvList();
         updateInboxBadge();
+        refreshInboxThreadHeader(); // correct header if auto-selected before data loaded
     } catch (e) { console.warn('Load conversations:', e); }
     subscribeToRealtimeMessages();
     subscribeToRealtimeListings();
@@ -1513,6 +1517,21 @@ function renderInboxConvList(filter) {
                 <div class="inbox-conv-preview">${escapeHtml(preview)}</div>
             </div>`;
     }).join('');
+}
+
+function refreshInboxThreadHeader() {
+    if (activeConvId === null) return;
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) return;
+    const part  = findPartAnywhere(conv.partId);
+    const thumb = document.getElementById('inboxThreadThumb');
+    if (thumb) { thumb.src = part?.images?.[0] || ''; thumb.style.display = part?.images?.[0] ? '' : 'none'; }
+    const withEl  = document.getElementById('inboxThreadWith');
+    const titleEl = document.getElementById('inboxThreadTitle');
+    const priceEl = document.getElementById('inboxThreadPrice');
+    if (withEl)  withEl.textContent  = conv.with;
+    if (titleEl) titleEl.textContent = part ? part.title : (conv.partTitle || '');
+    if (priceEl) priceEl.textContent = part ? '$' + part.price : '';
 }
 
 function openInboxConv(id) {
