@@ -280,7 +280,7 @@ function saveSettingsName() {
         currentUserName = val;
         userListings.forEach(l => { if (l.seller === oldName) l.seller = val; });
         saveUserListings();
-        saveRememberedUser({ name: val, email: currentUserEmail });
+        saveRememberedUser({ name: val, tier: currentUserTier, email: currentUserEmail });
         renderAccountState();
         renderProfile();
         renderMyParts();
@@ -4489,6 +4489,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const name = profile.display_name || emailName;
                         const tier = profile.is_pro ? 'pro' : 'standard';
                         signIn(name, tier, false, session.user.email);
+                        saveRememberedUser({ name, tier, email: session.user.email });
                     }
                 });
             loadPublicListingsFromSupabase();
@@ -5929,7 +5930,7 @@ function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '
     currentUserTier  = tier;
     currentUserEmail = email || null;
     if (remember) {
-        saveRememberedUser({ name, email });
+        saveRememberedUser({ name, tier, email });
     }
     renderAccountState();
 }
