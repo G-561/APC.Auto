@@ -2231,10 +2231,20 @@ function initFilterVehicleDropdowns() {
 function onFilterMakeChange() {
     const make    = document.getElementById('filterMake')?.value || '';
     const modelEl = document.getElementById('filterModel');
+    const yearEl  = document.getElementById('filterYear');
     if (modelEl) {
         modelEl.innerHTML = '<option value="">Any Model</option>' +
             getVehicleModels(make).map(m => `<option value="${m}">${m}</option>`).join('');
     }
+    if (yearEl) yearEl.innerHTML = buildYearOptions('');
+    if (window.innerWidth >= 900) applyFiltersAndRender();
+}
+
+function onFilterModelChange() {
+    const make  = document.getElementById('filterMake')?.value || '';
+    const model = document.getElementById('filterModel')?.value || '';
+    const yearEl = document.getElementById('filterYear');
+    if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '').replace('<option value="">Year</option>', '<option value="">Any Year</option>');
     if (window.innerWidth >= 900) applyFiltersAndRender();
 }
 
