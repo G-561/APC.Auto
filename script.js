@@ -6007,10 +6007,11 @@ function clearSignUpFields() {
     });
 }
 
-function showAuthError(msg) {
+function showAuthError(msg, isStatus = false) {
     const el = document.getElementById('authErrorBanner');
     if (!el) return;
     el.textContent = msg;
+    el.classList.toggle('auth-status', isStatus);
     el.style.display = '';
 }
 function hideAuthError() {
@@ -6028,7 +6029,7 @@ async function handleSignInSubmit() {
     const email    = document.getElementById('authEmail')?.value.trim() || '';
     const password = document.getElementById('authPassword')?.value;
     if (!email || !password) { showAuthError('Enter your email and password to sign in.'); return; }
-    showAuthError('Signing in…');
+    showAuthError('Signing in…', true);
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) { showAuthError(error.message); return; }
     document.getElementById('authPassword').value = '';
@@ -6042,7 +6043,7 @@ async function handleSignUpPersonalSubmit() {
     const email    = document.getElementById('authEmailPersonal')?.value.trim() || '';
     const password = document.getElementById('authPasswordPersonal')?.value;
     if (!name || !email || !password) { showAuthError('Please enter your name, email and password.'); return; }
-    showAuthError('Creating account…');
+    showAuthError('Creating account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
         options: { data: { display_name: name, is_pro: false } }
@@ -6069,7 +6070,7 @@ async function handleSignUpProSubmit() {
     if (!/^\d{11}$/.test(abnDigits)) {
         showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).'); return;
     }
-    showAuthError('Creating Pro account…');
+    showAuthError('Creating Pro account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
         options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits } }
