@@ -4113,6 +4113,7 @@ header {
     #settingsDrawer,
     #workshopDrawer,
     #vehicleMakesDrawer,
+    #helpDrawer,
     #sellOverlay {
         bottom: 16px !important;
         border-radius: 16px !important;
