@@ -2003,7 +2003,7 @@ function getAllParts() {
     });
 }
 function findPartAnywhere(id) {
-    return [...partDatabase, ...userListings].find(p => p.id === id || p.supabaseId === id);
+    return [...partDatabase, ...userListings].find(p => p.supabaseId === id);
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
