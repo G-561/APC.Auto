@@ -61,56 +61,18 @@ function nextOfferId() {
     return offersDb.length ? Math.max(...offersDb.map(o => o.id)) + 1 : 1;
 }
 
-// Mock analytics data for Pro Dashboard — replaced by Supabase queries at go-live
 const dashMockData = {
     weekLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    weekViews:  [18, 24, 31, 22, 45, 38, 56],
-    weekSaves:  [3,   5,   7,  4,   9,  8,  12],
-    closedSales: [
-        { title: 'Lotus Elise S2 GT Track Spoiler',      price: 850, buyer: 'Sarah M.', date: '28 Apr 2026', img: 'images/elise.wing.jpg' },
-        { title: 'Toyota Hiace Left Side Mirror (2019+)', price: 85,  buyer: 'John T.',  date: '22 Apr 2026', img: 'images/hiace.mirror.jpg' },
-        { title: 'Toyota Hiace Tail Light Assembly',      price: 145, buyer: 'Pete K.',  date: '15 Apr 2026', img: 'images/hiace.taillight.webp' },
-    ],
-    pendingSales: [
-        { title: 'Toyota Hiace Sliding Door Handle',     price: 35,  buyer: 'Mike R.',  offered: '1 May 2026',  img: 'images/hiace.handle.jpg' },
-        { title: 'Lotus Elise Sport Steering Wheel',     price: 320, buyer: 'Chris B.', offered: '30 Apr 2026', img: 'images/elise.steering.wheel.jpeg' },
-    ],
-    activity: [
-        { type: 'save',    text: 'Sarah M. saved your Elise Spoiler',              time: '2 min ago'  },
-        { type: 'message', text: 'New message from John T.',                        time: '18 min ago' },
-        { type: 'view',    text: 'Your Hiace Mirror got 12 views today',            time: '1 hr ago'   },
-        { type: 'save',    text: 'Mike R. saved your Door Handle',                  time: '2 hr ago'   },
-        { type: 'message', text: 'Chris B. made an offer on your Steering Wheel',  time: '3 hr ago'   },
-        { type: 'trend',   text: '1KD Engine listing is trending in Adelaide',      time: '5 hr ago'   },
-        { type: 'save',    text: 'Pete K. saved your Tail Light Assembly',          time: '6 hr ago'   },
-    ]
+    weekViews:  [0, 0, 0, 0, 0, 0, 0],
+    weekSaves:  [0, 0, 0, 0, 0, 0, 0],
+    closedSales:  [],
+    pendingSales: [],
+    activity:     []
 };
 
-// Public wanted listings from other buyers — searched in FIND WANTED (Pro) mode by sellers
-const publicWantedDatabase = [
-    { id: 101, partName: 'Hiace sliding door complete assembly', buyer: 'Mark T.',   loc: 'ADELAIDE, SA',   make: 'Toyota',     model: 'Hiace',      year: '2019', maxPrice: 400,  posted: '2 hours ago', category: 'body',        isPro: false },
-    { id: 102, partName: 'Lotus Elise S2 front clamshell',       buyer: 'Chris B.',  loc: 'MELBOURNE, VIC', make: 'Lotus',      model: 'Elise',      year: '2004', maxPrice: 1200, posted: '5 hours ago', category: 'body',        isPro: false },
-    { id: 103, partName: 'Toyota Hiace radiator 2015+',           buyer: 'Sam R.',    loc: 'SYDNEY, NSW',    make: 'Toyota',     model: 'Hiace',      year: '2017', maxPrice: 300,  posted: '1 day ago',   category: 'cooling',     isPro: true  },
-    { id: 104, partName: 'Elise exhaust manifold',                buyer: 'Jay P.',    loc: 'BRISBANE, QLD',  make: 'Lotus',      model: 'Elise',      year: '2006', maxPrice: 600,  posted: '1 day ago',   category: 'engine',      isPro: false },
-    { id: 105, partName: 'Hiace front bumper bar grey',           buyer: 'Tanya W.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'Hiace',      year: '2020', maxPrice: 250,  posted: '2 days ago',  category: 'body',        isPro: false },
-    { id: 106, partName: 'Ford Falcon BA XR6 turbo engine',       buyer: 'Dave L.',   loc: 'ADELAIDE, SA',   make: 'Ford',       model: 'Falcon',     year: '2004', maxPrice: 2500, posted: '2 days ago',  category: 'engine',      isPro: true  },
-    { id: 107, partName: 'Commodore VE SS front seats pair',      buyer: 'Nic A.',    loc: 'MELBOURNE, VIC', make: 'Holden',     model: 'Commodore',  year: '2008', maxPrice: 700,  posted: '3 days ago',  category: 'interior',    isPro: false },
-    { id: 108, partName: 'Golf MK7 GTI exhaust system',           buyer: 'Petra H.',  loc: 'SYDNEY, NSW',    make: 'Volkswagen', model: 'Golf',       year: '2016', maxPrice: 800,  posted: '4 days ago',  category: 'performance', isPro: false },
-    { id: 109, partName: 'Autel MaxiSys scan tool MS906BT',       buyer: 'Brett M.',  loc: 'BRISBANE, QLD',  make: '',           model: '',           year: '',     maxPrice: 600,  posted: '1 day ago',   category: 'tools',       isPro: true  },
-    { id: 110, partName: '4x4 snorkel — 200 Series LandCruiser',  buyer: 'Craig F.',  loc: 'PERTH, WA',      make: 'Toyota',     model: 'LandCruiser',year: '2015', maxPrice: 350,  posted: '3 days ago',  category: '4x4',         isPro: false },
-    { id: 111, partName: 'Bride reclinable bucket seat',          buyer: 'Tom K.',    loc: 'MELBOURNE, VIC', make: '',           model: '',           year: '',     maxPrice: 900,  posted: '5 days ago',  category: 'performance', isPro: true  },
-    { id: 112, partName: 'Alpine head unit iLX-W650',             buyer: 'Lisa R.',   loc: 'SYDNEY, NSW',    make: '',           model: '',           year: '',     maxPrice: 400,  posted: '6 days ago',  category: 'audio',       isPro: false },
-];
+const publicWantedDatabase = [];
 
-const workshopDatabase = [
-    { id: 1, name: 'Eastside Toyota Repairs',       specialty: 'Camry bonnet, body panels & crash repair',              distance: '3.4km',  loc: 'ADELAIDE, SA',   rating: 4.9, approvedClub: 'RAA', vehicleTypes: ['Toyota', 'Camry', 'Hiace'],          services: ['collision', 'sprayPaint', 'cooling'] },
-    { id: 2, name: 'City Crash Workshop',            specialty: 'Volkswagen and general panel fitment',                  distance: '5.1km',  loc: 'ADELAIDE, SA',   rating: 4.8, approvedClub: 'RAA', vehicleTypes: ['Volkswagen', 'Golf', 'Passat'],       services: ['collision', 'sprayPaint', 'autoElectrical', 'wheelAlign'] },
-    { id: 3, name: 'Suburban Auto Fitters',          specialty: 'Suspension, brakes and body fitment for Japanese sedans', distance: '6.8km', loc: 'ADELAIDE, SA',  rating: 4.7,                       vehicleTypes: ['Toyota', 'Mazda', 'Nissan'],          services: ['logbook', 'brakes', 'suspension', 'wheelAlign', 'aircon'] },
-    { id: 4, name: 'Crash & Panel Pros',             specialty: 'Full repair, repaint and fitting service',              distance: '8.4km',  loc: 'ADELAIDE, SA',   rating: 4.6,                       vehicleTypes: ['Toyota', 'Volkswagen', 'Ford'],       services: ['collision', 'sprayPaint', 'pdr', 'trimming'] },
-    { id: 5, name: 'Hills Auto Trimmers',            specialty: 'Custom upholstery, seat repairs and interior restoration', distance: '24km', loc: 'STIRLING, SA',  rating: 4.8,                       vehicleTypes: ['All makes'],                         services: ['autoGlass', 'trimming'] },
-    { id: 6, name: 'Southern Auto Electrics & Air',  specialty: 'Auto electrical, A/C regas and fault diagnosis',        distance: '38km',  loc: 'NOARLUNGA, SA',  rating: 4.7,                       vehicleTypes: ['All makes'],                         services: ['autoElectrical', 'aircon', 'battery'] },
-    { id: 7, name: 'Barossa Mechanical & Cooling',   specialty: 'Radiator repairs, engine cooling and general mechanical', distance: '62km', loc: 'NURIOOTPA, SA', rating: 4.5,                       vehicleTypes: ['Toyota', 'Ford', 'Holden'],           services: ['engineDiag', 'logbook', 'transmission', 'cooling'] }
-];
+const workshopDatabase = [];
 
 let workshopRadiusKm = null;
 
