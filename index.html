@@ -232,7 +232,7 @@
                 <span class="dash-card-title">My Listings</span>
                 <div class="dash-tabs">
                     <button class="dash-tab active" onclick="renderDashListings('active',this)">Active <span id="dashActiveCount" class="dash-tab-badge"></span></button>
-                    <button class="dash-tab" onclick="renderDashListings('pending',this)">Pending <span class="dash-tab-badge">2</span></button>
+                    <button class="dash-tab" onclick="renderDashListings('pending',this)">Pending <span id="dashPendingCount" class="dash-tab-badge"></span></button>
                     <button class="dash-tab" onclick="renderDashListings('sold',this)">Sold <span id="dashSoldCount" class="dash-tab-badge"></span></button>
                 </div>
             </div>
@@ -1139,11 +1139,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Email')">
+                <div class="settings-row">
                     <span class="settings-row-label">Email</span>
-                    <span class="settings-row-value">gary@example.com</span>
+                    <span class="settings-row-value" id="settingsEmailDisplay" style="color:#888;">—</span>
                 </div>
-                <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Change Password')">
+                <div class="settings-row settings-row-tappable" onclick="sendPasswordReset()">
                     <span class="settings-row-label">Change Password</span>
                     <span class="settings-chevron">›</span>
                 </div>

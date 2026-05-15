@@ -7282,6 +7282,11 @@ function renderDashboard() {
 
     const countBadge = document.getElementById('dashActiveCount');
     if (countBadge) countBadge.textContent = myListings.length;
+    const pendingBadge = document.getElementById('dashPendingCount');
+    if (pendingBadge) {
+        const pendingOfferCount = offersDb.filter(o => o.status === 'pending').length;
+        pendingBadge.textContent = pendingOfferCount || '';
+    }
     const soldBadge = document.getElementById('dashSoldCount');
     if (soldBadge) {
         const realSoldCount = userListings.filter(l => l.status === 'sold' && l.seller === getCurrentSellerName()).length;
