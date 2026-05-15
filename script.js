@@ -287,7 +287,13 @@ function saveSettingsName() {
     }
 }
 function saveSettingsLocation() {
-    // Legacy — location now saved immediately via onSuburbSelect/clearLocationPicker
+    // Capture any pending suburb selection that the user may not have explicitly chosen
+    document.querySelectorAll('.location-picker-wrap').forEach(wrap => {
+        const sel = wrap.querySelector('.loc-suburb-select');
+        if (sel && sel.style.display !== 'none' && sel.value) {
+            onSuburbSelect(sel);
+        }
+    });
 }
 
 // ── POSTCODE / LOCATION PICKER ───────────────────────────────────────────────
@@ -316,6 +322,9 @@ function onSuburbSelect(selectEl) {
     userSettings.location = val;
     saveUserSettings();
     renderProfile();
+    if (currentUserId && sb) {
+        sb.from('profiles').update({ location: val }).eq('id', currentUserId).then(() => {});
+    }
 }
 
 function clearLocationPicker(wrap) {
@@ -4518,6 +4527,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         const tier = profile.is_pro ? 'pro' : 'standard';
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
+                        if (profile.location && !userSettings.location) {
+                            userSettings.location = profile.location;
+                            saveUserSettings();
+                            populateLocationPickers();
+                        }
                     }
                 });
             loadPublicListingsFromSupabase();

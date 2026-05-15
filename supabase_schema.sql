@@ -13,6 +13,7 @@ create table if not exists profiles (
   business_name text,
   abn           text,
   profile_pic   text,
+  location      text,
   created_at    timestamptz not null default now()
 );
 
