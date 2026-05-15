@@ -7086,6 +7086,7 @@ function updateHeaderOffset() {
     const inboxDrawer         = document.getElementById('inboxDrawer');
     const messageDetailDrawer = document.getElementById('messageDetailDrawer');
     const chatDrawer          = document.getElementById('chatDrawer');
+    const helpDrawer          = document.getElementById('helpDrawer');
     const accountDropdown     = document.getElementById('accountDropdown');
     if (header && grid) {
         const topBarH   = topBar ? topBar.offsetHeight : 0;
@@ -7125,6 +7126,7 @@ function updateHeaderOffset() {
             if (inboxDrawer)          inboxDrawer.style.top          = totalH + 'px';
             if (messageDetailDrawer)  messageDetailDrawer.style.top  = totalH + 'px';
             if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
+            if (helpDrawer)           helpDrawer.style.top           = totalH + 'px';
             if (authDrawer)           authDrawer.style.top           = totalH + 'px';
             if (dashView)             dashView.style.top             = totalH + 'px';
             if (rightPanel)           rightPanel.style.top           = totalH + 'px';
