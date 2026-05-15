@@ -280,6 +280,7 @@ function saveSettingsName() {
         currentUserName = val;
         userListings.forEach(l => { if (l.seller === oldName) l.seller = val; });
         saveUserListings();
+        saveRememberedUser({ name: val, email: currentUserEmail });
         renderAccountState();
         renderProfile();
         renderMyParts();
