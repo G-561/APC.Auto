@@ -194,6 +194,19 @@
             <div id="dashListingsBody"></div>
         </div>
 
+        <!-- Featured Placement -->
+        <div class="dash-card" style="margin-bottom:20px;">
+            <div class="dash-card-hdr">
+                <span class="dash-card-title">Featured Placement</span>
+                <span id="dashSponsoredStatusBadge" class="dash-card-meta"></span>
+            </div>
+            <div style="padding:0 16px 16px;">
+                <p style="font-size:13px;color:#888;margin:0 0 14px;line-height:1.5;">Promote your business in the APC sidebar. Reach buyers actively searching for parts.</p>
+                <div id="dashSponsoredPreview" style="margin-bottom:14px;"></div>
+                <button id="dashSponsoredBtn" class="dash-action-btn dash-btn-primary" onclick="openSponsoredBuilder()">+ Create Sponsored Card</button>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -1651,6 +1664,32 @@
     </div>
     <div class="makes-done-bar">
         <button class="btn-full-action" onclick="closeMakesDrawer()">DONE</button>
+    </div>
+</div>
+
+<!-- SPONSORED CARD BUILDER -->
+<div id="spbBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:4000; backdrop-filter:blur(2px);" onclick="closeSponsoredBuilder()"></div>
+<div id="spbModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(720px,calc(100vw - 24px)); max-height:calc(100vh - 48px); background:white; border-radius:20px; overflow:hidden; flex-direction:column; z-index:4001; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <div class="spb-header">
+        <span class="spb-title">Sponsored Card Builder</span>
+        <button class="spb-close" onclick="closeSponsoredBuilder()">×</button>
+    </div>
+    <div style="overflow-y:auto; flex:1; min-height:0;">
+        <div class="spb-tabs">
+            <button class="spb-tpl-tab active" data-tpl="supplier" onclick="selectSponsoredTemplate('supplier')">Supplier</button>
+            <button class="spb-tpl-tab" data-tpl="product" onclick="selectSponsoredTemplate('product')">Product</button>
+            <button class="spb-tpl-tab" data-tpl="partner" onclick="selectSponsoredTemplate('partner')">Partner</button>
+        </div>
+        <div class="spb-body">
+            <div class="spb-form-col">
+                <div id="spbFormFields"></div>
+                <button class="btn-full-action" style="margin-top:8px;" onclick="submitSponsoredCard()">Submit for Review</button>
+            </div>
+            <div class="spb-preview-col">
+                <div class="spb-preview-label">Live Preview</div>
+                <div id="spbPreviewCard"></div>
+            </div>
+        </div>
     </div>
 </div>
 

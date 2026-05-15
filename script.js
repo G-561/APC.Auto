@@ -6295,6 +6295,312 @@ function submitHelpContact() {
     window.location.href = `mailto:support@autopartsconnection.com.au?subject=${subject}&body=${body}`;
     showToast('Opening your email app…');
 }
+// ===== SPONSORED CARD BUILDER =====
+let _spbTemplate = 'supplier';
+let _spbLogoData = '';
+let _spbImageData = '';
+let _spbExistingCard = null;
+
+function openSponsoredBuilder() {
+    _spbLogoData = '';
+    _spbImageData = '';
+    _spbExistingCard = null;
+    document.getElementById('spbBackdrop').style.display = '';
+    const modal = document.getElementById('spbModal');
+    modal.style.display = 'flex';
+    if (sb && currentUserId) {
+        sb.from('sponsored_cards').select('*').eq('user_id', currentUserId).single()
+            .then(({ data }) => {
+                _spbExistingCard = data || null;
+                if (data) {
+                    _spbTemplate = data.template || 'supplier';
+                    _spbLogoData = data.logo_data || '';
+                    _spbImageData = data.image_data || '';
+                }
+                _spbBuildForm();
+            });
+    } else {
+        _spbBuildForm();
+    }
+}
+
+function closeSponsoredBuilder() {
+    document.getElementById('spbBackdrop').style.display = 'none';
+    document.getElementById('spbModal').style.display = 'none';
+}
+
+function selectSponsoredTemplate(type) {
+    _spbTemplate = type;
+    document.querySelectorAll('.spb-tpl-tab').forEach(t => t.classList.toggle('active', t.dataset.tpl === type));
+    _spbBuildForm();
+}
+
+function _spbBuildForm() {
+    document.querySelectorAll('.spb-tpl-tab').forEach(t => t.classList.toggle('active', t.dataset.tpl === _spbTemplate));
+    const e = _spbExistingCard || {};
+    const tpl = _spbTemplate;
+    let html = '';
+
+    if (tpl === 'supplier') {
+        html = `
+            <div class="input-group"><label>Business Name <span style="color:#e53935;">*</span></label>
+                <input id="spbName" type="text" maxlength="50" placeholder="e.g. AA Automotive" value="${escapeHtml(e.business_name || '')}">
+            </div>
+            <div class="input-group"><label>Tagline <span style="font-weight:400;color:#aaa;">one line</span></label>
+                <input id="spbTagline" type="text" maxlength="80" placeholder="e.g. Adelaide's trusted auto specialists since 1995" value="${escapeHtml(e.tagline || '')}">
+            </div>
+            <div class="input-group"><label>Tags <span style="font-weight:400;color:#aaa;">up to 3, comma-separated</span></label>
+                <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Servicing, Tyres, Performance" value="${escapeHtml((e.tags || []).join(', '))}">
+            </div>
+            <div class="input-group"><label>Logo</label>
+                <div class="spb-logo-upload" id="spbLogoPreview" onclick="document.getElementById('spbLogoInput').click()">
+                    ${_spbLogoData ? `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">` : '<span class="spb-upload-hint">＋ Upload Logo</span>'}
+                </div>
+                <input type="file" id="spbLogoInput" accept="image/*" style="display:none;" onchange="handleSpbLogo(this)">
+                <div style="font-size:11px;color:#aaa;margin-top:4px;">PNG transparent preferred · max 500 KB</div>
+            </div>
+            <div class="input-group"><label>Button Label</label>
+                <input id="spbBtnLabel" type="text" maxlength="30" placeholder="Visit Website →" value="${escapeHtml(e.button_label || 'Visit Website →')}">
+            </div>
+            <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
+                <input id="spbBtnUrl" type="url" placeholder="https://yourwebsite.com.au" value="${escapeHtml(e.button_url || '')}">
+            </div>`;
+    } else if (tpl === 'product') {
+        html = `
+            <div class="input-group"><label>Hero Image <span style="color:#e53935;">*</span></label>
+                <div class="spb-hero-upload" id="spbHeroPreview" onclick="document.getElementById('spbHeroInput').click()">
+                    ${_spbImageData ? `<img src="${_spbImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : '<span class="spb-upload-hint">＋ Upload Photo<br><small>400 × 240 px · JPG</small></span>'}
+                </div>
+                <input type="file" id="spbHeroInput" accept="image/*" style="display:none;" onchange="handleSpbImage(this)">
+                <div style="font-size:11px;color:#aaa;margin-top:4px;">max 1 MB</div>
+            </div>
+            <div class="input-group"><label>Price</label>
+                <input id="spbPrice" type="text" maxlength="20" placeholder="e.g. $149" value="${escapeHtml(e.price || '')}">
+            </div>
+            <div class="input-group"><label>Title <span style="color:#e53935;">*</span></label>
+                <input id="spbName" type="text" maxlength="60" placeholder="e.g. Bosch Wiper Blades" value="${escapeHtml(e.business_name || '')}">
+            </div>
+            <div class="input-group"><label>Seller / Brand</label>
+                <input id="spbTagline" type="text" maxlength="40" placeholder="e.g. AA Automotive" value="${escapeHtml(e.tagline || '')}">
+            </div>
+            <div class="input-group"><label>Link URL <span style="color:#e53935;">*</span></label>
+                <input id="spbBtnUrl" type="url" placeholder="https://..." value="${escapeHtml(e.button_url || '')}">
+            </div>`;
+    } else {
+        html = `
+            <div class="input-group"><label>Partner Name <span style="color:#e53935;">*</span></label>
+                <input id="spbName" type="text" maxlength="50" placeholder="e.g. Sendle" value="${escapeHtml(e.business_name || '')}">
+            </div>
+            <div class="input-group"><label>Short blurb <span style="color:#e53935;">*</span></label>
+                <textarea id="spbBlurb" class="apc-textarea" rows="3" maxlength="120" placeholder="e.g. Australia-wide door-to-door delivery. Get an instant quote.">${escapeHtml(e.blurb || '')}</textarea>
+            </div>
+            <div class="input-group"><label>Logo <span style="font-weight:400;color:#aaa;">optional</span></label>
+                <div class="spb-logo-upload" id="spbLogoPreview" onclick="document.getElementById('spbLogoInput').click()">
+                    ${_spbLogoData ? `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">` : '<span class="spb-upload-hint">＋ Logo</span>'}
+                </div>
+                <input type="file" id="spbLogoInput" accept="image/*" style="display:none;" onchange="handleSpbLogo(this)">
+            </div>
+            <div class="input-group"><label>Button Label</label>
+                <input id="spbBtnLabel" type="text" maxlength="30" placeholder="Learn More →" value="${escapeHtml(e.button_label || 'Learn More →')}">
+            </div>
+            <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
+                <input id="spbBtnUrl" type="url" placeholder="https://..." value="${escapeHtml(e.button_url || '')}">
+            </div>`;
+    }
+
+    document.getElementById('spbFormFields').innerHTML = html;
+    document.getElementById('spbFormFields').querySelectorAll('input,textarea').forEach(el => {
+        el.addEventListener('input', _spbUpdatePreview);
+    });
+    _spbUpdatePreview();
+}
+
+function _spbUpdatePreview() {
+    const preview = document.getElementById('spbPreviewCard');
+    if (!preview) return;
+    const name     = document.getElementById('spbName')?.value || '';
+    const tagline  = document.getElementById('spbTagline')?.value || '';
+    const blurb    = document.getElementById('spbBlurb')?.value || '';
+    const price    = document.getElementById('spbPrice')?.value || '';
+    const btnLabel = document.getElementById('spbBtnLabel')?.value || '';
+    const tagsRaw  = document.getElementById('spbTags')?.value || '';
+    const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
+    preview.innerHTML = buildSponsoredCardHTML({
+        template: _spbTemplate, business_name: name, tagline, blurb, price,
+        button_label: btnLabel, button_url: '#', tags,
+        logo_data: _spbLogoData, image_data: _spbImageData
+    });
+}
+
+function handleSpbLogo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 500 * 1024) { showToast('Logo too large — max 500 KB'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX = 400; let w = img.width, h = img.height;
+            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            _spbLogoData = canvas.toDataURL('image/png', 0.9);
+            const prev = document.getElementById('spbLogoPreview');
+            if (prev) prev.innerHTML = `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">`;
+            _spbUpdatePreview();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleSpbImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 1024 * 1024) { showToast('Image too large — max 1 MB'); input.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX = 500; let w = img.width, h = img.height;
+            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            _spbImageData = canvas.toDataURL('image/jpeg', 0.85);
+            const prev = document.getElementById('spbHeroPreview');
+            if (prev) prev.innerHTML = `<img src="${_spbImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`;
+            _spbUpdatePreview();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function submitSponsoredCard() {
+    if (!sb || !currentUserId) { showToast('Please sign in'); return; }
+    const name   = document.getElementById('spbName')?.value.trim();
+    const btnUrl = document.getElementById('spbBtnUrl')?.value.trim();
+    if (!name)   { showToast('Name / title is required'); return; }
+    if (!btnUrl) { showToast('Button URL is required'); return; }
+    if (_spbTemplate === 'product' && !_spbImageData) { showToast('Hero image is required for a Product card'); return; }
+
+    const tagline  = document.getElementById('spbTagline')?.value.trim() || null;
+    const blurb    = document.getElementById('spbBlurb')?.value.trim() || null;
+    const price    = document.getElementById('spbPrice')?.value.trim() || null;
+    const btnLabel = document.getElementById('spbBtnLabel')?.value.trim() || null;
+    const tagsRaw  = document.getElementById('spbTags')?.value || '';
+    const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
+
+    const payload = {
+        user_id: currentUserId, template: _spbTemplate,
+        business_name: name, tagline, blurb, price,
+        tags: tags.length ? tags : null,
+        logo_data: _spbLogoData || null, image_data: _spbImageData || null,
+        button_label: btnLabel, button_url: btnUrl, active: false
+    };
+
+    let error;
+    if (_spbExistingCard?.id) {
+        ({ error } = await sb.from('sponsored_cards').update(payload).eq('id', _spbExistingCard.id));
+    } else {
+        ({ error } = await sb.from('sponsored_cards').insert(payload));
+    }
+    if (error) { showToast('Error: ' + error.message); return; }
+    showToast('Submitted for review — we\'ll activate it shortly');
+    closeSponsoredBuilder();
+    renderDashSponsoredStatus();
+}
+
+function buildSponsoredCardHTML(card) {
+    const tpl      = card.template;
+    const name     = escapeHtml(card.business_name || '');
+    const tagline  = escapeHtml(card.tagline || '');
+    const blurb    = escapeHtml(card.blurb || '');
+    const price    = escapeHtml(card.price || '');
+    const btnLabel = escapeHtml(card.button_label || 'Visit →');
+    const btnUrl   = escapeHtml(card.button_url || '#');
+    const tags     = (card.tags || []).slice(0, 3);
+    const logo     = card.logo_data || '';
+    const image    = card.image_data || '';
+
+    if (tpl === 'supplier') {
+        const logoHtml = logo
+            ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" alt="">`
+            : `<div class="drp-supplier-logo-placeholder">${name.slice(0, 3).toUpperCase()}</div>`;
+        const tagsHtml = tags.map(t => `<span class="drp-tag">${escapeHtml(t)}</span>`).join('');
+        return `<div class="drp-card drp-supplier-card">
+            <div class="drp-sponsored-tag">Featured Supplier</div>
+            <div class="drp-supplier-logo">${logoHtml}</div>
+            <div class="drp-supplier-name">${name}</div>
+            ${tagline ? `<div class="drp-supplier-tagline">${tagline}</div>` : ''}
+            ${tagsHtml ? `<div class="drp-supplier-tags">${tagsHtml}</div>` : ''}
+            <button class="drp-supplier-btn" onclick="window.open('${btnUrl}','_blank')">${btnLabel}</button>
+        </div>`;
+    } else if (tpl === 'product') {
+        const imgHtml = image
+            ? `<img src="${image}" class="drp-sp-img" alt="">`
+            : `<div class="drp-sp-img" style="background:#eee;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">No image</div>`;
+        return `<div class="drp-card drp-sp-card" onclick="window.open('${btnUrl}','_blank')">
+            <div class="drp-sp-img-wrap">${imgHtml}
+                <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
+            </div>
+            <div class="drp-sp-info">
+                ${price ? `<div class="drp-sp-price">${price}</div>` : ''}
+                <div class="drp-sp-title">${name}</div>
+                ${tagline ? `<div class="drp-sp-seller">${tagline}</div>` : ''}
+            </div>
+        </div>`;
+    } else {
+        const logoHtml = logo
+            ? `<img src="${logo}" style="max-width:44px;max-height:44px;object-fit:contain;border-radius:6px;margin-bottom:6px;" alt="">`
+            : '';
+        return `<div class="drp-card">
+            <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Partner</div>
+            <div class="drp-partner-card">
+                ${logoHtml}
+                <div class="drp-partner-name">${name}</div>
+                ${blurb ? `<div class="drp-partner-desc">${blurb}</div>` : ''}
+                <button class="drp-partner-btn" onclick="window.open('${btnUrl}','_blank')">${btnLabel}</button>
+            </div>
+        </div>`;
+    }
+}
+
+async function loadSponsoredCards() {
+    if (!sb) return;
+    const { data } = await sb.from('sponsored_cards')
+        .select('*').eq('active', true)
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: true });
+    if (!data?.length) return;
+    const panel = document.getElementById('desktopRightPanel');
+    if (panel) panel.innerHTML = data.map(buildSponsoredCardHTML).join('');
+}
+
+async function renderDashSponsoredStatus() {
+    if (!sb || !currentUserId) return;
+    const { data } = await sb.from('sponsored_cards').select('*').eq('user_id', currentUserId).single();
+    const badge = document.getElementById('dashSponsoredStatusBadge');
+    const preview = document.getElementById('dashSponsoredPreview');
+    const btn = document.getElementById('dashSponsoredBtn');
+    if (!data) {
+        if (badge) { badge.textContent = ''; }
+        if (preview) preview.innerHTML = '';
+        if (btn) btn.textContent = '+ Create Sponsored Card';
+        return;
+    }
+    if (badge) {
+        badge.textContent = data.active ? '● Live' : '⏳ Pending review';
+        badge.style.color = data.active ? '#2e7d32' : '#f97316';
+    }
+    if (preview) {
+        preview.innerHTML = `<div style="pointer-events:none; transform:scale(0.8); transform-origin:top left; width:125%;">${buildSponsoredCardHTML(data)}</div>`;
+    }
+    if (btn) btn.textContent = 'Edit Card';
+}
+
 function onMenuOpenWorkshops() {
     if (!userIsSignedIn) {
         openAuthDrawer(onMenuOpenWorkshops);
@@ -7297,6 +7603,7 @@ function renderDashboard() {
     renderDashActivity();
     renderDemandWidget();
     renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
+    renderDashSponsoredStatus();
 }
 
 function renderDashboardCharts(myListings) {
@@ -7517,6 +7824,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilterVehicleDropdowns();
     renderSkeletonGrid();
     loadPublicListingsFromSupabase();
+    loadSponsoredCards();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications
     const remembered = loadRememberedUser();
