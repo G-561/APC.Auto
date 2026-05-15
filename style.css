@@ -3850,7 +3850,8 @@ header {
     }
     #sellOverlay .drawer-header,
     #settingsDrawer .drawer-header,
-    #workshopDrawer .drawer-header {
+    #workshopDrawer .drawer-header,
+    #helpDrawer .drawer-header {
         border-bottom: 3px solid var(--apc-orange);
         border-radius: 0;
         flex-shrink: 0;
@@ -4085,7 +4086,8 @@ header {
     #messageDetailDrawer,
     #chatDrawer,
     #inboxDrawer,
-    #settingsDrawer {
+    #settingsDrawer,
+    #helpDrawer {
         left: calc(max(0px, 50vw - 700px) + 240px) !important;
         right: calc(max(0px, 50vw - 700px) + 220px) !important;
         width: auto !important;
