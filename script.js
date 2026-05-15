@@ -432,6 +432,8 @@ function renderProfilePicPreview() {
     if (img) { img.src = pic; img.style.display = pic ? 'block' : 'none'; }
     if (ini) { ini.style.display = pic ? 'none' : ''; ini.textContent = initial; }
     if (removeBtn) removeBtn.style.display = pic ? '' : 'none';
+    const picWrap = document.querySelector('.settings-profile-pic-wrap');
+    if (picWrap) picWrap.classList.toggle('pro', currentUserTier === 'pro');
     renderAccountState();
 }
 
@@ -479,7 +481,7 @@ function renderBannerPreview() {
     if (placeholder) placeholder.style.display = banner ? 'none' : '';
     if (removeBtn) removeBtn.style.display = banner ? '' : 'none';
     const hint = document.getElementById('bannerSizeHint');
-    if (hint) hint.textContent = banner ? '' : 'Recommended: 1200 × 400 px · JPG or PNG · max 2 MB';
+    if (hint) hint.textContent = banner ? '' : 'Recommended: 1200 × 300 px · JPG · max 2 MB';
 }
 
 function setBizType(el, type) {
@@ -6248,10 +6250,12 @@ function renderProfile() {
     const savedEl    = document.getElementById('profileStatSaved');
     const wantedEl   = document.getElementById('profileStatWanted');
 
-    if (avatarEl) avatarEl.textContent = (currentUserName || 'U').charAt(0).toUpperCase();
-    if (nameEl)   nameEl.textContent   = currentUserName || 'User';
-
     const isPro = currentUserTier === 'pro';
+    if (avatarEl) {
+        avatarEl.textContent = (currentUserName || 'U').charAt(0).toUpperCase();
+        avatarEl.classList.toggle('pro', isPro);
+    }
+    if (nameEl) nameEl.textContent = currentUserName || 'User';
     if (badgeEl) {
         badgeEl.textContent = isPro ? 'APC Pro' : 'Standard';
         badgeEl.className   = 'profile-tier-badge ' + (isPro ? 'pro' : 'standard');

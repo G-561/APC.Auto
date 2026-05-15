@@ -2402,6 +2402,7 @@ header {
     overflow: hidden; cursor: pointer; flex-shrink: 0;
     border: 2px solid #eee;
 }
+.settings-profile-pic-wrap.pro { background: var(--apc-blue); }
 .settings-pic-remove-btn {
     font-size: 11px; font-weight: 700; color: #e74c3c;
     background: none; border: none; cursor: pointer; padding: 0;
@@ -2725,6 +2726,7 @@ header {
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
 }
+.spc-avatar.pro { background: var(--apc-blue); }
 .spc-body { flex: 1; min-width: 0; }
 .spc-name-row { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
 .spc-name { font-size: 15px; font-weight: 800; color: #1a1a1a; }
