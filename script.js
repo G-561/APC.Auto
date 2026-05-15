@@ -580,6 +580,14 @@ function closeSettingsDrawer() {
     if (el) el.classList.remove('active');
     syncBackdrop();
 }
+async function sendPasswordReset() {
+    if (!currentUserEmail) { showToast('No email on file'); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(currentUserEmail, {
+        redirectTo: 'https://www.autopartsconnection.online'
+    });
+    if (error) { showToast('Error: ' + error.message); return; }
+    showToast('Password reset email sent to ' + currentUserEmail);
+}
 function onMenuOpenSettings() {
     closeAccountDropdown();
     renderSettingsDrawer();
@@ -590,6 +598,8 @@ function renderSettingsDrawer() {
     const nameEl     = document.getElementById('settingsDisplayName');
     const proSection = document.getElementById('settingsProSection');
     if (nameEl) nameEl.value = currentUserName || '';
+    const emailEl = document.getElementById('settingsEmailDisplay');
+    if (emailEl) emailEl.textContent = currentUserEmail || '—';
     populateLocationPickers();
     renderProfilePicPreview();
 
