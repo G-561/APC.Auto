@@ -7897,4 +7897,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'ArrowRight') { e.preventDefault(); lightboxNav(1); }
         if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
     });
+
+    // Desktop: clicking outside an open drawer closes it first, then lets the click proceed
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth < 900) return;
+        const openDrawer = document.querySelector('.drawer.active');
+        if (!openDrawer) return;
+        if (e.target.closest('.drawer')) return;
+        if (e.target.closest('#drawerBackdrop')) return;
+        // Ignore clicks inside modals/backdrops (sponsored builder, lightbox, etc.)
+        if (e.target.closest('[id$="Modal"]') || e.target.closest('[id$="Backdrop"]') || e.target.closest('[id$="modal"]')) return;
+        closeTopDrawer();
+    }, true);
 });
