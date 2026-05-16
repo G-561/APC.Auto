@@ -355,6 +355,7 @@ async function saveSettingsName() {
     renderMyParts();
     if (currentUserId && sb) {
         sb.from('profiles').update({ display_name: val }).eq('id', currentUserId).then(() => {});
+        sb.from('listings').update({ seller_name: val }).eq('seller_id', currentUserId).then(() => {});
     }
     return true;
 }
@@ -1025,6 +1026,16 @@ async function loadPublicListingsFromSupabase() {
             .limit(40);
         if (error) { renderMainGrid(); return; }
 
+        // Batch-fetch current display names so stale seller_name values don't show
+        const sellerIds = [...new Set((rows || []).map(r => r.seller_id).filter(Boolean))];
+        let nameMap = {};
+        if (sellerIds.length) {
+            const { data: profiles } = await sb.from('profiles')
+                .select('id, display_name')
+                .in('id', sellerIds);
+            nameMap = Object.fromEntries((profiles || []).map(p => [p.id, p.display_name]).filter(([, n]) => n));
+        }
+
         (rows || []).forEach(r => {
             if (partDatabase.some(p => p.supabaseId === r.id)) return;
             if (userListings.some(l => l.supabaseId === r.id)) return;
@@ -1044,7 +1055,7 @@ async function loadPublicListingsFromSupabase() {
                 stockNumber: r.stock_number, odometer: r.odometer,
                 warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
                 fit: r.fitting_available, year: r.fits_year,
-                seller: r.seller_name || 'Seller',
+                seller: nameMap[r.seller_id] || r.seller_name || 'Seller',
                 status: r.status === 'active' ? undefined : r.status,
                 images: images.length ? images : [], fits,
             });
@@ -1097,6 +1108,7 @@ async function loadUserListingsFromSupabase(userId) {
                     quantity: r.quantity || 1, apcId: r.apc_id,
                     fit: r.fitting_available, year: r.fits_year,
                     saves: r.saves_count || 0, sellerId: r.seller_id, fits,
+                    seller: currentUserName || r.seller_name || '',
                     ...(images.length ? { images } : {}),
                 });
             } else {
