@@ -2937,11 +2937,11 @@ function renderSellVehicleChip() {
         const { make, model, year, series } = sellVehicleSelection;
         if (mmEl) mmEl.textContent = `${make} ${model}`;
         if (ysEl) ysEl.textContent = [year, series].filter(Boolean).join(' · ');
-        chip.classList.add('visible');
-        btn.style.display = 'none';
+        chip.style.display = 'flex';
+        btn.style.display  = 'none';
     } else {
-        chip.classList.remove('visible');
-        btn.style.display = '';
+        chip.style.display = 'none';
+        btn.style.display  = '';
     }
 }
 

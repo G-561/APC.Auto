@@ -922,12 +922,14 @@
                 <div class="filter-section">
                     <h4>Vehicle Details <span id="sellVehicleRequiredNote" style="font-size:11px;font-weight:500;color:var(--apc-orange);display:none;">* required</span></h4>
                     <div id="sellVehicleChip" style="display:none; background:#f8f8f8; border:1.5px solid #e0e0e0; border-radius:12px; padding:11px 14px; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
-                        <div onclick="openSellVehiclePicker()" style="flex:1; min-width:0; cursor:pointer;">
-                            <div id="sellVehicleChipMakeModel" style="font-size:14px; font-weight:800; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
-                            <div id="sellVehicleChipYearSeries" style="font-size:12px; font-weight:600; color:#888; margin-top:2px;"></div>
-                            <div style="font-size:10px; color:var(--apc-orange); font-weight:700; margin-top:3px;">Tap to change</div>
+                        <div style="flex:1; min-width:0;">
+                            <div id="sellVehicleChipMakeModel" style="font-size:14px; font-weight:800; color:#222;"></div>
+                            <div id="sellVehicleChipYearSeries" style="font-size:12px; font-weight:600; color:#666; margin-top:2px;"></div>
                         </div>
-                        <button onclick="clearSellVehicle()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;" title="Clear vehicle">×</button>
+                        <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                            <button onclick="openSellVehiclePicker()" style="background:var(--apc-orange);border:none;color:#fff;font-size:11px;font-weight:800;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit;">Edit</button>
+                            <button onclick="clearSellVehicle()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;padding:0;line-height:1;" title="Clear vehicle">×</button>
+                        </div>
                     </div>
                     <button id="sellVehiclePickerBtn" onclick="openSellVehiclePicker()" style="width:100%;padding:13px;background:#f4f4f4;border:1.5px dashed #ccc;border-radius:12px;font-size:13px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;">＋ Select Vehicle</button>
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
