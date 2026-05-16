@@ -2337,6 +2337,7 @@ function getFilterValues() {
 }
 
 function onFilterRadiusPostcodeInput(input) {
+    input.value = input.value.replace(/\D/g, '');
     const hasPostcode = input.value.trim().length > 0;
     const control = document.getElementById('radiusSegControl');
     const hint = document.getElementById('radiusHint');
