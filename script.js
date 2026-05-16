@@ -293,21 +293,70 @@ function silentSavePostcode(value) {
     const sellPc = document.getElementById('sellPostcode');
     if (sellPc && !sellPc.value) sellPc.value = pc;
 }
-function saveSettingsName() {
-    const val = document.getElementById('settingsDisplayName')?.value.trim();
-    if (val && val !== currentUserName) {
-        const oldName = currentUserName;
-        currentUserName = val;
-        userListings.forEach(l => { if (l.seller === oldName) l.seller = val; });
-        saveUserListings();
-        saveRememberedUser({ name: val, tier: currentUserTier, email: currentUserEmail });
-        renderAccountState();
-        renderProfile();
-        renderMyParts();
-        if (currentUserId && sb) {
-            sb.from('profiles').update({ display_name: val }).eq('id', currentUserId).then(() => {});
-        }
+async function isUsernameAvailable(name, excludeId) {
+    if (!sb || !name) return true;
+    try {
+        let q = sb.from('profiles')
+            .select('id', { count: 'exact', head: true })
+            .ilike('display_name', name);
+        if (excludeId) q = q.neq('id', excludeId);
+        const { count } = await q;
+        return count === 0;
+    } catch { return true; }
+}
+
+function suggestUsernames(base) {
+    const clean = base.replace(/[^a-zA-Z0-9]/g, '');
+    if (!clean) return [];
+    const rand = String(Math.floor(Math.random() * 90 + 10));
+    const yr   = String(new Date().getFullYear()).slice(-2);
+    return [clean + rand, clean + '_au', clean + yr];
+}
+
+function showUsernameSuggestions(suggestions, inputId, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = 'Try: ' + suggestions.map(s =>
+        `<button class="username-suggestion-btn" onclick="fillUsername('${escapeHtml(s)}','${inputId}')">${escapeHtml(s)}</button>`
+    ).join('');
+    el.style.display = '';
+}
+
+function fillUsername(name, inputId) {
+    const el = document.getElementById(inputId);
+    if (el) el.value = name;
+    ['authUsernameSuggestions','settingsUsernameSuggestions'].forEach(id => {
+        const c = document.getElementById(id); if (c) c.style.display = 'none';
+    });
+    const errEl = document.getElementById('settingsNameError');
+    if (errEl) errEl.style.display = 'none';
+}
+
+async function saveSettingsName() {
+    const val    = document.getElementById('settingsDisplayName')?.value.trim();
+    const errEl  = document.getElementById('settingsNameError');
+    const sugEl  = document.getElementById('settingsUsernameSuggestions');
+    if (errEl) errEl.style.display = 'none';
+    if (sugEl) sugEl.style.display = 'none';
+    if (!val || val === currentUserName) return true;
+    const available = await isUsernameAvailable(val, currentUserId);
+    if (!available) {
+        if (errEl) { errEl.textContent = `"${val}" is already taken.`; errEl.style.display = ''; }
+        showUsernameSuggestions(suggestUsernames(val), 'settingsDisplayName', 'settingsUsernameSuggestions');
+        return false;
     }
+    const oldName = currentUserName;
+    currentUserName = val;
+    userListings.forEach(l => { if (l.seller === oldName) l.seller = val; });
+    saveUserListings();
+    saveRememberedUser({ name: val, tier: currentUserTier, email: currentUserEmail });
+    renderAccountState();
+    renderProfile();
+    renderMyParts();
+    if (currentUserId && sb) {
+        sb.from('profiles').update({ display_name: val }).eq('id', currentUserId).then(() => {});
+    }
+    return true;
 }
 function saveSettingsLocation() {
     // Capture any pending suburb selection that the user may not have explicitly chosen
@@ -510,8 +559,9 @@ function populateWsLocatorPicker() {
         wrap.dataset.selectedSuburb   = `${suburbs[0][0]}, ${suburbs[0][1]}`;
     }
 }
-function saveSettingsAccount() {
-    saveSettingsName();
+async function saveSettingsAccount() {
+    const nameOk = await saveSettingsName();
+    if (!nameOk) return;
     saveSettingsLocation();
     showToast('Account settings saved');
 }
@@ -6534,6 +6584,13 @@ async function handleSignUpPersonalSubmit() {
     const email    = document.getElementById('authEmailPersonal')?.value.trim() || '';
     const password = document.getElementById('authPasswordPersonal')?.value;
     if (!name || !email || !password) { showAuthError('Please enter your name, email and password.'); return; }
+    showAuthError('Checking username…', true);
+    const nameAvailable = await isUsernameAvailable(name);
+    if (!nameAvailable) {
+        showAuthError(`"${name}" is already taken.`);
+        showUsernameSuggestions(suggestUsernames(name), 'authNamePersonal', 'authUsernameSuggestions');
+        return;
+    }
     showAuthError('Creating account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
@@ -6565,6 +6622,13 @@ async function handleSignUpProSubmit() {
     const abnDigits = abnRaw.replace(/\s/g, '');
     if (!/^\d{11}$/.test(abnDigits)) {
         showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).'); return;
+    }
+    showAuthError('Checking username…', true);
+    const nameAvailablePro = await isUsernameAvailable(name);
+    if (!nameAvailablePro) {
+        showAuthError(`"${name}" is already taken.`);
+        showUsernameSuggestions(suggestUsernames(name), 'authNamePro', 'authUsernameSuggestions');
+        return;
     }
     showAuthError('Creating Pro account…', true);
     const { error } = await sb.auth.signUp({
