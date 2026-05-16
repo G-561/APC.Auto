@@ -3030,7 +3030,7 @@ function renderWantedSearchResults(mainGrid) {
 
     const hdr = document.createElement('div');
     hdr.className = 'wanted-results-hdr';
-    hdr.textContent = `${matching.length} member${matching.length === 1 ? '' : 's'} looking`;
+    hdr.textContent = `${matching.length} part${matching.length === 1 ? '' : 's'} wanted`;
     wrap.appendChild(hdr);
 
     matching.forEach(w => {
