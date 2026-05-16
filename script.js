@@ -3948,8 +3948,9 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             img.onclick = () => openDetailImageViewer(src, part.images || [], i);
             carousel.appendChild(img);
         });
-        // Reset AFTER images are in the DOM so scroll-snap doesn't ignore it
-        carousel.scrollTo({ left: 0, behavior: 'instant' });
+        // Reset to first image — deferred one frame so mobile browsers don't restore old scroll position
+        carousel.scrollLeft = 0;
+        requestAnimationFrame(() => { carousel.scrollLeft = 0; });
     }
     if (dotsContainer) {
         dotsContainer.innerHTML = '';
