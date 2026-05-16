@@ -762,7 +762,14 @@ function buildSeriesOptions(make, model, year, selected) {
     if (!seriesList.length) return '';
     let html = '<option value="">Select series</option>';
     seriesList.forEach(s => {
-        html += `<option value="${s}"${s === selected ? ' selected' : ''}>${s}</option>`;
+        const ranges = VEHICLE_YEAR_RANGES[make]?.[model + ' ' + s];
+        let label = s;
+        if (ranges?.length) {
+            const minY = Math.min(...ranges.map(([f]) => f));
+            const maxY = Math.max(...ranges.map(([, t]) => t));
+            label = `${s} (${minY}–${maxY})`;
+        }
+        html += `<option value="${s}"${s === selected ? ' selected' : ''}>${label}</option>`;
     });
     return html;
 }
