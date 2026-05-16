@@ -3007,6 +3007,15 @@ function vpFillFromGarage(v) {
 function closeSellVehiclePicker() {
     const modal = document.getElementById('sellVehiclePickerModal');
     if (modal) modal.style.display = 'none';
+    // Reset all picker dropdowns so next open always starts clean
+    const vpMake  = document.getElementById('vpMake');
+    const vpModel = document.getElementById('vpModel');
+    const vpYear  = document.getElementById('vpYear');
+    if (vpMake)  vpMake.value   = '';
+    if (vpModel) vpModel.innerHTML = '<option value="">Select model</option>';
+    if (vpYear)  vpYear.innerHTML  = '<option value="">Select year</option>';
+    _refreshVpSeries('', '', '', '');
+    document.querySelectorAll('#vpGarageChips .vp-garage-chip').forEach(c => c.classList.remove('active'));
 }
 
 function vpOverlayClick(e) {
