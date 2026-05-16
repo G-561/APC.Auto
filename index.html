@@ -834,7 +834,15 @@
             <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>
             <div class="auth-form-heading">Personal Account</div>
             <div class="input-group" style="margin-bottom:12px;"><label>Name</label><input type="text" id="authNamePersonal" placeholder="Your name"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label><input type="text" id="authPostcodePersonal" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000"></div>
+            <div class="input-group location-picker-wrap" data-mode="signup" style="margin-bottom:12px;">
+                <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
+                <input class="loc-postcode-input" id="authPostcodePersonal" type="text" inputmode="numeric" maxlength="4" placeholder="e.g. 5000" oninput="onPostcodeInput(this)">
+                <select class="loc-suburb-select" style="display:none;margin-top:6px;width:100%;" onchange="onSuburbSelect(this)"></select>
+                <div class="location-chip" style="display:none;margin-top:6px;">
+                    <span class="location-chip-text"></span>
+                    <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
+                </div>
+            </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPersonal" placeholder="you@example.com"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPersonal" placeholder="Password"></div>
             <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberPersonal"> Remember me</label>
@@ -851,7 +859,15 @@
                 <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
                 <input type="text" id="authAbnPro" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
             </div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label><input type="text" id="authPostcodePro" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000"></div>
+            <div class="input-group location-picker-wrap" data-mode="signup" style="margin-bottom:12px;">
+                <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
+                <input class="loc-postcode-input" id="authPostcodePro" type="text" inputmode="numeric" maxlength="4" placeholder="e.g. 5000" oninput="onPostcodeInput(this)">
+                <select class="loc-suburb-select" style="display:none;margin-top:6px;width:100%;" onchange="onSuburbSelect(this)"></select>
+                <div class="location-chip" style="display:none;margin-top:6px;">
+                    <span class="location-chip-text"></span>
+                    <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
+                </div>
+            </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPro" placeholder="you@example.com"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPro" placeholder="Password"></div>
             <label class="choice-item" style="margin-bottom:16px;"><input type="checkbox" id="authRememberPro"> Remember me</label>
@@ -946,10 +962,17 @@
             <div class="sell-right-col">
                 <div class="filter-section">
                     <h4>Location & Delivery</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
-                        <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000" onblur="silentSavePostcode(this.value)"></div>
-                        <div class="input-group"><label>Suburb, State</label><input id="sellLocation" type="text" placeholder="e.g. Adelaide, SA"></div>
+                    <div class="input-group location-picker-wrap" data-mode="sell" style="margin-bottom:10px;">
+                        <label>Suburb, State</label>
+                        <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" placeholder="Enter postcode…" oninput="onPostcodeInput(this)">
+                        <select class="loc-suburb-select" style="display:none;margin-top:6px;width:100%;" onchange="onSuburbSelect(this)"></select>
+                        <div class="location-chip" style="display:none;margin-top:6px;">
+                            <span class="location-chip-text"></span>
+                            <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
+                        </div>
                     </div>
+                    <input type="hidden" id="sellPostcode">
+                    <input type="hidden" id="sellLocation">
                     <div class="shared-choice-box">
                         <label class="choice-item"><input id="sellPickup" type="checkbox" checked> Pickup Available</label>
                         <label class="choice-item"><input id="sellPostage" type="checkbox"> Willing to Post</label>
@@ -1484,9 +1507,18 @@
                         <input type="text" id="proSettingABN" placeholder="12 345 678 901">
                     </div>
                 </div>
+                <div class="input-group location-picker-wrap" data-mode="workshop" style="margin-bottom:12px;">
+                    <label>Suburb, State</label>
+                    <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" placeholder="Enter postcode…" oninput="onPostcodeInput(this)">
+                    <select class="loc-suburb-select" style="display:none;margin-top:6px;width:100%;" onchange="onSuburbSelect(this)"></select>
+                    <div class="location-chip" style="display:none;margin-top:6px;">
+                        <span class="location-chip-text"></span>
+                        <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
+                    </div>
+                </div>
                 <div class="input-group">
-                    <label>Business Address</label>
-                    <input type="text" id="wsAddress" placeholder="e.g. 47 Richmond Road, Norwood SA 5067" autocomplete="street-address">
+                    <label>Street Address <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <input type="text" id="wsAddress" placeholder="e.g. 47 Richmond Road" autocomplete="street-address">
                 </div>
                 <div class="input-group">
                     <label>I am a</label>

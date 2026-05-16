@@ -342,11 +342,29 @@ function onSuburbSelect(selectEl) {
     const val  = selectEl.value;
     if (!val) return;
     _applyLocationToWrap(wrap, val);
-    userSettings.location = val;
-    saveUserSettings();
-    renderProfile();
-    if (currentUserId && sb) {
-        sb.from('profiles').update({ location: val }).eq('id', currentUserId).then(() => {});
+    const mode   = wrap.dataset.mode || 'profile';
+    const pc     = val.match(/\b(\d{4})\b/)?.[1] || '';
+    const suburb = val.replace(/\s*\d{4}$/, '').trim(); // "SUBURB, STATE"
+    if (mode === 'sell') {
+        const pcEl  = document.getElementById('sellPostcode');
+        const locEl = document.getElementById('sellLocation');
+        if (pcEl)  pcEl.value  = pc;
+        if (locEl) locEl.value = suburb;
+        silentSavePostcode(pc);
+    } else if (mode === 'signup') {
+        wrap.dataset.selectedPostcode = pc;
+        wrap.dataset.selectedSuburb   = suburb;
+        silentSavePostcode(pc);
+    } else if (mode === 'workshop') {
+        wrap.dataset.selectedPostcode = pc;
+        wrap.dataset.selectedSuburb   = suburb;
+    } else {
+        userSettings.location = val;
+        saveUserSettings();
+        renderProfile();
+        if (currentUserId && sb) {
+            sb.from('profiles').update({ location: val }).eq('id', currentUserId).then(() => {});
+        }
     }
 }
 
@@ -354,13 +372,24 @@ function clearLocationPicker(wrap) {
     const input = wrap.querySelector('.loc-postcode-input');
     const sel   = wrap.querySelector('.loc-suburb-select');
     const chip  = wrap.querySelector('.location-chip');
-    input.value        = '';
+    input.value         = '';
     input.style.display = '';
-    sel.style.display  = 'none';
-    chip.style.display = 'none';
-    userSettings.location = '';
-    saveUserSettings();
-    renderProfile();
+    sel.style.display   = 'none';
+    chip.style.display  = 'none';
+    const mode = wrap.dataset.mode || 'profile';
+    if (mode === 'sell') {
+        const pcEl  = document.getElementById('sellPostcode');
+        const locEl = document.getElementById('sellLocation');
+        if (pcEl)  pcEl.value  = '';
+        if (locEl) locEl.value = '';
+    } else if (mode === 'signup' || mode === 'workshop') {
+        wrap.dataset.selectedPostcode = '';
+        wrap.dataset.selectedSuburb   = '';
+    } else {
+        userSettings.location = '';
+        saveUserSettings();
+        renderProfile();
+    }
 }
 
 function _applyLocationToWrap(wrap, locationStr) {
@@ -380,18 +409,42 @@ function _applyLocationToWrap(wrap, locationStr) {
 function populateLocationPickers() {
     const loc = userSettings.location || '';
     document.querySelectorAll('.location-picker-wrap').forEach(wrap => {
+        const mode = wrap.dataset.mode || 'profile';
+        if (mode !== 'profile') return; // only auto-populate the profile settings picker
         const input = wrap.querySelector('.loc-postcode-input');
         const sel   = wrap.querySelector('.loc-suburb-select');
         const chip  = wrap.querySelector('.location-chip');
         if (loc) {
             _applyLocationToWrap(wrap, loc);
         } else {
-            input.value        = '';
+            input.value         = '';
             input.style.display = '';
-            sel.style.display  = 'none';
-            chip.style.display = 'none';
+            sel.style.display   = 'none';
+            chip.style.display  = 'none';
         }
     });
+}
+
+function populateSellLocationPicker() {
+    const wrap = document.querySelector('#sellOverlay .location-picker-wrap[data-mode="sell"]');
+    if (!wrap) return;
+    const loc = userSettings.location || '';
+    const pc  = userSettings.postcode  || '';
+    if (!loc && !pc) return;
+    // Build the chip string — prefer full location, fall back to postcode lookup
+    let chipVal = loc;
+    if (!chipVal && pc && typeof AU_POSTCODES !== 'undefined') {
+        const subs = AU_POSTCODES[pc] || [];
+        if (subs.length === 1) chipVal = `${subs[0][0]}, ${subs[0][1]} ${pc}`;
+    }
+    if (!chipVal) return;
+    _applyLocationToWrap(wrap, chipVal);
+    const parsedPc     = chipVal.match(/\b(\d{4})\b/)?.[1] || pc;
+    const parsedSuburb = chipVal.replace(/\s*\d{4}$/, '').trim();
+    const pcEl  = document.getElementById('sellPostcode');
+    const locEl = document.getElementById('sellLocation');
+    if (pcEl)  pcEl.value  = parsedPc;
+    if (locEl) locEl.value = parsedSuburb;
 }
 function saveSettingsAccount() {
     saveSettingsName();
@@ -3193,11 +3246,7 @@ function openSellOverlay() {
     currentEditingListingId = null;
     currentEditStatus = null;
     resetSellForm();
-    // Pre-fill location from user profile
-    const locEl  = document.getElementById('sellLocation');
-    const pcEl   = document.getElementById('sellPostcode');
-    if (locEl  && !locEl.value  && userSettings.suburb)   locEl.value  = userSettings.suburb;
-    if (pcEl   && !pcEl.value   && userSettings.postcode) pcEl.value   = userSettings.postcode;
+    populateSellLocationPicker();
     const fitting = document.getElementById('sellFittingAvailable');
     if (fitting && currentUserTier === 'pro' && userSettings.defaultFitting) fitting.checked = true;
     initSellVehicleDropdowns('', '', '');
@@ -3467,6 +3516,8 @@ function resetSellForm() {
     });
     sellVehicleSelection = null;
     renderSellVehicleChip();
+    const sellLocWrap = document.querySelector('#sellOverlay .location-picker-wrap[data-mode="sell"]');
+    if (sellLocWrap) clearLocationPicker(sellLocWrap);
     onSellCategoryChange();
     const pickup = document.getElementById('sellPickup');
     const postage = document.getElementById('sellPostage');
@@ -6387,17 +6438,20 @@ async function handleSignInSubmit() {
 
 async function handleSignUpPersonalSubmit() {
     const name     = document.getElementById('authNamePersonal')?.value.trim();
-    const postcode = document.getElementById('authPostcodePersonal')?.value.trim();
+    const pcWrap   = document.querySelector('#authSignUpPersonalSection .location-picker-wrap');
+    const postcode = pcWrap?.dataset.selectedPostcode || document.getElementById('authPostcodePersonal')?.value.trim() || '';
+    const suburb   = pcWrap?.dataset.selectedSuburb   || '';
     const email    = document.getElementById('authEmailPersonal')?.value.trim() || '';
     const password = document.getElementById('authPasswordPersonal')?.value;
     if (!name || !email || !password) { showAuthError('Please enter your name, email and password.'); return; }
     showAuthError('Creating account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: false, postcode: postcode || '' } }
+        options: { data: { display_name: name, is_pro: false, postcode: postcode || '', location: suburb || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     if (postcode) { userSettings.postcode = postcode; saveUserSettings(); }
+    if (suburb)   { userSettings.location = suburb;   saveUserSettings(); }
     document.getElementById('authPasswordPersonal').value = '';
     hideAuthError();
     toggleDrawer('authDrawer');
@@ -6410,7 +6464,9 @@ async function handleSignUpProSubmit() {
     const name         = document.getElementById('authNamePro')?.value.trim();
     const businessName = document.getElementById('authBusinessNamePro')?.value.trim();
     const abnRaw       = document.getElementById('authAbnPro')?.value.trim();
-    const postcode     = document.getElementById('authPostcodePro')?.value.trim();
+    const pcWrapPro    = document.querySelector('#authSignUpProSection .location-picker-wrap');
+    const postcode     = pcWrapPro?.dataset.selectedPostcode || document.getElementById('authPostcodePro')?.value.trim() || '';
+    const suburb       = pcWrapPro?.dataset.selectedSuburb   || '';
     const email        = document.getElementById('authEmailPro')?.value.trim() || '';
     const password     = document.getElementById('authPasswordPro')?.value;
     if (!name || !businessName || !abnRaw || !email || !password) {
@@ -6430,6 +6486,7 @@ async function handleSignUpProSubmit() {
     userSettings.businessName = businessName;
     userSettings.abn = abnDigits;
     if (postcode) userSettings.postcode = postcode;
+    if (suburb)   userSettings.location = suburb;
     saveUserSettings();
     hideAuthError();
     toggleDrawer('authDrawer');
