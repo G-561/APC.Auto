@@ -2304,7 +2304,7 @@ function getAllParts() {
     });
 }
 function findPartAnywhere(id) {
-    return [...partDatabase, ...userListings].find(p => p.supabaseId === id);
+    return [...userListings, ...partDatabase].find(p => p.supabaseId === id);
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
