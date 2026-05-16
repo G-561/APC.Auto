@@ -2916,6 +2916,14 @@ function initSellVehicleDropdowns(make, model, year, variant) {
     _refreshSellSeries(make, model, year, variant);
 }
 
+const VEHICLE_EXEMPT_CATEGORIES = ['tools', 'other'];
+
+function onSellCategoryChange() {
+    const cat  = document.getElementById('sellCategory')?.value || '';
+    const note = document.getElementById('sellVehicleRequiredNote');
+    if (note) note.style.display = VEHICLE_EXEMPT_CATEGORIES.includes(cat) ? 'none' : 'inline';
+}
+
 function onSellMakeChange() {
     const make    = document.getElementById('sellMake')?.value || '';
     const modelEl = document.getElementById('sellModel');
@@ -3285,6 +3293,7 @@ function resetSellForm() {
     });
     const variantGroup = document.getElementById('sellVariantGroup');
     if (variantGroup) variantGroup.style.display = 'none';
+    onSellCategoryChange();
     const pickup = document.getElementById('sellPickup');
     const postage = document.getElementById('sellPostage');
     const fitting = document.getElementById('sellFittingAvailable');
@@ -3363,6 +3372,13 @@ async function submitSellListing() {
     if (!category) missing.push('Category');
     if (!price)    missing.push('Price');
     if (!location) missing.push('Location');
+    if (category && !VEHICLE_EXEMPT_CATEGORIES.includes(category)) {
+        if (!make)  missing.push('Make');
+        if (!model) missing.push('Model');
+        if (!year)  missing.push('Year');
+        const seriesGroup = document.getElementById('sellVariantGroup');
+        if (seriesGroup && seriesGroup.style.display !== 'none' && !variant) missing.push('Series');
+    }
     if (missing.length) {
         showSellError(`Please complete: ${missing.join(', ')}`);
         return;

@@ -895,7 +895,7 @@
                     </div>
                     <div class="input-group">
                         <label>Category</label>
-                        <select id="sellCategory">
+                        <select id="sellCategory" onchange="onSellCategoryChange()">
                             <option value="" disabled selected>Select a category...</option>
                             <option value="body">Body & Exterior</option>
                             <option value="glass">Glass & Windows</option>
@@ -918,14 +918,14 @@
                 </div>
 
                 <div class="filter-section">
-                    <h4>Vehicle Details</h4>
+                    <h4>Vehicle Details <span id="sellVehicleRequiredNote" style="font-size:11px;font-weight:500;color:var(--apc-orange);display:none;">* required</span></h4>
                     <div class="input-row-flex">
                         <div class="input-group"><label>Make</label><select id="sellMake" onchange="onSellMakeChange()"><option value="">Make</option></select></div>
                         <div class="input-group"><label>Model</label><select id="sellModel" onchange="onSellModelChange()"><option value="">Model</option></select></div>
                         <div class="input-group"><label>Year</label><select id="sellYear" onchange="onSellYearChange()"><option value="">Year</option></select></div>
                     </div>
                     <div class="input-group" id="sellVariantGroup" style="margin-top:10px; display:none;">
-                        <label>Series <span style="font-weight:400;color:#aaa;">optional</span></label>
+                        <label>Series</label>
                         <select id="sellVariant"><option value="">Select series</option></select>
                     </div>
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
