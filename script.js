@@ -1199,7 +1199,11 @@ async function ensureSupabaseConversation(conv) {
     if (error) {
         console.warn('Conv sync error:', error.message, { buyerId, sellerId: part.sellerId });
         if (error.message?.includes('foreign key')) {
-            showToast('Session expired — please sign out and sign back in');
+            // Stale session — the account was deleted/recreated; clear it and prompt sign-in
+            sb.auth.signOut().then(() => {
+                showToast('Your session has expired — please sign in again');
+                openAuthDrawer();
+            });
         } else {
             showToast('Sync error: ' + error.message);
         }
