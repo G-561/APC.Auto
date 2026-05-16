@@ -274,6 +274,25 @@ function getDefaultSettings() {
 function saveUserSettings() {
     try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(userSettings)); } catch (e) {}
 }
+
+// Silently captures a postcode the first time the user enters one anywhere in the app.
+// No prompt, no interruption — just saves it in the background.
+function silentSavePostcode(value) {
+    const pc = (value || '').trim().replace(/\D/g, '');
+    if (!/^\d{4}$/.test(pc)) return;          // must be a valid 4-digit AU postcode
+    if (userSettings.postcode === pc) return;  // already saved — nothing to do
+    userSettings.postcode = pc;
+    saveUserSettings();
+    // Sync to Supabase profile in background (fire and forget)
+    if (sb && currentUserId) {
+        sb.from('profiles').update({ postcode: pc }).eq('id', currentUserId)
+            .then(() => {})
+            .catch(() => {});
+    }
+    // Also pre-fill the sell form if it's open and blank
+    const sellPc = document.getElementById('sellPostcode');
+    if (sellPc && !sellPc.value) sellPc.value = pc;
+}
 function saveSettingsName() {
     const val = document.getElementById('settingsDisplayName')?.value.trim();
     if (val && val !== currentUserName) {
@@ -4790,11 +4809,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
                         let dirty = false;
-                        if (profile.location     && !userSettings.location)     { userSettings.location     = profile.location;              dirty = true; }
+                        if (profile.location      && !userSettings.location)     { userSettings.location     = profile.location;              dirty = true; }
                         if (profile.business_name && !userSettings.businessName) { userSettings.businessName = profile.business_name;         dirty = true; }
                         if (profile.abn           && !userSettings.abn)          { userSettings.abn          = profile.abn;                   dirty = true; }
                         if (profile.about         && !userSettings.about)        { userSettings.about        = profile.about;                 dirty = true; }
                         if (profile.profile_pic   && !userSettings.profilePic)   { userSettings.profilePic   = profile.profile_pic;           dirty = true; }
+                        if (profile.postcode      && !userSettings.postcode)     { userSettings.postcode     = profile.postcode;              dirty = true; }
                         if (dirty) { saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); }
                     }
                 });
@@ -6358,15 +6378,17 @@ async function handleSignInSubmit() {
 
 async function handleSignUpPersonalSubmit() {
     const name     = document.getElementById('authNamePersonal')?.value.trim();
+    const postcode = document.getElementById('authPostcodePersonal')?.value.trim();
     const email    = document.getElementById('authEmailPersonal')?.value.trim() || '';
     const password = document.getElementById('authPasswordPersonal')?.value;
     if (!name || !email || !password) { showAuthError('Please enter your name, email and password.'); return; }
     showAuthError('Creating account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: false } }
+        options: { data: { display_name: name, is_pro: false, postcode: postcode || '' } }
     });
     if (error) { showAuthError(error.message); return; }
+    if (postcode) { userSettings.postcode = postcode; saveUserSettings(); }
     document.getElementById('authPasswordPersonal').value = '';
     hideAuthError();
     toggleDrawer('authDrawer');
@@ -6379,6 +6401,7 @@ async function handleSignUpProSubmit() {
     const name         = document.getElementById('authNamePro')?.value.trim();
     const businessName = document.getElementById('authBusinessNamePro')?.value.trim();
     const abnRaw       = document.getElementById('authAbnPro')?.value.trim();
+    const postcode     = document.getElementById('authPostcodePro')?.value.trim();
     const email        = document.getElementById('authEmailPro')?.value.trim() || '';
     const password     = document.getElementById('authPasswordPro')?.value;
     if (!name || !businessName || !abnRaw || !email || !password) {
@@ -6391,12 +6414,13 @@ async function handleSignUpProSubmit() {
     showAuthError('Creating Pro account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits } }
+        options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits, postcode: postcode || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     document.getElementById('authPasswordPro').value = '';
     userSettings.businessName = businessName;
     userSettings.abn = abnDigits;
+    if (postcode) userSettings.postcode = postcode;
     saveUserSettings();
     hideAuthError();
     toggleDrawer('authDrawer');

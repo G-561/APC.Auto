@@ -723,7 +723,7 @@
             </div>
             <div class="input-group" style="margin-top: 10px;">
                 <label>Postcode <span style="font-weight:400; color:#aaa;">(required for radius search)</span></label>
-                <input id="filterPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000" oninput="onPostcodeInput(this)">
+                <input id="filterPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000" oninput="onPostcodeInput(this)" onblur="silentSavePostcode(this.value)">
             </div>
             <div class="input-group" style="margin-top: 10px;">
                 <label>Search Radius</label>
@@ -834,6 +834,7 @@
             <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>
             <div class="auth-form-heading">Personal Account</div>
             <div class="input-group" style="margin-bottom:12px;"><label>Name</label><input type="text" id="authNamePersonal" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label><input type="text" id="authPostcodePersonal" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPersonal" placeholder="you@example.com"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPersonal" placeholder="Password"></div>
             <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberPersonal"> Remember me</label>
@@ -850,6 +851,7 @@
                 <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
                 <input type="text" id="authAbnPro" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
             </div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label><input type="text" id="authPostcodePro" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPro" placeholder="you@example.com"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPro" placeholder="Password"></div>
             <label class="choice-item" style="margin-bottom:16px;"><input type="checkbox" id="authRememberPro"> Remember me</label>
@@ -943,7 +945,7 @@
                 <div class="filter-section">
                     <h4>Location & Delivery</h4>
                     <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 12px; margin-bottom: 10px;">
-                        <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000"></div>
+                        <div class="input-group"><label>P/Code</label><input id="sellPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000" onblur="silentSavePostcode(this.value)"></div>
                         <div class="input-group"><label>Suburb, State</label><input id="sellLocation" type="text" placeholder="e.g. Adelaide, SA"></div>
                     </div>
                     <div class="shared-choice-box">

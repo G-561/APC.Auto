@@ -14,6 +14,7 @@ create table if not exists profiles (
   abn           text,
   profile_pic   text,
   location      text,
+  postcode      text,
   about         text,
   created_at    timestamptz not null default now()
 );
@@ -22,13 +23,14 @@ create table if not exists profiles (
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
-  insert into public.profiles (id, display_name, is_pro, business_name, abn)
+  insert into public.profiles (id, display_name, is_pro, business_name, abn, postcode)
   values (
     new.id,
     new.raw_user_meta_data->>'display_name',
     coalesce((new.raw_user_meta_data->>'is_pro')::boolean, false),
     new.raw_user_meta_data->>'business_name',
-    new.raw_user_meta_data->>'abn'
+    new.raw_user_meta_data->>'abn',
+    new.raw_user_meta_data->>'postcode'
   )
   on conflict (id) do nothing;
   return new;
