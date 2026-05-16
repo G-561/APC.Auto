@@ -519,9 +519,6 @@
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeDetailImageViewer()">
     <div class="image-lightbox-inner" onclick="event.stopPropagation()">
-        <button class="image-lightbox-close" onclick="event.stopPropagation(); closeDetailImageViewer()" aria-label="Close photo preview">×</button>
-        <button class="lightbox-nav lightbox-prev" onclick="event.stopPropagation(); lightboxNav(-1)" aria-label="Previous photo" style="display:none;">‹</button>
-        <button class="lightbox-nav lightbox-next" onclick="event.stopPropagation(); lightboxNav(1)" aria-label="Next photo" style="display:none;">›</button>
         <img id="lightboxImage" src="" alt="Photo preview" />
         <div id="lightboxDots" class="lightbox-dots"></div>
     </div>

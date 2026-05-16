@@ -4650,11 +4650,6 @@ function lightboxNav(dir) {
 }
 
 function updateLightboxNav() {
-    const show = _lightboxImages.length > 1;
-    const prev = document.querySelector('.lightbox-prev');
-    const next = document.querySelector('.lightbox-next');
-    if (prev) prev.style.display = show ? '' : 'none';
-    if (next) next.style.display = show ? '' : 'none';
     document.querySelectorAll('#lightboxDots .carousel-dot').forEach((d, i) => {
         d.classList.toggle('active', i === _lightboxIdx);
     });
