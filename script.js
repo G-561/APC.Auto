@@ -4441,6 +4441,62 @@ function openDetailImageViewer(src, images, idx) {
     // Allow pinch-to-zoom on the lightbox image
     document.querySelector('meta[name=viewport]').setAttribute('content',
         'width=device-width, initial-scale=1.0');
+
+    _initLightboxPullDown(lightbox);
+}
+
+function _initLightboxPullDown(lightbox) {
+    const inner = lightbox.querySelector('.image-lightbox-inner');
+    if (!inner || inner._pullDownBound) return;
+    inner._pullDownBound = true;
+
+    let startY = 0, startX = 0, dragging = false;
+    const THRESHOLD = 110;
+
+    inner.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
+        dragging = false;
+        inner.style.transition = 'none';
+    }, { passive: true });
+
+    inner.addEventListener('touchmove', e => {
+        if (e.touches.length !== 1) { inner.style.transform = ''; return; }
+        const dy = e.touches[0].clientY - startY;
+        const dx = e.touches[0].clientX - startX;
+        if (!dragging && Math.abs(dy) < 8) return;
+        if (!dragging && Math.abs(dx) > Math.abs(dy)) return; // horizontal swipe — leave it
+        dragging = true;
+        if (dy < 0) return; // don't allow dragging up
+        const progress = Math.min(dy / THRESHOLD, 1);
+        inner.style.transform = `translateY(${dy * 0.6}px) scale(${1 - progress * 0.12})`;
+        lightbox.style.background = `rgba(0,0,0,${0.92 - progress * 0.72})`;
+    }, { passive: true });
+
+    inner.addEventListener('touchend', e => {
+        if (!dragging) return;
+        const dy = e.changedTouches[0].clientY - startY;
+        inner.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        lightbox.style.transition = 'background 0.25s ease';
+        if (dy >= THRESHOLD) {
+            inner.style.transform = `translateY(100vh)`;
+            inner.style.opacity = '0';
+            setTimeout(() => {
+                closeDetailImageViewer();
+                inner.style.transform = '';
+                inner.style.opacity   = '';
+                inner.style.transition = '';
+                lightbox.style.background = '';
+                lightbox.style.transition = '';
+            }, 220);
+        } else {
+            inner.style.transform = '';
+            lightbox.style.background = '';
+            setTimeout(() => { inner.style.transition = ''; lightbox.style.transition = ''; }, 260);
+        }
+        dragging = false;
+    }, { passive: true });
 }
 
 function lightboxNav(dir) {
