@@ -2343,6 +2343,9 @@ async function openStorefrontByUserId(userId) {
         profile.location || '',
         ''
     );
+    const isOwn = userId === currentUserId || sellerName === getCurrentSellerName();
+    const sfMsgBtn = document.getElementById('sfMsgBtn');
+    if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
     const sfEl    = document.getElementById('storefrontDrawer');
     const backBar = document.getElementById('storefrontBackBar');
     if (sfEl)    sfEl.style.zIndex    = '';
@@ -4570,6 +4573,8 @@ function openStorefront(partId) {
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = part.seller;
     renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
+    const sfMsgBtn = document.getElementById('sfMsgBtn');
+    if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
     // Float above detailOverlay (z-index 3150 mobile / 2050 desktop) when opening from within a listing
     const sfEl = document.getElementById('storefrontDrawer');
     if (sfEl) sfEl.style.zIndex = '3200';
@@ -4852,6 +4857,8 @@ function handleGeneralEnquiry() {
         || document.getElementById('sfBusinessName')?.textContent?.trim()
         || '';
     if (!seller) return;
+    // Block messaging your own store
+    if (seller === getCurrentSellerName()) return;
 
     // If a general enquiry thread already exists with this seller, open it
     const existing = conversations.find(c => c.with === seller && c.partId === 'general');
