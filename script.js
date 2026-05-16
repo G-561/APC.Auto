@@ -6553,6 +6553,17 @@ function showAuthError(msg, isStatus = false) {
     el.classList.toggle('auth-status', isStatus);
     el.style.display = '';
 }
+async function forgotPassword() {
+    const email = document.getElementById('authEmail')?.value.trim();
+    if (!email) { showAuthError('Enter your email above first.'); return; }
+    showAuthError('Sending reset link…', true);
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+    });
+    if (error) { showAuthError(error.message); return; }
+    showAuthError('Reset link sent — check your email.', true);
+}
+
 function togglePwVisibility(inputId, btn) {
     const input = document.getElementById(inputId);
     if (!input) return;

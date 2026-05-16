@@ -790,7 +790,8 @@
         <!-- SIGN IN -->
         <div id="authSignInSection">
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><div class="pw-wrap"><input type="password" id="authPassword" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePwVisibility('authPassword',this)" aria-label="Show password">👁</button></div></div>
+            <div class="input-group" style="margin-bottom:4px;"><label>Password</label><div class="pw-wrap"><input type="password" id="authPassword" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePwVisibility('authPassword',this)" aria-label="Show password">👁</button></div></div>
+            <div style="text-align:right; margin-bottom:14px;"><a href="#" class="forgot-pw-link" onclick="forgotPassword();return false;">Forgot password?</a></div>
             <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberMe"> Remember me</label>
             <button onclick="handleSignInSubmit()" style="width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">SIGN IN</button>
             <p class="auth-join-prompt">New to APC? <a href="#" class="sign-up-link" onclick="setAuthMode('signup');return false;">Sign up free</a></p>

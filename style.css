@@ -307,6 +307,12 @@ header {
     gap: 8px;
     padding: 0 20px 16px;
 }
+.forgot-pw-link {
+    font-size: 13px;
+    color: #888;
+    text-decoration: none;
+}
+.forgot-pw-link:hover { color: var(--apc-orange); }
 .pw-wrap {
     position: relative;
     display: flex;
