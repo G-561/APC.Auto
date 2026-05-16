@@ -519,7 +519,11 @@
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeDetailImageViewer()">
     <div class="image-lightbox-inner" onclick="event.stopPropagation()">
-        <img id="lightboxImage" src="" alt="Photo preview" />
+        <div class="lightbox-strip">
+            <img id="lightboxPrev" src="" alt="" />
+            <img id="lightboxImage" src="" alt="Photo preview" />
+            <img id="lightboxNext" src="" alt="" />
+        </div>
         <div id="lightboxDots" class="lightbox-dots"></div>
     </div>
 </div>

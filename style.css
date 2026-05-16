@@ -1332,6 +1332,21 @@ header {
     background: #111;
 }
 
+.lightbox-strip {
+    display: flex;
+    width: 300%;
+    transform: translateX(-33.333%);
+}
+.lightbox-strip img {
+    width: 33.333%;
+    max-height: 92vh;
+    height: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+    background: #111;
+}
+
 .image-lightbox-close {
     position: absolute;
     top: 14px;
@@ -1477,6 +1492,21 @@ header {
 #detailOverlay.chat-card .carousel-arrow { display: flex; }
 #detailOverlay.chat-card #imageCarousel { scrollbar-width: none; -ms-overflow-style: none; }
 #detailOverlay.chat-card #imageCarousel::-webkit-scrollbar { display: none; }
+/* On mobile, chat-card becomes a standard full-screen drawer so pull-down-to-close works */
+@media (max-width: 899px) {
+    #detailOverlay.chat-card {
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        height: 100% !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+    }
+}
+
 /* On desktop, chat-card: centred 520px modal, single-column layout */
 @media (min-width: 900px) {
     #detailOverlay.chat-card {

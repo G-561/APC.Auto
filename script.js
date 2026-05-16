@@ -4509,10 +4509,13 @@ function openDetailImageViewer(src, images, idx) {
     if (_lightboxIdx < 0) _lightboxIdx = 0;
 
     const lightbox = document.getElementById('imageLightbox');
-    const image    = document.getElementById('lightboxImage');
-    if (!lightbox || !image) return;
+    if (!lightbox) return;
 
-    // Build dots once per open
+    // Reset strip to centre position
+    const strip = lightbox.querySelector('.lightbox-strip');
+    if (strip) { strip.style.transition = 'none'; strip.style.transform = ''; }
+
+    // Build dots
     const dotsEl = document.getElementById('lightboxDots');
     if (dotsEl) {
         dotsEl.innerHTML = '';
@@ -4520,17 +4523,16 @@ function openDetailImageViewer(src, images, idx) {
             _lightboxImages.forEach((_, i) => {
                 const dot = document.createElement('div');
                 dot.className = 'carousel-dot' + (i === _lightboxIdx ? ' active' : '');
-                dot.onclick = (e) => { e.stopPropagation(); _lightboxIdx = i; image.src = _lightboxImages[i]; updateLightboxNav(); };
+                dot.onclick = (e) => { e.stopPropagation(); _lightboxIdx = i; _syncLightboxStrip(); updateLightboxNav(); };
                 dotsEl.appendChild(dot);
             });
         }
     }
 
-    image.src = _lightboxImages[_lightboxIdx];
+    _syncLightboxStrip();
     lightbox.style.zIndex = '19999';
     lightbox.classList.add('active');
     updateLightboxNav();
-    // Allow pinch-to-zoom on the lightbox image
     document.querySelector('meta[name=viewport]').setAttribute('content',
         'width=device-width, initial-scale=1.0');
 
@@ -4542,6 +4544,7 @@ function _initLightboxPullDown(lightbox) {
     if (!inner || inner._pullDownBound) return;
     inner._pullDownBound = true;
 
+    const strip = inner.querySelector('.lightbox-strip');
     const CLOSE_THRESHOLD = 110;
     const SWIPE_THRESHOLD = 55;
 
@@ -4554,6 +4557,7 @@ function _initLightboxPullDown(lightbox) {
         lockDir = null;
         activeDrag = false;
         inner.style.transition = 'none';
+        if (strip) strip.style.transition = 'none';
     }, { passive: true });
 
     inner.addEventListener('touchmove', e => {
@@ -4561,7 +4565,6 @@ function _initLightboxPullDown(lightbox) {
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
 
-        // Lock swipe direction after first decisive movement
         if (!lockDir) {
             if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
             lockDir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
@@ -4570,10 +4573,10 @@ function _initLightboxPullDown(lightbox) {
         if (lockDir === 'h') {
             if (_lightboxImages.length < 2) return;
             activeDrag = true;
-            // Resist dragging past the first/last image
             const atEdge = (dx < 0 && _lightboxIdx === _lightboxImages.length - 1) ||
                            (dx > 0 && _lightboxIdx === 0);
-            inner.style.transform = `translateX(${dx * (atEdge ? 0.18 : 0.72)}px)`;
+            // Move the whole strip — prev/current/next all travel together
+            if (strip) strip.style.transform = `translateX(calc(-33.333% + ${atEdge ? dx * 0.18 : dx}px))`;
         } else {
             if (dy < 0) return;
             activeDrag = true;
@@ -4587,36 +4590,37 @@ function _initLightboxPullDown(lightbox) {
         if (!activeDrag || !lockDir) { lockDir = null; activeDrag = false; return; }
         const dx = e.changedTouches[0].clientX - startX;
         const dy = e.changedTouches[0].clientY - startY;
-        const image = document.getElementById('lightboxImage');
-        const w = inner.offsetWidth || window.innerWidth;
+        const n = _lightboxImages.length;
 
         if (lockDir === 'h') {
-            const dir = dx < 0 ? 1 : -1; // left swipe = next (+1), right swipe = prev (-1)
-            const atEdge = (dir === 1 && _lightboxIdx === _lightboxImages.length - 1) ||
+            const dir = dx < 0 ? 1 : -1;
+            const atEdge = (dir === 1 && _lightboxIdx === n - 1) ||
                            (dir === -1 && _lightboxIdx === 0);
 
             if (atEdge || Math.abs(dx) < SWIPE_THRESHOLD) {
                 // Spring back to centre
-                inner.style.transition = 'transform 0.28s ease';
-                inner.style.transform = '';
-                setTimeout(() => { inner.style.transition = ''; }, 290);
+                if (strip) {
+                    strip.style.transition = 'transform 0.28s ease';
+                    strip.style.transform = 'translateX(-33.333%)';
+                    setTimeout(() => { if (strip) strip.style.transition = ''; }, 290);
+                }
             } else {
-                // Slide current image off-screen in swipe direction
-                inner.style.transition = 'transform 0.2s ease';
-                inner.style.transform = `translateX(${dx < 0 ? -w : w}px)`;
+                // Animate strip to the adjacent slot — both images travel together until new one lands
+                const targetPct = dir === 1 ? '-66.666%' : '0%';
+                if (strip) {
+                    strip.style.transition = 'transform 0.22s ease';
+                    strip.style.transform = `translateX(${targetPct})`;
+                }
                 setTimeout(() => {
-                    _lightboxIdx = (_lightboxIdx + dir + _lightboxImages.length) % _lightboxImages.length;
-                    if (image) image.src = _lightboxImages[_lightboxIdx];
+                    const newIdx = (_lightboxIdx + dir + n) % n;
+                    // Pre-populate center slot before resetting strip (avoids a flash)
+                    const imgEl = document.getElementById('lightboxImage');
+                    if (imgEl) imgEl.src = _lightboxImages[newIdx];
+                    if (strip) { strip.style.transition = 'none'; strip.style.transform = 'translateX(-33.333%)'; }
+                    _lightboxIdx = newIdx;
+                    _syncLightboxStrip();
                     updateLightboxNav();
-                    // Place new image on the opposite side, then slide it in
-                    inner.style.transition = 'none';
-                    inner.style.transform = `translateX(${dx < 0 ? w : -w}px)`;
-                    requestAnimationFrame(() => requestAnimationFrame(() => {
-                        inner.style.transition = 'transform 0.22s ease';
-                        inner.style.transform = '';
-                        setTimeout(() => { inner.style.transition = ''; }, 240);
-                    }));
-                }, 205);
+                }, 225);
             }
         } else {
             inner.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
@@ -4644,11 +4648,20 @@ function _initLightboxPullDown(lightbox) {
     }, { passive: true });
 }
 
+function _syncLightboxStrip() {
+    const n    = _lightboxImages.length;
+    const prev = document.getElementById('lightboxPrev');
+    const curr = document.getElementById('lightboxImage');
+    const next = document.getElementById('lightboxNext');
+    if (curr) curr.src = _lightboxImages[_lightboxIdx] || '';
+    if (prev) prev.src = n > 1 ? _lightboxImages[(_lightboxIdx - 1 + n) % n] : '';
+    if (next) next.src = n > 1 ? _lightboxImages[(_lightboxIdx + 1) % n] : '';
+}
+
 function lightboxNav(dir) {
     if (_lightboxImages.length < 2) return;
     _lightboxIdx = (_lightboxIdx + dir + _lightboxImages.length) % _lightboxImages.length;
-    const image = document.getElementById('lightboxImage');
-    if (image) image.src = _lightboxImages[_lightboxIdx];
+    _syncLightboxStrip();
     updateLightboxNav();
 }
 
@@ -4660,11 +4673,14 @@ function updateLightboxNav() {
 
 function closeDetailImageViewer() {
     const lightbox = document.getElementById('imageLightbox');
-    const image = document.getElementById('lightboxImage');
-    if (!lightbox || !image) return;
+    if (!lightbox) return;
     lightbox.classList.remove('active');
-    image.src = '';
-    // Restore zoom lock for the rest of the app
+    ['lightboxPrev', 'lightboxImage', 'lightboxNext'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.src = '';
+    });
+    const strip = lightbox.querySelector('.lightbox-strip');
+    if (strip) { strip.style.transition = 'none'; strip.style.transform = ''; }
     document.querySelector('meta[name=viewport]').setAttribute('content',
         'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
 }
