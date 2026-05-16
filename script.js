@@ -5710,10 +5710,8 @@ function toggleSavedPart(partId, btn) {
                 sb.from('saved_listings').insert({ user_id: currentUserId, listing_id: part.supabaseId })
                   .then(({ error }) => { if (error && !error.message?.includes('duplicate')) console.warn('save listing:', error.message); });
             }
-            // Update saves_count on the listing atomically
-            sb.rpc('update_saves_count', { listing_id_val: part.supabaseId, delta })
-              .then(({ error }) => { if (error) console.warn('saves_count update:', error.message); });
             // Reflect immediately in local caches so cards and dashboard update without reload
+            // saves_count on the listings table is maintained by a DB trigger on saved_listings
             const pubPart = partDatabase.find(p => p.supabaseId === part.supabaseId);
             if (pubPart) pubPart.saves = Math.max(0, (pubPart.saves || 0) + delta);
             const ownPart = userListings.find(l => l.supabaseId === part.supabaseId);
