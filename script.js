@@ -5707,10 +5707,8 @@ function toggleSavedPart(partId, btn) {
                   .eq('user_id', currentUserId).eq('listing_id', part.supabaseId)
                   .then(({ error }) => { if (error) console.warn('unsave listing:', error.message); });
             } else {
-                sb.from('saved_listings').upsert(
-                    { user_id: currentUserId, listing_id: part.supabaseId },
-                    { onConflict: 'user_id,listing_id' }
-                ).then(({ error }) => { if (error) console.warn('save listing:', error.message); });
+                sb.from('saved_listings').insert({ user_id: currentUserId, listing_id: part.supabaseId })
+                  .then(({ error }) => { if (error && !error.message?.includes('duplicate')) console.warn('save listing:', error.message); });
             }
             // Update saves_count on the listing atomically
             sb.rpc('update_saves_count', { listing_id_val: part.supabaseId, delta })
