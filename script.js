@@ -5713,7 +5713,7 @@ function toggleSavedPart(partId, btn) {
                 ).then(({ error }) => { if (error) console.warn('save listing:', error.message); });
             }
             // Update saves_count on the listing atomically
-            sb.rpc('update_saves_count', { listing_uuid: part.supabaseId, delta })
+            sb.rpc('update_saves_count', { listing_id_val: part.supabaseId, delta })
               .then(({ error }) => { if (error) console.warn('saves_count update:', error.message); });
             // Reflect immediately in local partDatabase so cards update without reload
             const pubPart = partDatabase.find(p => p.supabaseId === part.supabaseId);
