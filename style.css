@@ -2366,6 +2366,7 @@ header {
     display: grid;
     grid-template-columns: 88px 1fr;
     gap: 8px;
+    width: 100%;
     flex: none;
     align-items: center;
 }
@@ -2386,10 +2387,15 @@ header {
 .location-picker-wrap[data-mode="signup"] .loc-suburb-select,
 .location-picker-wrap[data-mode="workshop"] .loc-suburb-select,
 .location-picker-wrap[data-mode="ws-locator"] .loc-suburb-select {
+    display: block !important;
     max-width: 100%;
     width: 100%;
     padding: 10px 12px;
     font-size: 14px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fff;
+    box-sizing: border-box;
 }
 /* Workshop locator postcode row — sits between search and radius control */
 .ws-locator-postcode-row {

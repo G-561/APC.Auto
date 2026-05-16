@@ -408,6 +408,9 @@ function clearLocationPicker(wrap) {
         saveUserSettings();
         renderProfile();
     } else {
+        // Clear any stale inline display:none left by old code or profile mode
+        input.style.display = '';
+        sel.style.display   = '';
         sel.innerHTML = '<option value="">Suburb, State</option>';
         if (mode === 'sell') {
             const pcEl  = document.getElementById('sellPostcode');
