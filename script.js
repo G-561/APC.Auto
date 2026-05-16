@@ -5701,6 +5701,7 @@ function toggleSavedPart(partId, btn) {
     if (currentUserId) {
         const part = getPartById(partId);
         if (part?.supabaseId) {
+            const delta = wasSaved ? -1 : 1;
             if (wasSaved) {
                 sb.from('saved_listings').delete()
                   .eq('user_id', currentUserId).eq('listing_id', part.supabaseId)
@@ -5711,6 +5712,12 @@ function toggleSavedPart(partId, btn) {
                     { onConflict: 'user_id,listing_id' }
                 ).then(({ error }) => { if (error) console.warn('save listing:', error.message); });
             }
+            // Update saves_count on the listing atomically
+            sb.rpc('update_saves_count', { listing_uuid: part.supabaseId, delta })
+              .then(({ error }) => { if (error) console.warn('saves_count update:', error.message); });
+            // Reflect immediately in local partDatabase so cards update without reload
+            const pubPart = partDatabase.find(p => p.supabaseId === part.supabaseId);
+            if (pubPart) pubPart.saves = Math.max(0, (pubPart.saves || 0) + delta);
         }
     }
     syncDetailSaveButton(partId);
