@@ -2905,15 +2905,156 @@ function _refreshSellSeries(make, model, year, selected) {
     if (sel)   sel.innerHTML       = html || '<option value="">Select series</option>';
 }
 
+// ── SELL VEHICLE PICKER ─────────────────────────────────────
+let sellVehicleSelection = null; // { make, model, year, series }
+
+function renderSellVehicleChip() {
+    const chip    = document.getElementById('sellVehicleChip');
+    const btn     = document.getElementById('sellVehiclePickerBtn');
+    const mmEl    = document.getElementById('sellVehicleChipMakeModel');
+    const ysEl    = document.getElementById('sellVehicleChipYearSeries');
+    if (!chip || !btn) return;
+    if (sellVehicleSelection?.make) {
+        const { make, model, year, series } = sellVehicleSelection;
+        if (mmEl) mmEl.textContent = `${make} ${model}`;
+        if (ysEl) ysEl.textContent = [year, series].filter(Boolean).join(' · ');
+        chip.classList.add('visible');
+        btn.style.display = 'none';
+    } else {
+        chip.classList.remove('visible');
+        btn.style.display = '';
+    }
+}
+
+function openSellVehiclePicker() {
+    const modal = document.getElementById('sellVehiclePickerModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    // Populate makes
+    const vpMake = document.getElementById('vpMake');
+    if (vpMake && vpMake.options.length < 3)
+        vpMake.innerHTML = '<option value="">Select make</option>' +
+            VEHICLE_MAKES.map(m => `<option value="${m}">${m}</option>`).join('');
+    // Pre-fill from current selection
+    const sel = sellVehicleSelection;
+    if (sel?.make) {
+        if (vpMake) vpMake.value = sel.make;
+        const vpModel = document.getElementById('vpModel');
+        if (vpModel) { vpModel.innerHTML = buildModelOptions(sel.make, sel.model); }
+        const vpYear = document.getElementById('vpYear');
+        if (vpYear) { vpYear.innerHTML = buildYearOptionsForModel(sel.make, sel.model, sel.year); }
+        _refreshVpSeries(sel.make, sel.model, sel.year, sel.series);
+    } else {
+        const vpModel = document.getElementById('vpModel');
+        if (vpModel) vpModel.innerHTML = '<option value="">Select model</option>';
+        const vpYear = document.getElementById('vpYear');
+        if (vpYear) vpYear.innerHTML = '<option value="">Select year</option>';
+        _refreshVpSeries('', '', '', '');
+    }
+    // Garage chips
+    const gSec  = document.getElementById('vpGarageSection');
+    const chips = document.getElementById('vpGarageChips');
+    if (gSec && chips) {
+        if (myVehicles.length) {
+            gSec.style.display = '';
+            chips.innerHTML = '';
+            myVehicles.forEach(v => {
+                const label = [v.make, v.model, v.year, v.variant].filter(Boolean).join(' ');
+                const btn = document.createElement('button');
+                btn.className = 'vp-garage-chip';
+                btn.type = 'button';
+                btn.textContent = label;
+                btn.onclick = () => vpFillFromGarage(v);
+                chips.appendChild(btn);
+            });
+        } else {
+            gSec.style.display = 'none';
+        }
+    }
+}
+
+function vpFillFromGarage(v) {
+    const vpMake  = document.getElementById('vpMake');
+    const vpModel = document.getElementById('vpModel');
+    const vpYear  = document.getElementById('vpYear');
+    if (vpMake)  { vpMake.innerHTML  = buildMakeOptions(v.make || '');                    vpMake.value  = v.make  || ''; }
+    if (vpModel) { vpModel.innerHTML = buildModelOptions(v.make || '', v.model || '');    vpModel.value = v.model || ''; }
+    if (vpYear)  { vpYear.innerHTML  = buildYearOptionsForModel(v.make || '', v.model || '', String(v.year || '')); vpYear.value = String(v.year || ''); }
+    _refreshVpSeries(v.make || '', v.model || '', String(v.year || ''), v.variant || '');
+    document.querySelectorAll('#vpGarageChips .vp-garage-chip').forEach(c => c.classList.remove('active'));
+    event?.currentTarget?.classList.add('active');
+}
+
+function closeSellVehiclePicker() {
+    const modal = document.getElementById('sellVehiclePickerModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function vpOverlayClick(e) {
+    if (e.target === document.getElementById('sellVehiclePickerModal')) closeSellVehiclePicker();
+}
+
+function _refreshVpSeries(make, model, year, selected) {
+    const group = document.getElementById('vpSeriesGroup');
+    const sel   = document.getElementById('vpSeries');
+    if (!sel || !group) return;
+    if (!model || !year) { group.style.display = 'none'; sel.innerHTML = '<option value="">Select series</option>'; return; }
+    const html = buildSeriesOptions(make, model, year, selected || '');
+    if (!html) { group.style.display = 'none'; sel.innerHTML = '<option value="">Select series</option>'; return; }
+    sel.innerHTML = html;
+    group.style.display = '';
+}
+
+function onVpMakeChange() {
+    const make = document.getElementById('vpMake')?.value || '';
+    const modelEl = document.getElementById('vpModel');
+    const yearEl  = document.getElementById('vpYear');
+    if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
+    if (yearEl)  yearEl.innerHTML  = '<option value="">Select year</option>';
+    _refreshVpSeries('', '', '', '');
+}
+
+function onVpModelChange() {
+    const make  = document.getElementById('vpMake')?.value  || '';
+    const model = document.getElementById('vpModel')?.value || '';
+    const yearEl = document.getElementById('vpYear');
+    if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
+    _refreshVpSeries('', '', '', '');
+}
+
+function onVpYearChange() {
+    const make  = document.getElementById('vpMake')?.value  || '';
+    const model = document.getElementById('vpModel')?.value || '';
+    const year  = document.getElementById('vpYear')?.value  || '';
+    _refreshVpSeries(make, model, year, '');
+}
+
+function confirmSellVehicle() {
+    const make   = document.getElementById('vpMake')?.value.trim()  || '';
+    const model  = document.getElementById('vpModel')?.value.trim() || '';
+    const year   = document.getElementById('vpYear')?.value.trim()  || '';
+    const series = document.getElementById('vpSeries')?.value.trim() || '';
+    if (!make || !model || !year) { showToast('Please select make, model and year.'); return; }
+    // Check if series is required (series data exists for this combo but none selected)
+    const seriesHtml = buildSeriesOptions(make, model, year, '');
+    if (seriesHtml && !series) { showToast('Please select a series.'); return; }
+    sellVehicleSelection = { make, model, year, series };
+    renderSellVehicleChip();
+    closeSellVehiclePicker();
+}
+
+function clearSellVehicle() {
+    sellVehicleSelection = null;
+    renderSellVehicleChip();
+}
+
 function initSellVehicleDropdowns(make, model, year, variant) {
-    const makeEl  = document.getElementById('sellMake');
-    const modelEl = document.getElementById('sellModel');
-    const yearEl  = document.getElementById('sellYear');
-    if (!makeEl || !modelEl || !yearEl) return;
-    makeEl.innerHTML  = buildMakeOptions(make || '');
-    modelEl.innerHTML = buildModelOptions(make || '', model || '');
-    yearEl.innerHTML  = buildYearOptionsForModel(make || '', model || '', year || '');
-    _refreshSellSeries(make, model, year, variant);
+    if (make && model && year) {
+        sellVehicleSelection = { make, model, year, series: variant || '' };
+    } else {
+        sellVehicleSelection = null;
+    }
+    renderSellVehicleChip();
 }
 
 const VEHICLE_EXEMPT_CATEGORIES = ['tools', 'other'];
@@ -3283,7 +3424,7 @@ function resetSellForm() {
     currentEditingListingId = null;
     sellListingImages = [];
     const fields = [
-        'sellTitle', 'sellCategory', 'sellPostcode', 'sellLocation', 'sellPrice', 'sellCondition', 'sellDescription', 'sellVariant'
+        'sellTitle', 'sellCategory', 'sellPostcode', 'sellLocation', 'sellPrice', 'sellCondition', 'sellDescription'
     ];
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -3291,8 +3432,8 @@ function resetSellForm() {
         if (el.tagName.toLowerCase() === 'select' || el.tagName.toLowerCase() === 'input') el.value = '';
         if (el.tagName.toLowerCase() === 'textarea') el.value = '';
     });
-    const variantGroup = document.getElementById('sellVariantGroup');
-    if (variantGroup) variantGroup.style.display = 'none';
+    sellVehicleSelection = null;
+    renderSellVehicleChip();
     onSellCategoryChange();
     const pickup = document.getElementById('sellPickup');
     const postage = document.getElementById('sellPostage');
@@ -3355,10 +3496,10 @@ function onToggleWarehouseManagement() {
 async function submitSellListing() {
     const title = document.getElementById('sellTitle')?.value.trim();
     const category = document.getElementById('sellCategory')?.value;
-    const make = document.getElementById('sellMake')?.value.trim();
-    const model = document.getElementById('sellModel')?.value.trim();
-    const year = document.getElementById('sellYear')?.value.trim();
-    const variant = document.getElementById('sellVariant')?.value.trim() || null;
+    const make    = sellVehicleSelection?.make    || '';
+    const model   = sellVehicleSelection?.model   || '';
+    const year    = sellVehicleSelection?.year    || '';
+    const variant = sellVehicleSelection?.series  || null;
     const postcode = document.getElementById('sellPostcode')?.value.trim();
     const location = document.getElementById('sellLocation')?.value.trim();
     const pickup = document.getElementById('sellPickup')?.checked;
@@ -3373,11 +3514,7 @@ async function submitSellListing() {
     if (!price)    missing.push('Price');
     if (!location) missing.push('Location');
     if (category && !VEHICLE_EXEMPT_CATEGORIES.includes(category)) {
-        if (!make)  missing.push('Make');
-        if (!model) missing.push('Model');
-        if (!year)  missing.push('Year');
-        const seriesGroup = document.getElementById('sellVariantGroup');
-        if (seriesGroup && seriesGroup.style.display !== 'none' && !variant) missing.push('Series');
+        if (!sellVehicleSelection?.make) missing.push('Vehicle (make, model, year, series)');
     }
     if (missing.length) {
         showSellError(`Please complete: ${missing.join(', ')}`);

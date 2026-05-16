@@ -919,15 +919,15 @@
 
                 <div class="filter-section">
                     <h4>Vehicle Details <span id="sellVehicleRequiredNote" style="font-size:11px;font-weight:500;color:var(--apc-orange);display:none;">* required</span></h4>
-                    <div class="input-row-flex">
-                        <div class="input-group"><label>Make</label><select id="sellMake" onchange="onSellMakeChange()"><option value="">Make</option></select></div>
-                        <div class="input-group"><label>Model</label><select id="sellModel" onchange="onSellModelChange()"><option value="">Model</option></select></div>
-                        <div class="input-group"><label>Year</label><select id="sellYear" onchange="onSellYearChange()"><option value="">Year</option></select></div>
+                    <div id="sellVehicleChip" style="display:none; background:#f8f8f8; border:1.5px solid #e0e0e0; border-radius:12px; padding:11px 14px; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
+                        <div onclick="openSellVehiclePicker()" style="flex:1; min-width:0; cursor:pointer;">
+                            <div id="sellVehicleChipMakeModel" style="font-size:14px; font-weight:800; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                            <div id="sellVehicleChipYearSeries" style="font-size:12px; font-weight:600; color:#888; margin-top:2px;"></div>
+                            <div style="font-size:10px; color:var(--apc-orange); font-weight:700; margin-top:3px;">Tap to change</div>
+                        </div>
+                        <button onclick="clearSellVehicle()" style="background:none;border:none;font-size:22px;color:#bbb;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;" title="Clear vehicle">×</button>
                     </div>
-                    <div class="input-group" id="sellVariantGroup" style="margin-top:10px; display:none;">
-                        <label>Series</label>
-                        <select id="sellVariant"><option value="">Select series</option></select>
-                    </div>
+                    <button id="sellVehiclePickerBtn" onclick="openSellVehiclePicker()" style="width:100%;padding:13px;background:#f4f4f4;border:1.5px dashed #ccc;border-radius:12px;font-size:13px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;">＋ Select Vehicle</button>
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
                         <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
                         <input id="sellStockNumber" type="text" inputmode="text" maxlength="20" placeholder="e.g. WH-001/A" style="max-width: 22ch;">
@@ -2214,6 +2214,28 @@
 </div>
 
 <div id="sellLabelPrintArea"></div>
+
+<!-- SELL — VEHICLE PICKER MODAL -->
+<div id="sellVehiclePickerModal" class="vp-overlay" style="display:none;" onclick="vpOverlayClick(event)">
+    <div class="vp-sheet">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span style="font-size:16px;font-weight:900;letter-spacing:-0.3px;">Select Vehicle</span>
+            <button onclick="closeSellVehiclePicker()" style="background:none;border:none;font-size:24px;color:#aaa;cursor:pointer;line-height:1;padding:0;">×</button>
+        </div>
+        <!-- Garage quick-fill -->
+        <div id="vpGarageSection" style="display:none;margin-bottom:14px;">
+            <div style="font-size:10px;font-weight:800;letter-spacing:0.6px;color:#aaa;text-transform:uppercase;margin-bottom:8px;">From your garage</div>
+            <div id="vpGarageChips" style="display:flex;flex-wrap:wrap;gap:7px;"></div>
+            <div style="border-top:1px solid #eee;margin:14px 0 0;"></div>
+        </div>
+        <!-- Dropdowns -->
+        <div class="input-group"><label>Make</label><select id="vpMake" onchange="onVpMakeChange()" style="width:100%"><option value="">Select make</option></select></div>
+        <div class="input-group"><label>Model</label><select id="vpModel" onchange="onVpModelChange()" style="width:100%"><option value="">Select model</option></select></div>
+        <div class="input-group"><label>Year</label><select id="vpYear" onchange="onVpYearChange()" style="width:100%"><option value="">Select year</option></select></div>
+        <div id="vpSeriesGroup" style="display:none;"><div class="input-group"><label>Series</label><select id="vpSeries" style="width:100%"><option value="">Select series</option></select></div></div>
+        <button onclick="confirmSellVehicle()" class="btn-full-action" style="margin-top:18px;">Confirm Vehicle</button>
+    </div>
+</div>
 
 </body>
 </html>
