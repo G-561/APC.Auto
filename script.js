@@ -1454,6 +1454,47 @@ async function loadWantedFromSupabase(userId) {
     } catch (e) { console.warn('loadWantedFromSupabase:', e); }
 }
 
+async function loadPublicWantedFromSupabase() {
+    if (!sb) return;
+    try {
+        const excludeId = currentUserId || '00000000-0000-0000-0000-000000000000';
+        const { data: rows, error } = await sb
+            .from('wanted_parts')
+            .select('*')
+            .eq('status', 'active')
+            .neq('user_id', excludeId)
+            .order('created_at', { ascending: false })
+            .limit(200);
+        if (error) { console.warn('public wanted load:', error.message); return; }
+        if (!rows?.length) { publicWantedDatabase.splice(0); return; }
+
+        const userIds = [...new Set(rows.map(r => r.user_id))];
+        const { data: profiles } = await sb.from('profiles')
+            .select('id, display_name, is_pro, location')
+            .in('id', userIds);
+        const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+
+        publicWantedDatabase.splice(0);
+        rows.forEach(r => {
+            const prof = profileMap[r.user_id] || {};
+            publicWantedDatabase.push({
+                id: r.id,
+                partName: r.part_name || r.title || '',
+                make: r.make || '',
+                model: r.model || '',
+                year: r.year ? String(r.year) : '',
+                maxPrice: r.max_price || r.budget_max || null,
+                category: r.category || '',
+                isPro: prof.is_pro || false,
+                loc: prof.location || '',
+                posted: new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
+                userId: r.user_id,
+                sellerName: prof.display_name || '',
+            });
+        });
+    } catch (e) { console.warn('loadPublicWantedFromSupabase:', e); }
+}
+
 async function loadSavedListingsFromSupabase(userId) {
     try {
         const { data: rows, error } = await sb
@@ -5200,6 +5241,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadVehiclesFromSupabase(session.user.id);
             loadWantedFromSupabase(session.user.id);
             loadSavedListingsFromSupabase(session.user.id);
+            loadPublicWantedFromSupabase();
         } else if (event === 'SIGNED_OUT') {
             unsubscribeRealtime();
             userIsSignedIn = false;
