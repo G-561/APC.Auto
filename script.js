@@ -4897,6 +4897,8 @@ function handleMessageSeller() {
     if (!userIsSignedIn) { openAuthDrawer(() => handleMessageSeller()); return; }
     const part = getPartById(currentOpenPartId);
     if (!part) return;
+    // Block self-messaging
+    if ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName()) return;
 
     // If a conversation already exists for this part, go straight to the inbox thread
     const existing = conversations.find(c => c.partId === currentOpenPartId || (part.supabaseId && c.partId === part.supabaseId));
@@ -7941,6 +7943,8 @@ function openOfferSheet(partId) {
     const part = getPartById(partId);
     if (!part) return;
     if (!userIsSignedIn) { openAuthDrawer(() => openOfferSheet(partId)); return; }
+    // Block self-offers
+    if ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName()) return;
     const info = document.getElementById('offerSheetPartInfo');
     if (info) {
         info.innerHTML = `<div class="offer-sheet-part-title">${escapeHtml(part.title)}</div>
