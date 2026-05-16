@@ -694,8 +694,14 @@
             </div>
             <div class="input-group">
                 <label>Year</label>
-                <select id="filterYear" onchange="onFilterChange()" style="width:100%">
+                <select id="filterYear" onchange="onFilterYearChange()" style="width:100%">
                     <option value="">Any Year</option>
+                </select>
+            </div>
+            <div class="input-group" id="filterSeriesGroup" style="display:none">
+                <label>Series</label>
+                <select id="filterSeries" onchange="onFilterChange()" style="width:100%">
+                    <option value="">Any Series</option>
                 </select>
             </div>
         </div>

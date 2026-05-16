@@ -30,6 +30,7 @@ let activeFilters = {
     make: '',
     model: '',
     year: '',
+    series: '',
     location: 'all',
     minPrice: '',
     maxPrice: '',
@@ -2172,9 +2173,10 @@ function closeTopDrawer() {
 function getFilterValues() {
     activeFilters.category = document.querySelector('#filterDrawer select')?.value || 'all';
 
-    activeFilters.make  = (document.getElementById('filterMake')?.value  || '').trim().toLowerCase();
-    activeFilters.model = (document.getElementById('filterModel')?.value || '').trim().toLowerCase();
-    activeFilters.year  = (document.getElementById('filterYear')?.value  || '').trim();
+    activeFilters.make   = (document.getElementById('filterMake')?.value   || '').trim().toLowerCase();
+    activeFilters.model  = (document.getElementById('filterModel')?.value  || '').trim().toLowerCase();
+    activeFilters.year   = (document.getElementById('filterYear')?.value   || '').trim();
+    activeFilters.series = (document.getElementById('filterSeries')?.value || '').trim().toLowerCase();
 
     activeFilters.location = document.getElementById('filterStateSelect')?.value || 'all';
 
@@ -2291,6 +2293,17 @@ function initFilterVehicleDropdowns() {
     }
 }
 
+function _refreshFilterSeries(make, model, year) {
+    const group = document.getElementById('filterSeriesGroup');
+    const sel   = document.getElementById('filterSeries');
+    if (!sel || !group) return;
+    if (!model) { group.style.display = 'none'; sel.innerHTML = '<option value="">Any Series</option>'; return; }
+    const rawHtml = buildSeriesOptions(make, model, year, '');
+    if (!rawHtml) { group.style.display = 'none'; sel.innerHTML = '<option value="">Any Series</option>'; return; }
+    sel.innerHTML = '<option value="">Any Series</option>' + rawHtml.replace('<option value="">Select series</option>', '');
+    group.style.display = '';
+}
+
 function onFilterMakeChange() {
     const make    = document.getElementById('filterMake')?.value || '';
     const modelEl = document.getElementById('filterModel');
@@ -2300,15 +2313,26 @@ function onFilterMakeChange() {
             getVehicleModels(make).map(m => `<option value="${m}">${m}</option>`).join('');
     }
     if (yearEl) yearEl.innerHTML = buildYearOptions('');
+    _refreshFilterSeries('', '', '');
     if (window.innerWidth >= 900) applyFiltersAndRender();
 }
 
 function onFilterModelChange() {
     const make  = document.getElementById('filterMake')?.value || '';
     const model = document.getElementById('filterModel')?.value || '';
+    const year  = document.getElementById('filterYear')?.value || '';
     const yearEl = document.getElementById('filterYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '').replace('<option value="">Year</option>', '<option value="">Any Year</option>');
+    _refreshFilterSeries(make, model, '');
     if (window.innerWidth >= 900) applyFiltersAndRender();
+}
+
+function onFilterYearChange() {
+    const make  = document.getElementById('filterMake')?.value || '';
+    const model = document.getElementById('filterModel')?.value || '';
+    const year  = document.getElementById('filterYear')?.value || '';
+    _refreshFilterSeries(make, model, year);
+    onFilterChange();
 }
 
 function applyFiltersAndRender() {
@@ -2386,6 +2410,10 @@ function getFilteredParts() {
         if (activeFilters.model && part.fits.length > 0) {
             const mdl = activeFilters.model;
             if (!part.fits.some(f => f.model?.toLowerCase().includes(mdl)) && !part.title.toLowerCase().includes(mdl)) return false;
+        }
+        if (activeFilters.series && part.fits.length > 0) {
+            const srv = activeFilters.series;
+            if (!part.fits.some(f => f.variant?.toLowerCase() === srv)) return false;
         }
         if (activeFilters.year && part.year) {
             const searchYr = Number(activeFilters.year);
