@@ -1461,12 +1461,11 @@ async function loadPublicWantedFromSupabase() {
         const { data: rows, error } = await sb
             .from('wanted_parts')
             .select('*')
-            .eq('status', 'active')
             .neq('user_id', excludeId)
             .order('created_at', { ascending: false })
             .limit(200);
         if (error) { console.warn('public wanted load:', error.message); return; }
-        if (!rows?.length) { publicWantedDatabase.splice(0); return; }
+        if (!rows?.length) { publicWantedDatabase.splice(0); if (currentSearchMode === 'wanted') renderMainGrid(); return; }
 
         const userIds = [...new Set(rows.map(r => r.user_id))];
         const { data: profiles } = await sb.from('profiles')
@@ -1493,6 +1492,7 @@ async function loadPublicWantedFromSupabase() {
                 sellerName: prof.display_name || '',
             });
         });
+        if (currentSearchMode === 'wanted') renderMainGrid();
     } catch (e) { console.warn('loadPublicWantedFromSupabase:', e); }
 }
 
