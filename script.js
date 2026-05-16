@@ -5078,10 +5078,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Use display_name from session metadata (set at sign-up) — avoids showing email prefix
             const emailName = session.user.email.split('@')[0];
             const metaName  = session.user.user_metadata?.display_name || emailName;
-            signIn(metaName, 'standard', false, session.user.email);
-            // Fetch real name + tier from profile in background
+            // Use remembered tier as the initial value so Pro doesn't flicker to Standard
+            const remembered = loadRememberedUser();
+            const seedTier = (remembered?.email === session.user.email) ? (remembered?.tier || 'standard') : 'standard';
+            signIn(metaName, seedTier, false, session.user.email);
+            // Fetch real name + tier from profile — always authoritative
             sb.from('profiles').select('*').eq('id', session.user.id).single()
-                .then(({ data: profile }) => {
+                .then(({ data: profile, error: profErr }) => {
+                    if (profErr) console.warn('Profile fetch:', profErr.message);
                     if (profile) {
                         const name = profile.display_name || metaName;
                         const tier = profile.is_pro ? 'pro' : 'standard';
