@@ -1197,8 +1197,12 @@ async function ensureSupabaseConversation(conv) {
     }).select('id').single();
 
     if (error) {
-        console.warn('Conv sync error:', error.message, { buyerId, sellerId: part.sellerId, listingId: part.supabaseId });
-        showToast(`Sync error: ${error.message} | buyer:${buyerId?.slice(-6)} seller:${part.sellerId?.slice(-6)}`);
+        console.warn('Conv sync error:', error.message, { buyerId, sellerId: part.sellerId });
+        if (error.message?.includes('foreign key')) {
+            showToast('Session expired — please sign out and sign back in');
+        } else {
+            showToast('Sync error: ' + error.message);
+        }
         return false;
     }
     conv.supabaseConvId = data.id;
