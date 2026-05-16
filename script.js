@@ -4961,8 +4961,10 @@ document.addEventListener('DOMContentLoaded', () => {
             myVehicles.splice(0); saveVehicles();
             myWanted.splice(0); saveWanted();
             savedParts.clear(); persistSavedParts();
+            // Reload public listings so the signed-out user's listings appear in the grid
+            partDatabase.splice(0);
+            loadPublicListingsFromSupabase();
             renderAccountState();
-            renderMainGrid();
             renderMyParts();
             renderInboxConvList();
         }
