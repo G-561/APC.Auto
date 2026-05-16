@@ -790,7 +790,7 @@
         <!-- SIGN IN -->
         <div id="authSignInSection">
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmail" placeholder="you@example.com"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPassword" placeholder="Password"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><div class="pw-wrap"><input type="password" id="authPassword" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePwVisibility('authPassword',this)" aria-label="Show password">👁</button></div></div>
             <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberMe"> Remember me</label>
             <button onclick="handleSignInSubmit()" style="width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">SIGN IN</button>
             <p class="auth-join-prompt">New to APC? <a href="#" class="sign-up-link" onclick="setAuthMode('signup');return false;">Sign up free</a></p>
@@ -843,7 +843,7 @@
                 </div>
             </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPersonal" placeholder="you@example.com"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPersonal" placeholder="Password"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><div class="pw-wrap"><input type="password" id="authPasswordPersonal" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePwVisibility('authPasswordPersonal',this)" aria-label="Show password">👁</button></div></div>
             <label class="choice-item" style="margin-bottom:18px;"><input type="checkbox" id="authRememberPersonal"> Remember me</label>
             <button onclick="handleSignUpPersonalSubmit()" style="width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">CREATE ACCOUNT</button>
         </div>
@@ -866,7 +866,7 @@
                 </div>
             </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPro" placeholder="you@example.com"></div>
-            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><input type="password" id="authPasswordPro" placeholder="Password"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><div class="pw-wrap"><input type="password" id="authPasswordPro" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePwVisibility('authPasswordPro',this)" aria-label="Show password">👁</button></div></div>
             <label class="choice-item" style="margin-bottom:16px;"><input type="checkbox" id="authRememberPro"> Remember me</label>
             <div class="auth-pro-perks-box">
                 <div class="auth-pro-perks-hdr">What's included in your 3-month free trial</div>

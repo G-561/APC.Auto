@@ -307,6 +307,28 @@ header {
     gap: 8px;
     padding: 0 20px 16px;
 }
+.pw-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.pw-wrap input {
+    flex: 1;
+    padding-right: 40px;
+}
+.pw-eye {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+.pw-eye:hover { opacity: 1; }
 .auth-error-banner {
     background: #fff1f2;
     border: 1.5px solid #f87171;

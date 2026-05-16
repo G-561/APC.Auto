@@ -6553,6 +6553,14 @@ function showAuthError(msg, isStatus = false) {
     el.classList.toggle('auth-status', isStatus);
     el.style.display = '';
 }
+function togglePwVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.textContent = show ? '🙈' : '👁';
+}
+
 function hideAuthError() {
     const el = document.getElementById('authErrorBanner');
     if (el) el.style.display = 'none';
