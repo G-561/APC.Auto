@@ -1952,17 +1952,27 @@ function viewConvListing() {
 }
 
 function syncInboxPendingBtn() {
-    const btn = document.getElementById('inboxPendingBtn');
-    if (!btn) return;
+    const pendingBtn = document.getElementById('inboxPendingBtn');
+    const soldBtn    = document.getElementById('inboxSoldBtn');
     const conv = conversations.find(c => c.id === activeConvId);
-    if (!conv) { btn.style.display = 'none'; return; }
-    const listing = userListings.find(l => l.id === conv.partId);
-    if (!listing) { btn.style.display = 'none'; return; }
-    // Only show for the seller (it's their listing)
-    btn.style.display = '';
+    const listing = conv && userListings.find(l => l.id === conv.partId);
+    if (!listing) {
+        if (pendingBtn) pendingBtn.style.display = 'none';
+        if (soldBtn)    soldBtn.style.display    = 'none';
+        return;
+    }
+    const isSold    = listing.status === 'sold';
     const isPending = listing.status === 'pending';
-    btn.textContent  = isPending ? 'Remove Pending' : 'Mark as Pending';
-    btn.classList.toggle('inbox-pending-active', isPending);
+    if (pendingBtn) {
+        pendingBtn.style.display = isSold ? 'none' : '';
+        pendingBtn.textContent   = isPending ? 'Remove Pending' : 'Mark as Pending';
+        pendingBtn.classList.toggle('inbox-pending-active', isPending);
+    }
+    if (soldBtn) {
+        soldBtn.style.display = '';
+        soldBtn.textContent   = isSold ? 'Relist' : 'Mark Sold';
+        soldBtn.classList.toggle('is-sold', isSold);
+    }
 }
 
 function toggleListingPending() {
@@ -1979,6 +1989,40 @@ function toggleListingPending() {
     if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
     showToast(newStatus === 'pending' ? 'Listing marked as Pending' : 'Pending status removed');
     syncListingStatusToSupabase(listing, newStatus);
+}
+
+function markSoldFromInbox() {
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) return;
+    const listing = userListings.find(l => l.id === conv.partId);
+    if (!listing) return;
+    if (listing.status === 'sold') {
+        listing.status   = 'active';
+        listing.soldDate = null;
+        saveUserListings();
+        syncInboxPendingBtn();
+        renderMainGrid();
+        renderMyParts();
+        showToast('Listing relisted as active');
+        syncListingStatusToSupabase(listing, 'active');
+        return;
+    }
+    showConfirmDialog(
+        'Mark as Sold',
+        `Mark "${listing.title}" as sold? It will be removed from active listings.`,
+        'Mark Sold',
+        () => {
+            listing.status   = 'sold';
+            listing.soldDate = Date.now();
+            saveUserListings();
+            syncInboxPendingBtn();
+            renderMainGrid();
+            renderMyParts();
+            if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+            showToast('Listing marked as sold!');
+            syncListingStatusToSupabase(listing, 'sold');
+        }
+    );
 }
 
 function clearListingPending(partId) {
@@ -7955,16 +7999,37 @@ function acceptOfferCard(convId, msgIdx) {
     const msg = conv.msgs[msgIdx];
     if (!msg?.offerCard) return;
     msg.offerCard.status = 'accepted';
-    const responseText = `Offer accepted! Let's arrange the sale.`;
+    const responseText = `Offer accepted! Message me here to arrange payment and pickup.`;
     conv.msgs.push({ id: nextMsgId(conv), sent: true, time: 'Today', clock: nowClock(), text: responseText });
     saveConversations();
     renderInboxMsgs(conv);
     renderInboxConvList();
+    syncInboxPendingBtn();
     showToast('Offer accepted!');
     if (conv.supabaseConvId && currentUserId) {
         const isBuyer = conv.buyerId === currentUserId;
         if (msg.supabaseMsgId) sb.from('messages').update({ offer_data: msg.offerCard }).eq('id', msg.supabaseMsgId);
         syncMessageToSupabase(conv.supabaseConvId, responseText, isBuyer);
+    }
+    // Prompt seller to mark the listing as sold
+    const listing = userListings.find(l => l.id === conv.partId);
+    if (listing && listing.status !== 'sold') {
+        setTimeout(() => showConfirmDialog(
+            'Mark as Sold?',
+            `Would you like to mark "${listing.title}" as sold now?`,
+            'Mark Sold',
+            () => {
+                listing.status   = 'sold';
+                listing.soldDate = Date.now();
+                saveUserListings();
+                syncInboxPendingBtn();
+                renderMainGrid();
+                renderMyParts();
+                if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+                syncListingStatusToSupabase(listing, 'sold');
+                showToast('Listing marked as sold!');
+            }
+        ), 400);
     }
 }
 
@@ -7974,7 +8039,7 @@ function declineOfferCard(convId, msgIdx) {
     const msg = conv.msgs[msgIdx];
     if (!msg?.offerCard) return;
     msg.offerCard.status = 'declined';
-    const responseText = `Thanks for your offer, but I'll pass on this one.`;
+    const responseText = `Thanks for the offer — it's not quite what I'm looking for at the moment.`;
     conv.msgs.push({ id: nextMsgId(conv), sent: true, time: 'Today', clock: nowClock(), text: responseText });
     saveConversations();
     renderInboxMsgs(conv);
@@ -8020,15 +8085,27 @@ function submitCounter(convId, msgIdx) {
 }
 
 function acceptOffer(offerId) {
+    // Route through inbox offer card so Supabase stays in sync
+    for (const conv of conversations) {
+        const msgIdx = conv.msgs.findIndex(m => m.offerCard?.offerId === offerId);
+        if (msgIdx !== -1) { acceptOfferCard(conv.id, msgIdx); renderDashListings('pending'); return; }
+    }
+    // Fallback if no conversation found
     const o = offersDb.find(x => x.id === offerId);
     if (!o) return;
     o.status = 'accepted';
     saveOffers();
-    showToast(`Offer accepted — congrats on the sale!`);
+    showToast('Offer accepted — congrats on the sale!');
     renderDashListings('pending');
 }
 
 function declineOffer(offerId) {
+    // Route through inbox offer card so Supabase stays in sync
+    for (const conv of conversations) {
+        const msgIdx = conv.msgs.findIndex(m => m.offerCard?.offerId === offerId);
+        if (msgIdx !== -1) { declineOfferCard(conv.id, msgIdx); renderDashListings('pending'); return; }
+    }
+    // Fallback if no conversation found
     offersDb = offersDb.filter(x => x.id !== offerId);
     saveOffers();
     showToast('Offer declined');
