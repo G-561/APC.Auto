@@ -916,7 +916,7 @@ header {
     font-weight: 600;
     color: #666;
 }
-.filter-status-chip span { flex: 1; }
+.filter-status-chip span { flex: none; }
 .filter-status-chip button {
     background: none;
     border: none;
