@@ -3955,6 +3955,10 @@ function printSellLabel(listing) {
     const apcId = listing.apcId || ('APC-' + listing.id);
     const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${listing.warehouseBin}</strong></td></tr>` : '';
     const year = listing.year ? `<tr><td>Year</td><td>${listing.year}</td></tr>` : '';
+    const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
+        ? 'https://g-561.github.io/APC.Auto/'
+        : `${location.origin}${location.pathname}`;
+    const listingUrl = `${baseUrl}?item=${listing.id}`;
 
     // Generate QR code in a hidden temp element, grab the data URL, then open print tab
     const qrTemp = document.createElement('div');
@@ -3962,8 +3966,7 @@ function printSellLabel(listing) {
     document.body.appendChild(qrTemp);
 
     if (window.QRCode) {
-        const qrText = [apcId, listing.title || '', listing.stockNumber ? 'Stock: ' + listing.stockNumber : '', condition].filter(Boolean).join('\n');
-        new QRCode(qrTemp, { text: qrText, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
+        new QRCode(qrTemp, { text: listingUrl, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
     }
 
     setTimeout(() => {
@@ -3995,6 +3998,7 @@ function printSellLabel(listing) {
   .sell-price { font-size: 20px; font-weight: 900; }
   .sell-price-label { font-size: 11px; color: #555; }
   .sell-qr-id { font-size: 9px; color: #555; text-align: center; margin-top: 2px; word-break: break-all; max-width: 90px; }
+  .sell-url { font-size: 8px; color: #888; margin-top: 5px; word-break: break-all; }
   @page { size: A6 landscape; margin: 8mm; }
 </style>
 </head><body>
@@ -4017,6 +4021,7 @@ function printSellLabel(listing) {
         <span class="sell-price">$${listing.price}</span>
         <span class="sell-price-label">Listed price</span>
       </div>
+      <div class="sell-url">${listingUrl}</div>
     </div>
     <div class="sell-right">
       ${qrHtml}
