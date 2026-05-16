@@ -3990,11 +3990,14 @@ function printSellLabel(listing) {
         new QRCode(qrEl, { text: qrText, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
     }
     document.body.classList.add('printing-sell-label');
-    window.print();
-    window.addEventListener('afterprint', () => {
-        document.body.classList.remove('printing-sell-label');
-        area.innerHTML = '';
-    }, { once: true });
+    // Give the browser one frame to apply the print-mode CSS and render the QR image
+    requestAnimationFrame(() => setTimeout(() => {
+        window.print();
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('printing-sell-label');
+            area.innerHTML = '';
+        }, { once: true });
+    }, 80));
 }
 
 // --- DYNAMIC ITEM DETAIL ---
