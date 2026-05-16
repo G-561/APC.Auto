@@ -2520,6 +2520,16 @@ function clearAllFilters() {
     showToast('Filters cleared');
 }
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function getFilteredParts() {
     const search = activeFilters.search.toLowerCase();
     const results = getAllParts().filter(part => {
@@ -2567,6 +2577,19 @@ function getFilteredParts() {
         if (activeFilters.location !== 'all') {
             const stateCode = part.loc.split(',')[1]?.trim();
             if (stateCode !== activeFilters.location) return false;
+        }
+        if (activeFilters.postcode && activeFilters.radius) {
+            const coords = typeof AU_POSTCODE_COORDS !== 'undefined' && AU_POSTCODE_COORDS;
+            const origin = coords && coords[activeFilters.postcode];
+            if (origin) {
+                const pc = part.postcode || (part.loc.match(/\b(\d{4})\b/) || [])[1];
+                const dest = pc && coords[pc];
+                if (dest) {
+                    const km = haversineKm(origin[0], origin[1], dest[0], dest[1]);
+                    if (km > Number(activeFilters.radius)) return false;
+                }
+                // if listing has no coords, let it through (permissive fallback)
+            }
         }
         if (!activeFilters.sellerPro && part.isPro) return false;
         if (!activeFilters.sellerPrivate && !part.isPro) return false;
