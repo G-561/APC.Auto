@@ -2357,6 +2357,33 @@ header {
     font-family: inherit;
     cursor: pointer;
 }
+/* Block-mode variant — sell form, sign-up, workshop (stacked, full-width) */
+.location-picker-wrap[data-mode="sell"],
+.location-picker-wrap[data-mode="signup"],
+.location-picker-wrap[data-mode="workshop"] {
+    display: block;
+    flex: none;
+}
+.location-picker-wrap[data-mode="sell"] .loc-postcode-input,
+.location-picker-wrap[data-mode="signup"] .loc-postcode-input,
+.location-picker-wrap[data-mode="workshop"] .loc-postcode-input {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: #fff;
+    box-sizing: border-box;
+}
+.location-picker-wrap[data-mode="sell"] .loc-suburb-select,
+.location-picker-wrap[data-mode="signup"] .loc-suburb-select,
+.location-picker-wrap[data-mode="workshop"] .loc-suburb-select {
+    max-width: 100%;
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+}
 .location-chip {
     display: flex;
     align-items: center;
