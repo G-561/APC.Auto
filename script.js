@@ -4692,25 +4692,9 @@ function renderWorkshopStorefront(data) {
 // Fetch a workshop profile by userId from Supabase, then open their storefront
 async function handleStoreDeepLink(userId) {
     if (!userId) return;
-    // Own profile — open from local data
-    if (userIsSignedIn && userId === currentUserId) {
-        openWorkshopStorefront({
-            ...workshopProfile,
-            businessName: userSettings.businessName,
-            about: userSettings.about,
-            abn: userSettings.abn,
-            bizType: userSettings.businessType || 'supplier',
-            logo: userSettings.businessLogo || userSettings.profilePic,
-            banner: userSettings.businessBanner,
-            sellerName: getCurrentSellerName(),
-            user_id: currentUserId,
-        });
-        return;
-    }
     if (!sb) return;
-    const { data, error } = await sb.from('workshop_profiles').select('*').eq('user_id', userId).single();
-    if (error || !data) { showToast('Workshop profile not found'); return; }
-    openWorkshopStorefront({ ...data, bizType: data.biz_type });
+    // Always open the parts storefront — works for own profile and other users
+    openStorefrontByUserId(userId);
 }
 
 // Sync workshop profile to Supabase after saving (Pro users)
