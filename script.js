@@ -3949,15 +3949,55 @@ async function submitSellListing() {
 }
 
 function printSellLabel(listing) {
-    const area = document.getElementById('sellLabelPrintArea');
-    if (!area) return;
     const fits = (listing.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal';
     const condition = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[listing.condition] || listing.condition || '';
     const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const apcId = listing.apcId || ('APC-' + listing.id);
     const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${listing.warehouseBin}</strong></td></tr>` : '';
     const year = listing.year ? `<tr><td>Year</td><td>${listing.year}</td></tr>` : '';
-    area.innerHTML = `
+
+    // Generate QR code in a hidden temp element, grab the data URL, then open print tab
+    const qrTemp = document.createElement('div');
+    qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(qrTemp);
+
+    if (window.QRCode) {
+        const qrText = [apcId, listing.title || '', listing.stockNumber ? 'Stock: ' + listing.stockNumber : '', condition].filter(Boolean).join('\n');
+        new QRCode(qrTemp, { text: qrText, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
+    }
+
+    setTimeout(() => {
+        const qrImg = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
+        let qrSrc = '';
+        if (qrImg instanceof HTMLCanvasElement) qrSrc = qrImg.toDataURL();
+        else if (qrImg) qrSrc = qrImg.src;
+        document.body.removeChild(qrTemp);
+
+        const qrHtml = qrSrc ? `<img src="${qrSrc}" width="90" height="90" />` : '';
+
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>APC Label — ${apcId}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #fff; }
+  .sell-label { border: 2px solid #222; border-radius: 6px; padding: 10px 12px; width: 100%; }
+  .sell-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #222; padding-bottom: 8px; margin-bottom: 8px; }
+  .sell-brand { font-size: 18px; font-weight: 900; color: #f7941d; letter-spacing: -0.5px; }
+  .sell-date { font-size: 10px; color: #aaa; text-align: right; }
+  .sell-body { display: flex; gap: 12px; align-items: flex-start; }
+  .sell-left { flex: 1; min-width: 0; }
+  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .sell-title { font-size: 13px; font-weight: 800; margin-bottom: 7px; line-height: 1.3; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  td { padding: 2px 6px 2px 0; vertical-align: top; }
+  td:first-child { color: #555; width: 65px; white-space: nowrap; }
+  .sell-price-row { margin-top: 7px; border-top: 2px solid #222; padding-top: 7px; display: flex; align-items: baseline; gap: 6px; }
+  .sell-price { font-size: 20px; font-weight: 900; }
+  .sell-price-label { font-size: 11px; color: #555; }
+  .sell-qr-id { font-size: 9px; color: #555; text-align: center; margin-top: 2px; word-break: break-all; max-width: 90px; }
+  @page { size: A6 landscape; margin: 8mm; }
+</style>
+</head><body>
 <div class="sell-label">
   <div class="sell-header">
     <div class="sell-brand">AUTO PARTS CONNECTION</div>
@@ -3979,25 +4019,18 @@ function printSellLabel(listing) {
       </div>
     </div>
     <div class="sell-right">
-      <div id="sellLabelQr"></div>
+      ${qrHtml}
       <div class="sell-qr-id">${apcId}</div>
     </div>
   </div>
-</div>`;
-    const qrEl = document.getElementById('sellLabelQr');
-    if (qrEl && window.QRCode) {
-        const qrText = [apcId, listing.title || '', listing.stockNumber ? 'Stock: ' + listing.stockNumber : '', condition].filter(Boolean).join('\n');
-        new QRCode(qrEl, { text: qrText, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
-    }
-    document.body.classList.add('printing-sell-label');
-    // Give the browser one frame to apply the print-mode CSS and render the QR image
-    requestAnimationFrame(() => setTimeout(() => {
-        window.print();
-        window.addEventListener('afterprint', () => {
-            document.body.classList.remove('printing-sell-label');
-            area.innerHTML = '';
-        }, { once: true });
-    }, 80));
+</div>
+<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
+</body></html>`;
+
+        const tab = window.open('', '_blank');
+        if (tab) { tab.document.open(); tab.document.write(html); tab.document.close(); }
+        else showToast('Allow pop-ups to print labels');
+    }, 150);
 }
 
 // --- DYNAMIC ITEM DETAIL ---
