@@ -2063,6 +2063,39 @@ function getCurrentSellerName() {
     return currentUserName || 'Guest Seller';
 }
 
+// Returns the public-facing name for the signed-in user.
+// Pro users with a business name show that; standard users show their display name.
+function getPublicSellerName() {
+    if (currentUserTier === 'pro' && userSettings.businessName) return userSettings.businessName;
+    return currentUserName || 'Guest Seller';
+}
+
+async function openStorefrontByUserId(userId) {
+    if (!sb || !userId) return;
+    const { data: profile } = await sb.from('profiles')
+        .select('display_name, is_pro, business_name, abn, about, profile_pic, location')
+        .eq('id', userId).single();
+    if (!profile) return;
+    const sellerName = profile.display_name || 'Seller';
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) grid.dataset.seller = sellerName;
+    renderStorefront(
+        sellerName,
+        profile.is_pro || false,
+        profile.profile_pic || '',
+        profile.business_name || '',
+        profile.abn || '',
+        profile.about || '',
+        profile.location || '',
+        ''
+    );
+    const sfEl    = document.getElementById('storefrontDrawer');
+    const backBar = document.getElementById('storefrontBackBar');
+    if (sfEl)    sfEl.style.zIndex    = '';
+    if (backBar) backBar.style.display = 'none';
+    toggleDrawer('storefrontDrawer', true);
+}
+
 // --- CORE UI CONTROLS ---
 
 // Close all open drawers, then open the requested one.
@@ -3323,7 +3356,7 @@ async function submitSellListing() {
         loc: location.toUpperCase(),
         postcode,
         fit: !!fittingAvailable,
-        seller: getCurrentSellerName(),
+        seller: getPublicSellerName(),
         isPro: currentUserTier === 'pro',
         category,
         fits,
@@ -6591,6 +6624,9 @@ function buildSponsoredCardHTML(card) {
     const logo     = card.logo_data || '';
     const image    = card.image_data || '';
 
+    const userId  = card.user_id || '';
+    const openCmd = userId ? `openStorefrontByUserId('${userId}')` : `window.open('${btnUrl}','_blank')`;
+
     if (tpl === 'supplier') {
         const logoHtml = logo
             ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" alt="">`
@@ -6602,13 +6638,13 @@ function buildSponsoredCardHTML(card) {
             <div class="drp-supplier-name">${name}</div>
             ${tagline ? `<div class="drp-supplier-tagline">${tagline}</div>` : ''}
             ${tagsHtml ? `<div class="drp-supplier-tags">${tagsHtml}</div>` : ''}
-            <button class="drp-supplier-btn" onclick="window.open('${btnUrl}','_blank')">${btnLabel}</button>
+            <button class="drp-supplier-btn" onclick="${openCmd}">View Store →</button>
         </div>`;
     } else if (tpl === 'product') {
         const imgHtml = image
             ? `<img src="${image}" class="drp-sp-img" alt="">`
             : `<div class="drp-sp-img" style="background:#eee;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">No image</div>`;
-        return `<div class="drp-card drp-sp-card" onclick="window.open('${btnUrl}','_blank')">
+        return `<div class="drp-card drp-sp-card" onclick="${openCmd}" style="cursor:pointer;">
             <div class="drp-sp-img-wrap">${imgHtml}
                 <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
             </div>
@@ -6628,7 +6664,7 @@ function buildSponsoredCardHTML(card) {
                 ${logoHtml}
                 <div class="drp-partner-name">${name}</div>
                 ${blurb ? `<div class="drp-partner-desc">${blurb}</div>` : ''}
-                <button class="drp-partner-btn" onclick="window.open('${btnUrl}','_blank')">${btnLabel}</button>
+                <button class="drp-partner-btn" onclick="${openCmd}">View Store →</button>
             </div>
         </div>`;
     }
