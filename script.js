@@ -1489,6 +1489,7 @@ async function loadPublicWantedFromSupabase() {
                 loc: prof.location || '',
                 posted: new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
                 userId: r.user_id,
+                buyer: prof.display_name || 'Member',
                 sellerName: prof.display_name || '',
             });
         });
