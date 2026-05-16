@@ -1761,9 +1761,9 @@
             <div style="display:grid; grid-template-columns:1fr 1fr 90px; gap:8px; margin-bottom:8px;">
                 <div class="input-group" style="margin:0;"><label>Make *</label><select id="vehMake" onchange="onVehMakeChange()"><option value="">Make</option></select></div>
                 <div class="input-group" style="margin:0;"><label>Model *</label><select id="vehModel" onchange="onVehModelChange()"><option value="">Model</option></select></div>
-                <div class="input-group" style="margin:0;"><label>Year *</label><select id="vehYear"><option value="">Year</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Year *</label><select id="vehYear" onchange="onVehYearChange()"><option value="">Year</option></select></div>
             </div>
-            <div class="input-group"><label>Variant</label><input type="text" id="vehVariant" placeholder="e.g. GTti, LWB, Turbo"></div>
+            <div id="vehSeriesGroup" style="display:none"><div class="input-group"><label>Series</label><select id="vehVariant" style="width:100%"><option value="">Select series</option></select></div></div>
         </div>
         <div class="filter-section">
             <h4>Optional</h4>
@@ -1809,8 +1809,9 @@
             <div style="display:grid; grid-template-columns:1fr 1fr 80px; gap:8px;">
                 <div class="input-group" style="margin:0;"><label>Make</label><select id="wantedMake" onchange="onWantedMakeChange()"><option value="">Make</option></select></div>
                 <div class="input-group" style="margin:0;"><label>Model</label><select id="wantedModel" onchange="onWantedModelChange()"><option value="">Model</option></select></div>
-                <div class="input-group" style="margin:0;"><label>Year</label><select id="wantedYear"><option value="">Year</option></select></div>
+                <div class="input-group" style="margin:0;"><label>Year</label><select id="wantedYear" onchange="onWantedYearChange()"><option value="">Year</option></select></div>
             </div>
+            <div id="wantedSeriesGroup" style="display:none; margin-top:8px;"><div class="input-group" style="margin:0;"><label>Series</label><select id="wantedSeries" style="width:100%"><option value="">Any Series</option></select></div></div>
             <!-- Inline add-to-garage prompt -->
             <div id="wantedGaragePrompt" style="display:none; margin-top:10px; background:#fff8ee; border:1.5px solid rgba(247,148,29,0.3); border-radius:10px; padding:10px 14px; align-items:center; justify-content:space-between; gap:10px;">
                 <span id="wantedGaragePromptText" style="font-size:12px; font-weight:700; color:#555; flex:1;"></span>

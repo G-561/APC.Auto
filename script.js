@@ -2940,7 +2940,7 @@ function onSellYearChange() {
     _refreshSellSeries(make, model, year, '');
 }
 
-function initWantedVehicleDropdowns(make, model, year) {
+function initWantedVehicleDropdowns(make, model, year, series) {
     const makeEl  = document.getElementById('wantedMake');
     const modelEl = document.getElementById('wantedModel');
     const yearEl  = document.getElementById('wantedYear');
@@ -2948,7 +2948,20 @@ function initWantedVehicleDropdowns(make, model, year) {
     makeEl.innerHTML  = buildMakeOptions(make || '');
     modelEl.innerHTML = buildModelOptions(make || '', model || '');
     yearEl.innerHTML  = buildYearOptionsForModel(make || '', model || '', year || '');
+    _refreshWantedSeries(make || '', model || '', year || '');
+    if (series) { const s = document.getElementById('wantedSeries'); if (s) s.value = series; }
     checkWantedGaragePrompt();
+}
+
+function _refreshWantedSeries(make, model, year) {
+    const group = document.getElementById('wantedSeriesGroup');
+    const sel   = document.getElementById('wantedSeries');
+    if (!sel || !group) return;
+    if (!model || !year) { group.style.display = 'none'; sel.innerHTML = '<option value="">Any Series</option>'; return; }
+    const html = buildSeriesOptions(make, model, year, '');
+    if (!html) { group.style.display = 'none'; sel.innerHTML = '<option value="">Any Series</option>'; return; }
+    sel.innerHTML = '<option value="">Any Series</option>' + html.replace('<option value="">Select series</option>', '');
+    group.style.display = '';
 }
 
 function onWantedMakeChange() {
@@ -2957,6 +2970,7 @@ function onWantedMakeChange() {
     const yearEl  = document.getElementById('wantedYear');
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
     if (yearEl)  yearEl.innerHTML  = buildYearOptions('');
+    _refreshWantedSeries('', '', '');
     checkWantedGaragePrompt();
 }
 
@@ -2965,6 +2979,15 @@ function onWantedModelChange() {
     const model = document.getElementById('wantedModel')?.value || '';
     const yearEl = document.getElementById('wantedYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
+    _refreshWantedSeries('', '', '');
+    checkWantedGaragePrompt();
+}
+
+function onWantedYearChange() {
+    const make  = document.getElementById('wantedMake')?.value  || '';
+    const model = document.getElementById('wantedModel')?.value || '';
+    const year  = document.getElementById('wantedYear')?.value  || '';
+    _refreshWantedSeries(make, model, year);
     checkWantedGaragePrompt();
 }
 
@@ -4670,7 +4693,18 @@ function onOpenGarage() {
 }
 
 // Open the Add Vehicle form on top of the garage drawer
-function initVehicleDropdowns(make, model, year) {
+function _refreshVehSeries(make, model, year, selected) {
+    const group = document.getElementById('vehSeriesGroup');
+    const sel   = document.getElementById('vehVariant');
+    if (!sel || !group) return;
+    if (!model || !year) { group.style.display = 'none'; sel.innerHTML = '<option value="">Select series</option>'; return; }
+    const html = buildSeriesOptions(make, model, year, selected || '');
+    if (!html) { group.style.display = 'none'; sel.innerHTML = '<option value="">Select series</option>'; return; }
+    sel.innerHTML = html;
+    group.style.display = '';
+}
+
+function initVehicleDropdowns(make, model, year, variant) {
     const makeEl  = document.getElementById('vehMake');
     const modelEl = document.getElementById('vehModel');
     const yearEl  = document.getElementById('vehYear');
@@ -4678,6 +4712,7 @@ function initVehicleDropdowns(make, model, year) {
     makeEl.innerHTML  = buildMakeOptions(make || '');
     modelEl.innerHTML = buildModelOptions(make || '', model || '');
     yearEl.innerHTML  = buildYearOptionsForModel(make || '', model || '', year || '');
+    _refreshVehSeries(make || '', model || '', year || '', variant || '');
 }
 
 function onVehMakeChange() {
@@ -4686,6 +4721,7 @@ function onVehMakeChange() {
     const yearEl  = document.getElementById('vehYear');
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
     if (yearEl)  yearEl.innerHTML  = buildYearOptions('');
+    _refreshVehSeries('', '', '', '');
 }
 
 function onVehModelChange() {
@@ -4693,6 +4729,14 @@ function onVehModelChange() {
     const model  = document.getElementById('vehModel')?.value || '';
     const yearEl = document.getElementById('vehYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
+    _refreshVehSeries('', '', '', '');
+}
+
+function onVehYearChange() {
+    const make  = document.getElementById('vehMake')?.value  || '';
+    const model = document.getElementById('vehModel')?.value || '';
+    const year  = document.getElementById('vehYear')?.value  || '';
+    _refreshVehSeries(make, model, year, '');
 }
 
 function onAddVehicleClick() {
@@ -4713,8 +4757,7 @@ function openEditVehicleDrawer(id) {
     editingVehicleId = id;
     const title = document.querySelector('#addVehicleDrawer .drawer-header span');
     if (title) title.textContent = 'EDIT VEHICLE';
-    initVehicleDropdowns(v.make || '', v.model || '', v.year || '');
-    document.getElementById('vehVariant').value  = v.variant  || '';
+    initVehicleDropdowns(v.make || '', v.model || '', v.year || '', v.variant || '');
     document.getElementById('vehNickname').value = v.nickname || '';
     document.getElementById('vehVin').value      = v.vin      || '';
     toggleDrawer('addVehicleDrawer', true);
@@ -5291,13 +5334,14 @@ function restoreDismissedMatches(wantedId) {
 }
 
 // Add a new wanted entry
-function addWanted(partName, make, model, year, maxPrice, category) {
+function addWanted(partName, make, model, year, maxPrice, category, series) {
     const newW = {
         id: nextWantedId(),
         partName,
         make:     make     || '',
         model:    model    || '',
         year:     year     || '',
+        series:   series   || '',
         maxPrice: maxPrice || null,
         category: category || '',
         mutedNotifications: false,
@@ -5653,12 +5697,13 @@ function submitAddWanted() {
     const make     = document.getElementById('wantedMake').value.trim();
     const model    = document.getElementById('wantedModel').value.trim();
     const year     = document.getElementById('wantedYear').value.trim();
+    const series   = document.getElementById('wantedSeries')?.value.trim() || '';
     const category = document.getElementById('wantedCategory')?.value || '';
 
     if (!partName) { showToast('Part name is required.'); return; }
 
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
-    addWanted(partName, make, model, year, maxPrice, category);
+    addWanted(partName, make, model, year, maxPrice, category, series);
 
     if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
