@@ -929,6 +929,7 @@ function thumbUrl(src, width = 800) {
 
 async function uploadListingImagesToStorage(listingUUID, base64Images) {
     const urls = [];
+    let newCount = 0;
     for (let i = 0; i < base64Images.length; i++) {
         const b64 = base64Images[i];
         if (!b64 || !b64.startsWith('data:')) { urls.push(b64); continue; }
@@ -936,7 +937,9 @@ async function uploadListingImagesToStorage(listingUUID, base64Images) {
             const compressed = await compressBase64(b64, 1600, 0.88);
             const res = await fetch(compressed);
             const blob = await res.blob();
-            const path = `${listingUUID}/${i}.jpg`;
+            // Use a timestamp-based path so new uploads never collide with
+            // surviving images that already occupy 0.jpg, 1.jpg, etc.
+            const path = `${listingUUID}/${Date.now()}_${newCount++}.jpg`;
             const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
             if (error) { showToast('Storage error: ' + error.message); continue; }
             const { data } = sb.storage.from('listing-images').getPublicUrl(path);
