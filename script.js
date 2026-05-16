@@ -4428,7 +4428,6 @@ function initDetailSwipeDismiss() {
 
     function canActivate() {
         return overlay.classList.contains('active') &&
-               !overlay.classList.contains('chat-card') &&
                window.innerWidth < 900;
     }
 
