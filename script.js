@@ -102,7 +102,7 @@ function getDefaultWorkshopProfile() {
             // Chassis & Vehicle Dynamics
             brakes: false, suspension: false, wheelAlign: false, tyreSupply: false,
             // Electrical, Climate & Cooling
-            autoElectrical: false, battery: false, aircon: false, cooling: false, autoSecurity: false,
+            autoElectrical: false, battery: false, aircon: false, cooling: false, autoSecurity: false, audioAccessories: false,
             // Body, Glass & Interior
             collision: false, sprayPaint: false, pdr: false, autoGlass: false, trimming: false,
         },
@@ -129,7 +129,8 @@ const SERVICE_LABELS = {
     battery: 'Battery, Alternator & Starter',
     aircon: 'Air Conditioning',
     cooling: 'Cooling & Radiator',
-    autoSecurity: 'Security Systems & Accessories',
+    autoSecurity: 'Automotive Locksmith & Security',
+    audioAccessories: 'Audio & Accessories',
     collision: 'Collision Repair & Panel Beating',
     sprayPaint: 'Spray Painting & Refinishing',
     pdr: 'Paintless Dent Removal',
@@ -7559,7 +7560,7 @@ function openWorkshopProfileEditor() {
     setChk('wsWheelAlign', svc.wheelAlign);   setChk('wsTyreSupply', svc.tyreSupply);
     setChk('wsAutoElectrical', svc.autoElectrical); setChk('wsBattery', svc.battery);
     setChk('wsAircon', svc.aircon);           setChk('wsCooling', svc.cooling);
-    setChk('wsAutoSecurity', svc.autoSecurity);
+    setChk('wsAutoSecurity', svc.autoSecurity); setChk('wsAudioAcc', svc.audioAccessories);
     setChk('wsCollision', svc.collision);     setChk('wsSprayPaint', svc.sprayPaint);
     setChk('wsPDR', svc.pdr);                setChk('wsAutoGlass', svc.autoGlass);
     setChk('wsTrimming', svc.trimming);
@@ -7621,7 +7622,7 @@ function submitWorkshopProfile() {
             wheelAlign: getChk('wsWheelAlign'),   tyreSupply: getChk('wsTyreSupply'),
             autoElectrical: getChk('wsAutoElectrical'), battery: getChk('wsBattery'),
             aircon: getChk('wsAircon'),           cooling: getChk('wsCooling'),
-            autoSecurity: getChk('wsAutoSecurity'),
+            autoSecurity: getChk('wsAutoSecurity'),   audioAccessories: getChk('wsAudioAcc'),
             collision: getChk('wsCollision'),     sprayPaint: getChk('wsSprayPaint'),
             pdr: getChk('wsPDR'),                autoGlass: getChk('wsAutoGlass'),
             trimming: getChk('wsTrimming'),
@@ -7733,7 +7734,8 @@ function renderWorkshopBrowseView() {
         ['wfWheelAlign',     'wheelAlign'],     ['wfTyreSupply',    'tyreSupply'],
         ['wfAutoElectrical', 'autoElectrical'], ['wfBattery',       'battery'],
         ['wfAircon',         'aircon'],         ['wfCooling',       'cooling'],
-        ['wfAutoSecurity',   'autoSecurity'],   ['wfCollision',     'collision'],
+        ['wfAutoSecurity',   'autoSecurity'],   ['wfAudioAcc',      'audioAccessories'],
+        ['wfCollision',     'collision'],
         ['wfSprayPaint',     'sprayPaint'],     ['wfPdr',           'pdr'],
         ['wfAutoGlass',      'autoGlass'],      ['wfTrimming',      'trimming'],
     ];
