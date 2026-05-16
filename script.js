@@ -8471,15 +8471,16 @@ function refreshDashSavesFromSupabase() {
     if (!currentUserId || !sb || !userListings.length) return;
     const ids = userListings.map(l => l.supabaseId).filter(Boolean);
     if (!ids.length) return;
-    sb.from('saved_listings').select('listing_id').in('listing_id', ids)
+    sb.from('listings').select('id, saves_count').in('id', ids)
       .then(({ data }) => {
           if (!data) return;
-          const counts = {};
-          data.forEach(r => { counts[r.listing_id] = (counts[r.listing_id] || 0) + 1; });
+          const counts = Object.fromEntries(data.map(r => [r.id, r.saves_count || 0]));
           let changed = false;
           userListings.forEach(l => {
-              const fresh = l.supabaseId ? (counts[l.supabaseId] || 0) : (l.saves || 0);
-              if (fresh !== (l.saves || 0)) { l.saves = fresh; changed = true; }
+              if (l.supabaseId && counts[l.supabaseId] !== undefined) {
+                  const fresh = counts[l.supabaseId];
+                  if (fresh !== (l.saves || 0)) { l.saves = fresh; changed = true; }
+              }
           });
           if (changed) { saveUserListings(); renderDashboard(); }
       });
