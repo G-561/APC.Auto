@@ -2320,10 +2320,9 @@ function onFilterMakeChange() {
 function onFilterModelChange() {
     const make  = document.getElementById('filterMake')?.value || '';
     const model = document.getElementById('filterModel')?.value || '';
-    const year  = document.getElementById('filterYear')?.value || '';
     const yearEl = document.getElementById('filterYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '').replace('<option value="">Year</option>', '<option value="">Any Year</option>');
-    _refreshFilterSeries(make, model, '');
+    _refreshFilterSeries('', '', ''); // hide series — wait for year selection
     if (window.innerWidth >= 900) applyFiltersAndRender();
 }
 
@@ -2931,7 +2930,7 @@ function onSellModelChange() {
     const model = document.getElementById('sellModel')?.value || '';
     const yearEl = document.getElementById('sellYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
-    _refreshSellSeries(make, model, '', '');
+    _refreshSellSeries('', '', '', ''); // hide series — wait for year selection
 }
 
 function onSellYearChange() {
