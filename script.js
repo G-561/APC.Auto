@@ -1037,8 +1037,11 @@ async function loadPublicListingsFromSupabase() {
         }
 
         (rows || []).forEach(r => {
-            if (partDatabase.some(p => p.supabaseId === r.id)) return;
-            if (userListings.some(l => l.supabaseId === r.id)) return;
+            const liveName = nameMap[r.seller_id] || r.seller_name || 'Seller';
+            const existPub = partDatabase.find(p => p.supabaseId === r.id);
+            if (existPub) { existPub.seller = liveName; return; }
+            const existUser = userListings.find(l => l.supabaseId === r.id);
+            if (existUser) { existUser.seller = liveName; return; }
             const images = (r.listing_images || [])
                 .sort((a, b) => a.position - b.position)
                 .map(img => img.storage_path).filter(Boolean);
