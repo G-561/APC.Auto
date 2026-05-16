@@ -682,7 +682,11 @@ function getVehicleYearRange(make, model, year) {
 const VEHICLE_MAKES = Object.keys(VEHICLE_DB).sort();
 
 function getVehicleModels(make) {
-    return (VEHICLE_DB[make] || []).slice().sort();
+    const all = VEHICLE_DB[make] || [];
+    // Exclude series entries — any entry that is a sub-model of another entry
+    // e.g. "HiLux N70" is excluded because "HiLux" exists in the same list
+    const base = all.filter(m => !all.some(b => b !== m && m.startsWith(b + ' ')));
+    return base.slice().sort();
 }
 
 function buildYearOptions(selectedYear) {
@@ -698,7 +702,15 @@ function buildYearOptions(selectedYear) {
 // Falls back to the full list if no range data exists for this make/model.
 function buildYearOptionsForModel(make, model, selectedYear) {
     if (!make || !model) return buildYearOptions(selectedYear);
-    const ranges = VEHICLE_YEAR_RANGES?.[make]?.[model];
+    let ranges = VEHICLE_YEAR_RANGES?.[make]?.[model];
+    // No direct range — aggregate from all sub-series (e.g. "HiLux" → all "HiLux *" entries)
+    if (!ranges?.length) {
+        const prefix = model + ' ';
+        const sub = Object.entries(VEHICLE_YEAR_RANGES?.[make] || {})
+            .filter(([k]) => k.startsWith(prefix))
+            .flatMap(([, r]) => r);
+        if (sub.length) ranges = sub;
+    }
     if (!ranges || !ranges.length) return buildYearOptions(selectedYear);
     const minYear = Math.min(...ranges.map(([f]) => f));
     const maxYear = Math.max(...ranges.map(([, t]) => t));
