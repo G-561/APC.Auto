@@ -4996,14 +4996,15 @@ document.addEventListener('DOMContentLoaded', () => {
     sb.auth.onAuthStateChange((event, session) => {
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
             currentUserId = session.user.id;
-            // Sign in immediately with email fallback so UI updates without waiting for profile fetch
+            // Use display_name from session metadata (set at sign-up) — avoids showing email prefix
             const emailName = session.user.email.split('@')[0];
-            signIn(emailName, 'standard', false, session.user.email);
-            // Fetch real name + tier in background
+            const metaName  = session.user.user_metadata?.display_name || emailName;
+            signIn(metaName, 'standard', false, session.user.email);
+            // Fetch real name + tier from profile in background
             sb.from('profiles').select('*').eq('id', session.user.id).single()
                 .then(({ data: profile }) => {
                     if (profile) {
-                        const name = profile.display_name || emailName;
+                        const name = profile.display_name || metaName;
                         const tier = profile.is_pro ? 'pro' : 'standard';
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
