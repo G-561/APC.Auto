@@ -284,6 +284,9 @@ function saveSettingsName() {
         renderAccountState();
         renderProfile();
         renderMyParts();
+        if (currentUserId && sb) {
+            sb.from('profiles').update({ display_name: val }).eq('id', currentUserId).then(() => {});
+        }
     }
 }
 function saveSettingsLocation() {
@@ -385,6 +388,13 @@ function saveSettingsProBusiness() {
     userSettings.abn          = document.getElementById('proSettingABN')?.value.trim() || '';
     userSettings.about        = document.getElementById('proSettingAbout')?.value.trim() || '';
     saveUserSettings();
+    if (currentUserId && sb) {
+        sb.from('profiles').update({
+            business_name: userSettings.businessName || null,
+            abn:           userSettings.abn           || null,
+            about:         userSettings.about         || null,
+        }).eq('id', currentUserId).then(() => {});
+    }
     showToast('Business details saved');
 }
 function handleLogoUpload(input) {
@@ -410,26 +420,37 @@ function removeBusinessLogo() {
     showToast('Logo removed');
 }
 
-function handleProfilePicUpload(input) {
+async function handleProfilePicUpload(input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 1024 * 1024) { showToast('Image too large — please use an image under 1 MB'); input.value = ''; return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-        userSettings.profilePic = e.target.result;
-        saveUserSettings();
-        renderProfilePicPreview();
-        showToast('Profile photo saved');
-    };
-    reader.readAsDataURL(file);
+    if (file.size > 2 * 1024 * 1024) { showToast('Image too large — please use an image under 2 MB'); input.value = ''; return; }
+    if (!currentUserId || !sb) {
+        showToast('Please sign in to save a profile photo');
+        return;
+    }
+    showToast('Uploading…');
+    const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = `profile-pics/${currentUserId}.${ext}`;
+    const { error: upErr } = await sb.storage.from('listing-images').upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) { showToast('Upload failed — ' + upErr.message); return; }
+    const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
+    const url = urlData.publicUrl + '?t=' + Date.now();
+    userSettings.profilePic = url;
+    saveUserSettings();
+    await sb.from('profiles').update({ profile_pic: url }).eq('id', currentUserId);
+    renderProfilePicPreview();
+    showToast('Profile photo saved');
 }
 
-function removeProfilePic() {
+async function removeProfilePic() {
     userSettings.profilePic = '';
     saveUserSettings();
     const input = document.getElementById('profilePicInput');
     if (input) input.value = '';
     renderProfilePicPreview();
+    if (currentUserId && sb) {
+        await sb.from('profiles').update({ profile_pic: null }).eq('id', currentUserId);
+    }
     showToast('Profile photo removed');
 }
 
@@ -4527,11 +4548,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         const tier = profile.is_pro ? 'pro' : 'standard';
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
-                        if (profile.location && !userSettings.location) {
-                            userSettings.location = profile.location;
-                            saveUserSettings();
-                            populateLocationPickers();
-                        }
+                        let dirty = false;
+                        if (profile.location     && !userSettings.location)     { userSettings.location     = profile.location;              dirty = true; }
+                        if (profile.business_name && !userSettings.businessName) { userSettings.businessName = profile.business_name;         dirty = true; }
+                        if (profile.abn           && !userSettings.abn)          { userSettings.abn          = profile.abn;                   dirty = true; }
+                        if (profile.about         && !userSettings.about)        { userSettings.about        = profile.about;                 dirty = true; }
+                        if (profile.profile_pic   && !userSettings.profilePic)   { userSettings.profilePic   = profile.profile_pic;           dirty = true; }
+                        if (dirty) { saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); }
                     }
                 });
             loadPublicListingsFromSupabase();

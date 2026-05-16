@@ -14,6 +14,7 @@ create table if not exists profiles (
   abn           text,
   profile_pic   text,
   location      text,
+  about         text,
   created_at    timestamptz not null default now()
 );
 
