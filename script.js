@@ -5715,9 +5715,11 @@ function toggleSavedPart(partId, btn) {
             // Update saves_count on the listing atomically
             sb.rpc('update_saves_count', { listing_id_val: part.supabaseId, delta })
               .then(({ error }) => { if (error) console.warn('saves_count update:', error.message); });
-            // Reflect immediately in local partDatabase so cards update without reload
+            // Reflect immediately in local caches so cards and dashboard update without reload
             const pubPart = partDatabase.find(p => p.supabaseId === part.supabaseId);
             if (pubPart) pubPart.saves = Math.max(0, (pubPart.saves || 0) + delta);
+            const ownPart = userListings.find(l => l.supabaseId === part.supabaseId);
+            if (ownPart) { ownPart.saves = Math.max(0, (ownPart.saves || 0) + delta); saveUserListings(); }
         }
     }
     syncDetailSaveButton(partId);
