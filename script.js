@@ -3165,6 +3165,11 @@ function openSellOverlay() {
     currentEditingListingId = null;
     currentEditStatus = null;
     resetSellForm();
+    // Pre-fill location from user profile
+    const locEl  = document.getElementById('sellLocation');
+    const pcEl   = document.getElementById('sellPostcode');
+    if (locEl  && !locEl.value  && userSettings.suburb)   locEl.value  = userSettings.suburb;
+    if (pcEl   && !pcEl.value   && userSettings.postcode) pcEl.value   = userSettings.postcode;
     const fitting = document.getElementById('sellFittingAvailable');
     if (fitting && currentUserTier === 'pro' && userSettings.defaultFitting) fitting.checked = true;
     initSellVehicleDropdowns('', '', '');
