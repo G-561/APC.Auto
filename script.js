@@ -4100,6 +4100,12 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (!_restoring) addToRecentlyViewed(partId);
     history.pushState(null, '', '?item=' + partId);
 
+    // Track view in Supabase — only for other sellers' listings, not own
+    if (!_restoring && sb && part.supabaseId && part.sellerId !== currentUserId) {
+        sb.from('listing_views').insert({ listing_id: part.supabaseId, viewer_id: currentUserId || null })
+          .then(({ error }) => { if (error) console.warn('view track:', error.message); });
+    }
+
     // 1. Carousel — images + dot indicators
     const carousel = document.getElementById('imageCarousel');
     const dotsContainer = document.getElementById('carouselDots');
@@ -8484,8 +8490,44 @@ function refreshDashSavesFromSupabase() {
       });
 }
 
+async function loadDashGraphData() {
+    if (!currentUserId || !sb) return;
+    const listingIds = userListings.map(l => l.supabaseId).filter(Boolean);
+    if (!listingIds.length) return;
+
+    const since = new Date(Date.now() - 6 * 86400000).toISOString();
+    const dayLabel = d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d).getDay()];
+    const labels = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (6 - i)); return dayLabel(d);
+    });
+    const dateKey = d => new Date(d).toISOString().slice(0, 10);
+    const last7 = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (6 - i)); return dateKey(d);
+    });
+
+    const [{ data: views }, { data: saves }] = await Promise.all([
+        sb.from('listing_views').select('created_at').in('listing_id', listingIds).gte('created_at', since),
+        sb.from('saved_listings').select('created_at').in('listing_id', listingIds).gte('created_at', since),
+    ]);
+
+    const countByDay = (rows) => {
+        const map = {};
+        (rows || []).forEach(r => { const k = dateKey(r.created_at); map[k] = (map[k] || 0) + 1; });
+        return last7.map(k => map[k] || 0);
+    };
+
+    dashMockData.weekLabels = labels;
+    dashMockData.weekViews  = countByDay(views);
+    dashMockData.weekSaves  = countByDay(saves);
+
+    if (document.getElementById('dashboardView')?.style.display !== 'none') {
+        renderDashboardCharts(userListings.filter(p => p.status !== 'removed'));
+    }
+}
+
 function renderDashboard() {
     refreshDashSavesFromSupabase();
+    loadDashGraphData();
     const sellerName = getCurrentSellerName();
     const myListings = userListings.filter(p => p.status !== 'removed');
     const totalSaves = myListings.reduce((s, p) => s + (p.saves || 0), 0);
