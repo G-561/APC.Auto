@@ -320,31 +320,51 @@ function saveSettingsLocation() {
 }
 
 // ── POSTCODE / LOCATION PICKER ───────────────────────────────────────────────
+// Profile mode uses a collapsible chip pattern (hide input → show chip).
+// All other modes (sell, signup, workshop, ws-locator) use a two-column grid:
+// postcode input always visible left, suburb select always visible right.
 function onPostcodeInput(inputEl) {
-    const wrap   = inputEl.closest('.location-picker-wrap');
-    const sel    = wrap.querySelector('.loc-suburb-select');
-    const chip   = wrap.querySelector('.location-chip');
-    const val    = inputEl.value.replace(/\D/g, '');
+    const wrap = inputEl.closest('.location-picker-wrap');
+    const sel  = wrap.querySelector('.loc-suburb-select');
+    const mode = wrap.dataset.mode || 'profile';
+    const val  = inputEl.value.replace(/\D/g, '');
     inputEl.value = val;
-    sel.style.display  = 'none';
-    chip.style.display = 'none';
-    if (val.length !== 4) return;
-    const suburbs = (typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[val]) || [];
-    if (suburbs.length === 0) return;
-    sel.innerHTML = (suburbs.length > 1 ? '<option value="">Select suburb…</option>' : '') +
-        suburbs.map(([s, st]) => `<option value="${s}, ${st} ${val}">${s}, ${st}</option>`).join('');
-    sel.style.display = '';
-    if (suburbs.length === 1) onSuburbSelect(sel);
+
+    if (mode === 'profile') {
+        const chip = wrap.querySelector('.location-chip');
+        sel.style.display  = 'none';
+        chip.style.display = 'none';
+        if (val.length !== 4) return;
+        const suburbs = (typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[val]) || [];
+        if (!suburbs.length) return;
+        sel.innerHTML = (suburbs.length > 1 ? '<option value="">Select suburb…</option>' : '') +
+            suburbs.map(([s, st]) => `<option value="${s}, ${st} ${val}">${s}, ${st}</option>`).join('');
+        sel.style.display = '';
+        if (suburbs.length === 1) onSuburbSelect(sel);
+    } else {
+        // Grid modes: select is always visible — just repopulate
+        if (val.length !== 4) {
+            sel.innerHTML = '<option value="">Suburb, State</option>';
+            return;
+        }
+        const suburbs = (typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[val]) || [];
+        if (!suburbs.length) {
+            sel.innerHTML = '<option value="">No match</option>';
+            return;
+        }
+        sel.innerHTML = (suburbs.length > 1 ? '<option value="">Suburb, State</option>' : '') +
+            suburbs.map(([s, st]) => `<option value="${s}, ${st} ${val}">${s}, ${st}</option>`).join('');
+        if (suburbs.length === 1) onSuburbSelect(sel);
+    }
 }
 
 function onSuburbSelect(selectEl) {
     const wrap = selectEl.closest('.location-picker-wrap');
     const val  = selectEl.value;
     if (!val) return;
-    _applyLocationToWrap(wrap, val);
     const mode   = wrap.dataset.mode || 'profile';
     const pc     = val.match(/\b(\d{4})\b/)?.[1] || '';
-    const suburb = val.replace(/\s*\d{4}$/, '').trim(); // "SUBURB, STATE"
+    const suburb = val.replace(/\s*\d{4}$/, '').trim();
     if (mode === 'sell') {
         const pcEl  = document.getElementById('sellPostcode');
         const locEl = document.getElementById('sellLocation');
@@ -358,7 +378,13 @@ function onSuburbSelect(selectEl) {
     } else if (mode === 'workshop') {
         wrap.dataset.selectedPostcode = pc;
         wrap.dataset.selectedSuburb   = suburb;
+    } else if (mode === 'ws-locator') {
+        wrap.dataset.selectedPostcode = pc;
+        wrap.dataset.selectedSuburb   = suburb;
+        silentSavePostcode(pc);
+        renderWorkshopBrowseView();
     } else {
+        _applyLocationToWrap(wrap, val);
         userSettings.location = val;
         saveUserSettings();
         renderProfile();
@@ -371,24 +397,28 @@ function onSuburbSelect(selectEl) {
 function clearLocationPicker(wrap) {
     const input = wrap.querySelector('.loc-postcode-input');
     const sel   = wrap.querySelector('.loc-suburb-select');
-    const chip  = wrap.querySelector('.location-chip');
-    input.value         = '';
-    input.style.display = '';
-    sel.style.display   = 'none';
-    chip.style.display  = 'none';
-    const mode = wrap.dataset.mode || 'profile';
-    if (mode === 'sell') {
-        const pcEl  = document.getElementById('sellPostcode');
-        const locEl = document.getElementById('sellLocation');
-        if (pcEl)  pcEl.value  = '';
-        if (locEl) locEl.value = '';
-    } else if (mode === 'signup' || mode === 'workshop') {
-        wrap.dataset.selectedPostcode = '';
-        wrap.dataset.selectedSuburb   = '';
-    } else {
+    const mode  = wrap.dataset.mode || 'profile';
+    input.value = '';
+    if (mode === 'profile') {
+        const chip = wrap.querySelector('.location-chip');
+        input.style.display = '';
+        sel.style.display   = 'none';
+        chip.style.display  = 'none';
         userSettings.location = '';
         saveUserSettings();
         renderProfile();
+    } else {
+        sel.innerHTML = '<option value="">Suburb, State</option>';
+        if (mode === 'sell') {
+            const pcEl  = document.getElementById('sellPostcode');
+            const locEl = document.getElementById('sellLocation');
+            if (pcEl)  pcEl.value  = '';
+            if (locEl) locEl.value = '';
+        } else {
+            wrap.dataset.selectedPostcode = '';
+            wrap.dataset.selectedSuburb   = '';
+            if (mode === 'ws-locator') renderWorkshopBrowseView();
+        }
     }
 }
 
@@ -401,7 +431,6 @@ function _applyLocationToWrap(wrap, locationStr) {
     chip.style.display   = 'flex';
     sel.style.display    = 'none';
     input.style.display  = 'none';
-    // Pre-fill postcode in case user clears and re-enters
     const pcMatch = locationStr.match(/\b(\d{4})\b/);
     if (pcMatch) input.value = pcMatch[1];
 }
@@ -410,7 +439,7 @@ function populateLocationPickers() {
     const loc = userSettings.location || '';
     document.querySelectorAll('.location-picker-wrap').forEach(wrap => {
         const mode = wrap.dataset.mode || 'profile';
-        if (mode !== 'profile') return; // only auto-populate the profile settings picker
+        if (mode !== 'profile') return;
         const input = wrap.querySelector('.loc-postcode-input');
         const sel   = wrap.querySelector('.loc-suburb-select');
         const chip  = wrap.querySelector('.location-chip');
@@ -430,21 +459,53 @@ function populateSellLocationPicker() {
     if (!wrap) return;
     const loc = userSettings.location || '';
     const pc  = userSettings.postcode  || '';
-    if (!loc && !pc) return;
-    // Build the chip string — prefer full location, fall back to postcode lookup
-    let chipVal = loc;
-    if (!chipVal && pc && typeof AU_POSTCODES !== 'undefined') {
-        const subs = AU_POSTCODES[pc] || [];
-        if (subs.length === 1) chipVal = `${subs[0][0]}, ${subs[0][1]} ${pc}`;
+    const resolvedPc = loc.match(/\b(\d{4})\b/)?.[1] || pc;
+    if (!resolvedPc) return;
+    const input = wrap.querySelector('.loc-postcode-input');
+    const sel   = wrap.querySelector('.loc-suburb-select');
+    input.value = resolvedPc;
+    const suburbs = (typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[resolvedPc]) || [];
+    if (!suburbs.length) return;
+    sel.innerHTML = (suburbs.length > 1 ? '<option value="">Suburb, State</option>' : '') +
+        suburbs.map(([s, st]) => `<option value="${s}, ${st} ${resolvedPc}">${s}, ${st}</option>`).join('');
+    // Match the stored suburb if available
+    if (loc) {
+        const target = loc.toLowerCase().replace(/\s*\d{4}$/, '').trim();
+        for (const opt of sel.options) {
+            if (opt.value && opt.value.toLowerCase().startsWith(target.split(',')[0])) {
+                sel.value = opt.value;
+                break;
+            }
+        }
+    } else if (suburbs.length === 1) {
+        sel.value = sel.options[0]?.value || '';
     }
-    if (!chipVal) return;
-    _applyLocationToWrap(wrap, chipVal);
-    const parsedPc     = chipVal.match(/\b(\d{4})\b/)?.[1] || pc;
-    const parsedSuburb = chipVal.replace(/\s*\d{4}$/, '').trim();
-    const pcEl  = document.getElementById('sellPostcode');
-    const locEl = document.getElementById('sellLocation');
-    if (pcEl)  pcEl.value  = parsedPc;
-    if (locEl) locEl.value = parsedSuburb;
+    const selVal = sel.value;
+    if (selVal) {
+        const pcEl  = document.getElementById('sellPostcode');
+        const locEl = document.getElementById('sellLocation');
+        if (pcEl)  pcEl.value  = selVal.match(/\b(\d{4})\b/)?.[1] || resolvedPc;
+        if (locEl) locEl.value = selVal.replace(/\s*\d{4}$/, '').trim();
+    }
+}
+
+function populateWsLocatorPicker() {
+    const wrap = document.querySelector('.location-picker-wrap[data-mode="ws-locator"]');
+    if (!wrap) return;
+    const pc = userSettings.postcode || '';
+    if (!pc) return;
+    const input = wrap.querySelector('.loc-postcode-input');
+    const sel   = wrap.querySelector('.loc-suburb-select');
+    input.value = pc;
+    const suburbs = (typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[pc]) || [];
+    if (!suburbs.length) return;
+    sel.innerHTML = (suburbs.length > 1 ? '<option value="">Suburb, State</option>' : '') +
+        suburbs.map(([s, st]) => `<option value="${s}, ${st} ${pc}">${s}, ${st}</option>`).join('');
+    if (suburbs.length === 1) {
+        sel.value = sel.options[0]?.value || '';
+        wrap.dataset.selectedPostcode = pc;
+        wrap.dataset.selectedSuburb   = `${suburbs[0][0]}, ${suburbs[0][1]}`;
+    }
 }
 function saveSettingsAccount() {
     saveSettingsName();
@@ -2272,7 +2333,7 @@ function getFilterValues() {
     }
 }
 
-function onPostcodeInput(input) {
+function onFilterRadiusPostcodeInput(input) {
     const hasPostcode = input.value.trim().length > 0;
     const control = document.getElementById('radiusSegControl');
     const hint = document.getElementById('radiusHint');
@@ -7034,6 +7095,7 @@ function onMenuOpenWorkshops() {
     });
     renderWorkshopProfile();
     renderWorkshopBrowseView();
+    populateWsLocatorPicker();
     toggleDrawer('workshopDrawer', true);
 }
 
@@ -7056,6 +7118,32 @@ function openWorkshopProfileEditor() {
     if (aboutEl) aboutEl.value = userSettings.about        || '';
     const wsAddressEl = document.getElementById('wsAddress');
     if (wsAddressEl) wsAddressEl.value = workshopProfile.address || '';
+    // Pre-fill workshop location picker from saved postcode
+    const wsLocWrap = document.querySelector('#workshopProfileFields .location-picker-wrap[data-mode="workshop"]');
+    if (wsLocWrap) {
+        const pc = userSettings.postcode || '';
+        const input = wsLocWrap.querySelector('.loc-postcode-input');
+        const sel   = wsLocWrap.querySelector('.loc-suburb-select');
+        if (input) input.value = pc;
+        if (pc && sel && typeof AU_POSTCODES !== 'undefined') {
+            const subs = AU_POSTCODES[pc] || [];
+            if (subs.length) {
+                sel.innerHTML = (subs.length > 1 ? '<option value="">Suburb, State</option>' : '') +
+                    subs.map(([s, st]) => `<option value="${s}, ${st} ${pc}">${s}, ${st}</option>`).join('');
+                const savedLoc = (userSettings.location || '').toLowerCase().replace(/\s*\d{4}$/, '').trim();
+                for (const opt of sel.options) {
+                    if (opt.value && opt.value.toLowerCase().startsWith(savedLoc.split(',')[0])) {
+                        sel.value = opt.value;
+                        const matched = opt.value.match(/\b(\d{4})\b/)?.[1] || pc;
+                        const matchedSub = opt.value.replace(/\s*\d{4}$/, '').trim();
+                        wsLocWrap.dataset.selectedPostcode = matched;
+                        wsLocWrap.dataset.selectedSuburb   = matchedSub;
+                        break;
+                    }
+                }
+            }
+        }
+    }
     // Business type selector
     const bizType = userSettings.businessType || 'supplier';
     document.querySelectorAll('#bizTypeControl .radius-seg').forEach(s => {
@@ -7116,6 +7204,14 @@ function submitWorkshopProfile() {
     userSettings.businessName = document.getElementById('proSettingBusinessName')?.value.trim() || '';
     userSettings.abn          = document.getElementById('proSettingABN')?.value.trim() || '';
     userSettings.about        = document.getElementById('proSettingAbout')?.value.trim() || '';
+    // Capture location from the two-box picker
+    const wsLocWrap = document.querySelector('#workshopProfileFields .location-picker-wrap[data-mode="workshop"]');
+    if (wsLocWrap) {
+        const wsPc     = wsLocWrap.dataset.selectedPostcode || '';
+        const wsSub    = wsLocWrap.dataset.selectedSuburb   || '';
+        if (wsPc)  userSettings.postcode = wsPc;
+        if (wsSub) userSettings.location = wsSub + (wsPc ? ' ' + wsPc : '');
+    }
     saveUserSettings();
     const getChk = id => document.getElementById(id)?.checked || false;
     workshopProfile = {
