@@ -1160,26 +1160,34 @@ function formatMsgTime(isoString) {
 
 async function ensureSupabaseConversation(conv) {
     if (conv.supabaseConvId) return true;
-    if (!currentUserId) return false;
+
+    // Always use a fresh session UUID — avoids stale currentUserId after token refresh
+    const { data: { session } } = await sb.auth.getSession();
+    const buyerId = session?.user?.id;
+    if (!buyerId) return false;
+
     const part = findPartAnywhere(conv.partId);
     if (!part?.supabaseId || !part.sellerId) return false;
+
+    // Seller cannot be their own buyer
+    if (buyerId === part.sellerId) return false;
 
     // Conversation may already exist in Supabase (duplicate key guard)
     const { data: existing } = await sb.from('conversations')
         .select('id')
         .eq('listing_id', part.supabaseId)
-        .eq('buyer_id', currentUserId)
+        .eq('buyer_id', buyerId)
         .maybeSingle();
     if (existing) {
         conv.supabaseConvId = existing.id;
-        conv.buyerId = currentUserId;
+        conv.buyerId = buyerId;
         saveConversations();
         return true;
     }
 
     const { data, error } = await sb.from('conversations').insert({
         listing_id: part.supabaseId,
-        buyer_id: currentUserId,
+        buyer_id: buyerId,
         seller_id: part.sellerId,
         buyer_name: currentUserName,
         seller_name: part.seller || null,
@@ -1190,7 +1198,7 @@ async function ensureSupabaseConversation(conv) {
 
     if (error) { console.warn('Conv sync error:', error.message); showToast('Sync error: ' + error.message); return false; }
     conv.supabaseConvId = data.id;
-    conv.buyerId = currentUserId;
+    conv.buyerId = buyerId;
     saveConversations();
     return true;
 }
@@ -5053,6 +5061,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Restore session on page load + react to sign in / sign out events
     sb.auth.onAuthStateChange((event, session) => {
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+            currentUserId = session.user.id; // keep in sync after silent token refresh
+        }
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
             currentUserId = session.user.id;
             // Use display_name from session metadata (set at sign-up) — avoids showing email prefix
