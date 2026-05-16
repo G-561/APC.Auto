@@ -7645,7 +7645,10 @@ function renderAccountState() {
     const headerInboxBtn   = document.getElementById('headerInboxBtn');
     const dtbMessages      = document.getElementById('dtbMessages');
     const desktopInboxItem = document.getElementById('desktopInboxItem');
-    if (headerInboxBtn)   headerInboxBtn.style.display   = userIsSignedIn ? '' : 'none';
+    if (headerInboxBtn) {
+        headerInboxBtn.style.display = userIsSignedIn ? '' : 'none';
+        headerInboxBtn.classList.toggle('signed-in', userIsSignedIn);
+    }
     if (dtbMessages)      dtbMessages.style.display      = userIsSignedIn ? '' : 'none';
     if (desktopInboxItem) desktopInboxItem.style.display = userIsSignedIn ? '' : 'none';
 

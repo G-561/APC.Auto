@@ -70,7 +70,8 @@ header {
     flex-shrink: 0;
 }
 .header-inbox-btn svg { display: block; }
-.header-inbox-btn.active svg { stroke: var(--apc-orange); }
+.header-inbox-btn.active svg,
+.header-inbox-btn.signed-in svg { stroke: var(--apc-orange); }
 
 /* === NAV PROFILE CIRCLE (bottom nav) === */
 .nav-profile-circle {
