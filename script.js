@@ -8467,7 +8467,26 @@ function renderDemandWidget() {
     `;
 }
 
+function refreshDashSavesFromSupabase() {
+    if (!currentUserId || !sb || !userListings.length) return;
+    const ids = userListings.map(l => l.supabaseId).filter(Boolean);
+    if (!ids.length) return;
+    sb.from('saved_listings').select('listing_id').in('listing_id', ids)
+      .then(({ data }) => {
+          if (!data) return;
+          const counts = {};
+          data.forEach(r => { counts[r.listing_id] = (counts[r.listing_id] || 0) + 1; });
+          let changed = false;
+          userListings.forEach(l => {
+              const fresh = l.supabaseId ? (counts[l.supabaseId] || 0) : (l.saves || 0);
+              if (fresh !== (l.saves || 0)) { l.saves = fresh; changed = true; }
+          });
+          if (changed) { saveUserListings(); renderDashboard(); }
+      });
+}
+
 function renderDashboard() {
+    refreshDashSavesFromSupabase();
     const sellerName = getCurrentSellerName();
     const myListings = userListings.filter(p => p.status !== 'removed');
     const totalSaves = myListings.reduce((s, p) => s + (p.saves || 0), 0);
