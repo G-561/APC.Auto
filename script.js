@@ -5103,14 +5103,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         const tier = profile.is_pro ? 'pro' : 'standard';
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
-                        let dirty = false;
-                        if (profile.location      && !userSettings.location)     { userSettings.location     = profile.location;              dirty = true; }
-                        if (profile.business_name && !userSettings.businessName) { userSettings.businessName = profile.business_name;         dirty = true; }
-                        if (profile.abn           && !userSettings.abn)          { userSettings.abn          = profile.abn;                   dirty = true; }
-                        if (profile.about         && !userSettings.about)        { userSettings.about        = profile.about;                 dirty = true; }
-                        if (profile.profile_pic   && !userSettings.profilePic)   { userSettings.profilePic   = profile.profile_pic;           dirty = true; }
-                        if (profile.postcode      && !userSettings.postcode)     { userSettings.postcode     = profile.postcode;              dirty = true; }
-                        if (dirty) { saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); }
+                        // Supabase is authoritative — always overwrite local values with server data
+                        userSettings.location     = profile.location      || userSettings.location     || '';
+                        userSettings.businessName = profile.business_name || '';
+                        userSettings.abn          = profile.abn           || '';
+                        userSettings.about        = profile.about         || '';
+                        userSettings.profilePic   = profile.profile_pic   || userSettings.profilePic   || '';
+                        userSettings.postcode     = profile.postcode      || userSettings.postcode     || '';
+                        saveUserSettings(); populateLocationPickers(); renderProfilePicPreview();
                     }
                 });
             loadPublicListingsFromSupabase();
