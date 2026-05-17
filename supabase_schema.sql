@@ -21,7 +21,7 @@ create table if not exists profiles (
 
 -- Auto-create a profile row when a user signs up via Supabase Auth
 create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.profiles (id, display_name, is_pro, business_name, abn, postcode, location)
   values (
@@ -127,9 +127,11 @@ create table if not exists conversations (
   listing_title   text,
   last_message    text,
   last_message_at timestamptz,
-  unread_buyer    boolean     not null default false,
-  unread_seller   boolean     not null default true,
-  created_at      timestamptz not null default now()
+  unread_buyer      boolean     not null default false,
+  unread_seller     boolean     not null default true,
+  hidden_by_buyer   boolean     not null default false,
+  hidden_by_seller  boolean     not null default false,
+  created_at        timestamptz not null default now()
 );
 
 alter table conversations enable row level security;

@@ -1221,7 +1221,10 @@ async function ensureSupabaseConversation(conv) {
 
 async function syncNewConversationToSupabase(conv) {
     const ok = await ensureSupabaseConversation(conv);
-    if (!ok) return;
+    if (!ok) {
+        showToast("Message saved locally — couldn't reach the server. Re-open the conversation to retry.");
+        return;
+    }
     const firstMsg = conv.msgs[0];
     if (firstMsg && !firstMsg.offerCard) {
         await sb.from('messages').insert({
@@ -1230,6 +1233,12 @@ async function syncNewConversationToSupabase(conv) {
             sender_name: currentUserName,
             text: firstMsg.text,
         });
+        // Update last_message_at so this conversation sorts to the top for the recipient
+        await sb.from('conversations').update({
+            last_message_at: new Date().toISOString(),
+            unread_buyer: false,
+            unread_seller: true,
+        }).eq('id', conv.supabaseConvId);
     }
 }
 
@@ -5481,7 +5490,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             const meta = session.user.user_metadata || {};
                             const isPro = meta.is_pro === true || meta.is_pro === 'true';
                             const name  = meta.display_name || metaName;
-                            const { error: upsertErr } = await sb.from('profiles').upsert({
+                            const { error: insertErr } = await sb.from('profiles').insert({
                                 id:            session.user.id,
                                 display_name:  name,
                                 is_pro:        isPro,
@@ -5489,8 +5498,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 abn:           meta.abn           || null,
                                 postcode:      meta.postcode      || null,
                                 location:      meta.location      || null,
-                            }, { onConflict: 'id' });
-                            if (!upsertErr) {
+                            });
+                            // 23505 = unique_violation (row already created by trigger in parallel) — safe to ignore
+                            if (!insertErr || insertErr.code === '23505') {
                                 const tier = isPro ? 'pro' : 'standard';
                                 signIn(name, tier, false, session.user.email);
                                 saveRememberedUser({ name, tier, email: session.user.email });
@@ -5498,10 +5508,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (meta.location) { userSettings.location = meta.location; }
                                 saveUserSettings(); populateLocationPickers();
                             } else {
-                                console.warn('Profile upsert failed:', upsertErr.message);
+                                console.warn('Profile insert failed:', insertErr.code, insertErr.message);
+                                showToast('Profile setup incomplete — please sign out and back in.');
                             }
-                        } catch (upsertEx) {
-                            console.warn('Profile upsert exception:', upsertEx);
+                        } catch (insertEx) {
+                            console.warn('Profile create exception:', insertEx);
                         }
                     }
                 });
