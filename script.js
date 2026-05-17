@@ -2609,11 +2609,21 @@ function getAllParts() {
     });
 }
 function findPartAnywhere(id) {
-    // id may be a UUID string, a local integer, or a stringified integer from an onclick attribute
+    const all  = [...userListings, ...partDatabase];
     const numId = Number(id);
-    return [...userListings, ...partDatabase].find(p =>
-        p.supabaseId === id || p.id === id || (!isNaN(numId) && p.id === numId)
-    );
+    // 1. Exact supabaseId match (UUID string comparison)
+    let found = all.find(p => p.supabaseId != null && p.supabaseId === id);
+    if (found) return found;
+    // 2. Coerced supabaseId match (stringified bigint: '5' → 5)
+    if (!isNaN(numId)) {
+        found = all.find(p => p.supabaseId != null && p.supabaseId === numId);
+        if (found) return found;
+    }
+    // 3. Local integer id fallback (no supabaseId assigned yet)
+    found = all.find(p => p.id === id);
+    if (found) return found;
+    if (!isNaN(numId)) return all.find(p => p.id === numId);
+    return undefined;
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
