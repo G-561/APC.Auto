@@ -2548,11 +2548,11 @@ header {
 }
 .loc-suburb-select {
     flex: 1;
-    min-width: 0;
+    min-width: 120px;
     max-width: 280px;
     border: 1px solid #e5e5e5;
     border-radius: 8px;
-    padding: 4px 8px;
+    padding: 4px 28px 4px 8px;
     font-size: 13px;
     color: #333;
     background: #fafafa;
