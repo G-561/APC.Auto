@@ -5476,6 +5476,7 @@ function handleMessageSeller() {
     }
 
     // First contact — open the floating compose card
+    _pendingContactPart = part; // freeze part ref now — sendContactMessage must not re-read currentOpenPartId
     const titleEl = document.getElementById('contactCardTitle');
     const msgEl   = document.getElementById('contactCardMsg');
     const compose = document.getElementById('contactCardCompose');
@@ -5489,7 +5490,8 @@ function handleMessageSeller() {
     document.getElementById('contactSellerCard').style.display     = '';
 }
 
-let _lastSentConvId = null;
+let _lastSentConvId    = null;
+let _pendingContactPart = null;
 
 function sendContactMessage() {
     const msgEl = document.getElementById('contactCardMsg');
@@ -5503,12 +5505,13 @@ function sendContactMessage() {
         partTitle = 'General Enquiry';
         pendingGeneralEnquiry = null;
     } else {
-        const part = getPartById(currentOpenPartId);
+        const part = _pendingContactPart || getPartById(currentOpenPartId);
         if (!part) return;
         seller = part.seller;
         isPro  = !!part.isPro;
-        partId = part.supabaseId || currentOpenPartId;
+        partId = part.supabaseId || part.id;
         partTitle = undefined;
+        _pendingContactPart = null;
     }
 
     // Create conversation and add the opening message
@@ -5541,6 +5544,7 @@ function viewSentConversation() {
 function closeContactCard() {
     document.getElementById('contactSellerBackdrop').style.display = 'none';
     document.getElementById('contactSellerCard').style.display     = 'none';
+    _pendingContactPart = null;
 }
 
 // XSS-safe chat: build message node with textContent, never innerHTML
