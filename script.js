@@ -6886,6 +6886,8 @@ function onOpenInbox() {
     document.getElementById('inboxThreadEmpty').style.display = '';
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
+    // Always refresh from Supabase when inbox opens — catches messages missed during realtime gaps
+    if (currentUserId) loadConversationsFromSupabase(currentUserId);
     // On desktop split-pane, auto-select the most recent conversation
     if (window.innerWidth >= 768 && conversations.length > 0) {
         setTimeout(() => openInboxConv(conversations[0].id), 50);
