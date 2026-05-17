@@ -2274,21 +2274,43 @@ header {
 /* RECENTLY VIEWED DRAWER */
 .rv-drawer-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 14px 16px 10px 16px;
+    gap: 10px;
+    padding: 12px 16px;
     border-bottom: 1px solid #f0f0f0;
 }
-.rv-drawer-count {
+.rv-search-input {
+    flex: 1;
+    min-width: 0;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 9px;
+    padding: 8px 12px;
     font-size: 13px;
+    font-family: inherit;
+    background: #f6f6f6;
+    color: #222;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+.rv-search-input:focus {
+    border-color: var(--apc-orange);
+    background: #fff;
+}
+.rv-drawer-count-row {
+    padding: 7px 16px 4px;
+}
+.rv-drawer-count {
+    font-size: 12px;
     font-weight: 800;
-    color: #888;
+    color: #aaa;
 }
 .rv-drawer-clear {
     font-size: 13px;
     font-weight: 700;
     color: var(--apc-orange);
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 .rv-drawer-row {
     display: flex;
