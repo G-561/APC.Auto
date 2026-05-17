@@ -5462,8 +5462,12 @@ function handleMessageSeller() {
     // Block self-messaging
     if ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName()) return;
 
-    // If a conversation already exists for this part, go straight to the inbox thread
-    const existing = conversations.find(c => c.partId === currentOpenPartId || (part.supabaseId && c.partId === part.supabaseId));
+    // If a conversation already exists for this part, go straight to the inbox thread.
+    // Always match by Supabase UUID when available — local integer IDs are unstable across
+    // reloads (nextPartId re-sequences) and can collide with a different listing's local ID.
+    const existing = part.supabaseId
+        ? conversations.find(c => c.partId === part.supabaseId)
+        : conversations.find(c => c.with === part.seller && c.partId === currentOpenPartId);
     if (existing) {
         toggleDrawer('inboxDrawer', true);
         switchInboxTab('chats');
