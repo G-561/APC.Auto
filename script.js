@@ -1205,9 +1205,9 @@ async function ensureSupabaseConversation(conv) {
     if (error) {
         console.warn('Conv sync error:', error.message, { buyerId, sellerId: part.sellerId });
         if (error.message?.includes('foreign key')) {
-            // FK violation usually means the listing or seller account has changed —
-            // don't sign the buyer out, just surface a message.
-            showToast("Couldn't start conversation — the listing may have been removed.");
+            // FK violation — likely the seller re-created their account (UUID changed)
+            // so the listing's seller_id is stale. The seller needs to re-post the listing.
+            showToast("Can't message this listing — the seller may need to re-post it.");
         } else {
             showToast('Sync error: ' + error.message);
         }
@@ -2348,7 +2348,8 @@ function getAllParts() {
     });
 }
 function findPartAnywhere(id) {
-    return [...userListings, ...partDatabase].find(p => p.supabaseId === id);
+    // id may be a Supabase UUID (string) or a local integer — check both
+    return [...userListings, ...partDatabase].find(p => p.supabaseId === id || p.id === id);
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
@@ -3289,6 +3290,11 @@ function showConfirmDialog(title, message, confirmLabel, onConfirm) {
 function renderMyParts() {
     const myPartsList = document.getElementById('myPartsList');
     if (!myPartsList) return;
+
+    // Safety: if signed in but userListings empty, may be a post-sign-in race — reload
+    if (userIsSignedIn && currentUserId && !userListings.length) {
+        loadUserListingsFromSupabase(currentUserId);
+    }
 
     myPartsList.innerHTML = '';
     const query = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
@@ -5466,16 +5472,32 @@ document.addEventListener('DOMContentLoaded', () => {
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview();
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
-                        const meta = session.user.user_metadata || {};
-                        await sb.from('profiles').upsert({
-                            id:            session.user.id,
-                            display_name:  meta.display_name  || metaName,
-                            is_pro:        meta.is_pro === true || meta.is_pro === 'true',
-                            business_name: meta.business_name || null,
-                            abn:           meta.abn           || null,
-                            postcode:      meta.postcode      || null,
-                            location:      meta.location      || null,
-                        }, { onConflict: 'id', ignoreDuplicates: true });
+                        try {
+                            const meta = session.user.user_metadata || {};
+                            const isPro = meta.is_pro === true || meta.is_pro === 'true';
+                            const name  = meta.display_name || metaName;
+                            const { error: upsertErr } = await sb.from('profiles').upsert({
+                                id:            session.user.id,
+                                display_name:  name,
+                                is_pro:        isPro,
+                                business_name: meta.business_name || null,
+                                abn:           meta.abn           || null,
+                                postcode:      meta.postcode      || null,
+                                location:      meta.location      || null,
+                            }, { onConflict: 'id' });
+                            if (!upsertErr) {
+                                const tier = isPro ? 'pro' : 'standard';
+                                signIn(name, tier, false, session.user.email);
+                                saveRememberedUser({ name, tier, email: session.user.email });
+                                if (meta.postcode) { userSettings.postcode = meta.postcode; }
+                                if (meta.location) { userSettings.location = meta.location; }
+                                saveUserSettings(); populateLocationPickers();
+                            } else {
+                                console.warn('Profile upsert failed:', upsertErr.message);
+                            }
+                        } catch (upsertEx) {
+                            console.warn('Profile upsert exception:', upsertEx);
+                        }
                     }
                 });
             loadPublicListingsFromSupabase();
@@ -8906,6 +8928,11 @@ async function loadDashGraphData() {
 }
 
 function renderDashboard() {
+    // Safety: if signed in but userListings empty, may be a post-sign-in race — reload
+    if (userIsSignedIn && currentUserId && !userListings.length) {
+        loadUserListingsFromSupabase(currentUserId).then(() => renderDashboard());
+        return;
+    }
     refreshDashSavesFromSupabase();
     loadDashGraphData();
     const sellerName = getCurrentSellerName();
