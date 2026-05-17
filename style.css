@@ -2802,12 +2802,6 @@ header {
 }
 .filter-clear-btn:hover { color: var(--apc-orange); background: var(--apc-orange-light); }
 
-.filter-radius-hint {
-    font-size: 11px;
-    color: #aaa;
-    margin-top: 6px;
-    font-style: italic;
-}
 .filter-input-disabled {
     opacity: 0.4;
     pointer-events: none;

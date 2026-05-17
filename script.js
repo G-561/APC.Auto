@@ -2822,10 +2822,8 @@ function onFilterRadiusPostcodeInput(input) {
     input.value = input.value.replace(/\D/g, '');
     const hasPostcode = input.value.trim().length > 0;
     const control = document.getElementById('radiusSegControl');
-    const hint = document.getElementById('radiusHint');
     const stateSelect = document.getElementById('filterStateSelect');
     if (control) control.classList.toggle('radius-seg-disabled', !hasPostcode);
-    if (hint) hint.style.display = hasPostcode ? 'none' : 'block';
     if (stateSelect) {
         stateSelect.disabled = hasPostcode;
         stateSelect.classList.toggle('filter-input-disabled', hasPostcode);
@@ -2838,11 +2836,9 @@ function onStateChange(select) {
     const hasState = select.value !== 'all';
     const postcodeInput = document.getElementById('filterPostcode');
     const control = document.getElementById('radiusSegControl');
-    const hint = document.getElementById('radiusHint');
     if (hasState && postcodeInput) {
         postcodeInput.value = '';
         if (control) control.classList.add('radius-seg-disabled');
-        if (hint) hint.style.display = 'block';
     }
     applyFiltersAndRender();
 }
@@ -2989,8 +2985,6 @@ function clearAllFilters() {
         radiusControl.classList.add('radius-seg-disabled');
         radiusControl.querySelectorAll('.radius-seg').forEach((s, i) => s.classList.toggle('active', i === 0));
     }
-    const radiusHint = document.getElementById('radiusHint');
-    if (radiusHint) radiusHint.style.display = 'block';
     document.querySelectorAll('#sortSegControl .radius-seg').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('#filterDrawer input[type="checkbox"]').forEach(cb => cb.checked = true);
     // Reset globals
