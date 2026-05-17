@@ -229,7 +229,7 @@ function renderRecentlyViewed() {
     const content = document.getElementById('rvDrawerContent');
     if (!content) return;
 
-    const allParts = recentlyViewed.map(e => getPartById(e.id)).filter(Boolean);
+    const allParts = recentlyViewed.map(e => findPartAnywhere(e.id)).filter(Boolean);
 
     if (!allParts.length) {
         _rvSearchQuery = '';
@@ -259,7 +259,7 @@ function renderRecentlyViewed() {
 function _renderRvList(allParts) {
     const list = document.getElementById('rvListContent');
     if (!list) return;
-    if (!allParts) allParts = recentlyViewed.map(e => getPartById(e.id)).filter(Boolean);
+    if (!allParts) allParts = recentlyViewed.map(e => findPartAnywhere(e.id)).filter(Boolean);
 
     const q = _rvSearchQuery.toLowerCase().trim();
     const parts = q
