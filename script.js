@@ -277,7 +277,7 @@ function _renderRvList(allParts) {
         <div class="rv-drawer-count-row"><span class="rv-drawer-count">${countLabel}</span></div>
         ${parts.length === 0 ? `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No matches for "${escapeHtml(_rvSearchQuery)}"</div>` : ''}
         ${parts.map(part => `
-            <div class="rv-drawer-row" onclick="toggleDrawer('recentlyViewedDrawer'); openItemDetail(${part.id})">
+            <div class="rv-drawer-row" onclick="toggleDrawer('recentlyViewedDrawer'); openItemDetail('${part.supabaseId || part.id}')">
                 <img src="${part.images?.[0] || ''}" alt="" class="rv-drawer-img">
                 <div class="rv-drawer-info">
                     <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
@@ -2256,7 +2256,7 @@ function viewConvListing() {
                     conv.partId = data.listing_id;
                     saveConversations();
                     const p = findPartAnywhere(data.listing_id);
-                    if (p) openItemDetail(p.id, false, true);
+                    if (p) openItemDetail(p.supabaseId || p.id, false, true);
                     else showToast('Listing no longer available');
                 } else {
                     showToast('Listing no longer available');
@@ -2265,7 +2265,7 @@ function viewConvListing() {
         return;
     }
     if (!part) { showToast('Listing no longer available'); return; }
-    openItemDetail(part.id, false, true);
+    openItemDetail(part.supabaseId || part.id, false, true);
 }
 
 function syncInboxPendingBtn() {
@@ -3102,7 +3102,7 @@ function buildCardHTML(part, eager = false) {
         : '';
 
     return `
-        <div class="item-card" onclick="openItemDetail(${part.id})">
+        <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
             ${pendingBanner}
             <div class="item-info">
@@ -3562,7 +3562,7 @@ function renderMyParts() {
         thumb.className = 'my-part-thumb';
         if (!isSold) {
             thumb.style.cursor = 'pointer';
-            thumb.onclick = (e) => { e.stopPropagation(); openItemDetail(part.id); };
+            thumb.onclick = (e) => { e.stopPropagation(); openItemDetail(part.supabaseId || part.id); };
         }
 
         const info = document.createElement('div');
@@ -4490,7 +4490,7 @@ function printSellLabel(listing) {
 
 // --- DYNAMIC ITEM DETAIL ---
 function openItemDetail(partId, _restoring = false, _fromInbox = false) {
-    const part = getPartById(partId) || findPartAnywhere(partId);
+    const part = findPartAnywhere(partId);
     if (!part) return;
 
     const fromInbox   = _fromInbox || document.getElementById('inboxDrawer')?.classList.contains('active');
@@ -4504,10 +4504,10 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
         }
     }
 
-    currentOpenPartId = partId;
+    currentOpenPartId = part.supabaseId || part.id;
     _currentOpenPart  = part;
-    if (!_restoring) addToRecentlyViewed(partId);
-    history.pushState(null, '', '?item=' + partId);
+    if (!_restoring) addToRecentlyViewed(part.supabaseId || part.id);
+    history.pushState(null, '', '?item=' + (part.supabaseId || part.id));
 
     // Track view in Supabase — only for other sellers' listings, not own
     if (!_restoring && sb && part.supabaseId && part.sellerId !== currentUserId) {
@@ -4743,7 +4743,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     function buildStrip(parts) {
         return parts.map(p => {
             const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
-            return `<div class="detail-mini-card" onclick="openItemDetail(${p.id})">
+            return `<div class="detail-mini-card" onclick="openItemDetail('${p.supabaseId || p.id}')">
                 <img class="detail-mini-img" src="${img}" alt="${escapeHtml(p.title)}">
                 <div class="detail-mini-info">
                     <div class="detail-mini-title">${escapeHtml(p.title)}</div>
@@ -5092,7 +5092,7 @@ function closeDetailImageViewer() {
 
 function shareCurrentListing(btn) {
     if (btn) btn.blur(); // clear focus/active state so button doesn't stay highlighted
-    const part = getPartById(currentOpenPartId);
+    const part = findPartAnywhere(currentOpenPartId);
     if (!part) return;
     const text = `${part.title} — $${part.price} | Auto Parts Connection`;
     if (navigator.share) {
@@ -5193,7 +5193,7 @@ function filterStorefront() {
 }
 
 function openStorefront(partId) {
-    const part = getPartById(partId);
+    const part = findPartAnywhere(partId);
     if (!part) return;
     const isOwn = (currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName();
     // All users get their profile pic; Pro-only fields require isOwn + isPro
@@ -6336,7 +6336,7 @@ function renderSavedParts() {
     }).join('');
 
     const buildActiveHTML = (parts) => parts.map(part => `
-        <div class="rv-drawer-row wl-wanted-row" onclick="openItemDetail(${part.id})">
+        <div class="rv-drawer-row wl-wanted-row" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img src="${part.images[0]}" alt="" class="rv-drawer-img">
             <div class="rv-drawer-info">
                 <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
@@ -6600,7 +6600,7 @@ async function viewNotifListing(notifId, listingId) {
     if (!listingId) return;
     // Check local cache first
     const cached = [...partDatabase, ...userListings].find(p => p.supabaseId === listingId);
-    if (cached) { openItemDetail(cached.id); return; }
+    if (cached) { openItemDetail(cached.supabaseId || cached.id); return; }
     // Fetch from Supabase, map, then open
     try {
         const { data: r, error } = await sb.from('listings')
@@ -6624,7 +6624,7 @@ async function viewNotifListing(notifId, listingId) {
             images, fits,
         };
         partDatabase.push(mapped);
-        openItemDetail(mapped.id);
+        openItemDetail(mapped.supabaseId || mapped.id);
     } catch (e) { showToast('Could not load listing'); }
 }
 
@@ -6640,7 +6640,7 @@ function buildWantedCard(w, matches) {
     if (hasMatches) {
         card.onclick = () => {
             if (matches.length === 1) {
-                openItemDetail(matches[0].id);
+                openItemDetail(matches[0].supabaseId || matches[0].id);
             } else {
                 const total = getAllParts().filter(p => wantedMatchesPart(w, p));
                 showWantedMatches(w, matches, total.length - matches.length);
@@ -8822,7 +8822,7 @@ function closeOfferSheet() {
 }
 
 function submitOffer() {
-    const part  = getPartById(currentOpenPartId);
+    const part  = findPartAnywhere(currentOpenPartId);
     if (!part) return;
     const price = parseFloat(document.getElementById('offerPriceInput').value);
     if (!price || price < 1)  { showToast('Please enter a valid offer amount (minimum $1)'); return; }
@@ -9379,7 +9379,7 @@ function renderDashListings(tab, btn) {
         const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
         hasMore = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
-            <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt="" onclick="openItemDetail(${p.id})" style="cursor:pointer;" title="View listing"></td>
+            <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt="" onclick="openItemDetail('${p.supabaseId || p.id}')" style="cursor:pointer;" title="View listing"></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
@@ -9537,7 +9537,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Deep-link: if URL contains ?item=123, open that listing directly
     const itemParam = new URLSearchParams(location.search).get('item');
-    if (itemParam) openItemDetail(Number(itemParam));
+    if (itemParam) openItemDetail(itemParam.includes('-') ? itemParam : Number(itemParam));
 
     // Deep-link: if URL contains ?store=userId, open that workshop/supplier storefront
     const storeParam = new URLSearchParams(location.search).get('store');
