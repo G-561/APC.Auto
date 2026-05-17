@@ -923,36 +923,6 @@
                 </div>
 
                 <div class="filter-section">
-                    <h4>Part Details</h4>
-                    <div class="input-group" style="margin-bottom: 10px;">
-                        <label>Listing Title</label>
-                        <input id="sellTitle" type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
-                    </div>
-                    <div class="input-group">
-                        <label>Category</label>
-                        <select id="sellCategory" onchange="onSellCategoryChange()">
-                            <option value="" disabled selected>Select a category...</option>
-                            <option value="body">Body & Exterior</option>
-                            <option value="glass">Glass & Windows</option>
-                            <option value="engine">Engine</option>
-                            <option value="transmission">Transmission & Drivetrain</option>
-                            <option value="suspension">Suspension & Steering</option>
-                            <option value="wheels">Wheels & Tyres</option>
-                            <option value="brakes">Brakes</option>
-                            <option value="electrical">Electrical & Lighting</option>
-                            <option value="cooling">Cooling & Air Con</option>
-                            <option value="fuel">Fuel System</option>
-                            <option value="interior">Interior</option>
-                            <option value="4x4">4x4 & Off-Road</option>
-                            <option value="performance">Performance & Race</option>
-                            <option value="audio">Audio & In-Car Tech</option>
-                            <option value="tools">Workshop & Tools</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="filter-section">
                     <h4>Vehicle Details <span id="sellVehicleRequiredNote" style="font-size:11px;font-weight:500;color:var(--apc-orange);display:none;">* required</span></h4>
                     <div id="sellVehicleChip" style="display:none; background:#f8f8f8; border:1.5px solid #e0e0e0; border-radius:12px; padding:11px 14px; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
                         <div style="flex:1; min-width:0;">
@@ -974,9 +944,7 @@
                         <input id="sellOdometer" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="e.g. 120000" style="max-width: 18ch;">
                     </div>
                 </div>
-            </div>
 
-            <div class="sell-right-col">
                 <div class="filter-section">
                     <h4>Location & Delivery</h4>
                     <div class="input-group" style="margin-bottom:10px;">
@@ -994,6 +962,42 @@
                         <div id="sellFittingToggleSection" style="display:none;">
                             <label class="choice-item"><input id="sellFittingAvailable" type="checkbox"> Fitting Available</label>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sell-right-col">
+                <div class="filter-section">
+                    <h4>Part Details</h4>
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Listing Title</label>
+                        <input id="sellTitle" type="text" placeholder="e.g. Lotus Elise S2 Steering Wheel">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Category</label>
+                        <select id="sellCategory" onchange="onSellCategoryChange()">
+                            <option value="" disabled selected>Select a category...</option>
+                            <option value="body">Body & Exterior</option>
+                            <option value="glass">Glass & Windows</option>
+                            <option value="engine">Engine</option>
+                            <option value="transmission">Transmission & Drivetrain</option>
+                            <option value="suspension">Suspension & Steering</option>
+                            <option value="wheels">Wheels & Tyres</option>
+                            <option value="brakes">Brakes</option>
+                            <option value="electrical">Electrical & Lighting</option>
+                            <option value="cooling">Cooling & Air Con</option>
+                            <option value="fuel">Fuel System</option>
+                            <option value="interior">Interior</option>
+                            <option value="4x4">4x4 & Off-Road</option>
+                            <option value="performance">Performance & Race</option>
+                            <option value="audio">Audio & In-Car Tech</option>
+                            <option value="tools">Workshop & Tools</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Description</label>
+                        <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
                     </div>
                 </div>
 
@@ -1018,10 +1022,6 @@
                             <label>Quantity in Stock</label>
                             <input id="sellQuantity" type="number" min="1" max="9999" placeholder="1">
                         </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Description</label>
-                        <textarea id="sellDescription" rows="4" placeholder="Condition details, fitment notes, scuffs, etc..."></textarea>
                     </div>
                 </div>
 
