@@ -5315,11 +5315,9 @@ header {
     justify-content: center;
     gap: 5px;
 }
-.my-listings-tab.active {
-    background: var(--apc-blue);
-    border-color: var(--apc-blue);
-    color: white;
-}
+.my-listings-tab[data-tab="active"].active  { background: #1a7a3c; border-color: #1a7a3c; color: white; }
+.my-listings-tab[data-tab="pending"].active { background: #b86e00; border-color: #b86e00; color: white; }
+.my-listings-tab[data-tab="sold"].active    { background: #888;    border-color: #888;    color: white; }
 .ml-tab-badge {
     background: rgba(255,255,255,0.3);
     border-radius: 10px;
