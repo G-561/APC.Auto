@@ -6581,6 +6581,8 @@ function openAddWantedForVehicle(vehicleId) {
 }
 
 // Submit Add Wanted
+let _pendingWanted = null; // stash form data while "check listings" modal is open
+
 function submitAddWanted() {
     const partName = document.getElementById('wantedPartName').value.trim();
     const maxPriceStr = document.getElementById('wantedMaxPrice').value.trim();
@@ -6593,13 +6595,26 @@ function submitAddWanted() {
     if (!partName) { showToast('Part name is required.'); return; }
 
     const maxPrice = maxPriceStr ? Number(maxPriceStr) : null;
+
+    // Check if listings already exist for this wanted request before posting
+    const tempWanted = { partName, category, make, model, year, series };
+    const existingMatches = findListingsForWanted(tempWanted);
+    if (existingMatches.length >= 3) {
+        _pendingWanted = { partName, make, model, year, maxPrice, category, series };
+        showCheckListingsModal(existingMatches, partName);
+        return;
+    }
+
+    _doAddWanted(partName, make, model, year, maxPrice, category, series);
+}
+
+function _doAddWanted(partName, make, model, year, maxPrice, category, series) {
     addWanted(partName, make, model, year, maxPrice, category, series);
 
     if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     renderProfile();
 
-    // Show in-card success flash, then close and reset search bar
     const successMsg = document.getElementById('wantedSuccessMsg');
     if (successMsg) successMsg.style.display = 'block';
 
@@ -6607,11 +6622,9 @@ function submitAddWanted() {
         if (successMsg) successMsg.style.display = 'none';
         closeAddWantedDrawer();
 
-        // Clear search bar text but leave filters (make/model/category etc.) intact
         const searchEl = document.getElementById('mainSearchInput');
         if (searchEl) { searchEl.value = ''; activeFilters.search = ''; renderMainGrid(); }
 
-        // If vehicle not in garage, offer save via toast after card closes
         const alreadyInGarage = make && myVehicles.some(v =>
             v.make.toLowerCase() === make.toLowerCase() &&
             v.model.toLowerCase() === model.toLowerCase()
@@ -6629,6 +6642,76 @@ function submitAddWanted() {
             );
         }
     }, 1500);
+}
+
+// Find active listings that match a draft wanted request
+function findListingsForWanted(w) {
+    return partDatabase.filter(listing => {
+        if (listing.status && listing.status !== 'active') return false;
+        return wantedMatchesListing(w, listing);
+    });
+}
+
+// Show the "check listings first" modal
+function showCheckListingsModal(matches, partName) {
+    const modal = document.getElementById('checkListingsModal');
+    const sub   = document.getElementById('checkListingsSub');
+    const cards = document.getElementById('checkListingsCards');
+    if (!modal || !cards) return;
+
+    const n = matches.length;
+    sub.textContent = `We found ${n} listing${n !== 1 ? 's' : ''} that might match "${partName}" — check these before posting a wanted request.`;
+
+    const top3 = matches.slice(0, 3);
+    cards.innerHTML = top3.map(p => {
+        const thumb = (p.images && p.images[0]) ? `<img class="check-listing-thumb" src="${p.images[0]}" alt="">` : `<div class="check-listing-thumb"></div>`;
+        const price = p.price != null ? `$${Number(p.price).toLocaleString()}` : 'POA';
+        const cond  = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[p.condition] || '';
+        const meta  = [p.loc, cond].filter(Boolean).join(' · ');
+        return `<div class="check-listing-card" onclick="dismissCheckListingsModal();openPartDetail('${p.id}')">
+            ${thumb}
+            <div class="check-listing-info">
+                <div class="check-listing-title">${escapeHtml(p.title)}</div>
+                ${meta ? `<div class="check-listing-meta">${escapeHtml(meta)}</div>` : ''}
+                <div class="check-listing-price">${price}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function dismissCheckListingsModal() {
+    const modal = document.getElementById('checkListingsModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 280);
+    _pendingWanted = null;
+}
+
+// "View matching listings" — close both drawers and run the search
+function goCheckListings() {
+    const pw = _pendingWanted;
+    dismissCheckListingsModal();
+    closeAddWantedDrawer();
+    // Pre-fill search filters to match the draft wanted request
+    if (pw) {
+        const searchEl = document.getElementById('mainSearchInput');
+        if (searchEl) { searchEl.value = pw.partName; activeFilters.search = pw.partName.toLowerCase(); }
+        if (pw.make)  activeFilters.make  = pw.make;
+        if (pw.model) activeFilters.model = pw.model;
+        if (pw.category && pw.category !== '') activeFilters.category = pw.category;
+        renderMainGrid();
+    }
+}
+
+// "Post anyway" — proceed despite existing listings
+function proceedAddWanted() {
+    const pw = _pendingWanted;
+    if (!pw) { dismissCheckListingsModal(); return; }
+    dismissCheckListingsModal();
+    _doAddWanted(pw.partName, pw.make, pw.model, pw.year, pw.maxPrice, pw.category, pw.series);
 }
 
 // --- VEHICLE DETAIL: open, segmented toggle, render each tab ---

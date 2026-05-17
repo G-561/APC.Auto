@@ -2283,6 +2283,21 @@
     </div>
 </div>
 
+<!-- CHECK LISTINGS MODAL — shown to buyer before posting a wanted request if listings already exist -->
+<div id="checkListingsModal" class="notify-modal" style="display:none;" onclick="if(event.target===this)dismissCheckListingsModal()">
+    <div class="notify-modal-inner">
+        <div class="notify-modal-header">
+            <div class="notify-modal-title">Parts already listed</div>
+            <div class="notify-modal-sub" id="checkListingsSub">We found listings that match your search — check these first before posting a wanted request.</div>
+        </div>
+        <div id="checkListingsCards" class="check-listings-cards"></div>
+        <div class="notify-modal-actions">
+            <button class="btn-full-action" onclick="goCheckListings()">VIEW MATCHING LISTINGS</button>
+            <button class="notify-skip-btn" onclick="proceedAddWanted()">Post wanted anyway</button>
+        </div>
+    </div>
+</div>
+
 <!-- NOTIFY BUYERS MODAL — shown to Pro seller after listing a part, if wanted matches found -->
 <div id="notifyBuyersModal" class="notify-modal" style="display:none;" onclick="if(event.target===this)closeNotifyModal()">
     <div class="notify-modal-inner">
