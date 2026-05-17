@@ -438,11 +438,12 @@ function onSuburbSelect(selectEl) {
         renderWorkshopBrowseView();
     } else {
         _applyLocationToWrap(wrap, val);
-        userSettings.location = val;
+        const cleanLoc = val.replace(/\s*\d{4}$/, '').trim();
+        userSettings.location = cleanLoc;
         saveUserSettings();
         renderProfile();
         if (currentUserId && sb) {
-            sb.from('profiles').update({ location: val }).eq('id', currentUserId).then(() => {});
+            sb.from('profiles').update({ location: cleanLoc }).eq('id', currentUserId).then(() => {});
         }
     }
 }
