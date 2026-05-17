@@ -2096,7 +2096,11 @@ function buildOfferCardHTML(o, sent, convId, msgIdx) {
                <input type="number" class="offer-counter-input" id="offer-counter-input-${convId}-${msgIdx}" placeholder="Counter price $">
                <button class="offer-action-btn offer-accept" style="flex:0;padding:8px 12px;" onclick="submitCounter(${convId},${msgIdx})">SEND</button>
            </div>`
-        : (sent && o.status === 'pending' ? `<div class="offer-card-awaiting">Awaiting seller response…</div>` : '');
+        : (sent && o.status === 'pending'
+            ? `<div class="offer-card-awaiting">Awaiting seller response…</div>`
+            : (sent && o.status === 'accepted'
+                ? `<div class="offer-card-buyer-accepted">Your offer was accepted! Message the seller to arrange payment and pickup.</div>`
+                : ''));
     return `<div class="offer-card">
         <div class="offer-card-header">
             <img src="${escapeHtml(o.partImg)}" class="offer-card-img" alt="">
@@ -2117,8 +2121,12 @@ function renderInboxMsgs(conv) {
     const box = document.getElementById('inboxMsgList');
     if (!box) return;
     const me = currentUserName || 'You';
+    const linkedPart = findPartAnywhere(conv.partId);
+    const soldBanner = (linkedPart?.status === 'sold')
+        ? `<div class="inbox-sold-banner">This listing has been sold</div>`
+        : '';
     let lastDay = '';
-    box.innerHTML = conv.msgs.map((m, idx) => {
+    box.innerHTML = soldBanner + conv.msgs.map((m, idx) => {
         let divider = '';
         if (m.time !== lastDay) { lastDay = m.time; divider = `<div class="inbox-date-divider">${m.time}</div>`; }
         const isOffer  = !!m.offerCard;
@@ -2272,7 +2280,7 @@ function syncInboxPendingBtn() {
     const pendingBtn = document.getElementById('inboxPendingBtn');
     const soldBtn    = document.getElementById('inboxSoldBtn');
     const conv = conversations.find(c => c.id === activeConvId);
-    const listing = conv && userListings.find(l => l.id === conv.partId);
+    const listing = conv && userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
     if (!listing) {
         if (pendingBtn) pendingBtn.style.display = 'none';
         if (soldBtn)    soldBtn.style.display    = 'none';
@@ -2295,7 +2303,7 @@ function syncInboxPendingBtn() {
 function toggleListingPending() {
     const conv = conversations.find(c => c.id === activeConvId);
     if (!conv) return;
-    const listing = userListings.find(l => l.id === conv.partId);
+    const listing = userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
     if (!listing) { showToast('Listing not found'); return; }
     listing.status = listing.status === 'pending' ? undefined : 'pending';
     const newStatus = listing.status || 'active';
@@ -2311,7 +2319,7 @@ function toggleListingPending() {
 function markSoldFromInbox() {
     const conv = conversations.find(c => c.id === activeConvId);
     if (!conv) return;
-    const listing = userListings.find(l => l.id === conv.partId);
+    const listing = userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
     if (!listing) return;
     if (listing.status === 'sold') {
         listing.status   = 'active';
@@ -8800,7 +8808,7 @@ function closeLabelModal() {
 // --- OFFER SHEET ---
 
 function openOfferSheet(partId) {
-    const part = getPartById(partId);
+    const part = findPartAnywhere(partId);
     if (!part) return;
     if (!userIsSignedIn) { openAuthDrawer(() => openOfferSheet(partId)); return; }
     // Block self-offers
@@ -8840,9 +8848,10 @@ function submitOffer() {
     saveOffers();
 
     // Route offer into inbox conversation with seller
-    let conv = conversations.find(c => c.partId === part.id && c.with === part.seller);
+    const offerPartId = part.supabaseId || part.id;
+    let conv = conversations.find(c => c.partId === offerPartId || c.partId === part.id);
     if (!conv) {
-        conv = { id: nextConvId(), with: part.seller, partId: part.id, unread: false, msgs: [] };
+        conv = { id: nextConvId(), with: part.seller, partId: offerPartId, unread: false, msgs: [] };
         conversations.push(conv);
     }
     conv.msgs.push({
