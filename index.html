@@ -722,6 +722,7 @@
                     <option value="NT">Northern Territory (NT)</option>
                 </select>
             </div>
+            <div id="filterLocationPostcodeGroup">
             <div class="input-group" style="margin-top: 10px;">
                 <label>Postcode <span style="font-weight:400; color:#aaa;">(required for radius search)</span></label>
                 <input id="filterPostcode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="e.g. 5000" autocomplete="off" oninput="onFilterRadiusPostcodeInput(this)" onblur="silentSavePostcode(this.value)">
@@ -736,6 +737,7 @@
                 </div>
                 <div id="radiusHint" class="filter-radius-hint">Enter a postcode above to enable radius search</div>
             </div>
+            </div><!-- /filterLocationPostcodeGroup -->
         </div>
 
         <div class="filter-section" id="filterSectionSort">

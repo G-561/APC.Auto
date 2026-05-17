@@ -8094,8 +8094,8 @@ function syncSearchModePill() {
     if (segParts)  segParts.classList.toggle('active', !isWanted);
     if (segWanted) segWanted.classList.toggle('active',  isWanted);
 
-    // Grey out price/condition/logistics filters — irrelevant for wanted search
-    ['filterSectionSort', 'filterSectionCondition', 'filterSectionLogistics'].forEach(id => {
+    // Grey out irrelevant filters in wanted search mode
+    ['filterSectionSort', 'filterSectionCondition', 'filterSectionLogistics', 'filterLocationPostcodeGroup'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.toggle('filter-section-muted', isWanted);
     });
