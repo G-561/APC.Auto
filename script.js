@@ -7466,7 +7466,7 @@ async function handleSignUpProSubmit() {
     showAuthError('Creating Pro account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits, postcode: postcode || '' } }
+        options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits, postcode: postcode || '', location: suburb || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     document.getElementById('authPasswordPro').value = '';
