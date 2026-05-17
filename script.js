@@ -2519,6 +2519,20 @@ function setInboxRoleTab(tab) {
     _inboxRoleTab = tab;
     document.getElementById('inboxRoleTabBuying')?.classList.toggle('active', tab === 'buying');
     document.getElementById('inboxRoleTabSelling')?.classList.toggle('active', tab === 'selling');
+    // Clear thread if the open conversation isn't in the new tab
+    if (activeConvId !== null) {
+        const conv = conversations.find(c => c.id === activeConvId);
+        const inTab = conv && (
+            tab === 'buying'  ? (conv.buyerId === currentUserId || (!conv.buyerId && !conv.sellerId)) :
+            tab === 'selling' ? conv.sellerId === currentUserId : true
+        );
+        if (!inTab) {
+            activeConvId = null;
+            document.getElementById('inboxThreadContent').style.display = 'none';
+            document.getElementById('inboxThreadEmpty').style.display = '';
+            document.getElementById('inboxConvCol')?.classList.remove('slide-away');
+        }
+    }
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
 }
 function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
