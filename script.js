@@ -15,6 +15,7 @@ let myNotifications  = [];           // buyer's unread notifications from Supaba
 let gridShownCount   = 20;
 function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
 let currentOpenPartId = null;  // tracks which part detail is open
+let _currentOpenPart  = null;  // direct part ref — avoids integer ID collision in getAllParts()
 let _detailHistory    = [];    // stack of part IDs for store → listing → back navigation
 let currentEditingListingId = null; // edit mode for Sell form
 let currentEditStatus = null;       // status selected in manage section
@@ -4504,6 +4505,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     }
 
     currentOpenPartId = partId;
+    _currentOpenPart  = part;
     if (!_restoring) addToRecentlyViewed(partId);
     history.pushState(null, '', '?item=' + partId);
 
@@ -5517,7 +5519,7 @@ function closeMessageDetailDrawer() {
 
 function handleMessageSeller() {
     if (!userIsSignedIn) { openAuthDrawer(() => handleMessageSeller()); return; }
-    const part = getPartById(currentOpenPartId);
+    const part = _currentOpenPart || getPartById(currentOpenPartId);
     if (!part) return;
     // Block self-messaging
     if ((currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName()) return;
