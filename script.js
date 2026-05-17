@@ -9525,6 +9525,9 @@ function dashFmtDate(ts) {
 
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Always start with a blank filter postcode — never pre-fill from browser autocomplete or profile
+    const fp = document.getElementById('filterPostcode');
+    if (fp) fp.value = '';
     updateHeaderOffset();
     initFilterVehicleDropdowns();
     renderSkeletonGrid();
