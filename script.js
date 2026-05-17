@@ -1351,13 +1351,16 @@ async function ensureSupabaseConversation(conv) {
     // Always use a fresh session UUID — avoids stale currentUserId after token refresh
     const { data: { session } } = await sb.auth.getSession();
     const buyerId = session?.user?.id;
-    if (!buyerId) return false;
+    if (!buyerId) { console.warn('ensureConv: no session'); return false; }
 
     const part = findPartAnywhere(conv.partId);
-    if (!part?.supabaseId || !part.sellerId) return false;
+    if (!part?.supabaseId || !part.sellerId) {
+        console.warn('ensureConv: part missing data', { partId: conv.partId, found: !!part, supabaseId: part?.supabaseId, sellerId: part?.sellerId });
+        return false;
+    }
 
     // Seller cannot be their own buyer
-    if (buyerId === part.sellerId) return false;
+    if (buyerId === part.sellerId) { console.warn('ensureConv: self-message blocked'); return false; }
 
     // Conversation may already exist in Supabase (duplicate key guard)
     const { data: existing } = await sb.from('conversations')
@@ -5568,12 +5571,12 @@ function sendContactMessage() {
         seller = part.seller;
         isPro  = !!part.isPro;
         partId = part.supabaseId || part.id;
-        partTitle = undefined;
+        partTitle = part.title;
         _pendingContactPart = null;
     }
 
     // Create conversation and add the opening message
-    const conv = { id: nextConvId(), with: seller, isPro, unread: false, partId, ...(partTitle && { partTitle }), msgs: [] };
+    const conv = { id: nextConvId(), with: seller, isPro, unread: false, partId, partTitle, msgs: [] };
     conv.msgs.push({ id: 1, sent: true, text, time: 'Today', clock: nowClock() });
     if (currentUserId) conv.buyerId = currentUserId;
     conversations.unshift(conv);
