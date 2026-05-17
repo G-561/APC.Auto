@@ -835,6 +835,21 @@
             </div>
         </div>
 
+        <!-- PASSWORD RECOVERY — shown when user arrives via reset link -->
+        <div id="authResetSection" style="display:none;">
+            <div class="auth-form-heading" style="margin-bottom:6px;">Set new password</div>
+            <p style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;">Choose a strong password — at least 8 characters.</p>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>New Password</label>
+                <div class="pw-wrap"><input type="password" id="resetNewPassword" placeholder="New password"><button type="button" class="pw-eye" onclick="togglePwVisibility('resetNewPassword',this)" aria-label="Show password">👁</button></div>
+            </div>
+            <div class="input-group" style="margin-bottom:20px;">
+                <label>Confirm Password</label>
+                <div class="pw-wrap"><input type="password" id="resetConfirmPassword" placeholder="Confirm password"><button type="button" class="pw-eye" onclick="togglePwVisibility('resetConfirmPassword',this)" aria-label="Show password">👁</button></div>
+            </div>
+            <button onclick="submitNewPassword()" style="width:100%; padding:15px; background:var(--apc-orange); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:14px;">SET NEW PASSWORD</button>
+        </div>
+
         <!-- SIGN UP: PERSONAL FORM -->
         <div id="authSignUpPersonalSection" style="display:none;">
             <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>

@@ -5444,6 +5444,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event === 'TOKEN_REFRESHED' && session?.user) {
             currentUserId = session.user.id; // keep in sync after silent token refresh
         }
+        if (event === 'PASSWORD_RECOVERY') {
+            // User arrived via a password-reset link — show the set-new-password panel
+            showResetPasswordPanel();
+            return;
+        }
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
             currentUserId = session.user.id;
             // Use display_name from session metadata (set at sign-up) — avoids showing email prefix
@@ -7179,6 +7184,41 @@ function showAuthError(msg, isStatus = false) {
     el.classList.toggle('auth-status', isStatus);
     el.style.display = '';
 }
+function showResetPasswordPanel() {
+    // Hide sign-in/sign-up tabs, show only the reset form
+    const tabBar = document.getElementById('authTabBar');
+    if (tabBar) tabBar.style.display = 'none';
+    ['authSignInSection','authSignUpSection','authSignUpPersonalSection','authSignUpProSection'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+    const resetSection = document.getElementById('authResetSection');
+    if (resetSection) resetSection.style.display = '';
+    document.getElementById('resetNewPassword') && (document.getElementById('resetNewPassword').value = '');
+    document.getElementById('resetConfirmPassword') && (document.getElementById('resetConfirmPassword').value = '');
+    toggleDrawer('authDrawer', true);
+}
+
+async function submitNewPassword() {
+    const pw1 = document.getElementById('resetNewPassword')?.value || '';
+    const pw2 = document.getElementById('resetConfirmPassword')?.value || '';
+    if (pw1.length < 8)    { showAuthError('Password must be at least 8 characters.'); return; }
+    if (pw1 !== pw2)        { showAuthError('Passwords don\'t match.'); return; }
+    showAuthError('Updating password…', true);
+    const { error } = await sb.auth.updateUser({ password: pw1 });
+    if (error) { showAuthError(error.message); return; }
+    showAuthError('Password updated — you\'re signed in!', true);
+    setTimeout(() => {
+        // Restore tab bar and close drawer
+        const tabBar = document.getElementById('authTabBar');
+        if (tabBar) tabBar.style.display = '';
+        const resetSection = document.getElementById('authResetSection');
+        if (resetSection) resetSection.style.display = 'none';
+        toggleDrawer('authDrawer');
+        showToast('Password updated successfully');
+    }, 1800);
+}
+
 async function forgotPassword() {
     const email = document.getElementById('authEmail')?.value.trim();
     if (!email) { showAuthError('Enter your email above first.'); return; }
