@@ -635,11 +635,21 @@ function handleLogoUpload(input) {
     if (!file) return;
     if (file.size > 1024 * 1024) { showToast('Image too large — please use an image under 1 MB'); input.value = ''; return; }
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async e => {
         userSettings.businessLogo = e.target.result;
         saveUserSettings();
         renderLogoPreview();
         showToast('Logo saved');
+        if (!currentUserId || !sb) return;
+        const path = `business-logos/${currentUserId}`;
+        const { error: upErr } = await sb.storage.from('listing-images').upload(path, file, { upsert: true, contentType: file.type });
+        if (upErr) { console.warn('Logo upload failed:', upErr.message); return; }
+        const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
+        const url = urlData.publicUrl + '?t=' + Date.now();
+        userSettings.businessLogo = url;
+        saveUserSettings();
+        renderLogoPreview();
+        await sb.from('profiles').update({ business_logo: url }).eq('id', currentUserId);
     };
     reader.readAsDataURL(file);
 }
@@ -651,6 +661,7 @@ function removeBusinessLogo() {
     if (fileInput) fileInput.value = '';
     renderLogoPreview();
     showToast('Logo removed');
+    if (currentUserId && sb) sb.from('profiles').update({ business_logo: null }).eq('id', currentUserId);
 }
 
 // ── PROFILE PIC CROP ─────────────────────────────────────────
@@ -793,9 +804,9 @@ async function confirmPicCrop() {
             const url = urlData.publicUrl + '?t=' + Date.now();
             userSettings.profilePic = url;
             saveUserSettings();
-            await sb.from('profiles').update({ profile_pic: url }).eq('id', currentUserId);
-            renderProfilePicPreview();
-            showToast('Profile photo saved');
+            const { error: profErr } = await sb.from('profiles').update({ profile_pic: url }).eq('id', currentUserId);
+            if (profErr) { showToast('Photo saved locally — sync failed: ' + profErr.message); }
+            else { renderProfilePicPreview(); showToast('Profile photo saved'); }
         }, 'image/jpeg', 0.92);
     };
     img.src = URL.createObjectURL(_cropFile);
@@ -852,11 +863,21 @@ function handleBannerUpload(input) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { showToast('Image too large — please use an image under 2 MB'); input.value = ''; return; }
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async e => {
         userSettings.businessBanner = e.target.result;
         saveUserSettings();
         renderBannerPreview();
         showToast('Banner saved');
+        if (!currentUserId || !sb) return;
+        const path = `business-banners/${currentUserId}`;
+        const { error: upErr } = await sb.storage.from('listing-images').upload(path, file, { upsert: true, contentType: file.type });
+        if (upErr) { console.warn('Banner upload failed:', upErr.message); return; }
+        const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
+        const url = urlData.publicUrl + '?t=' + Date.now();
+        userSettings.businessBanner = url;
+        saveUserSettings();
+        renderBannerPreview();
+        await sb.from('profiles').update({ business_banner: url }).eq('id', currentUserId);
     };
     reader.readAsDataURL(file);
 }
@@ -868,6 +889,7 @@ function removeBannerImage() {
     if (fileInput) fileInput.value = '';
     renderBannerPreview();
     showToast('Banner removed');
+    if (currentUserId && sb) sb.from('profiles').update({ business_banner: null }).eq('id', currentUserId);
 }
 
 function renderBannerPreview() {
@@ -5731,13 +5753,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
                         // Supabase is authoritative — always overwrite local values with server data
-                        userSettings.location     = profile.location      || userSettings.location     || '';
-                        userSettings.businessName = profile.business_name || '';
-                        userSettings.abn          = profile.abn           || '';
-                        userSettings.about        = profile.about         || '';
-                        userSettings.profilePic   = profile.profile_pic   || userSettings.profilePic   || '';
-                        userSettings.postcode     = profile.postcode      || userSettings.postcode     || '';
-                        saveUserSettings(); populateLocationPickers(); renderProfilePicPreview();
+                        userSettings.location       = profile.location        || userSettings.location       || '';
+                        userSettings.businessName   = profile.business_name   || '';
+                        userSettings.abn            = profile.abn             || '';
+                        userSettings.about          = profile.about           || '';
+                        userSettings.profilePic     = profile.profile_pic     || userSettings.profilePic     || '';
+                        userSettings.businessLogo   = profile.business_logo   || userSettings.businessLogo   || '';
+                        userSettings.businessBanner = profile.business_banner || userSettings.businessBanner || '';
+                        userSettings.postcode       = profile.postcode        || userSettings.postcode       || '';
+                        saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderLogoPreview(); renderBannerPreview();
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
                         try {

@@ -7,16 +7,18 @@
 
 -- ── 1. PROFILES ─────────────────────────────────────────────
 create table if not exists profiles (
-  id            uuid primary key references auth.users on delete cascade,
-  display_name  text,
-  is_pro        boolean not null default false,
-  business_name text,
-  abn           text,
-  profile_pic   text,
-  location      text,
-  postcode      text,
-  about         text,
-  created_at    timestamptz not null default now()
+  id              uuid primary key references auth.users on delete cascade,
+  display_name    text,
+  is_pro          boolean not null default false,
+  business_name   text,
+  abn             text,
+  profile_pic     text,
+  business_logo   text,
+  business_banner text,
+  location        text,
+  postcode        text,
+  about           text,
+  created_at      timestamptz not null default now()
 );
 
 -- Auto-create a profile row when a user signs up via Supabase Auth
