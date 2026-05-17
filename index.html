@@ -1391,10 +1391,15 @@
         <div class="dh-close" onclick="toggleDrawer('myPartsDrawer')">×</div>
     </div>
     <div class="drawer-content" style="padding: 15px; background: #f4f4f4;">
-        <div class="input-group" style="margin-bottom: 15px;">
+        <div class="input-group" style="margin-bottom: 12px;">
             <div style="position: relative;">
                 <input id="myPartsSearchInput" type="text" placeholder="Search my inventory..." oninput="renderMyParts()" style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #ddd; outline: none; box-sizing: border-box; font-size: 14px;">
             </div>
+        </div>
+        <div class="my-listings-tabs">
+            <button class="my-listings-tab active" data-tab="active"  onclick="setMyListingsTab('active')">Active <span id="mlBadge-active" class="ml-tab-badge"></span></button>
+            <button class="my-listings-tab"        data-tab="pending" onclick="setMyListingsTab('pending')">Pending <span id="mlBadge-pending" class="ml-tab-badge"></span></button>
+            <button class="my-listings-tab"        data-tab="sold"    onclick="setMyListingsTab('sold')">Sold <span id="mlBadge-sold" class="ml-tab-badge"></span></button>
         </div>
         <div id="myPartsList" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 50px;"></div>
     </div>
@@ -1985,8 +1990,15 @@
                             <div id="inboxThreadTitle" class="inbox-thread-title"></div>
                             <div id="inboxThreadPrice" class="inbox-thread-price"></div>
                         </div>
-                        <button id="inboxPendingBtn" class="inbox-pending-btn" onclick="toggleListingPending()" style="display:none;">Mark as Pending</button>
-                        <button id="inboxSoldBtn" class="inbox-sold-btn" onclick="markSoldFromInbox()" style="display:none;">Mark Sold</button>
+                        <div class="inbox-status-wrap" id="inboxStatusWrap" style="display:none; position:relative; flex-shrink:0;">
+                            <button id="inboxStatusBtn" class="inbox-status-btn" onclick="toggleInboxStatusPicker(event)">● ACTIVE ▾</button>
+                            <div id="inboxStatusPicker" class="inbox-status-picker" style="display:none;">
+                                <div class="isp-title">Listing Status</div>
+                                <button class="isp-opt" id="ispOptActive"  onclick="setListingStatusFromInbox('active')">● Active</button>
+                                <button class="isp-opt" id="ispOptPending" onclick="setListingStatusFromInbox('pending')">● Pending</button>
+                                <button class="isp-opt" id="ispOptSold"    onclick="setListingStatusFromInbox('sold')">● Sold</button>
+                            </div>
+                        </div>
                         <button class="inbox-view-btn" onclick="viewConvListing()">View Listing</button>
                     </div>
                     <div id="inboxMsgList" class="inbox-msg-list"></div>

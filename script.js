@@ -2299,10 +2299,9 @@ function viewConvListing() {
 }
 
 function syncInboxPendingBtn() {
-    const pendingBtn = document.getElementById('inboxPendingBtn');
-    const soldBtn    = document.getElementById('inboxSoldBtn');
+    const wrap = document.getElementById('inboxStatusWrap');
+    const btn  = document.getElementById('inboxStatusBtn');
     const conv = conversations.find(c => c.id === activeConvId);
-    // Only show status buttons when the current user is the seller in this conversation
     const isSeller = conv && (
         (conv.sellerId && conv.sellerId === currentUserId) ||
         (!conv.sellerId && userListings.some(l =>
@@ -2310,27 +2309,64 @@ function syncInboxPendingBtn() {
         ))
     );
     if (!conv || !isSeller) {
-        if (pendingBtn) pendingBtn.style.display = 'none';
-        if (soldBtn)    soldBtn.style.display    = 'none';
+        if (wrap) wrap.style.display = 'none';
+        closeInboxStatusPicker();
         return;
     }
     const listing = userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
-    if (!listing) {
-        if (pendingBtn) pendingBtn.style.display = 'none';
-        if (soldBtn)    soldBtn.style.display    = 'none';
-        return;
+    if (!listing) { if (wrap) wrap.style.display = 'none'; closeInboxStatusPicker(); return; }
+    if (!wrap || !btn) return;
+    wrap.style.display = '';
+    const s = listing.status || 'active';
+    const label = s === 'active' ? 'ACTIVE' : s === 'pending' ? 'PENDING' : 'SOLD';
+    btn.textContent = '● ' + label + ' ▾';
+    btn.className = 'inbox-status-btn isp-status-' + s;
+}
+
+function toggleInboxStatusPicker(e) {
+    if (e) e.stopPropagation();
+    const picker = document.getElementById('inboxStatusPicker');
+    if (!picker) return;
+    const isOpen = picker.style.display !== 'none';
+    picker.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+        const conv = conversations.find(c => c.id === activeConvId);
+        const listing = conv && userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
+        const current = listing?.status || 'active';
+        ['active','pending','sold'].forEach(s => {
+            const opt = document.getElementById('ispOpt' + s.charAt(0).toUpperCase() + s.slice(1));
+            if (opt) opt.classList.toggle('active', s === current);
+        });
     }
-    const isSold    = listing.status === 'sold';
-    const isPending = listing.status === 'pending';
-    if (pendingBtn) {
-        pendingBtn.style.display = isSold ? 'none' : '';
-        pendingBtn.textContent   = isPending ? 'Remove Pending' : 'Mark as Pending';
-        pendingBtn.classList.toggle('inbox-pending-active', isPending);
-    }
-    if (soldBtn) {
-        soldBtn.style.display = '';
-        soldBtn.textContent   = isSold ? 'Relist' : 'Mark Sold';
-        soldBtn.classList.toggle('is-sold', isSold);
+}
+
+function closeInboxStatusPicker() {
+    const picker = document.getElementById('inboxStatusPicker');
+    if (picker) picker.style.display = 'none';
+}
+
+function setListingStatusFromInbox(status) {
+    closeInboxStatusPicker();
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (!conv) return;
+    const listing = userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
+    if (!listing) return;
+    const doSet = () => {
+        listing.status   = status === 'active' ? undefined : status;
+        listing.soldDate = status === 'sold' ? Date.now() : (status === 'active' ? null : listing.soldDate);
+        saveUserListings();
+        syncInboxPendingBtn();
+        renderMainGrid();
+        renderMyParts();
+        if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+        const msg = status === 'active' ? 'Listing relisted as active' : status === 'pending' ? 'Listing marked as pending' : 'Listing marked as sold!';
+        showToast(msg);
+        syncListingStatusToSupabase(listing, status === 'active' ? 'active' : status);
+    };
+    if (status === 'sold' && listing.status !== 'sold') {
+        showConfirmDialog('Mark as Sold', `Mark "${listing.title}" as sold? It will be removed from active listings.`, 'Mark Sold', doSet);
+    } else {
+        doSet();
     }
 }
 
@@ -2583,6 +2619,11 @@ function setInboxRoleTab(tab) {
         }
     }
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+}
+function setMyListingsTab(tab) {
+    _myListingsTab = tab;
+    document.querySelectorAll('.my-listings-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    renderMyParts();
 }
 function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function inboxHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); e.stopPropagation(); sendInboxMessage(); } }
@@ -3573,33 +3614,52 @@ function renderMyParts() {
     const myPartsList = document.getElementById('myPartsList');
     if (!myPartsList) return;
 
-    // Safety: if signed in but userListings empty, may be a post-sign-in race — reload
     if (userIsSignedIn && currentUserId && !userListings.length) {
         loadUserListingsFromSupabase(currentUserId);
     }
 
-    myPartsList.innerHTML = '';
-    const query = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
-    const myParts = userListings.filter(part =>
-        part.status !== 'removed' &&
-        (!query || part.title.toLowerCase().includes(query))
-    ).sort((a, b) => {
-        const w = s => s === 'sold' ? 2 : s === 'pending' ? 1 : 0;
-        return w(a.status) - w(b.status);
+    const query    = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
+    const allParts = userListings.filter(p => p.status !== 'removed');
+
+    // Update tab badges
+    const counts = { active: 0, pending: 0, sold: 0 };
+    allParts.forEach(p => {
+        if (p.status === 'pending') counts.pending++;
+        else if (p.status === 'sold') counts.sold++;
+        else counts.active++;
+    });
+    ['active','pending','sold'].forEach(k => {
+        const el = document.getElementById('mlBadge-' + k);
+        if (el) el.textContent = counts[k] || '';
     });
 
-    if (myParts.length === 0) {
+    const tabParts = allParts.filter(p => {
+        const matchTab =
+            _myListingsTab === 'active'  ? (!p.status || p.status === 'active') :
+            _myListingsTab === 'pending' ? p.status === 'pending' :
+            _myListingsTab === 'sold'    ? p.status === 'sold' : true;
+        return matchTab && (!query || p.title.toLowerCase().includes(query));
+    }).sort((a, b) => (b.date || 0) - (a.date || 0));
+
+    myPartsList.innerHTML = '';
+
+    if (tabParts.length === 0) {
+        const empty = {
+            active:  { icon: '📦', title: 'No active listings',   sub: 'Tap <strong>+ Sell a Part</strong> to list your first part.' },
+            pending: { icon: '⏳', title: 'No pending listings',  sub: 'Mark a listing as pending from your inbox.' },
+            sold:    { icon: '✅', title: 'No sold listings yet', sub: 'Your sold history will appear here.' },
+        }[_myListingsTab] || { icon: '📦', title: 'No listings', sub: '' };
         myPartsList.innerHTML = query
             ? `<div style="text-align:center;color:#888;padding:30px;font-weight:700;">No listings match "${escapeHtml(query)}"</div>`
             : `<div style="text-align:center;padding:40px 20px;color:#aaa;">
-                <div style="font-size:36px;margin-bottom:10px;">📦</div>
-                <div style="font-weight:800;font-size:14px;color:#888;margin-bottom:6px;">No active listings</div>
-                <div style="font-size:12px;">Tap <strong>+ Sell a Part</strong> to list your first part.</div>
+                <div style="font-size:36px;margin-bottom:10px;">${empty.icon}</div>
+                <div style="font-weight:800;font-size:14px;color:#888;margin-bottom:6px;">${empty.title}</div>
+                <div style="font-size:12px;">${empty.sub}</div>
                </div>`;
         return;
     }
 
-    myParts.forEach(part => {
+    tabParts.forEach(part => {
         const isSold    = part.status === 'sold';
         const isPending = part.status === 'pending';
 
@@ -3626,32 +3686,59 @@ function renderMyParts() {
 
         const price = document.createElement('span');
         price.className = 'my-part-price';
-        price.textContent = `$${part.price}`;
-
-        const badge = document.createElement('span');
-        badge.className = 'my-part-badge' + (isPending ? ' pending' : isSold ? ' sold' : '');
-        badge.textContent = isPending ? 'PENDING' : isSold ? 'SOLD' : 'ACTIVE';
-
+        price.textContent = '$' + part.price;
         sub.appendChild(price);
-        sub.appendChild(badge);
+
+        if (isSold && part.soldDate) {
+            const dateEl = document.createElement('span');
+            dateEl.className = 'my-part-sold-date';
+            dateEl.textContent = 'Sold ' + new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+            sub.appendChild(dateEl);
+        }
+
         info.appendChild(title);
         info.appendChild(sub);
 
-        const manageBtn = document.createElement('button');
-        manageBtn.className = 'my-part-manage-btn';
-        manageBtn.textContent = 'MANAGE';
-        manageBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'my-part-delete-btn';
-        deleteBtn.textContent = '×';
-        deleteBtn.title = 'Delete listing';
-        deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
-
         row.appendChild(thumb);
         row.appendChild(info);
-        row.appendChild(manageBtn);
-        row.appendChild(deleteBtn);
+
+        if (isSold) {
+            const relistBtn = document.createElement('button');
+            relistBtn.className = 'my-part-relist-btn';
+            relistBtn.textContent = 'RELIST';
+            relistBtn.onclick = (e) => { e.stopPropagation(); relistPart(part.id); };
+
+            const rateBtn = document.createElement('button');
+            rateBtn.className = 'my-part-rate-btn';
+            rateBtn.textContent = '★';
+            rateBtn.title = 'Rate buyer';
+            rateBtn.onclick = (e) => { e.stopPropagation(); showToast('Buyer ratings coming soon'); };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'my-part-delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.title = 'Delete listing';
+            deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
+
+            row.appendChild(relistBtn);
+            row.appendChild(rateBtn);
+            row.appendChild(deleteBtn);
+        } else {
+            const manageBtn = document.createElement('button');
+            manageBtn.className = 'my-part-manage-btn';
+            manageBtn.textContent = 'MANAGE';
+            manageBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'my-part-delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.title = 'Delete listing';
+            deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
+
+            row.appendChild(manageBtn);
+            row.appendChild(deleteBtn);
+        }
+
         myPartsList.appendChild(row);
     });
 }
@@ -5604,6 +5691,7 @@ function handleMessageSeller() {
 let _lastSentConvId    = null;
 let _pendingContactPart = null;
 let _inboxRoleTab = 'buying';
+let _myListingsTab = 'active';
 
 function sendContactMessage() {
     const msgEl = document.getElementById('contactCardMsg');
@@ -9540,6 +9628,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Always start with a blank filter postcode — never pre-fill from browser autocomplete or profile
     const fp = document.getElementById('filterPostcode');
     if (fp) fp.value = '';
+    document.addEventListener('click', e => { if (!e.target.closest('#inboxStatusWrap')) closeInboxStatusPicker(); });
     updateHeaderOffset();
     initFilterVehicleDropdowns();
     renderSkeletonGrid();
