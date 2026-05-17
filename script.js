@@ -1208,14 +1208,17 @@ async function loadPublicListingsFromSupabase() {
             .limit(40);
         if (error) { renderMainGrid(); return; }
 
-        // Batch-fetch current display names so stale seller_name values don't show
+        // Batch-fetch current display names and profile pics
         const sellerIds = [...new Set((rows || []).map(r => r.seller_id).filter(Boolean))];
         let nameMap = {};
         if (sellerIds.length) {
             const { data: profiles } = await sb.from('profiles')
-                .select('id, display_name')
+                .select('id, display_name, profile_pic')
                 .in('id', sellerIds);
-            nameMap = Object.fromEntries((profiles || []).map(p => [p.id, p.display_name]).filter(([, n]) => n));
+            (profiles || []).forEach(p => {
+                if (p.display_name) nameMap[p.id] = p.display_name;
+                if (p.profile_pic)  _sellerPicCache[p.id] = p.profile_pic;
+            });
         }
 
         (rows || []).forEach(r => {
@@ -2653,6 +2656,7 @@ async function openStorefrontByUserId(userId) {
         .select('display_name, is_pro, business_name, abn, about, profile_pic, location')
         .eq('id', userId).single();
     if (!profile) return;
+    if (profile.profile_pic) _sellerPicCache[userId] = profile.profile_pic;
     const sellerName = profile.display_name || 'Seller';
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = sellerName;
@@ -4653,8 +4657,8 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (sellerHeaderName) sellerHeaderName.textContent = part.seller;
     if (sellerHeaderSub)  sellerHeaderSub.textContent  = '';
 
-    // Avatar: show profile pic if own listing, otherwise tier-coloured initial
-    const sellerPic   = isOwnListing ? (userSettings.profilePic || '') : '';
+    // Avatar: own listing uses local settings; others use cached Supabase pic
+    const sellerPic   = isOwnListing ? (userSettings.profilePic || '') : (_sellerPicCache[part.sellerId] || '');
     const tierBg      = part.isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
     const tierShadow  = part.isPro ? '0 6px 16px rgba(0,122,255,0.18)' : '0 6px 16px rgba(255,149,0,0.18)';
     function applyAvatar(el) {
@@ -6108,6 +6112,7 @@ let savedPartsTab = 'all';           // 'all' | 'active' | 'ended' | 'stores'
 const SAVED_STORES_KEY = 'apc.savedStores.v1';
 let savedStores = loadSavedStores(); // Array<{ sellerName, businessName, isPro, savedAt }>
 let currentStorefrontSeller = null;  // tracks whose storefront is open
+let _sellerPicCache = {};            // sellerId → profile_pic URL
 let pendingGeneralEnquiry  = null;  // { seller, isPro } — set when contacting from storefront
 
 function loadSavedStores() {
