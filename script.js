@@ -1962,10 +1962,24 @@ function switchInboxTab(tab) {
 function renderInboxConvList(filter) {
     const list = document.getElementById('inboxConvList');
     if (!list) return;
+
+    // Update tab badges
+    const buyingUnread  = conversations.filter(c => c.unread && (c.buyerId === currentUserId || (!c.buyerId && !c.sellerId))).length;
+    const sellingUnread = conversations.filter(c => c.unread && c.sellerId === currentUserId).length;
+    const bBadge = document.getElementById('inboxRoleBadgeBuying');
+    const sBadge = document.getElementById('inboxRoleBadgeSelling');
+    if (bBadge) { bBadge.textContent = buyingUnread || ''; bBadge.style.display = buyingUnread ? '' : 'none'; }
+    if (sBadge) { sBadge.textContent = sellingUnread || ''; sBadge.style.display = sellingUnread ? '' : 'none'; }
+
     const q = (filter || '').toLowerCase();
+    const roleConvs = conversations.filter(c => {
+        if (_inboxRoleTab === 'buying')  return c.buyerId === currentUserId || (!c.buyerId && !c.sellerId);
+        if (_inboxRoleTab === 'selling') return c.sellerId === currentUserId;
+        return true;
+    });
     const filtered = (q
-        ? conversations.filter(c => c.with.toLowerCase().includes(q) || getConvPartTitle(c).toLowerCase().includes(q))
-        : [...conversations]
+        ? roleConvs.filter(c => c.with.toLowerCase().includes(q) || getConvPartTitle(c).toLowerCase().includes(q))
+        : [...roleConvs]
     ).sort((a, b) => {
         const weight = conv => {
             const t = (conv.msgs[conv.msgs.length - 1] || {}).time || '';
@@ -1978,12 +1992,15 @@ function renderInboxConvList(filter) {
     });
     if (!filtered.length) {
         const isSearch = !!filter;
+        const emptyMsg = _inboxRoleTab === 'selling'
+            ? 'When someone enquires about one of your listings, it will appear here.'
+            : 'When you message a seller about a listing, it will appear here.';
         list.innerHTML = isSearch
             ? `<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;font-weight:600;">No conversations match "${escapeHtml(filter)}"</div>`
             : `<div style="text-align:center;padding:40px 20px;color:#aaa;">
                 <div style="font-size:36px;margin-bottom:10px;">💬</div>
                 <div style="font-weight:800;font-size:14px;color:#888;margin-bottom:6px;">No messages yet</div>
-                <div style="font-size:12px;line-height:1.5;">When you message a seller or receive an enquiry,<br>the conversation will appear here.</div>
+                <div style="font-size:12px;line-height:1.5;">${emptyMsg}</div>
               </div>`;
         return;
     }
@@ -2498,6 +2515,12 @@ function renderTrashList() {
         }).join('')}`;
 }
 function filterInboxConvs(val) { renderInboxConvList(val); }
+function setInboxRoleTab(tab) {
+    _inboxRoleTab = tab;
+    document.getElementById('inboxRoleTabBuying')?.classList.toggle('active', tab === 'buying');
+    document.getElementById('inboxRoleTabSelling')?.classList.toggle('active', tab === 'selling');
+    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+}
 function inboxAutoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function inboxHandleKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); e.stopPropagation(); sendInboxMessage(); } }
 
@@ -5503,6 +5526,7 @@ function handleMessageSeller() {
 
 let _lastSentConvId    = null;
 let _pendingContactPart = null;
+let _inboxRoleTab = 'buying';
 
 function sendContactMessage() {
     const msgEl = document.getElementById('contactCardMsg');

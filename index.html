@@ -1953,6 +1953,10 @@
 
             <!-- Left: conversation list -->
             <div class="inbox-conv-col" id="inboxConvCol">
+                <div class="inbox-role-tabs">
+                    <button class="inbox-role-tab active" id="inboxRoleTabBuying" onclick="setInboxRoleTab('buying')">Buying <span class="inbox-role-badge" id="inboxRoleBadgeBuying" style="display:none"></span></button>
+                    <button class="inbox-role-tab" id="inboxRoleTabSelling" onclick="setInboxRoleTab('selling')">Selling <span class="inbox-role-badge" id="inboxRoleBadgeSelling" style="display:none"></span></button>
+                </div>
                 <div class="inbox-conv-search">
                     <input type="text" id="inboxSearchInput" placeholder="Search by name or part…" oninput="filterInboxConvs(this.value)">
                 </div>
