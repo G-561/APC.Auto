@@ -1151,6 +1151,7 @@ async function syncListingToSupabase(localListing) {
             is_pro: !!localListing.isPro,
             stock_number: localListing.stockNumber || null,
             odometer: localListing.odometer || null,
+            chassis_vin: localListing.chassisVin || null,
             warehouse_bin: localListing.warehouseBin || null,
             quantity: localListing.quantity || 1,
             apc_id: localListing.apcId || null,
@@ -1236,7 +1237,7 @@ async function loadPublicListingsFromSupabase() {
                 description: r.description, loc: r.location,
                 postcode: r.postcode, pickup: r.pickup, postage: r.postage,
                 openToOffers: r.open_to_offers, isPro: r.is_pro,
-                stockNumber: r.stock_number, odometer: r.odometer,
+                stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
                 warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
                 fit: r.fitting_available, year: r.fits_year,
                 seller: nameMap[r.seller_id] || r.seller_name || 'Seller',
@@ -1288,7 +1289,8 @@ async function loadUserListingsFromSupabase(userId) {
                     openToOffers: r.open_to_offers,
                     status: r.status === 'active' ? undefined : r.status,
                     isPro: r.is_pro, stockNumber: r.stock_number,
-                    odometer: r.odometer, warehouseBin: r.warehouse_bin,
+                    odometer: r.odometer, chassisVin: r.chassis_vin || null,
+                    warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, apcId: r.apc_id,
                     fit: r.fitting_available, year: r.fits_year,
                     saves: r.saves_count || 0, sellerId: r.seller_id, fits,
@@ -1307,7 +1309,8 @@ async function loadUserListingsFromSupabase(userId) {
                     openToOffers: r.open_to_offers,
                     status: r.status === 'active' ? undefined : r.status,
                     isPro: r.is_pro, stockNumber: r.stock_number,
-                    odometer: r.odometer, warehouseBin: r.warehouse_bin,
+                    odometer: r.odometer, chassisVin: r.chassis_vin || null,
+                    warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, fit: r.fitting_available,
                     year: r.fits_year, seller: r.seller_name || currentUserName || '',
                     images: images.length ? images : [], fits,
@@ -1856,7 +1859,7 @@ function subscribeToRealtimeListings() {
                             description: r.description, loc: r.location,
                             postcode: r.postcode, pickup: r.pickup, postage: r.postage,
                             openToOffers: r.open_to_offers, isPro: r.is_pro,
-                            stockNumber: r.stock_number, odometer: r.odometer,
+                            stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
                             warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
                             fit: r.fitting_available, year: r.fits_year,
                             seller: r.seller_name || 'Seller',
@@ -3986,6 +3989,8 @@ function openEditListing(listingId) {
     if (stockInput) stockInput.value = listing.stockNumber || '';
     const odoInput = document.getElementById('sellOdometer');
     if (odoInput) odoInput.value = listing.odometer || '';
+    const vinInput = document.getElementById('sellChassisVin');
+    if (vinInput) vinInput.value = listing.chassisVin || '';
 
     renderSellImagePreviews();
 
@@ -4143,6 +4148,8 @@ function resetSellForm() {
     if (stockInput) stockInput.value = '';
     const odoInput = document.getElementById('sellOdometer');
     if (odoInput) odoInput.value = '';
+    const vinInput = document.getElementById('sellChassisVin');
+    if (vinInput) vinInput.value = '';
     renderSellImagePreviews();
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
@@ -4159,8 +4166,8 @@ function updateSellFittingToggleVisibility() {
     if (fitting) fitting.style.display = isPro ? 'contents' : 'none';
     const stockSection = document.getElementById('sellStockNumberSection');
     if (stockSection) stockSection.style.display = isPro ? 'block' : 'none';
-    const odoSection = document.getElementById('sellOdometerSection');
-    if (odoSection) odoSection.style.display = isPro ? 'block' : 'none';
+    const vinOdoRow = document.getElementById('sellVinOdometerRow');
+    if (vinOdoRow) vinOdoRow.style.display = isPro ? 'flex' : 'none';
 }
 
 function updateSellQuantityVisibility() {
@@ -4235,6 +4242,9 @@ async function submitSellListing() {
     const stockNumber = document.getElementById('sellStockNumber')?.value.trim() || null;
     const odoRaw = document.getElementById('sellOdometer')?.value.trim().replace(/\D/g, '');
     const odometer = (userIsSignedIn && currentUserTier === 'pro' && odoRaw) ? Number(odoRaw) : null;
+    const chassisVin = (userIsSignedIn && currentUserTier === 'pro')
+        ? (document.getElementById('sellChassisVin')?.value.trim() || null)
+        : null;
     const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
     const warehouseBin = (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement)
         ? (document.getElementById('sellWarehouseBin')?.value.trim() || null)
@@ -4262,7 +4272,8 @@ async function submitSellListing() {
         warehouseBin,
         quantity,
         stockNumber,
-        odometer
+        odometer,
+        chassisVin
     };
 
     let message = 'Listing created';
@@ -6552,7 +6563,7 @@ async function viewNotifListing(notifId, listingId) {
             price: r.price, condition: r.condition, description: r.description,
             loc: r.location, postcode: r.postcode, pickup: r.pickup, postage: r.postage,
             openToOffers: r.open_to_offers, isPro: r.is_pro,
-            stockNumber: r.stock_number, odometer: r.odometer,
+            stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
             warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
             fit: r.fitting_available, year: r.fits_year,
             seller: r.seller_name || 'Seller',
