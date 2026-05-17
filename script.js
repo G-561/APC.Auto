@@ -2664,7 +2664,8 @@ async function openStorefrontByUserId(userId) {
         profile.abn || '',
         profile.about || '',
         profile.location || '',
-        ''
+        '',
+        userId
     );
     const isOwn = userId === currentUserId || sellerName === getCurrentSellerName();
     const sfMsgBtn = document.getElementById('sfMsgBtn');
@@ -5095,7 +5096,7 @@ function shareCurrentListing(btn) {
 }
 
 // --- SELLER STOREFRONT ---
-function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location, banner) {
+function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location, banner, userId = null) {
     currentStorefrontSeller = sellerName;
     const initial = (sellerName || 'S').charAt(0).toUpperCase();
 
@@ -5146,7 +5147,8 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     if (sfAboutText) sfAboutText.textContent = about || '';
 
     // Stats
-    const allParts   = getAllParts().filter(p => p.seller === sellerName);
+    const matchPart = p => userId ? (p.sellerId === userId || p.seller === sellerName) : p.seller === sellerName;
+    const allParts   = getAllParts().filter(matchPart);
     const totalSaves = allParts.reduce((s, p) => s + (p.saves || 0), 0);
     const listEl = document.getElementById('sfStatListings');
     const saveEl = document.getElementById('sfStatSaves');
@@ -5157,6 +5159,7 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) {
         grid.innerHTML = '';
+        grid.dataset.userId = userId || '';
         allParts.forEach(p => { grid.innerHTML += buildCardHTML(p); });
     }
 
@@ -5172,7 +5175,9 @@ function filterStorefront() {
     const grid = document.getElementById('sellerPartsGrid');
     if (!grid) return;
     const sellerName = grid.dataset.seller || '';
-    const parts = getAllParts().filter(p => p.seller === sellerName &&
+    const userId = grid.dataset.userId || null;
+    const matchPart = p => userId ? (p.sellerId === userId || p.seller === sellerName) : p.seller === sellerName;
+    const parts = getAllParts().filter(p => matchPart(p) &&
         (!q || p.title.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q)));
     grid.innerHTML = '';
     parts.forEach(p => { grid.innerHTML += buildCardHTML(p); });
