@@ -2302,7 +2302,19 @@ function syncInboxPendingBtn() {
     const pendingBtn = document.getElementById('inboxPendingBtn');
     const soldBtn    = document.getElementById('inboxSoldBtn');
     const conv = conversations.find(c => c.id === activeConvId);
-    const listing = conv && userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
+    // Only show status buttons when the current user is the seller in this conversation
+    const isSeller = conv && (
+        (conv.sellerId && conv.sellerId === currentUserId) ||
+        (!conv.sellerId && userListings.some(l =>
+            (l.supabaseId === conv.partId || l.id === conv.partId) && l.sellerId === currentUserId
+        ))
+    );
+    if (!conv || !isSeller) {
+        if (pendingBtn) pendingBtn.style.display = 'none';
+        if (soldBtn)    soldBtn.style.display    = 'none';
+        return;
+    }
+    const listing = userListings.find(l => l.supabaseId === conv.partId || l.id === conv.partId);
     if (!listing) {
         if (pendingBtn) pendingBtn.style.display = 'none';
         if (soldBtn)    soldBtn.style.display    = 'none';
