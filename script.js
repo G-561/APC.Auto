@@ -4311,12 +4311,12 @@ async function submitSellListing() {
             syncTarget = existing;
             message = 'Listing updated';
         } else {
-            const newListing = { id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload };
+            const newListing = { id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), sellerId: currentUserId || null, ...listingPayload };
             userListings.push(newListing);
             syncTarget = newListing;
         }
     } else {
-        const newListing = { id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), ...listingPayload };
+        const newListing = { id: nextPartId(), saves: 0, date: Date.now(), apcId: generateApcId(), sellerId: currentUserId || null, ...listingPayload };
         userListings.push(newListing);
         syncTarget = newListing;
     }
