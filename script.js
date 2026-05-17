@@ -6230,7 +6230,7 @@ function renderSavedParts() {
                 <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-                <div class="rv-drawer-price">${part.price}</div>
+                <div class="rv-drawer-price">$${part.price}</div>
                 <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
             </div>
         </div>
