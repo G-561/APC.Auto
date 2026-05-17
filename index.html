@@ -2298,6 +2298,19 @@
     </div>
 </div>
 
+<!-- PROFILE PIC CROP MODAL -->
+<div id="picCropModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.88); flex-direction:column; align-items:center; justify-content:center; gap:24px;">
+    <div style="color:#fff; font-size:15px; font-weight:700; letter-spacing:0.2px;">Move &amp; Scale</div>
+    <div id="picCropViewport" style="width:280px; height:280px; border-radius:50%; overflow:hidden; position:relative; cursor:grab; box-shadow:0 0 0 9999px rgba(0,0,0,0.75); border:2.5px solid rgba(255,255,255,0.35); flex-shrink:0;">
+        <img id="picCropImage" src="" alt="" draggable="false" style="position:absolute; top:50%; left:50%; transform-origin:center center; max-width:none; max-height:none; user-select:none; -webkit-user-drag:none; pointer-events:none;">
+    </div>
+    <div style="color:rgba(255,255,255,0.5); font-size:12px;">Drag to reposition · Pinch or scroll to zoom</div>
+    <div style="display:flex; gap:12px;">
+        <button onclick="cancelPicCrop()" style="padding:13px 30px; border-radius:12px; border:2px solid rgba(255,255,255,0.25); background:transparent; color:#fff; font-size:14px; font-weight:700; cursor:pointer;">Cancel</button>
+        <button onclick="confirmPicCrop()" style="padding:13px 30px; border-radius:12px; border:none; background:var(--apc-orange); color:#fff; font-size:14px; font-weight:700; cursor:pointer;">Use Photo</button>
+    </div>
+</div>
+
 <!-- CHECK LISTINGS MODAL — shown to buyer before posting a wanted request if listings already exist -->
 <div id="checkListingsModal" class="notify-modal" style="display:none;" onclick="if(event.target===this)dismissCheckListingsModal()">
     <div class="notify-modal-inner">

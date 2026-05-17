@@ -611,27 +611,161 @@ function removeBusinessLogo() {
     showToast('Logo removed');
 }
 
+// ── PROFILE PIC CROP ─────────────────────────────────────────
+const CROP_VP  = 280;  // viewport circle diameter (px)
+const CROP_OUT = 400;  // output canvas size (px)
+let _cropFile    = null;
+let _cropScale   = 1;
+let _cropMinScale = 1;
+let _cropOffsetX = 0;
+let _cropOffsetY = 0;
+let _cropImgW    = 0;
+let _cropImgH    = 0;
+let _cropEventsAttached = false;
+
+function openPicCropper(file) {
+    _cropFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById('picCropImage');
+        img.onload = () => {
+            _cropImgW     = img.naturalWidth;
+            _cropImgH     = img.naturalHeight;
+            _cropMinScale = CROP_VP / Math.min(_cropImgW, _cropImgH);
+            _cropScale    = _cropMinScale;
+            _cropOffsetX  = 0;
+            _cropOffsetY  = 0;
+            _applyCropTransform();
+            const modal = document.getElementById('picCropModal');
+            modal.style.display = 'flex';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    if (!_cropEventsAttached) { _attachCropEvents(); _cropEventsAttached = true; }
+}
+
+function _applyCropTransform() {
+    // Clamp so image always covers the circle
+    const maxX = Math.max(0, (_cropImgW * _cropScale - CROP_VP) / 2);
+    const maxY = Math.max(0, (_cropImgH * _cropScale - CROP_VP) / 2);
+    _cropOffsetX = Math.max(-maxX, Math.min(maxX, _cropOffsetX));
+    _cropOffsetY = Math.max(-maxY, Math.min(maxY, _cropOffsetY));
+    const img = document.getElementById('picCropImage');
+    img.style.transform = `translate(calc(-50% + ${_cropOffsetX}px), calc(-50% + ${_cropOffsetY}px)) scale(${_cropScale})`;
+}
+
+function _attachCropEvents() {
+    const vp = document.getElementById('picCropViewport');
+    let lastTouches = null;
+
+    vp.addEventListener('touchstart', e => {
+        e.preventDefault();
+        lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    }, { passive: false });
+
+    vp.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const cur = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+        if (!lastTouches) { lastTouches = cur; return; }
+
+        if (cur.length === 1 && lastTouches.length >= 1) {
+            _cropOffsetX += cur[0].x - lastTouches[0].x;
+            _cropOffsetY += cur[0].y - lastTouches[0].y;
+        } else if (cur.length === 2) {
+            const prevDist = lastTouches.length === 2
+                ? Math.hypot(lastTouches[1].x - lastTouches[0].x, lastTouches[1].y - lastTouches[0].y) : null;
+            const currDist = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);
+            if (prevDist) {
+                _cropScale = Math.max(_cropMinScale, Math.min(_cropScale * (currDist / prevDist), _cropMinScale * 4));
+            }
+            if (lastTouches.length === 2) {
+                _cropOffsetX += (cur[0].x + cur[1].x) / 2 - (lastTouches[0].x + lastTouches[1].x) / 2;
+                _cropOffsetY += (cur[0].y + cur[1].y) / 2 - (lastTouches[0].y + lastTouches[1].y) / 2;
+            }
+        }
+        lastTouches = cur;
+        _applyCropTransform();
+    }, { passive: false });
+
+    vp.addEventListener('touchend', e => {
+        lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    });
+
+    // Mouse drag
+    let dragging = false, dragX = 0, dragY = 0;
+    vp.addEventListener('mousedown', e => { dragging = true; dragX = e.clientX; dragY = e.clientY; e.preventDefault(); });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        _cropOffsetX += e.clientX - dragX; dragX = e.clientX;
+        _cropOffsetY += e.clientY - dragY; dragY = e.clientY;
+        _applyCropTransform();
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+
+    // Scroll to zoom (desktop)
+    vp.addEventListener('wheel', e => {
+        e.preventDefault();
+        _cropScale = Math.max(_cropMinScale, Math.min(_cropScale * (e.deltaY < 0 ? 1.1 : 0.9), _cropMinScale * 4));
+        _applyCropTransform();
+    }, { passive: false });
+}
+
+function cancelPicCrop() {
+    document.getElementById('picCropModal').style.display = 'none';
+    document.getElementById('profilePicInput').value = '';
+    _cropFile = null;
+}
+
+async function confirmPicCrop() {
+    if (!_cropFile) return;
+    document.getElementById('picCropModal').style.display = 'none';
+    showToast('Saving…');
+
+    const img = new Image();
+    img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = CROP_OUT;
+        const ctx = canvas.getContext('2d');
+
+        // Circular clip
+        ctx.beginPath();
+        ctx.arc(CROP_OUT / 2, CROP_OUT / 2, CROP_OUT / 2, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Map viewport transform to canvas
+        const ratio     = CROP_OUT / CROP_VP;
+        const drawScale = _cropScale * ratio;
+        const cx        = CROP_OUT / 2 + _cropOffsetX * ratio;
+        const cy        = CROP_OUT / 2 + _cropOffsetY * ratio;
+        ctx.drawImage(img, cx - _cropImgW * drawScale / 2, cy - _cropImgH * drawScale / 2,
+                      _cropImgW * drawScale, _cropImgH * drawScale);
+
+        canvas.toBlob(async blob => {
+            if (!blob) { showToast('Crop failed'); return; }
+            if (!currentUserId || !sb) { showToast('Please sign in first'); return; }
+            const path = `profile-pics/${currentUserId}.jpg`;
+            const { error: upErr } = await sb.storage.from('listing-images').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+            if (upErr) { showToast('Upload failed — ' + upErr.message); return; }
+            const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
+            const url = urlData.publicUrl + '?t=' + Date.now();
+            userSettings.profilePic = url;
+            saveUserSettings();
+            await sb.from('profiles').update({ profile_pic: url }).eq('id', currentUserId);
+            renderProfilePicPreview();
+            showToast('Profile photo saved');
+        }, 'image/jpeg', 0.92);
+    };
+    img.src = URL.createObjectURL(_cropFile);
+}
+
 async function handleProfilePicUpload(input) {
     const file = input.files[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { showToast('Image too large — please use an image under 2 MB'); input.value = ''; return; }
-    if (!currentUserId || !sb) {
-        showToast('Please sign in to save a profile photo');
-        return;
-    }
-    showToast('Uploading…');
-    const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
-    const path = `profile-pics/${currentUserId}.${ext}`;
-    const { error: upErr } = await sb.storage.from('listing-images').upload(path, file, { upsert: true, contentType: file.type });
-    if (upErr) { showToast('Upload failed — ' + upErr.message); return; }
-    const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
-    const url = urlData.publicUrl + '?t=' + Date.now();
-    userSettings.profilePic = url;
-    saveUserSettings();
-    await sb.from('profiles').update({ profile_pic: url }).eq('id', currentUserId);
-    renderProfilePicPreview();
-    showToast('Profile photo saved');
+    openPicCropper(file);
 }
+
 
 async function removeProfilePic() {
     userSettings.profilePic = '';
