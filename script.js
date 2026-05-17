@@ -10,6 +10,8 @@ let currentUserTier  = null;          // 'standard' | 'pro'
 let currentUserId    = null;          // Supabase UUID of signed-in user
 let currentUserEmail = null;          // signed-in user's email
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
+let _fromWantedId    = null;         // UUID of wanted request that triggered "List this Part"
+let myNotifications  = [];           // buyer's unread notifications from Supabase
 let gridShownCount   = 20;
 function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
 let currentOpenPartId = null;  // tracks which part detail is open
@@ -1525,6 +1527,46 @@ async function loadSavedListingsFromSupabase(userId) {
     } catch (e) { console.warn('loadSavedListingsFromSupabase:', e); }
 }
 
+// ── NOTIFICATIONS (buyer side) ────────────────────────────────
+async function loadNotificationsFromSupabase() {
+    if (!sb || !currentUserId) return;
+    try {
+        const { data, error } = await sb
+            .from('notifications')
+            .select('*')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (error) { console.warn('notifications load:', error.message); return; }
+        myNotifications = data || [];
+        renderNotificationBadge();
+        // Refresh wanted list if it's open so match banners appear
+        if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
+    } catch (e) { console.warn('loadNotificationsFromSupabase:', e); }
+}
+
+function renderNotificationBadge() {
+    const unread = myNotifications.filter(n => !n.read).length;
+    const badge  = document.getElementById('navNotifBadge');
+    if (badge) {
+        badge.style.display = unread > 0 ? 'flex' : 'none';
+        badge.textContent   = unread > 9 ? '9+' : String(unread);
+    }
+}
+
+async function markNotificationRead(notifId) {
+    myNotifications = myNotifications.map(n => n.id === notifId ? { ...n, read: true } : n);
+    renderNotificationBadge();
+    if (sb) await sb.from('notifications').update({ read: true }).eq('id', notifId);
+}
+
+async function dismissNotification(notifId) {
+    myNotifications = myNotifications.filter(n => n.id !== notifId);
+    renderNotificationBadge();
+    if (sb) await sb.from('notifications').delete().eq('id', notifId);
+    renderWantedList();
+}
+
 // ── SUPABASE REALTIME ─────────────────────────────────────────
 let _realtimeChannel = null;
 
@@ -2967,6 +3009,111 @@ function loadMoreListings() {
     renderMainGrid(true);
 }
 
+// ── WANTED ↔ LISTING MATCH ALGORITHM ────────────────────────────────────────
+// Used both to hide already-stocked items in the seller's wanted feed,
+// and to suggest which buyers to notify after a new listing is published.
+function wantedMatchesListing(w, listing) {
+    // Category must match if both sides have one
+    const lCat = (listing.category || '').toLowerCase();
+    const wCat = (w.category   || '').toLowerCase();
+    if (lCat && wCat && lCat !== wCat) return false;
+
+    // Make must match if both sides have one
+    const lMake  = (listing.fits?.[0]?.make  || '').toLowerCase().trim();
+    const wMake  = (w.make  || '').toLowerCase().trim();
+    if (lMake && wMake && lMake !== wMake) return false;
+
+    // Model must overlap if both sides have one
+    const lModel = (listing.fits?.[0]?.model || '').toLowerCase().trim();
+    const wModel = (w.model || '').toLowerCase().trim();
+    if (lModel && wModel && !lModel.includes(wModel) && !wModel.includes(lModel)) return false;
+
+    // Part-name word match: ALL significant words in the wanted request
+    // must appear somewhere in the listing title (prevents "engine" matching "engine cover")
+    const stopWords    = new Set(['for','a','an','the','of','with','to','from','in','on','at','and','or','my','i','need','wanted','looking','seeking','suit','suits']);
+    const vehicleTerms = new Set([lMake, wMake, lModel, wModel].filter(Boolean));
+    const tokenize = str => str.toLowerCase().split(/[\s\-\/,]+/)
+        .filter(t => t.length > 2 && !stopWords.has(t) && !vehicleTerms.has(t));
+
+    const lWords = tokenize(listing.title || '');
+    const wWords = tokenize(w.partName    || '');
+    if (!lWords.length || !wWords.length) return false;
+
+    return wWords.every(ww => lWords.some(lw => lw === ww || lw.startsWith(ww) || ww.startsWith(lw)));
+}
+
+function findWantedMatches(listing) {
+    if (!publicWantedDatabase.length) return [];
+    return publicWantedDatabase.filter(w => wantedMatchesListing(w, listing));
+}
+
+// ── NOTIFY BUYERS MODAL ──────────────────────────────────────────────────────
+function showNotifyBuyersModal(matches, listing) {
+    const modal = document.getElementById('notifyBuyersModal');
+    const list  = document.getElementById('notifyBuyersList');
+    if (!modal || !list) return;
+
+    list.innerHTML = '';
+    // Put the directly-triggered request first
+    const sorted = [...matches].sort((a, b) => (b.id === _fromWantedId) - (a.id === _fromWantedId));
+    sorted.forEach(w => {
+        const isDirect = w.id === _fromWantedId;
+        const label = document.createElement('label');
+        label.className = 'notify-buyer-item' + (isDirect ? ' notify-item-direct' : '');
+        const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
+        label.innerHTML = `
+            <input type="checkbox" class="notify-buyer-cb" data-wanted-id="${w.id}" data-user-id="${w.userId}" checked>
+            <div class="notify-buyer-details">
+                ${isDirect ? '<span class="notify-direct-tag">Original request</span>' : ''}
+                <div class="notify-buyer-part">${escapeHtml(w.partName)}</div>
+                <div class="notify-buyer-vehicle">${escapeHtml(vehicle)}${w.loc ? ' · ' + escapeHtml(w.loc) : ''}</div>
+                ${w.maxPrice ? `<div class="notify-buyer-budget">Budget up to $${w.maxPrice}</div>` : ''}
+            </div>`;
+        list.appendChild(label);
+    });
+
+    modal.dataset.listingId    = listing.supabaseId || '';
+    modal.dataset.listingTitle = listing.title || '';
+    modal.style.display = 'flex';
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+function closeNotifyModal() {
+    const modal = document.getElementById('notifyBuyersModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+async function confirmNotifyBuyers() {
+    const modal = document.getElementById('notifyBuyersModal');
+    if (!modal) return;
+    const listingId    = modal.dataset.listingId;
+    const listingTitle = modal.dataset.listingTitle;
+    const checked = [...modal.querySelectorAll('.notify-buyer-cb:checked')];
+    if (!checked.length) { closeNotifyModal(); return; }
+
+    const btn = document.getElementById('notifyConfirmBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+
+    const rows = checked.map(cb => ({
+        user_id:        cb.dataset.userId,
+        type:           'listing_match',
+        title:          'New listing matching your wanted request',
+        body:           `A seller has listed "${listingTitle}" — check if it's what you need.`,
+        listing_id:     listingId || null,
+        wanted_part_id: cb.dataset.wantedId,
+        read:           false
+    }));
+
+    const { error } = await sb.from('notifications').insert(rows);
+    if (error) showToast('Could not send notifications: ' + error.message);
+    else showToast(`${rows.length} buyer${rows.length !== 1 ? 's' : ''} notified`);
+
+    if (btn) { btn.disabled = false; btn.textContent = 'NOTIFY SELECTED BUYERS'; }
+    closeNotifyModal();
+}
+
 // Returns true if this seller already has a listing covering the wanted request.
 // Match requires part name overlap AND vehicle make/model compatibility.
 function sellerHasListedFor(wanted) {
@@ -3056,7 +3203,7 @@ function renderWantedSearchResults(mainGrid) {
                     <span class="wanted-chip wanted-chip-time">${escapeHtml(w.posted)}</span>
                 </div>
             </div>
-            <button class="wanted-have-btn" onclick="listFromWanted('${escapeHtml(w.make)}','${escapeHtml(w.model)}','${escapeHtml(w.year)}')">LIST THIS PART ›</button>
+            <button class="wanted-have-btn" onclick="listFromWanted('${w.id}','${escapeHtml(w.partName)}','${escapeHtml(w.category)}','${escapeHtml(w.make)}','${escapeHtml(w.model)}','${escapeHtml(w.year)}')">LIST THIS PART ›</button>
         `;
         wrap.appendChild(row);
     });
@@ -3526,8 +3673,13 @@ function openSellOverlay() {
     toggleDrawer('sellOverlay');
 }
 
-function listFromWanted(make, model, year) {
+function listFromWanted(wantedId, partName, category, make, model, year) {
+    _fromWantedId = wantedId || null;
     openSellOverlay();
+    const titleEl = document.getElementById('sellTitle');
+    if (titleEl && partName) titleEl.value = partName;
+    const catEl = document.getElementById('sellCategory');
+    if (catEl && category) catEl.value = category;
     initSellVehicleDropdowns(make, model, year);
 }
 
@@ -3927,6 +4079,7 @@ async function submitSellListing() {
 
     let message = 'Listing created';
     let syncTarget = null;
+    const isNewListing = currentEditingListingId === null;
     if (currentEditingListingId !== null) {
         const existing = userListings.find(l => l.id === currentEditingListingId);
         if (existing) {
@@ -3991,6 +4144,12 @@ async function submitSellListing() {
         if (sellSuccess) sellSuccess.style.display = 'none';
         closeSellOverlay();
         if (submitBtn) submitBtn.disabled = false;
+        // After close: offer to notify buyers whose wanted requests match (Pro new listings only)
+        if (isNewListing && currentUserTier === 'pro' && syncTarget?.supabaseId) {
+            const matches = findWantedMatches(syncTarget);
+            if (matches.length) setTimeout(() => showNotifyBuyersModal(matches, syncTarget), 350);
+        }
+        _fromWantedId = null;
     }, 1500);
 }
 
@@ -5316,6 +5475,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadWantedFromSupabase(session.user.id);
             loadSavedListingsFromSupabase(session.user.id);
             loadPublicWantedFromSupabase();
+            loadNotificationsFromSupabase();
         } else if (event === 'SIGNED_OUT') {
             unsubscribeRealtime();
             userIsSignedIn = false;
@@ -6140,8 +6300,45 @@ function renderWantedList() {
     }
 }
 
+async function viewNotifListing(notifId, listingId) {
+    if (notifId) await markNotificationRead(notifId);
+    if (!listingId) return;
+    // Check local cache first
+    const cached = [...partDatabase, ...userListings].find(p => p.supabaseId === listingId);
+    if (cached) { openItemDetail(cached.id); return; }
+    // Fetch from Supabase, map, then open
+    try {
+        const { data: r, error } = await sb.from('listings')
+            .select('*, listing_images(storage_path,position), listing_vehicles(make,model)')
+            .eq('id', listingId).single();
+        if (error || !r) { showToast('Listing not found'); return; }
+        const images = (r.listing_images || []).sort((a, b) => a.position - b.position).map(i => i.storage_path).filter(Boolean);
+        const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
+        const mapped = {
+            id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
+            saves: r.saves_count || 0, date: new Date(r.created_at).getTime(),
+            apcId: r.apc_id, title: r.title, category: r.category,
+            price: r.price, condition: r.condition, description: r.description,
+            loc: r.location, postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+            openToOffers: r.open_to_offers, isPro: r.is_pro,
+            stockNumber: r.stock_number, odometer: r.odometer,
+            warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
+            fit: r.fitting_available, year: r.fits_year,
+            seller: r.seller_name || 'Seller',
+            status: r.status === 'active' ? undefined : r.status,
+            images, fits,
+        };
+        partDatabase.push(mapped);
+        openItemDetail(mapped.id);
+    } catch (e) { showToast('Could not load listing'); }
+}
+
 function buildWantedCard(w, matches) {
     const hasMatches = matches.length > 0;
+    // Notifications for this specific wanted item
+    const notifs = myNotifications.filter(n =>
+        !n.read && n.type === 'listing_match' && n.wanted_part_id === w.supabaseId
+    );
     const card = document.createElement('div');
     card.className = 'rv-drawer-row wl-wanted-row' + (hasMatches ? ' wl-row-match' : ' wl-row-watching');
 
@@ -6189,6 +6386,22 @@ function buildWantedCard(w, matches) {
     right.appendChild(del);
     card.appendChild(info);
     card.appendChild(right);
+
+    // Notification banner — shown when a wrecker has listed a matching part
+    if (notifs.length) {
+        const notif = notifs[0]; // most recent
+        const banner = document.createElement('div');
+        banner.className = 'wanted-notif-banner';
+        banner.innerHTML = `
+            <div class="wanted-notif-banner-text">
+                New listing posted for this
+                <span>A seller may have what you need</span>
+            </div>
+            <button class="wanted-notif-view-btn" onclick="event.stopPropagation(); viewNotifListing('${notif.id}','${notif.listing_id || ''}')">View Listing</button>
+            <button class="wanted-notif-found-btn" onclick="event.stopPropagation(); markNotificationRead('${notif.id}'); deleteWanted(${w.id})">Found it? Remove this request</button>`;
+        card.appendChild(banner);
+    }
+
     return card;
 }
 

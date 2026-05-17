@@ -217,8 +217,9 @@
     <div class="nav-item active" id="homeNavItem" onclick="goHome()">Home</div>
     <div class="nav-item nav-sell" onclick="openSellOverlay()">Sell</div>
     <div class="nav-item" id="recentNavItem" onclick="setActiveNav(this); onOpenRecentlyViewed()">Recent</div>
-    <div class="nav-item" id="profileNavItem" onclick="onAccountPillClick(event)">
+    <div class="nav-item" id="profileNavItem" onclick="onAccountPillClick(event)" style="position:relative;">
         <span id="navProfileCircle" class="nav-profile-circle signed-out"></span>
+        <span id="navNotifBadge" class="nav-notif-badge" style="display:none;"></span>
     </div>
 </nav>
 
@@ -2279,6 +2280,21 @@
         <div class="input-group"><label>Year</label><select id="vpYear" onchange="onVpYearChange()" style="width:100%"><option value="">Select year</option></select></div>
         <div id="vpSeriesGroup" style="display:none;"><div class="input-group"><label>Series</label><select id="vpSeries" style="width:100%"><option value="">Select series</option></select></div></div>
         <button onclick="confirmSellVehicle()" class="btn-full-action" style="margin-top:18px;">Confirm Vehicle</button>
+    </div>
+</div>
+
+<!-- NOTIFY BUYERS MODAL — shown to Pro seller after listing a part, if wanted matches found -->
+<div id="notifyBuyersModal" class="notify-modal" style="display:none;" onclick="if(event.target===this)closeNotifyModal()">
+    <div class="notify-modal-inner">
+        <div class="notify-modal-header">
+            <div class="notify-modal-title">Notify interested buyers?</div>
+            <div class="notify-modal-sub">Your listing matches these wanted requests. Select who to notify — no personal details are shared.</div>
+        </div>
+        <div id="notifyBuyersList" class="notify-buyers-list"></div>
+        <div class="notify-modal-actions">
+            <button class="btn-full-action" id="notifyConfirmBtn" onclick="confirmNotifyBuyers()">NOTIFY SELECTED BUYERS</button>
+            <button class="notify-skip-btn" onclick="closeNotifyModal()">Skip for now</button>
+        </div>
     </div>
 </div>
 

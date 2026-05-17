@@ -220,6 +220,52 @@ create policy "Users delete own sponsored card" on sponsored_cards
   for delete using (auth.uid() = user_id);
 
 
+-- ── 9. WANTED PARTS ─────────────────────────────────────────
+create table if not exists wanted_parts (
+  id                  uuid        primary key default gen_random_uuid(),
+  user_id             uuid        not null references auth.users on delete cascade,
+  title               text,
+  part_name           text        not null,
+  category            text,
+  make                text,
+  model               text,
+  year                integer,
+  series              text,
+  max_price           numeric(10,2),
+  budget_max          numeric(10,2),
+  status              text        not null default 'active',
+  muted_notifications boolean     not null default false,
+  created_at          timestamptz not null default now()
+);
+
+alter table wanted_parts enable row level security;
+create policy "Anyone can read active wanted parts"   on wanted_parts for select using (status = 'active' or auth.uid() = user_id);
+create policy "Users can insert own wanted parts"     on wanted_parts for insert with check (auth.uid() = user_id);
+create policy "Users can update own wanted parts"     on wanted_parts for update using (auth.uid() = user_id);
+create policy "Users can delete own wanted parts"     on wanted_parts for delete using (auth.uid() = user_id);
+
+
+-- ── 10. NOTIFICATIONS ────────────────────────────────────────
+-- Buyer notifications: "a listing matching your wanted request was posted"
+create table if not exists notifications (
+  id              uuid        primary key default gen_random_uuid(),
+  user_id         uuid        not null references auth.users on delete cascade,
+  type            text        not null default 'listing_match',
+  title           text        not null,
+  body            text,
+  listing_id      uuid        references listings on delete cascade,
+  wanted_part_id  uuid        references wanted_parts on delete cascade,
+  read            boolean     not null default false,
+  created_at      timestamptz not null default now()
+);
+
+alter table notifications enable row level security;
+create policy "Users can read own notifications"        on notifications for select using (auth.uid() = user_id);
+create policy "Authenticated users can send notifs"     on notifications for insert with check (auth.uid() is not null);
+create policy "Users can mark own notifications read"   on notifications for update using (auth.uid() = user_id);
+create policy "Users can delete own notifications"      on notifications for delete using (auth.uid() = user_id);
+
+
 -- ============================================================
 -- DONE. After running this SQL:
 --

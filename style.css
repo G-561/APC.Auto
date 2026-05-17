@@ -99,6 +99,89 @@ header {
     letter-spacing: 0.2px;
 }
 
+/* Notification badge on profile nav item */
+.nav-notif-badge {
+    position: absolute;
+    top: 4px; right: 8px;
+    min-width: 16px; height: 16px;
+    background: var(--apc-orange);
+    color: #fff;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    border: 2px solid #fff;
+    pointer-events: none;
+}
+
+/* === NOTIFY BUYERS MODAL === */
+.notify-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+.notify-modal.active { opacity: 1; }
+.notify-modal-inner {
+    background: #fff;
+    width: 100%;
+    max-width: 560px;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 32px;
+    max-height: 82vh;
+    overflow-y: auto;
+    transform: translateY(40px);
+    transition: transform 0.28s ease;
+}
+.notify-modal.active .notify-modal-inner { transform: translateY(0); }
+.notify-modal-title { font-size: 16px; font-weight: 900; color: #111; margin-bottom: 6px; }
+.notify-modal-sub   { font-size: 12px; color: #888; margin-bottom: 18px; line-height: 1.5; }
+.notify-buyers-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.notify-buyer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #f7f7f7;
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+}
+.notify-buyer-item.notify-item-direct { background: #fff8f0; border: 1.5px solid var(--apc-orange); }
+.notify-buyer-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; width: 18px; height: 18px; accent-color: var(--apc-orange); }
+.notify-direct-tag { font-size: 9px; font-weight: 900; color: var(--apc-orange); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
+.notify-buyer-part    { font-size: 13px; font-weight: 800; color: #111; }
+.notify-buyer-vehicle { font-size: 11px; color: #666; margin-top: 2px; }
+.notify-buyer-budget  { font-size: 11px; color: var(--apc-blue); font-weight: 700; margin-top: 2px; }
+.notify-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+.notify-skip-btn { background: none; border: none; color: #aaa; font-size: 13px; font-weight: 700; cursor: pointer; padding: 6px; text-align: center; }
+
+/* Wanted list — notification match banner */
+.wanted-notif-banner {
+    flex: 0 0 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #fff8f0;
+    border: 1.5px solid var(--apc-orange);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+.wanted-notif-banner-text { font-weight: 700; color: #111; flex: 1; }
+.wanted-notif-banner-text span { display: block; font-size: 11px; font-weight: 400; color: #888; margin-top: 2px; }
+.wanted-notif-view-btn { background: var(--apc-orange); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 11px; font-weight: 900; cursor: pointer; white-space: nowrap; }
+.wanted-notif-found-btn { background: none; border: 1.5px solid #ccc; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 700; color: #666; cursor: pointer; white-space: nowrap; margin-top: 6px; width: 100%; }
+
 /* === ACCOUNT PILL === */
 .account-pill {
     display: inline-flex;
@@ -2030,6 +2113,7 @@ header {
 
 /* WANTED LIST — row modifiers */
 .wl-wanted-row {
+    flex-wrap: wrap;
     background: white;
     border: 1.5px solid #e8e8e8;
     border-radius: 10px;
