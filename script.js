@@ -5195,7 +5195,7 @@ function filterStorefront() {
 function openStorefront(partId) {
     const part = getPartById(partId);
     if (!part) return;
-    const isOwn = part.seller === getCurrentSellerName();
+    const isOwn = (currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName();
     // All users get their profile pic; Pro-only fields require isOwn + isPro
     const logo         = isOwn ? (userSettings.profilePic || userSettings.businessLogo || '') : '';
     const banner       = (isOwn && part.isPro) ? (userSettings.businessBanner || '') : '';
