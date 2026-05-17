@@ -2609,8 +2609,11 @@ function getAllParts() {
     });
 }
 function findPartAnywhere(id) {
-    // id may be a Supabase UUID (string) or a local integer — check both
-    return [...userListings, ...partDatabase].find(p => p.supabaseId === id || p.id === id);
+    // id may be a UUID string, a local integer, or a stringified integer from an onclick attribute
+    const numId = Number(id);
+    return [...userListings, ...partDatabase].find(p =>
+        p.supabaseId === id || p.id === id || (!isNaN(numId) && p.id === numId)
+    );
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id);
