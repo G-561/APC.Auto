@@ -1205,11 +1205,9 @@ async function ensureSupabaseConversation(conv) {
     if (error) {
         console.warn('Conv sync error:', error.message, { buyerId, sellerId: part.sellerId });
         if (error.message?.includes('foreign key')) {
-            // Stale session — the account was deleted/recreated; clear it and prompt sign-in
-            sb.auth.signOut().then(() => {
-                showToast('Your session has expired — please sign in again');
-                openAuthDrawer();
-            });
+            // FK violation usually means the listing or seller account has changed —
+            // don't sign the buyer out, just surface a message.
+            showToast("Couldn't start conversation — the listing may have been removed.");
         } else {
             showToast('Sync error: ' + error.message);
         }
@@ -5451,8 +5449,8 @@ document.addEventListener('DOMContentLoaded', () => {
             signIn(metaName, seedTier, false, session.user.email);
             // Fetch real name + tier from profile — always authoritative
             sb.from('profiles').select('*').eq('id', session.user.id).single()
-                .then(({ data: profile, error: profErr }) => {
-                    if (profErr) console.warn('Profile fetch:', profErr.message);
+                .then(async ({ data: profile, error: profErr }) => {
+                    if (profErr && profErr.code !== 'PGRST116') console.warn('Profile fetch:', profErr.message);
                     if (profile) {
                         const name = profile.display_name || metaName;
                         const tier = profile.is_pro ? 'pro' : 'standard';
@@ -5466,6 +5464,18 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.profilePic   = profile.profile_pic   || userSettings.profilePic   || '';
                         userSettings.postcode     = profile.postcode      || userSettings.postcode     || '';
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview();
+                    } else {
+                        // Profile row missing — trigger may have failed at sign-up; create it now
+                        const meta = session.user.user_metadata || {};
+                        await sb.from('profiles').upsert({
+                            id:            session.user.id,
+                            display_name:  meta.display_name  || metaName,
+                            is_pro:        meta.is_pro === true || meta.is_pro === 'true',
+                            business_name: meta.business_name || null,
+                            abn:           meta.abn           || null,
+                            postcode:      meta.postcode      || null,
+                            location:      meta.location      || null,
+                        }, { onConflict: 'id', ignoreDuplicates: true });
                     }
                 });
             loadPublicListingsFromSupabase();
