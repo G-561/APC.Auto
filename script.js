@@ -149,19 +149,13 @@ const CAT_LABELS = {
 };
 
 const RECENTLY_VIEWED_KEY = 'apc.recentlyViewed.v1';
-const RECENTLY_VIEWED_MAX = 50;
-const RECENTLY_VIEWED_TTL = 14 * 24 * 60 * 60 * 1000; // 14 days
+const RECENTLY_VIEWED_MAX = 8;
 let recentlyViewed = loadRecentlyViewed();
-let _rvSearchQuery  = '';
 
 function loadRecentlyViewed() {
     try {
         const raw = localStorage.getItem(RECENTLY_VIEWED_KEY);
-        if (!raw) return [];
-        const now = Date.now();
-        return JSON.parse(raw)
-            .map(e => typeof e === 'object' ? e : { id: e, viewedAt: now }) // migrate old format
-            .filter(e => now - e.viewedAt < RECENTLY_VIEWED_TTL);
+        return raw ? JSON.parse(raw) : [];
     } catch (e) { return []; }
 }
 function saveRecentlyViewed() {
@@ -206,17 +200,13 @@ function dtbOpenInbox() {
 
 function clearRecentlyViewed() {
     recentlyViewed = [];
-    _rvSearchQuery = '';
     saveRecentlyViewed();
     renderRecentlyViewed();
 }
 function addToRecentlyViewed(partId) {
-    const now = Date.now();
-    recentlyViewed = [
-        { id: partId, viewedAt: now },
-        ...recentlyViewed.filter(e => e.id !== partId),
-    ].slice(0, RECENTLY_VIEWED_MAX);
+    recentlyViewed = [partId, ...recentlyViewed.filter(id => id !== partId)].slice(0, RECENTLY_VIEWED_MAX);
     saveRecentlyViewed();
+    renderRecentlyViewed();
 }
 function onOpenRecentlyViewed() {
     setActiveNav('recentNavItem');
@@ -228,10 +218,7 @@ function renderRecentlyViewed() {
     const content = document.getElementById('rvDrawerContent');
     if (!content) return;
 
-    const allParts = recentlyViewed.map(e => getPartById(e.id)).filter(Boolean);
-
-    if (!allParts.length) {
-        _rvSearchQuery = '';
+    if (!recentlyViewed.length) {
         content.innerHTML = `
             <div style="text-align:center; padding: 60px 20px; color: #aaa;">
                 <div style="font-size: 40px; margin-bottom: 12px;">🕐</div>
@@ -241,46 +228,18 @@ function renderRecentlyViewed() {
         return;
     }
 
-    // Build header with search bar once; after that only refresh the list
-    if (!content.querySelector('.rv-search-input')) {
-        content.innerHTML = `
-            <div class="rv-drawer-header">
-                <input class="rv-search-input" type="text" placeholder="Search recently viewed…"
-                       value="${escapeHtml(_rvSearchQuery)}"
-                       oninput="_rvSearchQuery=this.value; _renderRvList()">
-                <span class="rv-drawer-clear" onclick="clearRecentlyViewed()">Clear all</span>
-            </div>
-            <div id="rvListContent"></div>`;
-    }
-    _renderRvList(allParts);
-}
-
-function _renderRvList(allParts) {
-    const list = document.getElementById('rvListContent');
-    if (!list) return;
-    if (!allParts) allParts = recentlyViewed.map(e => getPartById(e.id)).filter(Boolean);
-
-    const q = _rvSearchQuery.toLowerCase().trim();
-    const parts = q
-        ? allParts.filter(p =>
-            p.title.toLowerCase().includes(q) ||
-            (p.loc      || '').toLowerCase().includes(q) ||
-            (p.category || '').toLowerCase().includes(q))
-        : allParts;
-
-    const countLabel = q
-        ? `${parts.length} of ${allParts.length} part${allParts.length === 1 ? '' : 's'}`
-        : `${allParts.length} part${allParts.length === 1 ? '' : 's'} · last 14 days`;
-
-    list.innerHTML = `
-        <div class="rv-drawer-count-row"><span class="rv-drawer-count">${countLabel}</span></div>
-        ${parts.length === 0 ? `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No matches for "${escapeHtml(_rvSearchQuery)}"</div>` : ''}
+    const parts = recentlyViewed.map(id => getPartById(id)).filter(Boolean);
+    content.innerHTML = `
+        <div class="rv-drawer-header">
+            <span class="rv-drawer-count">${parts.length} part${parts.length === 1 ? '' : 's'}</span>
+            <span class="rv-drawer-clear" onclick="clearRecentlyViewed()">Clear all</span>
+        </div>
         ${parts.map(part => `
             <div class="rv-drawer-row" onclick="toggleDrawer('recentlyViewedDrawer'); openItemDetail(${part.id})">
-                <img src="${part.images?.[0] || ''}" alt="" class="rv-drawer-img">
+                <img src="${part.images[0]}" alt="" class="rv-drawer-img">
                 <div class="rv-drawer-info">
                     <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
-                    <div class="rv-drawer-meta">${escapeHtml(part.loc || '')}</div>
+                    <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
                 </div>
                 <div class="rv-drawer-price">$${part.price}</div>
             </div>
@@ -479,12 +438,11 @@ function onSuburbSelect(selectEl) {
         renderWorkshopBrowseView();
     } else {
         _applyLocationToWrap(wrap, val);
-        const cleanLoc = val.replace(/\s*\d{4}$/, '').trim();
-        userSettings.location = cleanLoc;
+        userSettings.location = val;
         saveUserSettings();
         renderProfile();
         if (currentUserId && sb) {
-            sb.from('profiles').update({ location: cleanLoc }).eq('id', currentUserId).then(() => {});
+            sb.from('profiles').update({ location: val }).eq('id', currentUserId).then(() => {});
         }
     }
 }
@@ -8860,7 +8818,7 @@ function showCounterForm(convId, msgIdx) {
     document.getElementById(`offer-actions-${convId}-${msgIdx}`)?.style.setProperty('display','none');
     document.getElementById(`offer-counter-${convId}-${msgIdx}`)?.style.setProperty('display','flex');
     document.getElementById(`offer-counter-input-${convId}-${msgIdx}`)?.focus();
-}
+t}
 
 function submitCounter(convId, msgIdx) {
     const conv = conversations.find(c => c.id === convId);
