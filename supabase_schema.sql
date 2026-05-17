@@ -23,13 +23,12 @@ create table if not exists profiles (
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  insert into public.profiles (id, display_name, is_pro, business_name, abn, postcode, location)
+  insert into public.profiles (id, display_name, is_pro, business_name, postcode, location)
   values (
     new.id,
-    new.raw_user_meta_data->>'display_name',
+    coalesce(new.raw_user_meta_data->>'display_name', ''),
     coalesce((new.raw_user_meta_data->>'is_pro')::boolean, false),
     new.raw_user_meta_data->>'business_name',
-    new.raw_user_meta_data->>'abn',
     new.raw_user_meta_data->>'postcode',
     new.raw_user_meta_data->>'location'
   )
