@@ -4867,13 +4867,12 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (sellerHeaderSub)  sellerHeaderSub.textContent  = '';
 
     // Avatar: own listing uses local settings; others use cached Supabase pic
-    const sellerPic   = isOwnListing ? (userSettings.profilePic || '') : (_sellerPicCache[part.sellerId] || '');
     const tierBg      = part.isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
     const tierShadow  = part.isPro ? '0 6px 16px rgba(0,122,255,0.18)' : '0 6px 16px rgba(255,149,0,0.18)';
-    function applyAvatar(el) {
+    function applyAvatar(el, pic) {
         if (!el) return;
-        if (sellerPic) {
-            el.innerHTML = `<img src="${sellerPic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+        if (pic) {
+            el.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
             el.style.background  = 'transparent';
             el.style.boxShadow   = 'none';
         } else {
@@ -4882,7 +4881,8 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             el.style.boxShadow   = tierShadow;
         }
     }
-    applyAvatar(sellerAvatar);
+    const initialPic = isOwnListing ? (userSettings.profilePic || '') : (_sellerPicCache[part.sellerId] || '');
+    applyAvatar(sellerAvatar, initialPic);
 
     const detailProBadge = document.getElementById('detailProBadge');
     if (detailProBadge) detailProBadge.style.display = part.isPro ? 'inline-block' : 'none';
@@ -4895,7 +4895,17 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     const colAvatar   = document.getElementById('detailSellerColAvatar');
     const colName     = document.getElementById('detailSellerColName');
     const colProBadge = document.getElementById('detailProBadgeCol');
-    applyAvatar(colAvatar);
+    applyAvatar(colAvatar, initialPic);
+    // Cache miss for another seller — fetch lazily so avatar fills in without blocking the overlay
+    if (!isOwnListing && !initialPic && part.sellerId && sb) {
+        sb.from('profiles').select('profile_pic').eq('id', part.sellerId).single().then(({ data }) => {
+            if (data?.profile_pic) {
+                _sellerPicCache[part.sellerId] = data.profile_pic;
+                applyAvatar(sellerAvatar, data.profile_pic);
+                applyAvatar(colAvatar,    data.profile_pic);
+            }
+        });
+    }
     if (colName)   colName.textContent   = part.seller;
     if (colProBadge) colProBadge.style.display = part.isPro ? 'inline-block' : 'none';
 
@@ -5406,23 +5416,31 @@ function openStorefront(partId) {
     const part = findPartAnywhere(partId);
     if (!part) return;
     const isOwn = (currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName();
-    // All users get their profile pic; Pro-only fields require isOwn + isPro
-    const logo         = isOwn ? (userSettings.profilePic || userSettings.businessLogo || '') : '';
-    const banner       = (isOwn && part.isPro) ? (userSettings.businessBanner || '') : '';
-    const businessName = (isOwn && part.isPro) ? (userSettings.businessName   || '') : '';
-    const abn          = (isOwn && part.isPro) ? (userSettings.abn            || '') : '';
-    const about        = (isOwn && part.isPro) ? (userSettings.about          || '') : '';
-    const location     = isOwn ? (userSettings.location || '') : '';
-    const grid = document.getElementById('sellerPartsGrid');
-    if (grid) grid.dataset.seller = part.seller;
-    renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
-    const sfMsgBtn = document.getElementById('sfMsgBtn');
-    if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
-    // Float above detailOverlay (z-index 3150 mobile / 2050 desktop) when opening from within a listing
+
+    // Float above detailOverlay when opening from within a listing
     const sfEl = document.getElementById('storefrontDrawer');
     if (sfEl) sfEl.style.zIndex = '3200';
     const backBar = document.getElementById('storefrontBackBar');
     if (backBar) backBar.style.display = currentOpenPartId ? '' : 'none';
+
+    if (!isOwn && part.sellerId) {
+        // Other seller — fetch full profile from DB so pic, bio, location all show correctly
+        openStorefrontByUserId(part.sellerId);
+        return;
+    }
+
+    // Own storefront — use local settings (always up-to-date without a round-trip)
+    const logo         = userSettings.profilePic || userSettings.businessLogo || '';
+    const banner       = part.isPro ? (userSettings.businessBanner || '') : '';
+    const businessName = part.isPro ? (userSettings.businessName   || '') : '';
+    const abn          = part.isPro ? (userSettings.abn            || '') : '';
+    const about        = part.isPro ? (userSettings.about          || '') : '';
+    const location     = userSettings.location || '';
+    const grid = document.getElementById('sellerPartsGrid');
+    if (grid) grid.dataset.seller = part.seller;
+    renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
+    const sfMsgBtn = document.getElementById('sfMsgBtn');
+    if (sfMsgBtn) sfMsgBtn.style.display = 'none';
     toggleDrawer('storefrontDrawer', true);
 }
 
