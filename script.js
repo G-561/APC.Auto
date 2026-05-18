@@ -5006,7 +5006,10 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
 
     if (detailEl && detailEl.classList.contains('active')) {
         if (_restoring) {
-            detailEl.style.zIndex = ''; // drop back below store so store is visible on top
+            detailEl.style.zIndex = '';
+            detailEl.style.transform  = '';
+            detailEl.style.opacity    = '';
+            detailEl.style.transition = '';
         } else if (document.getElementById('storefrontDrawer')?.classList.contains('active')) {
             detailEl.style.zIndex = '3250'; // lift above store to show this listing
         }
@@ -5025,6 +5028,10 @@ function onDetailSellerClick() {
 function closeDetailOverlay() {
     if (_detailHistory.length > 0) {
         const prevId = _detailHistory.pop();
+        // Clear swipe-dismiss animation styles before restoring — otherwise the overlay
+        // stays off-screen (translateY 105%) and blocks touches on iOS Safari
+        const el = document.getElementById('detailOverlay');
+        if (el) { el.style.transform = ''; el.style.opacity = ''; el.style.transition = ''; }
         openItemDetail(prevId, true); // restore previous listing, leave overlay open
         return;
     }
