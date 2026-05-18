@@ -12,8 +12,9 @@ let currentUserEmail = null;          // signed-in user's email
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let _fromWantedId    = null;         // UUID of wanted request that triggered "List this Part"
 let myNotifications  = [];           // buyer's unread notifications from Supabase
-let gridShownCount   = 20;
-function gridPageSize() { return window.innerWidth >= 900 ? 25 : 20; }
+let _listingsCursor    = null;   // created_at of last fetched row for cursor pagination
+let _listingsExhausted = false;  // true when Supabase has no more pages
+let _listingsLoading   = false;  // guard against concurrent fetches
 let currentOpenPartId = null;  // tracks which part detail is open
 let _currentOpenPart  = null;  // direct part ref — avoids integer ID collision in getAllParts()
 let _detailHistory    = [];    // stack of part IDs for store → listing → back navigation
@@ -1221,15 +1222,37 @@ async function syncListingToSupabase(localListing) {
     } catch (e) { showToast('Sync error: ' + (e.message || e)); }
 }
 
-async function loadPublicListingsFromSupabase() {
+async function loadPublicListingsFromSupabase(append = false) {
+    if (_listingsLoading) return;
+    _listingsLoading = true;
+
+    if (!append) {
+        _listingsCursor    = null;
+        _listingsExhausted = false;
+    }
+
+    const spinner = document.getElementById('gridLoadingSpinner');
+    if (spinner) spinner.style.display = append ? 'flex' : 'none';
+
     try {
-        const { data: rows, error } = await sb
+        let query = sb
             .from('listings')
             .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
             .in('status', ['active', 'pending'])
             .order('created_at', { ascending: false })
-            .limit(40);
+            .limit(20);
+
+        if (append && _listingsCursor) {
+            query = query.lt('created_at', _listingsCursor);
+        }
+
+        const { data: rows, error } = await query;
         if (error) { renderMainGrid(); return; }
+
+        if (rows && rows.length > 0) {
+            _listingsCursor = rows[rows.length - 1].created_at;
+        }
+        if (!rows || rows.length < 20) _listingsExhausted = true;
 
         // Batch-fetch current display names and profile pics
         const sellerIds = [...new Set((rows || []).map(r => r.seller_id).filter(Boolean))];
@@ -1244,6 +1267,7 @@ async function loadPublicListingsFromSupabase() {
             });
         }
 
+        let newCount = 0;
         (rows || []).forEach(r => {
             const liveName = nameMap[r.seller_id] || r.seller_name || 'Seller';
             const existPub = partDatabase.find(p => p.supabaseId === r.id);
@@ -1270,10 +1294,21 @@ async function loadPublicListingsFromSupabase() {
                 status: r.status === 'active' ? undefined : r.status,
                 images: images.length ? images : [], fits,
             });
+            newCount++;
         });
+
+        // If every row was a duplicate, we've caught up — stop fetching
+        if (append && newCount === 0) _listingsExhausted = true;
+
         renderMainGrid();
-        refreshInboxThreadHeader();
-    } catch (e) { console.warn('Load public listings:', e); renderMainGrid(); }
+        if (!append) refreshInboxThreadHeader();
+    } catch (e) {
+        console.warn('Load public listings:', e);
+        renderMainGrid();
+    } finally {
+        _listingsLoading = false;
+        if (spinner) spinner.style.display = 'none';
+    }
 }
 
 async function loadUserListingsFromSupabase(userId) {
@@ -3260,11 +3295,10 @@ function renderSkeletonGrid(count = 8) {
     mainGrid.innerHTML = Array(count).fill(card).join('');
 }
 
-function renderMainGrid(keepOffset = false) {
+function renderMainGrid() {
     const mainGrid = document.getElementById('mainGrid');
     if (!mainGrid) return;
 
-    if (!keepOffset) gridShownCount = gridPageSize();
     mainGrid.innerHTML = '';
     recordSearch(activeFilters.search);
 
@@ -3314,21 +3348,7 @@ function renderMainGrid(keepOffset = false) {
         updateGridHeading('Recently Listed', filtered.length);
     }
 
-    const visible = filtered.slice(0, gridShownCount);
-    mainGrid.innerHTML = visible.map((part, i) => buildCardHTML(part, i < 6)).join('');
-
-    if (filtered.length > gridShownCount) {
-        const remaining = filtered.length - gridShownCount;
-        const loadMoreWrap = document.createElement('div');
-        loadMoreWrap.style.cssText = 'grid-column:1/-1; text-align:center; padding:24px 0 12px;';
-        loadMoreWrap.innerHTML = `<button class="load-more-btn" onclick="loadMoreListings()">Load More &nbsp;·&nbsp; ${remaining} more</button>`;
-        mainGrid.appendChild(loadMoreWrap);
-    }
-}
-
-function loadMoreListings() {
-    gridShownCount += gridPageSize();
-    renderMainGrid(true);
+    mainGrid.innerHTML = filtered.map((part, i) => buildCardHTML(part, i < 6)).join('');
 }
 
 // ── WANTED ↔ LISTING MATCH ALGORITHM ────────────────────────────────────────
@@ -5930,6 +5950,7 @@ document.addEventListener('DOMContentLoaded', () => {
             savedParts.clear(); persistSavedParts();
             // Reload public listings so the signed-out user's listings appear in the grid
             partDatabase.splice(0);
+            _listingsCursor = null; _listingsExhausted = false;
             loadPublicListingsFromSupabase();
             renderAccountState();
             renderMyParts();
@@ -9639,6 +9660,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilterVehicleDropdowns();
     renderSkeletonGrid();
     loadPublicListingsFromSupabase();
+
+    // Infinite scroll — trigger next Supabase page when sentinel enters view
+    const _gridSentinel = document.getElementById('gridSentinel');
+    if (_gridSentinel) {
+        new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && !_listingsLoading && !_listingsExhausted && currentSearchMode !== 'wanted') {
+                loadPublicListingsFromSupabase(true);
+            }
+        }, { rootMargin: '400px' }).observe(_gridSentinel);
+    }
+
     loadSponsoredCards();
     renderGarage();            // build vehicle list from localStorage so drawer is ready when opened
     updateInboxBadge();        // update badge from mock notifications
