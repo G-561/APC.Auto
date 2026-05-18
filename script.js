@@ -5210,6 +5210,12 @@ function updateLightboxNav() {
     document.querySelectorAll('#lightboxDots .carousel-dot').forEach((d, i) => {
         d.classList.toggle('active', i === _lightboxIdx);
     });
+    const multi = _lightboxImages.length > 1;
+    const isDesktop = window.innerWidth >= 900;
+    const prevBtn = document.getElementById('lightboxPrevBtn');
+    const nextBtn = document.getElementById('lightboxNextBtn');
+    if (prevBtn) prevBtn.style.display = (multi && isDesktop) ? '' : 'none';
+    if (nextBtn) nextBtn.style.display = (multi && isDesktop) ? '' : 'none';
 }
 
 function closeDetailImageViewer() {

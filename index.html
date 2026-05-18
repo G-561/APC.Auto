@@ -520,6 +520,9 @@
 
 <div id="imageLightbox" class="image-lightbox" onclick="closeDetailImageViewer()">
     <div class="image-lightbox-inner" onclick="event.stopPropagation()">
+        <button class="image-lightbox-close" onclick="closeDetailImageViewer()">×</button>
+        <button class="lightbox-nav lightbox-prev" id="lightboxPrevBtn" onclick="lightboxNav(-1)">&#8249;</button>
+        <button class="lightbox-nav lightbox-next" id="lightboxNextBtn" onclick="lightboxNav(1)">&#8250;</button>
         <div class="lightbox-strip">
             <img id="lightboxPrev" src="" alt="" />
             <img id="lightboxImage" src="" alt="Photo preview" />
