@@ -3817,11 +3817,20 @@ function renderSellVehicleChip() {
 function onSellUniversalToggle() {
     const checked = !!document.getElementById('sellUniversalToggle')?.checked;
     if (checked && sellVehicleSelection?.make) {
-        if (!confirm('Remove vehicle fitment and mark as universal?')) {
-            document.getElementById('sellUniversalToggle').checked = false;
-            return;
-        }
-        sellVehicleSelection = null;
+        // Revert immediately — confirm dialog will re-apply if confirmed
+        document.getElementById('sellUniversalToggle').checked = false;
+        showConfirmDialog(
+            'Universal Part',
+            'Remove the selected vehicle fitment and mark this as a universal part?',
+            'Make Universal',
+            () => {
+                sellVehicleSelection = null;
+                sellIsUniversal = true;
+                document.getElementById('sellUniversalToggle').checked = true;
+                renderSellVehicleChip();
+            }
+        );
+        return;
     }
     sellIsUniversal = checked;
     renderSellVehicleChip();
