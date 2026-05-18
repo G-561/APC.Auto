@@ -5417,31 +5417,56 @@ function openStorefront(partId) {
     if (!part) return;
     const isOwn = (currentUserId && part.sellerId === currentUserId) || part.seller === getCurrentSellerName();
 
-    // Float above detailOverlay when opening from within a listing
-    const sfEl = document.getElementById('storefrontDrawer');
-    if (sfEl) sfEl.style.zIndex = '3200';
-    const backBar = document.getElementById('storefrontBackBar');
-    if (backBar) backBar.style.display = currentOpenPartId ? '' : 'none';
+    // Must be set AFTER any async path resolves — capture now so the closure uses the right value
+    const fromListingDetail = !!currentOpenPartId;
 
-    if (!isOwn && part.sellerId) {
-        // Other seller — fetch full profile from DB so pic, bio, location all show correctly
-        openStorefrontByUserId(part.sellerId);
+    function _showStorefront(logo, businessName, abn, about, location, banner) {
+        const grid = document.getElementById('sellerPartsGrid');
+        if (grid) { grid.dataset.seller = part.seller; grid.dataset.userId = part.sellerId || ''; }
+        renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner, part.sellerId || null);
+        const sfMsgBtn = document.getElementById('sfMsgBtn');
+        if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
+        const sfEl  = document.getElementById('storefrontDrawer');
+        const backBar = document.getElementById('storefrontBackBar');
+        if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
+        if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
+        toggleDrawer('storefrontDrawer', true);
+    }
+
+    if (isOwn) {
+        _showStorefront(
+            userSettings.profilePic || userSettings.businessLogo || '',
+            part.isPro ? (userSettings.businessName   || '') : '',
+            part.isPro ? (userSettings.abn            || '') : '',
+            part.isPro ? (userSettings.about          || '') : '',
+            userSettings.location || '',
+            part.isPro ? (userSettings.businessBanner || '') : ''
+        );
         return;
     }
 
-    // Own storefront — use local settings (always up-to-date without a round-trip)
-    const logo         = userSettings.profilePic || userSettings.businessLogo || '';
-    const banner       = part.isPro ? (userSettings.businessBanner || '') : '';
-    const businessName = part.isPro ? (userSettings.businessName   || '') : '';
-    const abn          = part.isPro ? (userSettings.abn            || '') : '';
-    const about        = part.isPro ? (userSettings.about          || '') : '';
-    const location     = userSettings.location || '';
-    const grid = document.getElementById('sellerPartsGrid');
-    if (grid) grid.dataset.seller = part.seller;
-    renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner);
-    const sfMsgBtn = document.getElementById('sfMsgBtn');
-    if (sfMsgBtn) sfMsgBtn.style.display = 'none';
-    toggleDrawer('storefrontDrawer', true);
+    // Other seller — fetch full profile so pic + bio show correctly
+    const cached = _sellerPicCache[part.sellerId];
+    if (cached || !part.sellerId || !sb) {
+        // Use whatever we have in cache (may be empty string → shows initial)
+        _showStorefront(cached || '', '', '', '', '', '');
+        return;
+    }
+    sb.from('profiles')
+        .select('display_name, is_pro, profile_pic, business_name, abn, about, location')
+        .eq('id', part.sellerId).single()
+        .then(({ data: profile }) => {
+            const pic = profile?.profile_pic || '';
+            if (pic) _sellerPicCache[part.sellerId] = pic;
+            _showStorefront(
+                pic,
+                (profile?.is_pro && profile?.business_name) ? profile.business_name : '',
+                (profile?.is_pro && profile?.abn)           ? profile.abn           : '',
+                (profile?.is_pro && profile?.about)         ? profile.about         : '',
+                profile?.location || '',
+                ''
+            );
+        });
 }
 
 // --- WORKSHOP / SERVICE STOREFRONT ---
