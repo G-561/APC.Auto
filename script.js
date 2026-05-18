@@ -2484,10 +2484,14 @@ function openItemPreview(part) {
         part.fit ? '<div class="iip-delivery-badge">🔧 Fitting Available</div>' : '',
     ].filter(Boolean).join('');
 
+    const _fitsUniversal = (!part.fits || part.fits.length === 0) && part.category && !VEHICLE_EXEMPT_CATEGORIES.includes(part.category);
     const fitmentHtml = part.fits && part.fits.length
         ? `<div class="iip-section-label">Vehicle Fitment</div>
            <div class="iip-fitment">${part.fits.map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ')}</div>`
-        : '';
+        : _fitsUniversal
+            ? `<div class="iip-section-label">Vehicle Fitment</div>
+               <div class="iip-fitment">Universal — fits all vehicles</div>`
+            : '';
 
     const locHtml = part.loc
         ? `<div class="iip-delivery-badge">📍 ${escapeHtml(part.loc)}</div>` : '';
@@ -3785,6 +3789,7 @@ function _refreshSellSeries(make, model, year, selected) {
 
 // ── SELL VEHICLE PICKER ─────────────────────────────────────
 let sellVehicleSelection = null; // { make, model, year, series }
+let sellIsUniversal = false;
 
 function renderSellVehicleChip() {
     const chip    = document.getElementById('sellVehicleChip');
@@ -3792,6 +3797,11 @@ function renderSellVehicleChip() {
     const mmEl    = document.getElementById('sellVehicleChipMakeModel');
     const ysEl    = document.getElementById('sellVehicleChipYearSeries');
     if (!chip || !btn) return;
+    if (sellIsUniversal) {
+        chip.style.display = 'none';
+        btn.style.display  = 'none';
+        return;
+    }
     if (sellVehicleSelection?.make) {
         const { make, model, year, series } = sellVehicleSelection;
         if (mmEl) mmEl.textContent = `${make} ${model}`;
@@ -3802,6 +3812,19 @@ function renderSellVehicleChip() {
         chip.style.display = 'none';
         btn.style.display  = '';
     }
+}
+
+function onSellUniversalToggle() {
+    const checked = !!document.getElementById('sellUniversalToggle')?.checked;
+    if (checked && sellVehicleSelection?.make) {
+        if (!confirm('Remove vehicle fitment and mark as universal?')) {
+            document.getElementById('sellUniversalToggle').checked = false;
+            return;
+        }
+        sellVehicleSelection = null;
+    }
+    sellIsUniversal = checked;
+    renderSellVehicleChip();
 }
 
 function openSellVehiclePicker() {
@@ -4171,6 +4194,11 @@ function openEditListing(listingId) {
     document.getElementById('sellTitle').value = listing.title || '';
     document.getElementById('sellCategory').value = listing.category || '';
     initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '', listing.fits?.[0]?.variant || '');
+    const isUniversal = !listing.fits?.length && !VEHICLE_EXEMPT_CATEGORIES.includes(listing.category || '');
+    sellIsUniversal = isUniversal;
+    const uToggle = document.getElementById('sellUniversalToggle');
+    if (uToggle) uToggle.checked = isUniversal;
+    renderSellVehicleChip();
     document.getElementById('sellPostcode').value = listing.postcode || '';
     document.getElementById('sellLocation').value = listing.loc || '';
     document.getElementById('sellPickup').checked = !!listing.pickup;
@@ -4328,6 +4356,9 @@ function resetSellForm() {
         if (el.tagName.toLowerCase() === 'textarea') el.value = '';
     });
     sellVehicleSelection = null;
+    sellIsUniversal = false;
+    const uToggle = document.getElementById('sellUniversalToggle');
+    if (uToggle) uToggle.checked = false;
     renderSellVehicleChip();
     const sellLocWrap = document.querySelector('#sellOverlay .location-picker-wrap[data-mode="sell"]');
     if (sellLocWrap) clearLocationPicker(sellLocWrap);
@@ -4412,7 +4443,7 @@ async function submitSellListing() {
     if (!category) missing.push('Category');
     if (!price)    missing.push('Price');
     if (!location) missing.push('Location');
-    if (category && !VEHICLE_EXEMPT_CATEGORIES.includes(category)) {
+    if (category && !VEHICLE_EXEMPT_CATEGORIES.includes(category) && !sellIsUniversal) {
         if (!sellVehicleSelection?.make) missing.push('Vehicle (make, model, year, series)');
     }
     if (missing.length) {
