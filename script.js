@@ -15,6 +15,7 @@ let myNotifications  = [];           // buyer's unread notifications from Supaba
 let _listingsCursor    = null;   // created_at of last fetched row for cursor pagination
 let _listingsExhausted = false;  // true when Supabase has no more pages
 let _listingsLoading   = false;  // guard against concurrent fetches
+let _pendingStoreOpen  = null;   // seller userId to auto-open storefront from ?store= URL param
 let currentOpenPartId = null;  // tracks which part detail is open
 let _currentOpenPart  = null;  // direct part ref — avoids integer ID collision in getAllParts()
 let _detailHistory    = [];    // stack of part IDs for store → listing → back navigation
@@ -1301,7 +1302,14 @@ async function loadPublicListingsFromSupabase(append = false) {
         if (append && newCount === 0) _listingsExhausted = true;
 
         renderMainGrid();
-        if (!append) refreshInboxThreadHeader();
+        if (!append) {
+            refreshInboxThreadHeader();
+            if (_pendingStoreOpen) {
+                const sid = _pendingStoreOpen;
+                _pendingStoreOpen = null;
+                openStorefrontByUserId(sid);
+            }
+        }
     } catch (e) {
         console.warn('Load public listings:', e);
         renderMainGrid();
@@ -5556,7 +5564,14 @@ function generateApcBadge() {
     const linkEl = document.getElementById('badgeLinkText');
     if (linkEl) linkEl.textContent = storeUrl;
 
-    // Generate QR into hidden div, then draw entire badge once QR image is ready
+    // Large QR preview shown in modal
+    const qrLarge = document.getElementById('badgeQrLarge');
+    if (qrLarge) {
+        qrLarge.innerHTML = '';
+        new QRCode(qrLarge, { text: storeUrl, width: 180, height: 180, colorDark: '#1a1a1a', colorLight: '#ffffff' });
+    }
+
+    // Hidden QR used to draw the badge canvas
     const qrTemp = document.getElementById('badgeQrTemp');
     if (qrTemp) {
         qrTemp.innerHTML = '';
@@ -9699,6 +9714,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', e => { if (!e.target.closest('#inboxStatusWrap')) closeInboxStatusPicker(); });
     updateHeaderOffset();
     initFilterVehicleDropdowns();
+    // Deep-link: ?store=USERID opens that seller's storefront once listings are loaded
+    const _storeParam = new URLSearchParams(location.search).get('store');
+    if (_storeParam) _pendingStoreOpen = _storeParam;
+
     renderSkeletonGrid();
     loadPublicListingsFromSupabase();
 
