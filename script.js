@@ -5973,6 +5973,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserTier  = null;
             currentUserId    = null;
             currentUserEmail = null;
+            closeDashboard();
             // Clear all user-specific data so it doesn't bleed into the next account on the same device
             userListings.splice(0); saveUserListings();
             conversations.splice(0); saveConversations();
