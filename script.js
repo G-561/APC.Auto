@@ -8016,6 +8016,8 @@ function openMyStorefront() {
         userSettings.location       || '',
         userSettings.businessBanner || ''
     );
+    const sfMsgBtn = document.getElementById('sfMsgBtn');
+    if (sfMsgBtn) sfMsgBtn.style.display = 'none';
     const backBar4 = document.getElementById('storefrontBackBar');
     if (backBar4) backBar4.style.display = 'none';
     toggleDrawer('storefrontDrawer');
