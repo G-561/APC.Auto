@@ -5571,11 +5571,11 @@ function generateApcBadge() {
         new QRCode(qrLarge, { text: storeUrl, width: 180, height: 180, colorDark: '#1a1a1a', colorLight: '#ffffff' });
     }
 
-    // Hidden QR used to draw the badge canvas
+    // Hidden QR used to draw the badge canvas — high-res source for 4× canvas
     const qrTemp = document.getElementById('badgeQrTemp');
     if (qrTemp) {
         qrTemp.innerHTML = '';
-        new QRCode(qrTemp, { text: storeUrl, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff' });
+        new QRCode(qrTemp, { text: storeUrl, width: 400, height: 400, colorDark: '#1a1a1a', colorLight: '#ffffff' });
     }
     setTimeout(() => _drawApcBadgeCanvas(biz, qrTemp), 300);
 }
@@ -5585,15 +5585,15 @@ function _drawApcBadgeCanvas(biz, qrTemp) {
     if (!canvas) return;
 
     const W = 420, H = 126;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width  = W * dpr;
-    canvas.height = H * dpr;
+    const SCALE = 4; // 1680×504px download — print-ready at 300 DPI (~5.6" wide)
+    canvas.width  = W * SCALE;
+    canvas.height = H * SCALE;
     canvas.style.width  = '300px';
     canvas.style.height = '90px';
 
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any leftover transform from previous calls
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(SCALE, SCALE);
 
     // Background
     ctx.fillStyle = '#F7941D';
