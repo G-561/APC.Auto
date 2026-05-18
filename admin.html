@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APC Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+        /* ── Auth overlay ── */
+        #authOverlay { position: fixed; inset: 0; background: #1a1a2e; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-box { background: white; border-radius: 18px; padding: 40px; max-width: 360px; width: 90%; text-align: center; }
+        .auth-logo { font-size: 36px; font-weight: 900; color: #F7941D; margin-bottom: 4px; letter-spacing: -1px; }
+        .auth-sub { font-size: 12px; color: #aaa; margin-bottom: 28px; text-transform: uppercase; letter-spacing: 1px; }
+        .auth-input { width: 100%; padding: 13px 16px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 14px; margin-bottom: 10px; outline: none; font-family: inherit; }
+        .auth-input:focus { border-color: #F7941D; }
+        .auth-btn { width: 100%; padding: 14px; background: #F7941D; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-top: 4px; }
+        .auth-btn:hover { background: #e08010; }
+        .auth-error { color: #e53935; font-size: 12px; margin-top: 10px; min-height: 16px; }
+
+        /* ── Top bar ── */
+        #dashboard { display: none; }
+        .top-bar { background: #1a1a2e; color: white; padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .top-bar-title { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+        .top-bar-title span { color: #F7941D; }
+        .top-bar-right { display: flex; align-items: center; gap: 12px; }
+        .last-updated { font-size: 12px; color: rgba(255,255,255,0.4); }
+        .refresh-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+        .refresh-btn:hover { background: rgba(255,255,255,0.2); }
+        .sign-out-btn { background: none; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.6); padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+        .sign-out-btn:hover { color: white; border-color: rgba(255,255,255,0.5); }
+
+        /* ── Layout ── */
+        .main { padding: 28px; max-width: 1260px; margin: 0 auto; }
+        .section-title { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 1.2px; margin: 32px 0 14px; }
+        .section-title:first-child { margin-top: 0; }
+
+        /* ── Metric cards ── */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+        .card { background: white; border-radius: 14px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border-top: 3px solid transparent; }
+        .card-orange { border-top-color: #F7941D; }
+        .card-green  { border-top-color: #28a745; }
+        .card-blue   { border-top-color: #007aff; }
+        .card-purple { border-top-color: #8e44ad; }
+        .card-label  { font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+        .card-value  { font-size: 40px; font-weight: 900; color: #1a1a2e; line-height: 1; }
+        .card-sub    { font-size: 12px; color: #bbb; margin-top: 8px; }
+
+        /* ── Status pills ── */
+        .status-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .status-pill { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+        .pill-active  { background: #e8f5e9; color: #2e7d32; }
+        .pill-pending { background: #fff3e0; color: #bf360c; }
+        .pill-sold    { background: #f5f5f5; color: #777; }
+
+        /* ── Two column ── */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } .top-bar { padding: 0 16px; } .main { padding: 16px; } }
+
+        /* ── Bar charts ── */
+        .panel { background: white; border-radius: 14px; padding: 22px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .panel h3 { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 16px; }
+        .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+        .bar-label { font-size: 12px; color: #555; width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
+        .bar-track { flex: 1; background: #f3f3f3; border-radius: 4px; height: 8px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.25,1,0.5,1); }
+        .bar-count { font-size: 12px; color: #aaa; width: 28px; text-align: right; flex-shrink: 0; }
+        .no-data { color: #ccc; font-size: 13px; padding: 8px 0; }
+
+        /* ── Tables ── */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; font-size: 11px; color: #bbb; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 10px 10px; }
+        td { padding: 9px 10px; border-top: 1px solid #f5f5f5; color: #333; vertical-align: middle; }
+        .td-muted { color: #bbb; font-size: 12px; }
+        .td-title { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+        .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+        .dot-active  { background: #28a745; }
+        .dot-pending { background: #F7941D; }
+        .dot-sold    { background: #bbb; }
+        .pro-tag { color: #F7941D; font-weight: 700; font-size: 11px; }
+
+        /* ── Shimmer loading ── */
+        .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; display: inline-block; height: 40px; width: 64px; vertical-align: bottom; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* ── GA4 note ── */
+        .ga-banner { background: white; border-radius: 14px; padding: 18px 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .ga-banner-left { font-size: 13px; color: #555; }
+        .ga-banner-left strong { color: #1a1a2e; }
+        .ga-link { display: inline-block; padding: 8px 18px; background: #4285F4; color: white; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .ga-link:hover { background: #2b6fd4; }
+    </style>
+</head>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div id="authOverlay">
+    <div class="auth-box">
+        <div class="auth-logo">APC</div>
+        <div class="auth-sub">Admin — Authorised Access Only</div>
+        <input type="email" id="adminEmail" class="auth-input" placeholder="Email address" autocomplete="email">
+        <input type="password" id="adminPassword" class="auth-input" placeholder="Password" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')adminSignIn()">
+        <button class="auth-btn" onclick="adminSignIn()">Sign In</button>
+        <div class="auth-error" id="authError"></div>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+    <div class="top-bar">
+        <div class="top-bar-title"><span>APC</span> Admin</div>
+        <div class="top-bar-right">
+            <span class="last-updated" id="lastUpdated"></span>
+            <button class="refresh-btn" onclick="loadAllMetrics()">↻ Refresh</button>
+            <button class="sign-out-btn" onclick="adminSignOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <!-- GOOGLE ANALYTICS LINK -->
+        <div class="section-title">External Analytics</div>
+        <div class="ga-banner">
+            <div class="ga-banner-left">
+                <strong>Google Analytics 4</strong> — traffic, acquisition, sessions, device breakdown and user behaviour.
+                Your Measurement ID: <strong id="gaMeasurementId">G-XXXXXXXXXX</strong>
+            </div>
+            <a class="ga-link" href="https://analytics.google.com" target="_blank" rel="noopener">Open GA4 →</a>
+        </div>
+
+        <!-- OVERVIEW -->
+        <div class="section-title">Overview</div>
+        <div class="cards-grid">
+            <div class="card card-orange">
+                <div class="card-label">Total Listings</div>
+                <div class="card-value" id="metricTotalListings"><span class="shimmer"></span></div>
+                <div class="status-row" id="listingStatusRow"></div>
+            </div>
+            <div class="card card-green">
+                <div class="card-label">Registered Users</div>
+                <div class="card-value" id="metricTotalUsers"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricProUsers"></div>
+            </div>
+            <div class="card card-blue">
+                <div class="card-label">Conversations</div>
+                <div class="card-value" id="metricConversations"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricConvSub"></div>
+            </div>
+            <div class="card card-purple">
+                <div class="card-label">Wanted Requests</div>
+                <div class="card-value" id="metricWanted"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricWantedSub"></div>
+            </div>
+        </div>
+
+        <!-- THIS WEEK / MONTH -->
+        <div class="section-title">This Week</div>
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-label">New Listings</div>
+                <div class="card-value" id="metricNewListingsWeek"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricNewListingsMonth"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">New Users</div>
+                <div class="card-value" id="metricNewUsersWeek"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricNewUsersMonth"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">New Conversations</div>
+                <div class="card-value" id="metricNewConvsWeek"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricNewConvsSub"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">New Wanted Requests</div>
+                <div class="card-value" id="metricNewWantedWeek"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricNewWantedSub"></div>
+            </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="section-title">Breakdown</div>
+        <div class="two-col">
+            <div class="panel">
+                <h3>Listings by Category</h3>
+                <div id="categoryChart"><div class="no-data">Loading…</div></div>
+            </div>
+            <div class="panel">
+                <h3>Top Makes Listed</h3>
+                <div id="makesChart"><div class="no-data">Loading…</div></div>
+            </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="section-title">Recent Activity</div>
+        <div class="two-col">
+            <div class="panel">
+                <h3>Latest Listings</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Title</th><th>Seller</th><th>Price</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody id="recentListingsBody"><tr><td colspan="5" class="td-muted">Loading…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="panel">
+                <h3>Recent Signups</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Joined</th></tr></thead>
+                        <tbody id="recentUsersBody"><tr><td colspan="4" class="td-muted">Loading…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /main -->
+</div><!-- /dashboard -->
+
+<script>
+const SUPABASE_URL  = 'https://ufpsnjtnvchazqswntch.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcHNuanRudmNoYXpxc3dudGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc5MDAsImV4cCI6MjA5Mzg4MzkwMH0.Wl60CI8rcIo26EnNx1A1Dd7xfZEFOBlAXJDpXA6fyCA';
+const ADMIN_EMAIL   = 'gary561d@gmail.com';
+const GA_ID         = 'G-XXXXXXXXXX'; // Replace with your GA4 Measurement ID
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Show GA4 ID in the banner
+document.getElementById('gaMeasurementId').textContent = GA_ID;
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+async function adminSignIn() {
+    const email    = document.getElementById('adminEmail').value.trim().toLowerCase();
+    const password = document.getElementById('adminPassword').value;
+    const errEl    = document.getElementById('authError');
+    errEl.textContent = '';
+
+    if (email !== ADMIN_EMAIL) { errEl.textContent = 'Access denied.'; return; }
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error || !data.user) { errEl.textContent = error?.message || 'Sign in failed.'; return; }
+    showDashboard();
+}
+
+async function adminSignOut() {
+    await sb.auth.signOut();
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('authOverlay').style.display = 'flex';
+}
+
+function showDashboard() {
+    document.getElementById('authOverlay').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadAllMetrics();
+}
+
+// Restore session on page load
+sb.auth.getSession().then(({ data }) => {
+    if (data.session?.user?.email?.toLowerCase() === ADMIN_EMAIL) showDashboard();
+});
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function setVal(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = val;
+}
+
+function fmt(n) {
+    if (n === null || n === undefined) return '—';
+    return Number(n).toLocaleString();
+}
+
+function fmtDate(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' });
+}
+
+// Safe count query — returns 0 on error rather than crashing the dashboard
+async function safeCount(table, filters = []) {
+    try {
+        let q = sb.from(table).select('*', { count: 'exact', head: true });
+        filters.forEach(([method, ...args]) => { q = q[method](...args); });
+        const { count, error } = await q;
+        return error ? 0 : (count ?? 0);
+    } catch { return 0; }
+}
+
+async function safeSelect(table, columns, modFn) {
+    try {
+        let q = sb.from(table).select(columns);
+        if (modFn) q = modFn(q);
+        const { data, error } = await q;
+        return error ? [] : (data ?? []);
+    } catch { return []; }
+}
+
+// ── Main data load ────────────────────────────────────────────────────────────
+
+async function loadAllMetrics() {
+    const now      = new Date();
+    const weekAgo  = new Date(now - 7  * 86400000).toISOString();
+    const monthAgo = new Date(now - 30 * 86400000).toISOString();
+
+    // Fire all queries in parallel
+    const [
+        totalListings,
+        listingsAll,
+        totalUsers,
+        proUsers,
+        newUsersWeek,
+        newUsersMonth,
+        totalConvs,
+        newConvsWeek,
+        totalWanted,
+        newWantedWeek,
+        newListingsWeek,
+        newListingsMonth,
+        categoryRows,
+        makesRows,
+        recentListings,
+        recentUsers,
+    ] = await Promise.all([
+        safeCount('listings'),
+        safeSelect('listings', 'status', q => q.neq('status', 'removed')),
+        safeCount('profiles'),
+        safeCount('profiles', [['eq', 'is_pro', true]]),
+        safeCount('profiles', [['gte', 'created_at', weekAgo]]),
+        safeCount('profiles', [['gte', 'created_at', monthAgo]]),
+        safeCount('conversations'),
+        safeCount('conversations', [['gte', 'created_at', weekAgo]]),
+        safeCount('wanted_parts'),
+        safeCount('wanted_parts', [['gte', 'created_at', weekAgo]]),
+        safeCount('listings',    [['gte', 'created_at', weekAgo]]),
+        safeCount('listings',    [['gte', 'created_at', monthAgo]]),
+        safeSelect('listings', 'category', q => q.neq('status', 'removed')),
+        safeSelect('listing_vehicles', 'make'),
+        safeSelect('listings', 'title, price, status, created_at, seller_name, is_pro',
+            q => q.order('created_at', { ascending: false }).limit(12)),
+        safeSelect('profiles', 'display_name, is_pro, location, created_at',
+            q => q.order('created_at', { ascending: false }).limit(12)),
+    ]);
+
+    // ── Overview cards ──
+    setVal('metricTotalListings', fmt(totalListings));
+
+    const statusCounts = {};
+    listingsAll.forEach(r => {
+        const s = r.status || 'active';
+        statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+    setVal('listingStatusRow', [
+        statusCounts.active  ? `<span class="status-pill pill-active">${fmt(statusCounts.active)} active</span>`   : '',
+        statusCounts.pending ? `<span class="status-pill pill-pending">${fmt(statusCounts.pending)} pending</span>` : '',
+        statusCounts.sold    ? `<span class="status-pill pill-sold">${fmt(statusCounts.sold)} sold</span>`           : '',
+    ].join(''));
+
+    setVal('metricTotalUsers',    fmt(totalUsers));
+    setVal('metricProUsers',      `${fmt(proUsers)} Pro ${proUsers === 1 ? 'account' : 'accounts'}`);
+    setVal('metricConversations', fmt(totalConvs));
+    setVal('metricConvSub',       '');
+    setVal('metricWanted',        fmt(totalWanted));
+    setVal('metricWantedSub',     '');
+
+    // ── This week cards ──
+    setVal('metricNewListingsWeek',  fmt(newListingsWeek));
+    setVal('metricNewListingsMonth', `${fmt(newListingsMonth)} this month`);
+    setVal('metricNewUsersWeek',     fmt(newUsersWeek));
+    setVal('metricNewUsersMonth',    `${fmt(newUsersMonth)} this month`);
+    setVal('metricNewConvsWeek',     fmt(newConvsWeek));
+    setVal('metricNewConvsSub',      '');
+    setVal('metricNewWantedWeek',    fmt(newWantedWeek));
+    setVal('metricNewWantedSub',     '');
+
+    // ── Bar charts ──
+    const catCounts = {};
+    categoryRows.forEach(r => { if (r.category) catCounts[r.category] = (catCounts[r.category] || 0) + 1; });
+    renderBarChart('categoryChart', catCounts, '#F7941D');
+
+    const makeCounts = {};
+    makesRows.forEach(r => { if (r.make) makeCounts[r.make] = (makeCounts[r.make] || 0) + 1; });
+    renderBarChart('makesChart', makeCounts, '#007aff');
+
+    // ── Recent listings table ──
+    const tbody = document.getElementById('recentListingsBody');
+    if (tbody) {
+        tbody.innerHTML = recentListings.length ? recentListings.map(r => {
+            const dot = r.status === 'pending' ? 'dot-pending' : r.status === 'sold' ? 'dot-sold' : 'dot-active';
+            return `<tr>
+                <td class="td-title">${esc(r.title || '—')}</td>
+                <td class="td-muted">${esc(r.seller_name || '—')}${r.is_pro ? ' <span class="pro-tag">PRO</span>' : ''}</td>
+                <td>$${(r.price || 0).toLocaleString()}</td>
+                <td><span class="status-dot ${dot}"></span>${r.status || 'active'}</td>
+                <td class="td-muted">${fmtDate(r.created_at)}</td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="5" class="td-muted">No listings yet</td></tr>';
+    }
+
+    // ── Recent users table ──
+    const ubody = document.getElementById('recentUsersBody');
+    if (ubody) {
+        ubody.innerHTML = recentUsers.length ? recentUsers.map(r => `<tr>
+            <td>${esc(r.display_name || 'Unknown')}</td>
+            <td>${r.is_pro ? '<span class="pro-tag">Pro</span>' : '<span class="td-muted">Standard</span>'}</td>
+            <td class="td-muted">${esc(r.location || '—')}</td>
+            <td class="td-muted">${fmtDate(r.created_at)}</td>
+        </tr>`).join('') : '<tr><td colspan="4" class="td-muted">No users yet</td></tr>';
+    }
+
+    setVal('lastUpdated', `Updated ${new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`);
+}
+
+function renderBarChart(containerId, counts, color) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    if (!sorted.length) { container.innerHTML = '<div class="no-data">No data yet</div>'; return; }
+    const max = sorted[0][1] || 1;
+    container.innerHTML = sorted.map(([label, count]) => `
+        <div class="bar-row">
+            <div class="bar-label" title="${esc(label)}">${esc(label)}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(count / max * 100).toFixed(1)}%; background:${color};"></div></div>
+            <div class="bar-count">${count}</div>
+        </div>`).join('');
+}
+
+function esc(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
