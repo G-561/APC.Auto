@@ -1419,6 +1419,44 @@ async function ensureSupabaseConversation(conv) {
     const buyerId = session?.user?.id;
     if (!buyerId) { console.warn('ensureConv: no session'); return false; }
 
+    // General enquiry path: listing_id is null, use conv.sellerId directly
+    if (conv.partId === 'general') {
+        const sellerId = conv.sellerId;
+        if (!sellerId) { console.warn('ensureConv: general enquiry missing sellerId'); return false; }
+        if (buyerId === sellerId) { console.warn('ensureConv: self-message blocked'); return false; }
+
+        const { data: existing } = await sb.from('conversations')
+            .select('id').is('listing_id', null)
+            .eq('buyer_id', buyerId).eq('seller_id', sellerId).maybeSingle();
+        if (existing) {
+            conv.supabaseConvId = existing.id;
+            conv.buyerId = buyerId;
+            saveConversations();
+            return true;
+        }
+
+        const { data, error } = await sb.from('conversations').insert({
+            listing_id: null,
+            buyer_id: buyerId,
+            seller_id: sellerId,
+            buyer_name: currentUserName,
+            seller_name: conv.with || null,
+            listing_title: 'General Enquiry',
+            unread_buyer: false,
+            unread_seller: true,
+        }).select('id').single();
+
+        if (error) {
+            console.warn('Conv sync error (general enquiry):', error.message);
+            showToast('Sync error: ' + error.message);
+            return false;
+        }
+        conv.supabaseConvId = data.id;
+        conv.buyerId = buyerId;
+        saveConversations();
+        return true;
+    }
+
     const part = findPartAnywhere(conv.partId);
     if (!part?.supabaseId || !part.sellerId) {
         console.warn('ensureConv: part missing data', { partId: conv.partId, found: !!part, supabaseId: part?.supabaseId, sellerId: part?.sellerId });
@@ -2345,7 +2383,8 @@ function syncInboxPendingBtn() {
     const wrap = document.getElementById('inboxStatusWrap');
     const btn  = document.getElementById('inboxStatusBtn');
     const conv = conversations.find(c => c.id === activeConvId);
-    const isSeller = conv && (
+    const isBuyer = conv?.buyerId && conv.buyerId === currentUserId;
+    const isSeller = !isBuyer && conv && (
         (conv.sellerId && conv.sellerId === currentUserId) ||
         (!conv.sellerId && userListings.some(l =>
             (l.supabaseId === conv.partId || l.id === conv.partId) && l.sellerId === currentUserId
@@ -5755,7 +5794,8 @@ function handleGeneralEnquiry() {
 
     pendingGeneralEnquiry = {
         seller,
-        isPro: document.getElementById('sfProBadge')?.style.display !== 'none'
+        isPro: document.getElementById('sfProBadge')?.style.display !== 'none',
+        sellerId: document.getElementById('sellerPartsGrid')?.dataset.userId || ''
     };
     currentOpenPartId = null;
 
@@ -5829,9 +5869,10 @@ function sendContactMessage() {
     const text  = msgEl ? msgEl.value.trim() : '';
     if (!text) return;
 
-    let seller, isPro, partId, partTitle;
+    let seller, isPro, partId, partTitle, _generalSellerId;
     if (pendingGeneralEnquiry) {
         ({ seller, isPro } = pendingGeneralEnquiry);
+        _generalSellerId = pendingGeneralEnquiry.sellerId || null;
         partId = 'general';
         partTitle = 'General Enquiry';
         pendingGeneralEnquiry = null;
@@ -5849,6 +5890,7 @@ function sendContactMessage() {
     const conv = { id: nextConvId(), with: seller, isPro, unread: false, partId, partTitle, msgs: [] };
     conv.msgs.push({ id: 1, sent: true, text, time: 'Today', clock: nowClock() });
     if (currentUserId) conv.buyerId = currentUserId;
+    if (_generalSellerId) conv.sellerId = _generalSellerId;
     conversations.unshift(conv);
     saveConversations();
     updateInboxBadge();
