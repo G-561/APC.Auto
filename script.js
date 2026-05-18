@@ -806,7 +806,7 @@ async function confirmPicCrop() {
             const url = urlData.publicUrl + '?t=' + Date.now();
             userSettings.profilePic = url;
             saveUserSettings();
-            const { error: profErr } = await sb.from('profiles').update({ profile_pic: url }).eq('id', currentUserId);
+            const { error: profErr } = await sb.from('profiles').update({ avatar_url: url }).eq('id', currentUserId);
             if (profErr) { showToast('Photo saved locally — sync failed: ' + profErr.message); }
             else { renderProfilePicPreview(); showToast('Profile photo saved'); }
         }, 'image/jpeg', 0.92);
@@ -829,7 +829,7 @@ async function removeProfilePic() {
     if (input) input.value = '';
     renderProfilePicPreview();
     if (currentUserId && sb) {
-        await sb.from('profiles').update({ profile_pic: null }).eq('id', currentUserId);
+        await sb.from('profiles').update({ avatar_url: null }).eq('id', currentUserId);
     }
     showToast('Profile photo removed');
 }
@@ -1260,11 +1260,11 @@ async function loadPublicListingsFromSupabase(append = false) {
         let nameMap = {};
         if (sellerIds.length) {
             const { data: profiles } = await sb.from('profiles')
-                .select('id, display_name, profile_pic')
+                .select('id, display_name, avatar_url')
                 .in('id', sellerIds);
             (profiles || []).forEach(p => {
                 if (p.display_name) nameMap[p.id] = p.display_name;
-                if (p.profile_pic)  _sellerPicCache[p.id] = p.profile_pic;
+                if (p.avatar_url)   _sellerPicCache[p.id] = p.avatar_url;
             });
         }
 
@@ -2800,17 +2800,17 @@ function getPublicSellerName() {
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
     const { data: profile } = await sb.from('profiles')
-        .select('display_name, is_pro, business_name, abn, about, profile_pic, location')
+        .select('display_name, is_pro, business_name, abn, about, avatar_url, location')
         .eq('id', userId).single();
     if (!profile) return;
-    if (profile.profile_pic) _sellerPicCache[userId] = profile.profile_pic;
+    if (profile.avatar_url)  _sellerPicCache[userId] = profile.avatar_url;
     const sellerName = profile.display_name || 'Seller';
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = sellerName;
     renderStorefront(
         sellerName,
         profile.is_pro || false,
-        profile.profile_pic || '',
+        profile.avatar_url || '',
         profile.business_name || '',
         profile.abn || '',
         profile.about || '',
@@ -4898,11 +4898,11 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     applyAvatar(colAvatar, initialPic);
     // Cache miss for another seller — fetch lazily so avatar fills in without blocking the overlay
     if (!isOwnListing && !initialPic && part.sellerId && sb) {
-        sb.from('profiles').select('profile_pic').eq('id', part.sellerId).single().then(({ data }) => {
-            if (data?.profile_pic) {
-                _sellerPicCache[part.sellerId] = data.profile_pic;
-                applyAvatar(sellerAvatar, data.profile_pic);
-                applyAvatar(colAvatar,    data.profile_pic);
+        sb.from('profiles').select('avatar_url').eq('id', part.sellerId).single().then(({ data }) => {
+            if (data?.avatar_url) {
+                _sellerPicCache[part.sellerId] = data.avatar_url;
+                applyAvatar(sellerAvatar, data.avatar_url);
+                applyAvatar(colAvatar,    data.avatar_url);
             }
         });
     }
@@ -5453,10 +5453,10 @@ function openStorefront(partId) {
         return;
     }
     sb.from('profiles')
-        .select('display_name, is_pro, profile_pic, business_name, abn, about, location')
+        .select('display_name, is_pro, avatar_url, business_name, abn, about, location')
         .eq('id', part.sellerId).single()
         .then(({ data: profile }) => {
-            const pic = profile?.profile_pic || '';
+            const pic = profile?.avatar_url || '';
             if (pic) _sellerPicCache[part.sellerId] = pic;
             _showStorefront(
                 pic,
@@ -5988,7 +5988,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.businessName   = profile.business_name   || '';
                         userSettings.abn            = profile.abn             || '';
                         userSettings.about          = profile.about           || '';
-                        userSettings.profilePic     = profile.profile_pic     || userSettings.profilePic     || '';
+                        userSettings.profilePic     = profile.avatar_url      || userSettings.profilePic     || '';
                         userSettings.businessLogo   = profile.business_logo   || userSettings.businessLogo   || '';
                         userSettings.businessBanner = profile.business_banner || userSettings.businessBanner || '';
                         userSettings.postcode       = profile.postcode        || userSettings.postcode       || '';
