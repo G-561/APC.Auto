@@ -3277,6 +3277,18 @@ function buildCardHTML(part, eager = false) {
         ? `<div class="card-pending-banner">PENDING</div>`
         : '';
 
+    // Vehicle fit label: "BMW Z3" or "Toyota Corolla +2 more"
+    let vehicleText = '';
+    if (Array.isArray(part.fits) && part.fits.length > 0) {
+        const f = part.fits[0];
+        vehicleText = [f.make, f.model].filter(Boolean).join(' ');
+        if (part.fits.length > 1) vehicleText += ` +${part.fits.length - 1} more`;
+    }
+
+    const titleBlock = vehicleText
+        ? `<div class="item-title">${escapeHtml(vehicleText)}</div><div class="item-subtitle">${escapeHtml(part.title)}</div>`
+        : `<div class="item-title">${escapeHtml(part.title)}</div>`;
+
     return `
         <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
@@ -3286,7 +3298,7 @@ function buildCardHTML(part, eager = false) {
                     <span class="item-price">$${part.price}</span>
                     ${tradeBadge}${fittingLabel}
                 </div>
-                <div class="item-title">${part.title}</div>
+                ${titleBlock}
                 <div class="item-loc">${locationHTML}</div>
             </div>
             ${savedDot}
@@ -4823,6 +4835,18 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     // 2. Update detail fields safely
     safeText(document.getElementById('detailPrice'), `$${part.price}`);
     safeText(document.getElementById('detailTitle'), part.title);
+    const detailVehicleEl = document.getElementById('detailVehicle');
+    if (detailVehicleEl) {
+        if (Array.isArray(part.fits) && part.fits.length > 0) {
+            const fits = part.fits;
+            let label = [fits[0].make, fits[0].model].filter(Boolean).join(' ');
+            if (fits.length > 1) label += ` +${fits.length - 1} more`;
+            detailVehicleEl.textContent = 'Fits: ' + label;
+            detailVehicleEl.style.display = 'block';
+        } else {
+            detailVehicleEl.style.display = 'none';
+        }
+    }
     const detailPendingBanner = document.getElementById('detailPendingBanner');
     if (detailPendingBanner) detailPendingBanner.style.display = part.status === 'pending' ? '' : 'none';
     const detailApcIdEl = document.getElementById('detailApcId');
