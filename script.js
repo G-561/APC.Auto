@@ -1216,7 +1216,7 @@ async function syncListingToSupabase(localListing) {
         if (localListing.fits?.length) {
             sb.from('listing_vehicles').delete().eq('listing_id', listingId).then(() =>
                 sb.from('listing_vehicles').insert(
-                    localListing.fits.map(f => ({ listing_id: listingId, make: f.make, model: f.model }))
+                    localListing.fits.map(f => ({ listing_id: listingId, make: f.make, model: f.model, series: f.variant || null }))
                 )
             ).catch(e => console.warn('Vehicle fits sync:', e));
         }
@@ -1238,7 +1238,7 @@ async function loadPublicListingsFromSupabase(append = false) {
     try {
         let query = sb
             .from('listings')
-            .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
+            .select('*, listing_images(storage_path, position), listing_vehicles(make, model, series)')
             .in('status', ['active', 'pending'])
             .order('created_at', { ascending: false })
             .limit(20);
@@ -1278,7 +1278,7 @@ async function loadPublicListingsFromSupabase(append = false) {
             const images = (r.listing_images || [])
                 .sort((a, b) => a.position - b.position)
                 .map(img => img.storage_path).filter(Boolean);
-            const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
+            const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
             partDatabase.push({
                 id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
                 saves: r.saves_count || 0,
@@ -1323,7 +1323,7 @@ async function loadUserListingsFromSupabase(userId) {
     try {
         const { data: rows, error } = await sb
             .from('listings')
-            .select('*, listing_images(storage_path, position), listing_vehicles(make, model)')
+            .select('*, listing_images(storage_path, position), listing_vehicles(make, model, series)')
             .eq('seller_id', userId)
             .order('created_at', { ascending: false });
         if (error) { showToast('Fetch error: ' + error.message); return; }
@@ -1343,7 +1343,7 @@ async function loadUserListingsFromSupabase(userId) {
                 .sort((a, b) => a.position - b.position)
                 .map(img => img.storage_path)
                 .filter(Boolean);
-            const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
+            const fits = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
             const existing = userListings.find(l => l.supabaseId === r.id)
                 || (r.apc_id && userListings.find(l => !l.supabaseId && l.apcId === r.apc_id))
                 || (!r.apc_id && userListings.find(l => !l.supabaseId && !l.apcId && l.title === r.title && Number(l.price) === Number(r.price)));
@@ -4826,9 +4826,26 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     const detailVehicleEl = document.getElementById('detailVehicle');
     if (detailVehicleEl) {
         if (Array.isArray(part.fits) && part.fits.length > 0) {
-            const fits = part.fits;
-            let label = [fits[0].make, fits[0].model].filter(Boolean).join(' ');
-            if (fits.length > 1) label += ` +${fits.length - 1} more`;
+            const f = part.fits[0];
+            const seriesKey = f.variant ? `${f.model} ${f.variant}` : f.model;
+            const fullName = [f.make, seriesKey].filter(Boolean).join(' ');
+            // Look up year range: prefer series-specific range, fall back to base model
+            const ranges = (typeof VEHICLE_YEAR_RANGES !== 'undefined') &&
+                (VEHICLE_YEAR_RANGES[f.make]?.[seriesKey] || VEHICLE_YEAR_RANGES[f.make]?.[f.model]);
+            let yearLabel = '';
+            if (ranges?.length && part.year) {
+                const yr = parseInt(part.year);
+                const gen = ranges.find(([s, e]) => yr >= s && yr <= e);
+                if (gen) yearLabel = ` · ${gen[0]}–${gen[1]}`;
+            } else if (ranges?.length) {
+                const minY = Math.min(...ranges.map(([s]) => s));
+                const maxY = Math.max(...ranges.map(([, e]) => e));
+                yearLabel = ` · ${minY}–${maxY}`;
+            } else if (part.year) {
+                yearLabel = ` · ${part.year}`;
+            }
+            let label = fullName + yearLabel;
+            if (part.fits.length > 1) label += ` +${part.fits.length - 1} more`;
             detailVehicleEl.textContent = 'Fits: ' + label;
             detailVehicleEl.style.display = 'block';
         } else {
@@ -6930,11 +6947,11 @@ async function viewNotifListing(notifId, listingId) {
     // Fetch from Supabase, map, then open
     try {
         const { data: r, error } = await sb.from('listings')
-            .select('*, listing_images(storage_path,position), listing_vehicles(make,model)')
+            .select('*, listing_images(storage_path,position), listing_vehicles(make,model,series)')
             .eq('id', listingId).single();
         if (error || !r) { showToast('Listing not found'); return; }
         const images = (r.listing_images || []).sort((a, b) => a.position - b.position).map(i => i.storage_path).filter(Boolean);
-        const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model }));
+        const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
         const mapped = {
             id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
             saves: r.saves_count || 0, date: new Date(r.created_at).getTime(),
