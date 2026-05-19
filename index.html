@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=40">
+    <link rel="stylesheet" href="style.css?v=41">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1529,8 +1529,11 @@
                 <button onclick="onUpgradeToPro()" style="margin-top: 12px; width: 100%; background: var(--apc-blue); color: white; border: none; border-radius: 12px; padding: 12px 0; font-weight: 700; cursor: pointer;">Upgrade to APC Pro</button>
             </div>
 
+            <!-- Right column: Banner, Logo, Your Business -->
+            <div class="ws-col-right">
+
             <!-- Banner — full bleed top of editor -->
-            <div style="margin: -15px -15px 0; position:relative;">
+            <div class="banner-bleed-wrap" style="margin: -15px -15px 0; position:relative;">
                 <div class="banner-upload-preview" id="bannerPreviewBox" style="border-radius:0; height:130px; cursor:pointer; flex-direction:column; gap:4px;" onclick="document.getElementById('bannerFileInput').click()">
                     <img id="bannerPreviewImg" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover;">
                     <span id="bannerPreviewPlaceholder" style="font-size:13px; color:rgba(255,255,255,0.9); font-weight:700;">＋ Add store banner</span>
@@ -1592,6 +1595,11 @@
                     <textarea id="proSettingAbout" class="apc-textarea" rows="3" placeholder="e.g. Specialising in Japanese imports, serving SA since 2005. We stock 500+ vehicles at any time."></textarea>
                 </div>
             </div>
+
+            </div><!-- end .ws-col-right -->
+
+            <!-- Left column: Workshop Services + Parts Supply -->
+            <div class="ws-col-left">
 
             <!-- Services — shown for Service Provider / Parts & Services -->
             <div class="filter-section" id="workshopServicesSection" style="display:none;">
@@ -1730,6 +1738,9 @@
                 </div>
             </div>
 
+            </div><!-- end .ws-col-left -->
+
+            <!-- Save + Badge span both columns -->
             <div class="action-container">
                 <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE PROFILE</button>
             </div>
