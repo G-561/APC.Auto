@@ -153,6 +153,67 @@ Check via `currentUserTier === 'pro'` in JS. `profiles.is_pro` in DB. Boolean fo
 
 ---
 
+## UI/UX design principles
+
+### APC's design voice
+Confident, practical, Australian. Not flashy — trustworthy. Buyers are looking for parts, not a lifestyle brand. Every UI decision should reduce friction, not add personality for its own sake.
+
+### Mobile-first hierarchy
+Information priority on a card or screen, top to bottom:
+1. Price (what does it cost)
+2. Image (what does it look like)
+3. Title (what is it)
+4. Location (can I get it)
+5. Everything else
+
+Never bury price. Never make the image small. Never use more than 2 type sizes in a single component.
+
+### Touch & interaction
+- Minimum tap target: 44×44px — no exceptions
+- Primary CTA always full-width on mobile, orange, bottom of screen or section
+- Destructive actions (delete, mark sold) always require a confirm step
+- Never rely on hover states — everything must work on tap
+- Drawers open from bottom on mobile, not side panels
+
+### Typography rules
+- Max 2 font weights per component (regular + bold)
+- Labels/badges: uppercase + letter-spacing, never sentence case
+- Prices: always bold, larger than surrounding text
+- Truncate long strings with `text-overflow: ellipsis` — never let text break layout
+
+### Colour usage
+- Orange (`#f07020`) for: primary CTAs, active states, prices, key labels, links
+- Never use orange for warnings or errors — reserve red (`#ef4444`) for errors, amber (`#f59e0b`) for warnings
+- Grey text hierarchy: `#333` body → `#666` secondary → `#888` tertiary → `#aaa` placeholder/meta
+- White cards on `#f4f4f4` background — never grey cards on white
+
+### Spacing discipline
+- Consistent 15px horizontal padding inside components
+- 20px between major sections
+- 8px between related items within a section
+- Never add padding/margin just to fill space — if something looks sparse, the content is the problem
+
+### Component decision rules
+- **New UI element needed?** First check if an existing component can be extended
+- **Drawer vs modal?** Always drawer for mobile — modals feel wrong on small screens
+- **Empty states** — always show something useful (prompt to list, search suggestion) not just a blank space
+- **Loading states** — skeleton cards, not spinners, for grid content
+- **Error states** — toast for transient errors, inline banner for form errors
+
+### Accessibility minimums
+- All interactive elements need visible focus states
+- Colour alone never conveys meaning — always pair with text or icon
+- Images always need `alt` text (part title is fine)
+- Font size minimum 11px on cards, 13px for body text, 10px only for meta/labels
+
+### What good looks like for APC
+- A buyer can find a part for their car in under 3 taps
+- A seller can list a part in under 2 minutes
+- A wrecker can manage their stock without opening a laptop
+- Nothing on screen makes the user wonder what to do next
+
+---
+
 ## What NOT to do
 
 - Do not add a build step, bundler, or package.json
