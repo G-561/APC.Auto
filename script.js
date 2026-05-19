@@ -8630,7 +8630,7 @@ function openWorkshopProfileEditor() {
     const drawerTitle    = document.getElementById('workshopDrawerTitle');
     const notice         = document.getElementById('workshopProNotice');
     if (browseSection) browseSection.style.display = 'none';
-    if (profileFields) profileFields.style.display = 'block';
+    if (profileFields) profileFields.style.display = '';
     if (drawerTitle)   drawerTitle.textContent      = 'Workshop & Repairer Profile';
     if (notice)        notice.style.display         = currentUserTier !== 'pro' ? 'block' : 'none';
     // Pre-fill unified profile fields
