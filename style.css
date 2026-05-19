@@ -4382,6 +4382,7 @@ header {
         height: auto !important;
         bottom: 0;
         box-shadow: none !important;
+        border-radius: 0 !important;
     }
 
     /* Detail overlay always sits above other open drawers (e.g. garage) */
