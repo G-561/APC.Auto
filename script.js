@@ -3277,18 +3277,6 @@ function buildCardHTML(part, eager = false) {
         ? `<div class="card-pending-banner">PENDING</div>`
         : '';
 
-    // Vehicle fit label: "BMW Z3" or "Toyota Corolla +2 more"
-    let vehicleText = '';
-    if (Array.isArray(part.fits) && part.fits.length > 0) {
-        const f = part.fits[0];
-        vehicleText = [f.make, f.model].filter(Boolean).join(' ');
-        if (part.fits.length > 1) vehicleText += ` +${part.fits.length - 1} more`;
-    }
-
-    const titleBlock = vehicleText
-        ? `<div class="item-title">${escapeHtml(vehicleText)}</div><div class="item-subtitle">${escapeHtml(part.title)}</div>`
-        : `<div class="item-title">${escapeHtml(part.title)}</div>`;
-
     return `
         <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
@@ -3298,7 +3286,7 @@ function buildCardHTML(part, eager = false) {
                     <span class="item-price">$${part.price}</span>
                     ${tradeBadge}${fittingLabel}
                 </div>
-                ${titleBlock}
+                <div class="item-title">${escapeHtml(part.title)}</div>
                 <div class="item-loc">${locationHTML}</div>
             </div>
             ${savedDot}
