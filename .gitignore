@@ -2,3 +2,7 @@ mockups/
 snapshots/
 300426.claude/
 .claude/
+.env
+.env*
+*.env
+*.env.*

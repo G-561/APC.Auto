@@ -2235,7 +2235,7 @@ function renderInboxMsgs(conv) {
         const isOffer  = !!m.offerCard;
         const content  = isOffer
             ? buildOfferCardHTML(m.offerCard, m.sent, conv.id, idx)
-            : (m.photo ? `<img src="${m.photo}" alt="Photo" style="cursor:zoom-in;" onclick="openDetailImageViewer('${m.photo.replace(/'/g,"\\'")}')">` : escapeHtml(m.text));
+            : (m.photo ? `<img src="${escapeHtml(m.photo)}" alt="Photo" style="cursor:zoom-in;" onclick="openDetailImageViewer('${escapeHtml(m.photo)}')">` : escapeHtml(m.text));
         const delBtn   = `<button class="inbox-msg-del" onclick="deleteInboxMsg(${conv.id},${idx})" title="Delete">×</button>`;
         const initial  = m.sent ? me.charAt(0).toUpperCase() : conv.with.charAt(0).toUpperCase();
         const colClass = isOffer ? 'inbox-msg-col offer-col' : 'inbox-msg-col';
@@ -3269,7 +3269,7 @@ function buildCardHTML(part, eager = false) {
         ? `<span class="trade-only-badge">TRADE</span>`
         : '';
 
-    const locationHTML = `📍 ${part.loc}`;
+    const locationHTML = `📍 ${escapeHtml(part.loc)}`;
 
     const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
 
@@ -4642,12 +4642,13 @@ async function submitSellListing() {
 }
 
 function printSellLabel(listing) {
-    const fits = (listing.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal';
-    const condition = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[listing.condition] || listing.condition || '';
+    const fits = escapeHtml((listing.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal');
+    const conditionMap = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' };
+    const condition = escapeHtml(conditionMap[listing.condition] || listing.condition || '');
     const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const apcId = listing.apcId || ('APC-' + listing.id);
-    const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${listing.warehouseBin}</strong></td></tr>` : '';
-    const year = listing.year ? `<tr><td>Year</td><td>${listing.year}</td></tr>` : '';
+    const apcId = escapeHtml(listing.apcId || ('APC-' + listing.id));
+    const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${escapeHtml(listing.warehouseBin)}</strong></td></tr>` : '';
+    const year = listing.year ? `<tr><td>Year</td><td>${escapeHtml(String(listing.year))}</td></tr>` : '';
     const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
         ? 'https://g-561.github.io/APC.Auto/'
         : `${location.origin}${location.pathname}`;
@@ -4702,13 +4703,13 @@ function printSellLabel(listing) {
   </div>
   <div class="sell-body">
     <div class="sell-left">
-      <div class="sell-title">${listing.title || ''}</div>
+      <div class="sell-title">${escapeHtml(listing.title || '')}</div>
       <table>
         <tr><td>Item No.</td><td><strong>${apcId}</strong></td></tr>
         <tr><td>Condition</td><td>${condition}</td></tr>
         <tr><td>Fits</td><td>${fits}</td></tr>
         ${year}${bin}
-        ${listing.stockNumber ? `<tr><td>Stock #</td><td>${listing.stockNumber}</td></tr>` : ''}
+        ${listing.stockNumber ? `<tr><td>Stock #</td><td>${escapeHtml(listing.stockNumber)}</td></tr>` : ''}
       </table>
       <div class="sell-price-row">
         <span class="sell-price">$${listing.price}</span>
@@ -5592,7 +5593,7 @@ function renderWorkshopStorefront(data) {
     const addrEl  = document.getElementById('sfAddress');
     const addr = data.address || '';
     if (addrSec) addrSec.style.display = addr ? '' : 'none';
-    if (addrEl)  addrEl.innerHTML = addr ? '📍 ' + addr : '';
+    if (addrEl)  addrEl.textContent = addr ? '📍 ' + addr : '';
 
     // Services chips
     const svcSec   = document.getElementById('sfServicesSection');
@@ -5615,7 +5616,7 @@ function renderWorkshopStorefront(data) {
         ? vehiclesRaw
         : String(vehiclesRaw).split(',').map(s => s.trim()).filter(Boolean);
     if (makesSec)   makesSec.style.display   = makesArr.length ? '' : 'none';
-    if (makesChips) makesChips.innerHTML      = makesArr.map(m => `<span class="sf-chip">${m}</span>`).join('');
+    if (makesChips) makesChips.innerHTML      = makesArr.map(m => `<span class="sf-chip">${escapeHtml(m)}</span>`).join('');
 
     // Parts categories chips (supplier/both)
     const catsSec  = document.getElementById('sfCatsSection');
@@ -5624,7 +5625,7 @@ function renderWorkshopStorefront(data) {
     const cats = data.partsCategories || data.parts_categories || [];
     const showCats = (bizType === 'supplier' || bizType === 'both') && cats.length;
     if (catsSec)   catsSec.style.display  = showCats ? '' : 'none';
-    if (catsChips) catsChips.innerHTML    = cats.map(c => `<span class="sf-chip">${CAT_LABELS[c] || c}</span>`).join('');
+    if (catsChips) catsChips.innerHTML    = cats.map(c => `<span class="sf-chip">${escapeHtml(CAT_LABELS[c] || c)}</span>`).join('');
     if (condEl) {
         const pt = data.partsType || data.parts_type || '';
         condEl.textContent = pt === 'new' ? 'New parts only' : pt === 'used' ? 'Used / reconditioned parts' : pt === 'both' ? 'New & used parts' : '';
@@ -8390,7 +8391,8 @@ function buildSponsoredCardHTML(card) {
     const image    = card.image_data || '';
 
     const userId  = card.user_id || '';
-    const openCmd = userId ? `openStorefrontByUserId('${userId}')` : `window.open('${btnUrl}','_blank')`;
+    const safeUrl = /^https:\/\//i.test(card.button_url || '') ? escapeHtml(card.button_url) : '#';
+    const openCmd = userId ? `openStorefrontByUserId('${userId}')` : `window.open('${safeUrl}','_blank')`;
 
     if (tpl === 'supplier') {
         const logoHtml = logo
