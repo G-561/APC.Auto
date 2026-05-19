@@ -671,10 +671,9 @@ const CROP_VP  = 280;  // viewport circle diameter (px)
 const CROP_OUT = 400;  // output canvas size (px)
 
 // ── BANNER CROP ───────────────────────────────────────────────
-const BANNER_VP_W  = 480;   // viewport width (px)  — 3:1 ratio
-const BANNER_VP_H  = 160;   // viewport height (px)
-const BANNER_OUT_W = 1200;  // output canvas width
-const BANNER_OUT_H = 400;   // output canvas height
+// Viewport dimensions are set dynamically to match the actual banner element
+let _bannerVpW = 480;
+let _bannerVpH = 160;
 let _cropFile    = null;
 let _cropScale   = 1;
 let _cropMinScale = 1;
@@ -885,14 +884,26 @@ function handleBannerUpload(input) {
 // ── BANNER CROP ───────────────────────────────────────────────
 function openBannerCropper(file) {
     _bannerCropFile = file;
+
+    // Match the crop viewport exactly to the actual rendered banner element
+    const bannerBox = document.getElementById('bannerPreviewBox');
+    if (bannerBox) {
+        const rect = bannerBox.getBoundingClientRect();
+        const maxVpW = Math.min(window.innerWidth - 40, 520);
+        const scale  = Math.min(1, maxVpW / rect.width);
+        _bannerVpW   = Math.round(rect.width  * scale);
+        _bannerVpH   = Math.round(rect.height * scale);
+    }
+    const vpEl = document.getElementById('bannerCropViewport');
+    if (vpEl) { vpEl.style.width = _bannerVpW + 'px'; vpEl.style.height = _bannerVpH + 'px'; }
+
     const reader = new FileReader();
     reader.onload = e => {
         const img = document.getElementById('bannerCropImage');
         img.onload = () => {
             _bannerCropImgW     = img.naturalWidth;
             _bannerCropImgH     = img.naturalHeight;
-            // min scale: image must cover the full rectangular viewport
-            _bannerCropMinScale = Math.max(BANNER_VP_W / _bannerCropImgW, BANNER_VP_H / _bannerCropImgH);
+            _bannerCropMinScale = Math.max(_bannerVpW / _bannerCropImgW, _bannerVpH / _bannerCropImgH);
             _bannerCropScale    = _bannerCropMinScale;
             _bannerCropOffsetX  = 0;
             _bannerCropOffsetY  = 0;
@@ -906,8 +917,8 @@ function openBannerCropper(file) {
 }
 
 function _applyBannerCropTransform() {
-    const maxX = Math.max(0, (_bannerCropImgW * _bannerCropScale - BANNER_VP_W) / 2);
-    const maxY = Math.max(0, (_bannerCropImgH * _bannerCropScale - BANNER_VP_H) / 2);
+    const maxX = Math.max(0, (_bannerCropImgW * _bannerCropScale - _bannerVpW) / 2);
+    const maxY = Math.max(0, (_bannerCropImgH * _bannerCropScale - _bannerVpH) / 2);
     _bannerCropOffsetX = Math.max(-maxX, Math.min(maxX, _bannerCropOffsetX));
     _bannerCropOffsetY = Math.max(-maxY, Math.min(maxY, _bannerCropOffsetY));
     const img = document.getElementById('bannerCropImage');
@@ -979,13 +990,14 @@ async function confirmBannerCrop() {
     const img = new Image();
     img.onload = async () => {
         const canvas = document.createElement('canvas');
-        canvas.width  = BANNER_OUT_W;
-        canvas.height = BANNER_OUT_H;
+        const outScale = 3;  // 3× the displayed size for quality
+        canvas.width  = _bannerVpW * outScale;
+        canvas.height = _bannerVpH * outScale;
         const ctx = canvas.getContext('2d');
-        const ratio     = BANNER_OUT_W / BANNER_VP_W;
+        const ratio     = outScale;
         const drawScale = _bannerCropScale * ratio;
-        const cx = BANNER_OUT_W / 2 + _bannerCropOffsetX * ratio;
-        const cy = BANNER_OUT_H / 2 + _bannerCropOffsetY * ratio;
+        const cx = (canvas.width  / 2) + _bannerCropOffsetX * ratio;
+        const cy = (canvas.height / 2) + _bannerCropOffsetY * ratio;
         ctx.drawImage(img,
             cx - _bannerCropImgW * drawScale / 2,
             cy - _bannerCropImgH * drawScale / 2,
