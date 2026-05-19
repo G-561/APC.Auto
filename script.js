@@ -669,6 +669,12 @@ function removeBusinessLogo() {
 // ── PROFILE PIC CROP ─────────────────────────────────────────
 const CROP_VP  = 280;  // viewport circle diameter (px)
 const CROP_OUT = 400;  // output canvas size (px)
+
+// ── BANNER CROP ───────────────────────────────────────────────
+const BANNER_VP_W  = 480;   // viewport width (px)  — 3:1 ratio
+const BANNER_VP_H  = 160;   // viewport height (px)
+const BANNER_OUT_W = 1200;  // output canvas width
+const BANNER_OUT_H = 400;   // output canvas height
 let _cropFile    = null;
 let _cropScale   = 1;
 let _cropMinScale = 1;
@@ -677,6 +683,15 @@ let _cropOffsetY = 0;
 let _cropImgW    = 0;
 let _cropImgH    = 0;
 let _cropEventsAttached = false;
+
+let _bannerCropFile           = null;
+let _bannerCropScale          = 1;
+let _bannerCropMinScale       = 1;
+let _bannerCropOffsetX        = 0;
+let _bannerCropOffsetY        = 0;
+let _bannerCropImgW           = 0;
+let _bannerCropImgH           = 0;
+let _bannerCropEventsAttached = false;
 
 function openPicCropper(file) {
     _cropFile = file;
@@ -863,25 +878,136 @@ function renderLogoPreview() {
 function handleBannerUpload(input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { showToast('Image too large — please use an image under 2 MB'); input.value = ''; return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image too large — please use an image under 5 MB'); input.value = ''; return; }
+    openBannerCropper(file);
+}
+
+// ── BANNER CROP ───────────────────────────────────────────────
+function openBannerCropper(file) {
+    _bannerCropFile = file;
     const reader = new FileReader();
-    reader.onload = async e => {
-        userSettings.businessBanner = e.target.result;
-        saveUserSettings();
-        renderBannerPreview();
-        showToast('Banner saved');
-        if (!currentUserId || !sb) return;
-        const path = `business-banners/${currentUserId}`;
-        const { error: upErr } = await sb.storage.from('listing-images').upload(path, file, { upsert: true, contentType: file.type });
-        if (upErr) { console.warn('Banner upload failed:', upErr.message); return; }
-        const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
-        const url = urlData.publicUrl + '?t=' + Date.now();
-        userSettings.businessBanner = url;
-        saveUserSettings();
-        renderBannerPreview();
-        await sb.from('profiles').update({ business_banner: url }).eq('id', currentUserId);
+    reader.onload = e => {
+        const img = document.getElementById('bannerCropImage');
+        img.onload = () => {
+            _bannerCropImgW     = img.naturalWidth;
+            _bannerCropImgH     = img.naturalHeight;
+            // min scale: image must cover the full rectangular viewport
+            _bannerCropMinScale = Math.max(BANNER_VP_W / _bannerCropImgW, BANNER_VP_H / _bannerCropImgH);
+            _bannerCropScale    = _bannerCropMinScale;
+            _bannerCropOffsetX  = 0;
+            _bannerCropOffsetY  = 0;
+            _applyBannerCropTransform();
+            document.getElementById('bannerCropModal').style.display = 'flex';
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+    if (!_bannerCropEventsAttached) { _attachBannerCropEvents(); _bannerCropEventsAttached = true; }
+}
+
+function _applyBannerCropTransform() {
+    const maxX = Math.max(0, (_bannerCropImgW * _bannerCropScale - BANNER_VP_W) / 2);
+    const maxY = Math.max(0, (_bannerCropImgH * _bannerCropScale - BANNER_VP_H) / 2);
+    _bannerCropOffsetX = Math.max(-maxX, Math.min(maxX, _bannerCropOffsetX));
+    _bannerCropOffsetY = Math.max(-maxY, Math.min(maxY, _bannerCropOffsetY));
+    const img = document.getElementById('bannerCropImage');
+    img.style.transform = `translate(calc(-50% + ${_bannerCropOffsetX}px), calc(-50% + ${_bannerCropOffsetY}px)) scale(${_bannerCropScale})`;
+}
+
+function _attachBannerCropEvents() {
+    const vp = document.getElementById('bannerCropViewport');
+    let lastTouches = null;
+
+    vp.addEventListener('touchstart', e => {
+        e.preventDefault();
+        lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    }, { passive: false });
+
+    vp.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const cur = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+        if (!lastTouches) { lastTouches = cur; return; }
+        if (cur.length === 1 && lastTouches.length >= 1) {
+            _bannerCropOffsetX += cur[0].x - lastTouches[0].x;
+            _bannerCropOffsetY += cur[0].y - lastTouches[0].y;
+        } else if (cur.length === 2) {
+            const prevDist = lastTouches.length === 2
+                ? Math.hypot(lastTouches[1].x - lastTouches[0].x, lastTouches[1].y - lastTouches[0].y) : null;
+            const currDist = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);
+            if (prevDist) _bannerCropScale = Math.max(_bannerCropMinScale, Math.min(_bannerCropScale * (currDist / prevDist), _bannerCropMinScale * 4));
+            if (lastTouches.length === 2) {
+                _bannerCropOffsetX += (cur[0].x + cur[1].x) / 2 - (lastTouches[0].x + lastTouches[1].x) / 2;
+                _bannerCropOffsetY += (cur[0].y + cur[1].y) / 2 - (lastTouches[0].y + lastTouches[1].y) / 2;
+            }
+        }
+        lastTouches = cur;
+        _applyBannerCropTransform();
+    }, { passive: false });
+
+    vp.addEventListener('touchend', e => {
+        lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    });
+
+    let dragging = false, dragX = 0, dragY = 0;
+    vp.addEventListener('mousedown', e => { dragging = true; dragX = e.clientX; dragY = e.clientY; e.preventDefault(); });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        _bannerCropOffsetX += e.clientX - dragX; dragX = e.clientX;
+        _bannerCropOffsetY += e.clientY - dragY; dragY = e.clientY;
+        _applyBannerCropTransform();
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+
+    vp.addEventListener('wheel', e => {
+        e.preventDefault();
+        _bannerCropScale = Math.max(_bannerCropMinScale, Math.min(_bannerCropScale * (e.deltaY < 0 ? 1.1 : 0.9), _bannerCropMinScale * 4));
+        _applyBannerCropTransform();
+    }, { passive: false });
+}
+
+function cancelBannerCrop() {
+    document.getElementById('bannerCropModal').style.display = 'none';
+    document.getElementById('bannerFileInput').value = '';
+    _bannerCropFile = null;
+}
+
+async function confirmBannerCrop() {
+    if (!_bannerCropFile) return;
+    document.getElementById('bannerCropModal').style.display = 'none';
+    showToast('Saving…');
+
+    const img = new Image();
+    img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width  = BANNER_OUT_W;
+        canvas.height = BANNER_OUT_H;
+        const ctx = canvas.getContext('2d');
+        const ratio     = BANNER_OUT_W / BANNER_VP_W;
+        const drawScale = _bannerCropScale * ratio;
+        const cx = BANNER_OUT_W / 2 + _bannerCropOffsetX * ratio;
+        const cy = BANNER_OUT_H / 2 + _bannerCropOffsetY * ratio;
+        ctx.drawImage(img,
+            cx - _bannerCropImgW * drawScale / 2,
+            cy - _bannerCropImgH * drawScale / 2,
+            _bannerCropImgW * drawScale,
+            _bannerCropImgH * drawScale);
+
+        canvas.toBlob(async blob => {
+            if (!blob) { showToast('Crop failed'); return; }
+            if (!currentUserId || !sb) { showToast('Please sign in first'); return; }
+            const path = `profile-banners/${currentUserId}.jpg`;
+            const { error: upErr } = await sb.storage.from('listing-images').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+            if (upErr) { showToast('Upload failed — ' + upErr.message); return; }
+            const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
+            const url = urlData.publicUrl + '?t=' + Date.now();
+            userSettings.businessBanner = url;
+            saveUserSettings();
+            const { error: profErr } = await sb.from('profiles').update({ business_banner: url }).eq('id', currentUserId);
+            if (profErr) showToast('Banner saved locally — sync failed');
+            else { renderBannerPreview(); showToast('Store banner saved'); }
+        }, 'image/jpeg', 0.92);
+    };
+    img.src = URL.createObjectURL(_bannerCropFile);
 }
 
 function removeBannerImage() {

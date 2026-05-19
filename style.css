@@ -4154,10 +4154,10 @@ header {
         padding: 20px;
     }
 
-    /* Settings: two-column layout on desktop */
+    /* Settings: three-column layout on desktop (wider drawer) */
     #settingsDrawer .drawer-content {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         align-items: start;
         overflow-y: auto;
         padding: 20px;
@@ -4355,13 +4355,11 @@ header {
     #savedPartsDrawer,
     #profileDrawer,
     #myPartsDrawer,
-    #workshopDrawer,
     #vehicleMakesDrawer,
     #recentlyViewedDrawer,
     #messageDetailDrawer,
     #chatDrawer,
     #inboxDrawer,
-    #settingsDrawer,
     #helpDrawer {
         left: calc(max(0px, 50vw - 700px) + 240px) !important;
         right: calc(max(0px, 50vw - 700px) + 220px) !important;
@@ -4372,6 +4370,18 @@ header {
         box-shadow: none !important;
         border-left: 1px solid #e8e8e8;
         border-right: 1px solid #e8e8e8;
+    }
+
+    /* Wide drawers: full viewport width like the dashboard — settings, workshop, workshop detail */
+    #settingsDrawer,
+    #workshopDrawer,
+    #workshopDetailDrawer {
+        left: max(0px, calc(50vw - 700px)) !important;
+        right: max(0px, calc(50vw - 700px)) !important;
+        width: auto !important;
+        height: auto !important;
+        bottom: 0;
+        box-shadow: none !important;
     }
 
     /* Detail overlay always sits above other open drawers (e.g. garage) */
@@ -4388,6 +4398,7 @@ header {
     #inboxDrawer,
     #settingsDrawer,
     #workshopDrawer,
+    #workshopDetailDrawer,
     #vehicleMakesDrawer,
     #helpDrawer,
     #sellOverlay {
@@ -4405,6 +4416,18 @@ header {
 
     /* Workshop service filters — 3 columns on desktop for better space use */
     .ws-filter-group { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* Workshop profile setup: use full width in two columns */
+    #workshopDrawer .drawer-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+        gap: 0 32px;
+        padding: 20px 24px;
+        overflow-y: auto;
+    }
+    #workshopDrawer .ws-section-header { grid-column: 1 / -1; }
+    #workshopBrowseSection { grid-column: 1 / -1; }
 
     /* Live filters on desktop — Apply button not needed */
     #filterDrawer .action-container { display: none; }

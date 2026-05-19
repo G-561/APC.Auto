@@ -2365,6 +2365,19 @@
     </div>
 </div>
 
+<!-- BANNER CROP MODAL -->
+<div id="bannerCropModal" style="display:none; position:fixed; inset:0; z-index:10000; background:rgba(0,0,0,0.88); flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:20px;">
+    <div style="color:#fff; font-size:15px; font-weight:700; letter-spacing:0.2px;">Position Your Banner</div>
+    <div id="bannerCropViewport" style="width:480px; max-width:calc(100vw - 40px); height:160px; overflow:hidden; position:relative; cursor:grab; box-shadow:0 0 0 9999px rgba(0,0,0,0.75); border:2.5px solid rgba(255,255,255,0.35); flex-shrink:0; border-radius:4px;">
+        <img id="bannerCropImage" src="" alt="" draggable="false" style="position:absolute; top:50%; left:50%; transform-origin:center center; max-width:none; max-height:none; user-select:none; -webkit-user-drag:none; pointer-events:none;">
+    </div>
+    <div style="color:rgba(255,255,255,0.5); font-size:12px;">Drag to reposition · Pinch or scroll to zoom</div>
+    <div style="display:flex; gap:12px;">
+        <button onclick="cancelBannerCrop()" style="padding:13px 30px; border-radius:12px; border:2px solid rgba(255,255,255,0.25); background:transparent; color:#fff; font-size:14px; font-weight:700; cursor:pointer;">Cancel</button>
+        <button onclick="confirmBannerCrop()" style="padding:13px 30px; border-radius:12px; border:none; background:var(--apc-orange); color:#fff; font-size:14px; font-weight:700; cursor:pointer;">Use Banner</button>
+    </div>
+</div>
+
 <!-- CHECK LISTINGS MODAL — shown to buyer before posting a wanted request if listings already exist -->
 <div id="checkListingsModal" class="notify-modal" style="display:none;" onclick="if(event.target===this)dismissCheckListingsModal()">
     <div class="notify-modal-inner">
