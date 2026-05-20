@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=51">
+    <link rel="stylesheet" href="style.css?v=52">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1240,6 +1240,7 @@
         </div>
 
         <!-- LEFT COLUMN: Account -->
+
         <div class="settings-col-left">
 
             <!-- ACCOUNT -->
@@ -1282,6 +1283,13 @@
                 <div class="settings-row" style="justify-content:flex-end; padding-top:4px;">
                     <button onclick="saveSettingsAccount()" class="settings-save-btn">Save changes</button>
                 </div>
+            </div>
+
+            <!-- STOREFRONT COLOUR -->
+            <div class="settings-section-label">Banner Colour</div>
+            <div class="settings-section">
+                <div class="settings-row-sub" style="padding: 4px 0 10px; color:#888;">Your storefront banner gradient. Tap to change.</div>
+                <div id="bannerColourSwatches" class="banner-colour-swatches"></div>
             </div>
 
         </div>
@@ -1524,12 +1532,6 @@
         <div class="profile-section">
             <div class="profile-section-title">About</div>
             <div id="profileAbout" class="profile-about-text">Auto enthusiast based in Adelaide. Specialising in Toyota Hiace and Lotus Elise parts.</div>
-        </div>
-
-        <!-- Banner colour picker -->
-        <div class="profile-section">
-            <div class="profile-section-title">Banner Colour</div>
-            <div id="bannerColourSwatches" class="banner-colour-swatches"></div>
         </div>
 
         <!-- Actions -->
@@ -2454,7 +2456,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=68"></script>
+<script src="script.js?v=69"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

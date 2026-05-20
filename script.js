@@ -1157,6 +1157,7 @@ function onMenuOpenSettings() {
 }
 function renderSettingsDrawer() {
     renderProfile();
+    renderBannerColourPicker();
     const nameEl     = document.getElementById('settingsDisplayName');
     const proSection = document.getElementById('settingsProSection');
     if (nameEl) nameEl.value = currentUserName || '';
@@ -1216,7 +1217,7 @@ function darkenHex(hex, amount) {
 }
 
 function bannerGradient(hex) {
-    return `linear-gradient(135deg, ${hex} 0%, ${darkenHex(hex, 0.22)} 100%)`;
+    return `linear-gradient(135deg, ${hex} 0%, ${darkenHex(hex, 0.12)} 100%)`;
 }
 
 const LISTINGS_STORAGE_KEY = 'apc.listings.v2';
@@ -8431,9 +8432,6 @@ async function pickBannerColour(hex) {
     userSettings.bannerColor = hex;
     saveUserSettings();
     renderBannerColourPicker();
-    // Apply live preview to profile hero
-    const hero = document.getElementById('profileHero');
-    if (hero) hero.style.background = bannerGradient(hex);
     if (currentUserId && sb) {
         await sb.from('profiles').update({ banner_color: hex }).eq('id', currentUserId);
     }
@@ -8465,10 +8463,6 @@ function renderProfile() {
     if (savedEl)    savedEl.textContent    = savedParts.size;
     if (wantedEl)   wantedEl.textContent   = myWanted.length;
 
-    // Apply banner colour to profile hero + render picker
-    const hero = document.getElementById('profileHero');
-    if (hero) hero.style.background = bannerGradient(userSettings.bannerColor || '#f07020');
-    renderBannerColourPicker();
 }
 
 function onMenuPlaceholder(label) {
