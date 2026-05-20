@@ -6,7 +6,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 // --- GLOBAL STATE ---
 let userIsSignedIn = false;          // starts logged out — header shows "Sign In" pill
 let currentUserName  = null;          // e.g. "Gary"
-let currentUserTier  = null;          // 'standard' | 'pro'
+let currentUserTier  = null;          // 'personal' | 'trade' | 'pro'
 let currentUserId    = null;          // Supabase UUID of signed-in user
 let currentUserEmail = null;          // signed-in user's email
 let currentSearchMode = 'parts';     // 'parts' | 'wanted'
@@ -1167,7 +1167,7 @@ function renderSettingsDrawer() {
 
     const isPro = currentUserTier === 'pro';
     const proBlock = document.getElementById('settingsProBlock');
-    if (proBlock) proBlock.style.display = isPro ? 'block' : 'none';
+    if (proBlock) proBlock.style.display = isTradeOrPro() ? 'block' : 'none';
 
     const toggleMap = {
         settingNotifyWanted:        'notifyWantedMatch',
@@ -1908,7 +1908,7 @@ async function loadPublicWantedFromSupabase() {
 
         const userIds = [...new Set(rows.map(r => r.user_id))];
         const { data: profiles } = await sb.from('profiles')
-            .select('id, display_name, is_pro, location')
+            .select('id, display_name, is_pro, tier, location')
             .in('id', userIds);
         const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
 
@@ -1923,7 +1923,7 @@ async function loadPublicWantedFromSupabase() {
                 year: r.year ? String(r.year) : '',
                 maxPrice: r.max_price || r.budget_max || null,
                 category: r.category || '',
-                isPro: prof.is_pro || false,
+                isPro: prof.tier === 'pro' || prof.is_pro || false,
                 loc: prof.location || '',
                 posted: new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
                 userId: r.user_id,
@@ -2977,7 +2977,7 @@ function getPublicSellerName() {
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
     const { data: profile } = await sb.from('profiles')
-        .select('display_name, is_pro, business_name, abn, about, avatar_url, location')
+        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location')
         .eq('id', userId).single();
     if (!profile) return;
     if (profile.avatar_url)  _sellerPicCache[userId] = profile.avatar_url;
@@ -2986,7 +2986,7 @@ async function openStorefrontByUserId(userId) {
     if (grid) grid.dataset.seller = sellerName;
     renderStorefront(
         sellerName,
-        profile.is_pro || false,
+        profile.tier === 'pro' || profile.is_pro || false,
         profile.avatar_url || '',
         profile.business_name || '',
         profile.abn || '',
@@ -3360,7 +3360,7 @@ function getFilteredParts() {
         }
         if (!activeFilters.sellerPro && part.isPro) return false;
         if (!activeFilters.sellerPrivate && !part.isPro) return false;
-        if (part.tradeOnly && currentUserTier !== 'pro') return false;
+        if (part.tradeOnly && currentUserTier === 'personal') return false;
         if (activeFilters.conditions && activeFilters.conditions.length < 5 && part.condition) {
             if (!activeFilters.conditions.includes(part.condition)) return false;
         }
@@ -5705,16 +5705,17 @@ function openStorefront(partId) {
         return;
     }
     sb.from('profiles')
-        .select('display_name, is_pro, avatar_url, business_name, abn, about, location')
+        .select('display_name, is_pro, tier, avatar_url, business_name, abn, about, location')
         .eq('id', part.sellerId).single()
         .then(({ data: profile }) => {
             const pic = profile?.avatar_url || '';
             if (pic) _sellerPicCache[part.sellerId] = pic;
+            const isTradeOrProProfile = profile?.tier === 'trade' || profile?.tier === 'pro' || profile?.is_pro;
             _showStorefront(
                 pic,
-                (profile?.is_pro && profile?.business_name) ? profile.business_name : '',
-                (profile?.is_pro && profile?.abn)           ? profile.abn           : '',
-                (profile?.is_pro && profile?.about)         ? profile.about         : '',
+                (isTradeOrProProfile && profile?.business_name) ? profile.business_name : '',
+                (isTradeOrProProfile && profile?.abn)           ? profile.abn           : '',
+                (isTradeOrProProfile && profile?.about)         ? profile.about         : '',
                 profile?.location || '',
                 ''
             );
@@ -6227,7 +6228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const metaName  = session.user.user_metadata?.display_name || emailName;
             // Use remembered tier as the initial value so Pro doesn't flicker to Standard
             const remembered = loadRememberedUser();
-            const seedTier = (remembered?.email === session.user.email) ? (remembered?.tier || 'standard') : 'standard';
+            const seedTier = (remembered?.email === session.user.email) ? (remembered?.tier || 'personal') : 'personal';
             signIn(metaName, seedTier, false, session.user.email);
             // Fetch real name + tier from profile — always authoritative
             sb.from('profiles').select('*').eq('id', session.user.id).single()
@@ -6235,7 +6236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (profErr && profErr.code !== 'PGRST116') console.warn('Profile fetch:', profErr.message);
                     if (profile) {
                         const name = profile.display_name || metaName;
-                        const tier = profile.is_pro ? 'pro' : 'standard';
+                        const tier = profile.tier || (profile.is_pro ? 'pro' : 'personal');
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
                         // Supabase is authoritative — always overwrite local values with server data
@@ -6253,11 +6254,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         try {
                             const meta = session.user.user_metadata || {};
                             const isPro = meta.is_pro === true || meta.is_pro === 'true';
+                            const metaTier = meta.tier || (isPro ? 'pro' : 'personal');
                             const name  = meta.display_name || metaName;
                             const { error: insertErr } = await sb.from('profiles').insert({
                                 id:            session.user.id,
                                 display_name:  name,
                                 is_pro:        isPro,
+                                tier:          metaTier,
                                 business_name: meta.business_name || null,
                                 abn:           meta.abn           || null,
                                 postcode:      meta.postcode      || null,
@@ -7883,8 +7886,10 @@ function generateInboxNotifications() {
 
 // --- AUTH STATE + ACCOUNT MENU ---
 
-// Sign in (stub — wire into real auth later). Always lands as Standard tier.
-function signIn(name = 'Gary S.', tier = 'standard', remember = false, email = '') {
+function isTradeOrPro() { return currentUserTier === 'trade' || currentUserTier === 'pro'; }
+
+// Sign in (stub — wire into real auth later). Always lands as Personal tier.
+function signIn(name = 'Gary S.', tier = 'personal', remember = false, email = '') {
     userIsSignedIn = true;
     currentUserName  = name;
     currentUserTier  = tier;
@@ -8060,7 +8065,7 @@ async function handleSignUpPersonalSubmit() {
     showAuthError('Creating account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: false, postcode: postcode || '', location: suburb || '' } }
+        options: { data: { display_name: name, is_pro: false, tier: 'personal', postcode: postcode || '', location: suburb || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     if (postcode) { userSettings.postcode = postcode; saveUserSettings(); }
@@ -8099,7 +8104,7 @@ async function handleSignUpProSubmit() {
     showAuthError('Creating Pro account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: true, business_name: businessName, abn: abnDigits, postcode: postcode || '', location: suburb || '' } }
+        options: { data: { display_name: name, is_pro: true, tier: 'pro', business_name: businessName, abn: abnDigits, postcode: postcode || '', location: suburb || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     document.getElementById('authPasswordPro').value = '';
@@ -8150,7 +8155,7 @@ async function confirmUpgrade() {
     if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
 
     const { error } = await sb.from('profiles')
-        .update({ is_pro: true })
+        .update({ is_pro: true, tier: 'pro' })
         .eq('id', currentUserId);
 
     if (error) {
@@ -8670,7 +8675,7 @@ function openWorkshopProfileEditor() {
     if (browseSection) browseSection.style.display = 'none';
     if (profileFields) profileFields.style.display = '';
     if (drawerTitle)   drawerTitle.textContent      = 'Workshop & Repairer Profile';
-    if (notice)        notice.style.display         = currentUserTier !== 'pro' ? 'block' : 'none';
+    if (notice)        notice.style.display         = currentUserTier === 'personal' ? 'block' : 'none';
     // Pre-fill unified profile fields
     const bizEl   = document.getElementById('proSettingBusinessName');
     const abnEl   = document.getElementById('proSettingABN');
@@ -8750,7 +8755,7 @@ function openWorkshopProfileEditor() {
     renderBannerPreview();
     // Badge trigger button — Pro users only
     const badgeSec = document.getElementById('apcBadgeSection');
-    if (badgeSec) badgeSec.style.display = (currentUserTier === 'pro' && userIsSignedIn) ? 'block' : 'none';
+    if (badgeSec) badgeSec.style.display = (isTradeOrPro() && userIsSignedIn) ? 'block' : 'none';
     toggleDrawer('workshopDrawer', true);
 }
 function submitWorkshopProfile() {
@@ -8758,8 +8763,8 @@ function submitWorkshopProfile() {
         openAuthDrawer(submitWorkshopProfile);
         return;
     }
-    if (currentUserTier !== 'pro') {
-        showToast('Upgrade to APC Pro to save your workshop profile');
+    if (!isTradeOrPro()) {
+        showToast('Upgrade to APC Trade or Pro to save your workshop profile');
         return;
     }
     // Save unified profile to userSettings
@@ -9057,7 +9062,8 @@ function renderAccountState() {
     if (menuStatus) {
         menuStatus.classList.toggle('pro', currentUserTier === 'pro');
         menuStatus.textContent = currentUserTier === 'pro'      ? 'APC Pro member' :
-                                 currentUserTier === 'standard' ? 'APC Standard member' : '';
+                                 currentUserTier === 'trade'    ? 'APC Trade member' :
+                                 currentUserTier === 'personal' ? 'APC Personal member' : '';
     }
     if (menuAvatar) {
         if (pic) {
@@ -9068,9 +9074,9 @@ function renderAccountState() {
             menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
         }
     }
-    if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'standard') ? 'flex' : 'none';
+    if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'personal') ? 'flex' : 'none';
     const settingsUpgradeNudge = document.getElementById('settingsUpgradeNudge');
-    if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'standard') ? 'block' : 'none';
+    if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'personal') ? 'block' : 'none';
     if (searchModePill) searchModePill.style.display = (currentUserTier === 'pro') ? '' : 'none';
     syncSearchModePill();
 
@@ -9118,10 +9124,10 @@ function renderAccountState() {
     }
     if (ddName)    ddName.textContent = currentUserName || 'Guest';
     if (ddTier) {
-        ddTier.textContent  = isPro ? 'APC Pro' : (currentUserTier === 'standard' ? 'APC Standard' : '');
+        ddTier.textContent  = currentUserTier === 'pro' ? 'APC Pro' : currentUserTier === 'trade' ? 'APC Trade' : currentUserTier === 'personal' ? 'APC Personal' : '';
         ddTier.classList.toggle('pro', isPro);
     }
-    if (ddUpgrade)  ddUpgrade.style.display  = (currentUserTier === 'standard') ? 'flex' : 'none';
+    if (ddUpgrade)  ddUpgrade.style.display  = (currentUserTier === 'personal') ? 'flex' : 'none';
     if (ddDash)     ddDash.style.display      = isPro ? 'flex' : 'none';
 
     maybeShowProDashboardBanner();
