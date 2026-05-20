@@ -4169,8 +4169,8 @@ header {
     #settingsDrawer .settings-col-left > .settings-section-label:first-child,
     #settingsDrawer .settings-col-centre > .settings-section-label:first-child,
     #settingsDrawer .settings-col-right > .settings-section-label:first-child,
-    #settingsDrawer .settings-col-right > div > .settings-section-label:first-child { padding-top: 0; }
-    #settingsProfileCard { grid-column: 1 / -1; margin: -20px -20px 20px -20px; }
+    #settingsDrawer .settings-col-right > div > .settings-section-label:first-child { padding-top: 8px !important; }
+    #settingsProfileCard { grid-column: 1 / -1; margin: -20px -20px 0 -20px; }
 
     /* Detail overlay: fills center column between sidebars */
     #detailOverlay {

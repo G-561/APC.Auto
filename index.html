@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=44">
+    <link rel="stylesheet" href="style.css?v=45">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1199,6 +1199,13 @@
             <!-- NOTIFICATIONS -->
             <div class="settings-section-label">Notifications</div>
             <div class="settings-section">
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-row-label">Email notifications</div>
+                        <div class="settings-row-sub">Receive alerts via email</div>
+                    </div>
+                    <label class="settings-toggle"><input type="checkbox" id="settingNotifyEmail" onchange="saveSettingsToggle('notifyEmail', this.checked)"><span class="settings-toggle-track"></span></label>
+                </div>
                 <div class="settings-row">
                     <span class="settings-row-label">Wanted match alerts</span>
                     <label class="settings-toggle"><input type="checkbox" id="settingNotifyWanted" onchange="saveSettingsToggle('notifyWantedMatch', this.checked)"><span class="settings-toggle-track"></span></label>
