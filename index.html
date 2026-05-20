@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=52">
+    <link rel="stylesheet" href="style.css?v=53">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1288,7 +1288,11 @@
             <!-- STOREFRONT COLOUR -->
             <div class="settings-section-label">Banner Colour</div>
             <div class="settings-section">
-                <div class="settings-row-sub" style="padding: 4px 0 10px; color:#888;">Your storefront banner gradient. Tap to change.</div>
+                <div class="banner-preview-wrap">
+                    <div id="bannerColourPreview" class="banner-colour-preview">
+                        <div id="bannerPreviewLogo" class="banner-preview-logo">G</div>
+                    </div>
+                </div>
                 <div id="bannerColourSwatches" class="banner-colour-swatches"></div>
             </div>
 
@@ -2456,7 +2460,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=69"></script>
+<script src="script.js?v=70"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

@@ -8426,6 +8426,21 @@ function renderBannerColourPicker() {
              style="background:${bannerGradient(hex)}"
              onclick="pickBannerColour('${hex}')"></div>`
     ).join('');
+
+    const preview = document.getElementById('bannerColourPreview');
+    if (preview) preview.style.background = bannerGradient(current);
+
+    const previewLogo = document.getElementById('bannerPreviewLogo');
+    if (previewLogo) {
+        const pic = userSettings.profilePic || userSettings.businessLogo || '';
+        if (pic) {
+            previewLogo.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            previewLogo.style.color = '';
+        } else {
+            previewLogo.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
+            previewLogo.style.color = 'var(--apc-orange)';
+        }
+    }
 }
 
 async function pickBannerColour(hex) {
