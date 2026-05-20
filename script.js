@@ -1166,8 +1166,19 @@ function renderSettingsDrawer() {
     renderProfilePicPreview();
 
     const isPro = currentUserTier === 'pro';
-    const proBlock = document.getElementById('settingsProBlock');
-    if (proBlock) proBlock.style.display = isTradeOrPro() ? 'block' : 'none';
+    const isPersonal = currentUserTier === 'personal';
+
+    const tradeNudge  = document.getElementById('settingsTradeNudge');
+    const upgradeNudge = document.getElementById('settingsUpgradeNudge');
+    const proBlock    = document.getElementById('settingsProBlock');
+    const proBlockLabel = document.getElementById('settingsProBlockLabel');
+    const proOnlyRows = document.getElementById('settingsProOnlyRows');
+
+    if (tradeNudge)  tradeNudge.style.display  = isPersonal ? 'block' : 'none';
+    if (upgradeNudge) upgradeNudge.style.display = !isPro ? 'block' : 'none';
+    if (proBlock)    proBlock.style.display     = isTradeOrPro() ? 'block' : 'none';
+    if (proBlockLabel) proBlockLabel.textContent = currentUserTier === 'trade' ? 'APC Trade' : 'APC Pro';
+    if (proOnlyRows) proOnlyRows.style.display  = isPro ? 'block' : 'none';
 
     const toggleMap = {
         settingNotifyWanted:        'notifyWantedMatch',
@@ -8180,6 +8191,55 @@ async function onSignOut() {
 
 let selectedUpgradePlan = 'monthly';
 
+function onUpgradeClick() {
+    if (currentUserTier === 'trade') { onUpgradeToPro(); }
+    else { onUpgradeToTrade(); }
+}
+
+function onUpgradeToTrade() {
+    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    if (isTradeOrPro()) return;
+    const bizInput = document.getElementById('upgradeTradeBizName');
+    const abnInput = document.getElementById('upgradeTradeAbn');
+    if (bizInput) bizInput.value = userSettings.businessName || '';
+    if (abnInput) abnInput.value = '';
+    document.getElementById('upgradeTradeBackdrop').style.display = '';
+    document.getElementById('upgradeTradeModal').style.display    = '';
+}
+
+function closeUpgradeToTradeModal() {
+    document.getElementById('upgradeTradeBackdrop').style.display = 'none';
+    document.getElementById('upgradeTradeModal').style.display    = 'none';
+}
+
+async function confirmUpgradeToTrade() {
+    if (!currentUserId) { showToast('Please sign in first.'); return; }
+    const bizName = document.getElementById('upgradeTradeBizName')?.value.trim();
+    const abnRaw  = document.getElementById('upgradeTradeAbn')?.value.trim();
+    if (!bizName) { showToast('Please enter your business name.'); return; }
+    if (!abnRaw)  { showToast('Please enter your ABN.'); return; }
+    const abnDigits = abnRaw.replace(/\s/g, '');
+    if (!/^\d{11}$/.test(abnDigits)) { showToast('Please enter a valid 11-digit ABN.'); return; }
+
+    const btn = document.getElementById('confirmUpgradeTradeBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Upgrading…'; }
+
+    const { error } = await sb.from('profiles')
+        .update({ tier: 'trade', business_name: bizName, abn: abnDigits })
+        .eq('id', currentUserId);
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Upgrade to Trade →'; }
+    if (error) { showToast('Something went wrong — please try again.'); return; }
+
+    currentUserTier = 'trade';
+    userSettings.businessName = bizName;
+    userSettings.abn = abnDigits;
+    saveUserSettings();
+    closeUpgradeToTradeModal();
+    renderAccountState();
+    showToast('Welcome to APC Trade!');
+}
+
 function onUpgradeToPro() {
     if (!userIsSignedIn) { openAuthDrawer(); return; }
     if (currentUserTier === 'pro') return;
@@ -9123,9 +9183,11 @@ function renderAccountState() {
             menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
         }
     }
-    if (menuUpgrade)      menuUpgrade.style.display      = (currentUserTier === 'personal') ? 'flex' : 'none';
-    const settingsUpgradeNudge = document.getElementById('settingsUpgradeNudge');
-    if (settingsUpgradeNudge) settingsUpgradeNudge.style.display = (currentUserTier === 'personal') ? 'block' : 'none';
+    if (menuUpgrade) {
+        const showMenuUpgrade = currentUserTier === 'personal' || currentUserTier === 'trade';
+        menuUpgrade.style.display = showMenuUpgrade ? 'flex' : 'none';
+        if (showMenuUpgrade) menuUpgrade.textContent = currentUserTier === 'trade' ? 'Upgrade to Pro ›' : 'Upgrade to Trade — Free ›';
+    }
     if (searchModePill) searchModePill.style.display = (currentUserTier === 'pro') ? '' : 'none';
     syncSearchModePill();
 
@@ -9176,7 +9238,11 @@ function renderAccountState() {
         ddTier.textContent  = currentUserTier === 'pro' ? 'APC Pro' : currentUserTier === 'trade' ? 'APC Trade' : currentUserTier === 'personal' ? 'APC Personal' : '';
         ddTier.classList.toggle('pro', isPro);
     }
-    if (ddUpgrade)  ddUpgrade.style.display  = (currentUserTier === 'personal') ? 'flex' : 'none';
+    if (ddUpgrade) {
+        const showUpgrade = currentUserTier === 'personal' || currentUserTier === 'trade';
+        ddUpgrade.style.display = showUpgrade ? 'flex' : 'none';
+        if (showUpgrade) ddUpgrade.textContent = currentUserTier === 'trade' ? 'Upgrade to Pro ›' : 'Upgrade to Trade — Free ›';
+    }
     if (ddDash)     ddDash.style.display      = isPro ? 'flex' : 'none';
 
     maybeShowProDashboardBanner();

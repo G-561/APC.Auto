@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=48">
+    <link rel="stylesheet" href="style.css?v=49">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -455,8 +455,8 @@
 
             <div class="welcome-tile welcome-tile-pro">
                 <div class="welcome-tile-icon">⭐</div>
-                <div class="welcome-tile-title welcome-tile-title-pro">APC Pro</div>
-                <div class="welcome-tile-desc">Trade seller or wrecker? Upgrade to unlock a workshop profile, stock search, QR labels and more.</div>
+                <div class="welcome-tile-title welcome-tile-title-pro">Trade &amp; Pro</div>
+                <div class="welcome-tile-desc">Workshop or wrecker? Free Trade accounts unlock your storefront. Pro unlocks stock tools, QR labels &amp; more.</div>
             </div>
 
         </div>
@@ -470,6 +470,29 @@
         <button onclick="closeWelcomeModal()" class="welcome-cta-btn">Start Exploring APC →</button>
     </div>
 
+</div>
+
+<!-- UPGRADE TO TRADE MODAL -->
+<div id="upgradeTradeBackdrop" onclick="closeUpgradeToTradeModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:3200;"></div>
+<div id="upgradeTradeModal" style="display:none; position:fixed; left:50%; transform:translateX(-50%); top:50%; margin-top:-220px; width:min(480px, calc(100vw - 24px)); background:white; border-radius:20px; box-shadow:0 16px 60px rgba(0,0,0,0.25); z-index:3201; overflow:hidden;">
+    <div style="background:linear-gradient(135deg, #14532d 0%, #16a34a 100%); padding:22px 24px 18px; text-align:center; position:relative;">
+        <div onclick="closeUpgradeToTradeModal()" style="position:absolute; top:14px; right:16px; font-size:22px; color:rgba(255,255,255,0.5); cursor:pointer; line-height:1;">×</div>
+        <div style="display:inline-block; background:white; color:#16a34a; font-size:10px; font-weight:900; padding:4px 14px; border-radius:20px; letter-spacing:1px; margin-bottom:10px;">APC TRADE</div>
+        <div style="color:white; font-size:20px; font-weight:900; margin-bottom:6px;">Upgrade to Trade — Free</div>
+        <div style="color:rgba(255,255,255,0.8); font-size:13px; font-weight:600;">Workshops, crash shops &amp; trade sellers</div>
+    </div>
+    <div style="padding:20px 24px;">
+        <div class="input-group" style="margin-bottom:12px;">
+            <label>Business Name</label>
+            <input type="text" id="upgradeTradeBizName" placeholder="e.g. Northside Auto Workshop">
+        </div>
+        <div class="input-group" style="margin-bottom:20px;">
+            <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
+            <input type="text" id="upgradeTradeAbn" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
+        </div>
+        <button id="confirmUpgradeTradeBtn" onclick="confirmUpgradeToTrade()" style="width:100%; padding:15px; background:#16a34a; color:white; border:none; border-radius:12px; font-weight:900; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer;">Upgrade to Trade →</button>
+        <div style="text-align:center; font-size:11px; color:#bbb; margin-top:10px;">Free forever for workshops &amp; trade sellers</div>
+    </div>
 </div>
 
 <!-- UPGRADE TO APC PRO MODAL -->
@@ -1333,32 +1356,47 @@
 
         </div>
 
-        <!-- RIGHT COLUMN: Upgrade promo (standard) or Pro settings (Pro) -->
+        <!-- RIGHT COLUMN: Upgrade promo(s) or Trade/Pro settings -->
         <div class="settings-col-right">
 
-            <!-- UPGRADE PROMO — shown for standard users -->
+            <!-- TRADE UPGRADE NUDGE — personal users only -->
+            <div id="settingsTradeNudge" style="display:none;">
+                <div class="settings-section-label">Go Trade</div>
+                <div class="sun-promo-card" style="border-top:3px solid #16a34a;">
+                    <div class="sun-badge" style="background:#16a34a;">APC Trade</div>
+                    <div class="sun-headline">Workshops &amp; trade sellers</div>
+                    <ul class="sun-features">
+                        <li>Workshop &amp; repairer profile</li>
+                        <li>APC Trade badge</li>
+                        <li>Up to 50 listings</li>
+                        <li>Trade-only listing access</li>
+                        <li>B2B enquiries</li>
+                    </ul>
+                    <button class="sun-promo-btn" style="background:#16a34a;" onclick="onUpgradeToTrade()">Upgrade to Trade — Free →</button>
+                </div>
+            </div>
+
+            <!-- PRO UPGRADE NUDGE — personal + trade users -->
             <div id="settingsUpgradeNudge" style="display:none;">
                 <div class="settings-section-label">Go Pro</div>
                 <div class="sun-promo-card">
                     <div class="sun-badge">APC Pro</div>
-                    <div class="sun-headline">Grow your parts business</div>
+                    <div class="sun-headline">Wreckers &amp; dismantlers</div>
                     <ul class="sun-features">
                         <li>Unlimited listings</li>
                         <li>Pro seller dashboard &amp; analytics</li>
                         <li>Wanted buyer feed — match your stock</li>
-                        <li>Odometer, stock number &amp; qty fields</li>
                         <li>Warehouse bin &amp; QR label system</li>
-                        <li>Workshop &amp; storefront profile</li>
-                        <li>Fitting available badge on listings</li>
+                        <li>Electronic Dismantling Workflow</li>
                         <li>Trade-only listing mode</li>
                     </ul>
                     <button class="sun-promo-btn" onclick="onUpgradeToPro()">Upgrade to APC Pro →</button>
                 </div>
             </div>
 
-            <!-- PRO BLOCK — hidden for standard users -->
+            <!-- TRADE / PRO BLOCK — trade + pro users -->
             <div id="settingsProBlock" style="display:none;">
-                <div class="settings-section-label settings-pro-label">APC Pro</div>
+                <div id="settingsProBlockLabel" class="settings-section-label settings-pro-label">APC Pro</div>
 
                 <div class="settings-section settings-pro-section">
                     <div class="settings-pro-section-hdr">Business Profile</div>
@@ -1371,60 +1409,63 @@
                     </div>
                 </div>
 
-                <div class="settings-section settings-pro-section">
-                    <div class="settings-pro-section-hdr">Search & Discovery</div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-row-label">Trade Only — Pro buyers only</div>
-                            <div class="settings-row-sub">Your listings are hidden from the public</div>
+                <div id="settingsProOnlyRows" style="display:none;">
+                    <div class="settings-section settings-pro-section">
+                        <div class="settings-pro-section-hdr">Search &amp; Discovery</div>
+                        <div class="settings-row">
+                            <div>
+                                <div class="settings-row-label">Trade Only — Pro buyers only</div>
+                                <div class="settings-row-sub">Your listings are hidden from the public</div>
+                            </div>
+                            <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
                         </div>
-                        <label class="settings-toggle"><input type="checkbox" id="settingTradeOnly" onchange="onToggleTradeOnly(this)"><span class="settings-toggle-track"></span></label>
+                    </div>
+
+                    <div class="settings-section settings-pro-section">
+                        <div class="settings-pro-section-hdr">Listing Defaults</div>
+                        <div class="settings-row">
+                            <div>
+                                <div class="settings-row-label">Open to Offers by default</div>
+                                <div class="settings-row-sub">New listings will have offers enabled</div>
+                            </div>
+                            <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultOffers"><span class="settings-toggle-track"></span></label>
+                        </div>
+                        <div class="settings-row">
+                            <div>
+                                <div class="settings-row-label">Fitting Available by default</div>
+                                <div class="settings-row-sub">Show fitting on all new listings</div>
+                            </div>
+                            <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting" onchange="saveSettingsToggle('defaultFitting', this.checked)"><span class="settings-toggle-track"></span></label>
+                        </div>
+                        <div class="settings-row">
+                            <div>
+                                <div class="settings-row-label">Warehouse Management</div>
+                                <div class="settings-row-sub">Rack/bin locations &amp; QR labels for listings</div>
+                            </div>
+                            <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
+                        </div>
+                    </div>
+
+                    <div class="settings-section settings-pro-section">
+                        <div class="settings-pro-section-hdr">Subscription</div>
+                        <div class="settings-row">
+                            <div>
+                                <div class="settings-row-label">Current Plan</div>
+                                <div class="settings-row-sub">3-month free trial active</div>
+                            </div>
+                            <span class="settings-row-value" style="color:var(--apc-orange); font-weight:800;">PRO TRIAL</span>
+                        </div>
+                        <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Billing')">
+                            <span class="settings-row-label">Billing &amp; Payment</span>
+                            <span class="settings-chevron" style="color:#2563eb;">›</span>
+                        </div>
+                        <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Cancel subscription')">
+                            <span class="settings-row-label" style="color:#e53935;">Cancel Subscription</span>
+                            <span class="settings-chevron" style="color:#e53935;">›</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="settings-section settings-pro-section">
-                    <div class="settings-pro-section-hdr">Listing Defaults</div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-row-label">Open to Offers by default</div>
-                            <div class="settings-row-sub">New listings will have offers enabled</div>
-                        </div>
-                        <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultOffers"><span class="settings-toggle-track"></span></label>
-                    </div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-row-label">Fitting Available by default</div>
-                            <div class="settings-row-sub">Show fitting on all new listings</div>
-                        </div>
-                        <label class="settings-toggle"><input type="checkbox" id="proSettingDefaultFitting" onchange="saveSettingsToggle('defaultFitting', this.checked)"><span class="settings-toggle-track"></span></label>
-                    </div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-row-label">Warehouse Management</div>
-                            <div class="settings-row-sub">Rack/bin locations &amp; QR labels for listings</div>
-                        </div>
-                        <label class="settings-toggle"><input type="checkbox" id="settingWarehouseManagement" onchange="onToggleWarehouseManagement()"><span class="settings-toggle-track"></span></label>
-                    </div>
-                </div>
-
-                <div class="settings-section settings-pro-section">
-                    <div class="settings-pro-section-hdr">Subscription</div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-row-label">Current Plan</div>
-                            <div class="settings-row-sub">3-month free trial active</div>
-                        </div>
-                        <span class="settings-row-value" style="color:var(--apc-orange); font-weight:800;">PRO TRIAL</span>
-                    </div>
-                    <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Billing')">
-                        <span class="settings-row-label">Billing &amp; Payment</span>
-                        <span class="settings-chevron" style="color:#2563eb;">›</span>
-                    </div>
-                    <div class="settings-row settings-row-tappable" onclick="onMenuPlaceholder('Cancel subscription')">
-                        <span class="settings-row-label" style="color:#e53935;">Cancel Subscription</span>
-                        <span class="settings-chevron" style="color:#e53935;">›</span>
-                    </div>
-                </div>
             </div>
 
         </div>
@@ -1607,8 +1648,8 @@
 
         <div id="workshopProfileFields" style="display:none;">
 <div id="workshopProNotice" style="display:none; padding: 18px; margin-bottom: 18px; border: 1px solid #f0d7b1; border-radius: 16px; background: #fff7eb; color: #7a4b0d; font-size: 13px;">
-                <div>This feature is for APC Pro accounts. Upgrade now to list the types of vehicles and fitment services your workshop can handle.</div>
-                <button onclick="onUpgradeToPro()" style="margin-top: 12px; width: 100%; background: var(--apc-blue); color: white; border: none; border-radius: 12px; padding: 12px 0; font-weight: 700; cursor: pointer;">Upgrade to APC Pro</button>
+                <div>This feature is available on APC Trade and Pro accounts. Upgrade to list your workshop services, vehicles you work on, and build your storefront.</div>
+                <button onclick="onUpgradeToTrade()" style="margin-top: 12px; width: 100%; background: #16a34a; color: white; border: none; border-radius: 12px; padding: 12px 0; font-weight: 700; cursor: pointer;">Upgrade to Trade — Free</button>
             </div>
 
             <!-- Right column: Banner, Logo, Your Business -->
@@ -2207,7 +2248,7 @@
             <button class="account-menu-item" onclick="onMenuOpenSettings()">Profile &amp; Settings <span class="account-menu-chevron">›</span></button>
         </div>
         <div class="amenu-section">
-            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeToPro()">Upgrade to APC Pro ›</button>
+            <button class="account-menu-item upgrade" id="accountMenuUpgrade" onclick="onUpgradeClick()">Upgrade to APC Pro ›</button>
         </div>
         <div class="amenu-section">
             <button class="account-menu-item" onclick="openHelpDrawer()">Help &amp; Support <span class="account-menu-chevron">›</span></button>
@@ -2241,7 +2282,7 @@
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
-        <button class="acct-dd-item acct-dd-upgrade" id="acctDdUpgrade" onclick="onUpgradeToPro(); closeAccountDropdown()">Upgrade to APC Pro ›</button>
+        <button class="acct-dd-item acct-dd-upgrade" id="acctDdUpgrade" onclick="onUpgradeClick(); closeAccountDropdown()">Upgrade to APC Pro ›</button>
     </div>
     <div class="acct-dd-divider"></div>
     <div class="acct-dd-group">
@@ -2407,7 +2448,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=66"></script>
+<script src="script.js?v=67"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
