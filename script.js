@@ -1196,6 +1196,29 @@ function renderSettingsDrawer() {
     });
 }
 
+const BANNER_COLOURS = [
+    '#f07020', // APC Orange (default)
+    '#8968cd', // Purple
+    '#1d4ed8', // Blue
+    '#16a34a', // Green
+    '#0891b2', // Teal
+    '#e53935', // Red
+    '#be185d', // Pink
+    '#d97706', // Amber
+    '#374151', // Charcoal
+];
+
+function darkenHex(hex, amount) {
+    const r = Math.max(0, Math.round(parseInt(hex.slice(1,3), 16) * (1 - amount)));
+    const g = Math.max(0, Math.round(parseInt(hex.slice(3,5), 16) * (1 - amount)));
+    const b = Math.max(0, Math.round(parseInt(hex.slice(5,7), 16) * (1 - amount)));
+    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+function bannerGradient(hex) {
+    return `linear-gradient(135deg, ${hex} 0%, ${darkenHex(hex, 0.22)} 100%)`;
+}
+
 const LISTINGS_STORAGE_KEY = 'apc.listings.v2';
 const REMEMBER_ME_KEY = 'apc.rememberMe.v1';
 const SEARCH_DEMAND_KEY = 'apc.searchDemand.v1';
@@ -2988,7 +3011,7 @@ function getPublicSellerName() {
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
     const { data: profile } = await sb.from('profiles')
-        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location')
+        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color')
         .eq('id', userId).single();
     if (!profile) return;
     if (profile.avatar_url)  _sellerPicCache[userId] = profile.avatar_url;
@@ -3004,6 +3027,7 @@ async function openStorefrontByUserId(userId) {
         profile.about || '',
         profile.location || '',
         '',
+        profile.banner_color || null,
         userId
     );
     const isOwn = userId === currentUserId || sellerName === getCurrentSellerName();
@@ -5588,7 +5612,7 @@ function shareCurrentListing(btn) {
 }
 
 // --- SELLER STOREFRONT ---
-function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location, banner, userId = null) {
+function renderStorefront(sellerName, isPro, logo, businessName, abn, about, location, banner, bannerColor = null, userId = null) {
     currentStorefrontSeller = sellerName;
     const initial = (sellerName || 'S').charAt(0).toUpperCase();
 
@@ -5596,6 +5620,7 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     const hero = document.querySelector('#storefrontDrawer .sf-hero');
     if (hero) {
         if (banner) {
+            hero.style.background = '';
             hero.style.backgroundImage = `url(${banner})`;
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
@@ -5604,6 +5629,7 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
             hero.style.backgroundImage = '';
             hero.style.backgroundSize = '';
             hero.style.backgroundPosition = '';
+            hero.style.background = bannerGradient(bannerColor || '#f07020');
             hero.classList.remove('has-banner');
         }
     }
@@ -5683,10 +5709,10 @@ function openStorefront(partId) {
     // Must be set AFTER any async path resolves — capture now so the closure uses the right value
     const fromListingDetail = !!currentOpenPartId;
 
-    function _showStorefront(logo, businessName, abn, about, location, banner) {
+    function _showStorefront(logo, businessName, abn, about, location, banner, bannerColor = null) {
         const grid = document.getElementById('sellerPartsGrid');
         if (grid) { grid.dataset.seller = part.seller; grid.dataset.userId = part.sellerId || ''; }
-        renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner, part.sellerId || null);
+        renderStorefront(part.seller, part.isPro, logo, businessName, abn, about, location, banner, bannerColor, part.sellerId || null);
         const sfMsgBtn = document.getElementById('sfMsgBtn');
         if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
         const sfEl  = document.getElementById('storefrontDrawer');
@@ -5703,7 +5729,8 @@ function openStorefront(partId) {
             part.isPro ? (userSettings.abn            || '') : '',
             part.isPro ? (userSettings.about          || '') : '',
             userSettings.location || '',
-            part.isPro ? (userSettings.businessBanner || '') : ''
+            part.isPro ? (userSettings.businessBanner || '') : '',
+            userSettings.bannerColor || null
         );
         return;
     }
@@ -5716,7 +5743,7 @@ function openStorefront(partId) {
         return;
     }
     sb.from('profiles')
-        .select('display_name, is_pro, tier, avatar_url, business_name, abn, about, location')
+        .select('display_name, is_pro, tier, avatar_url, business_name, abn, about, location, banner_color')
         .eq('id', part.sellerId).single()
         .then(({ data: profile }) => {
             const pic = profile?.avatar_url || '';
@@ -5728,7 +5755,8 @@ function openStorefront(partId) {
                 (isTradeOrProProfile && profile?.abn)           ? profile.abn           : '',
                 (isTradeOrProProfile && profile?.about)         ? profile.about         : '',
                 profile?.location || '',
-                ''
+                '',
+                profile?.banner_color || null
             );
         });
 }
@@ -6264,6 +6292,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.profilePic     = profile.avatar_url      || userSettings.profilePic     || '';
                         userSettings.businessLogo   = profile.business_logo   || userSettings.businessLogo   || '';
                         userSettings.businessBanner = profile.business_banner || userSettings.businessBanner || '';
+                        userSettings.bannerColor    = profile.banner_color    || userSettings.bannerColor    || '';
                         userSettings.postcode       = profile.postcode        || userSettings.postcode       || '';
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderLogoPreview(); renderBannerPreview();
                     } else {
@@ -6727,7 +6756,8 @@ function openStoreFromSaved(sellerName) {
     renderStorefront(
         sellerName, store?.isPro || (isOwnStore && currentUserTier === 'pro'),
         storeLogo, store?.businessName || (isOwnStore ? userSettings.businessName || '' : ''),
-        '', isOwnStore ? userSettings.about || '' : '', isOwnStore ? userSettings.location || '' : '', ''
+        '', isOwnStore ? userSettings.about || '' : '', isOwnStore ? userSettings.location || '' : '', '',
+        isOwnStore ? (userSettings.bannerColor || null) : null
     );
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) grid.dataset.seller = sellerName;
@@ -8376,13 +8406,37 @@ function openMyStorefront() {
         userSettings.abn            || '',
         userSettings.about          || '',
         userSettings.location       || '',
-        userSettings.businessBanner || ''
+        userSettings.businessBanner || '',
+        userSettings.bannerColor    || null
     );
     const sfMsgBtn = document.getElementById('sfMsgBtn');
     if (sfMsgBtn) sfMsgBtn.style.display = 'none';
     const backBar4 = document.getElementById('storefrontBackBar');
     if (backBar4) backBar4.style.display = 'none';
     toggleDrawer('storefrontDrawer');
+}
+
+function renderBannerColourPicker() {
+    const wrap = document.getElementById('bannerColourSwatches');
+    if (!wrap) return;
+    const current = userSettings.bannerColor || '#f07020';
+    wrap.innerHTML = BANNER_COLOURS.map(hex =>
+        `<div class="banner-colour-swatch${hex === current ? ' active' : ''}"
+             style="background:${bannerGradient(hex)}"
+             onclick="pickBannerColour('${hex}')"></div>`
+    ).join('');
+}
+
+async function pickBannerColour(hex) {
+    userSettings.bannerColor = hex;
+    saveUserSettings();
+    renderBannerColourPicker();
+    // Apply live preview to profile hero
+    const hero = document.getElementById('profileHero');
+    if (hero) hero.style.background = bannerGradient(hex);
+    if (currentUserId && sb) {
+        await sb.from('profiles').update({ banner_color: hex }).eq('id', currentUserId);
+    }
 }
 
 function renderProfile() {
@@ -8410,6 +8464,11 @@ function renderProfile() {
     if (listingsEl) listingsEl.textContent = myListingCount;
     if (savedEl)    savedEl.textContent    = savedParts.size;
     if (wantedEl)   wantedEl.textContent   = myWanted.length;
+
+    // Apply banner colour to profile hero + render picker
+    const hero = document.getElementById('profileHero');
+    if (hero) hero.style.background = bannerGradient(userSettings.bannerColor || '#f07020');
+    renderBannerColourPicker();
 }
 
 function onMenuPlaceholder(label) {

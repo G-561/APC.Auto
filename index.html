@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=50">
+    <link rel="stylesheet" href="style.css?v=51">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1526,6 +1526,12 @@
             <div id="profileAbout" class="profile-about-text">Auto enthusiast based in Adelaide. Specialising in Toyota Hiace and Lotus Elise parts.</div>
         </div>
 
+        <!-- Banner colour picker -->
+        <div class="profile-section">
+            <div class="profile-section-title">Banner Colour</div>
+            <div id="bannerColourSwatches" class="banner-colour-swatches"></div>
+        </div>
+
         <!-- Actions -->
         <div class="profile-section">
             <button class="profile-action-btn primary" onclick="openMyStorefront()">VIEW MY STOREFRONT</button>
@@ -2448,7 +2454,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=67"></script>
+<script src="script.js?v=68"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
