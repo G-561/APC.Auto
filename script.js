@@ -7990,6 +7990,9 @@ function setAuthMode(mode) {
         if (el) el.style.display = show ? '' : 'none';
     });
 
+    const drawer = document.getElementById('authDrawer');
+    if (drawer) drawer.classList.toggle('auth-drawer--wide', mode === 'signup');
+
     if (mode === 'signin') {
         prefillRememberedSignIn();
         clearSignUpFields();

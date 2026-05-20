@@ -4414,6 +4414,7 @@ header {
         z-index: 2100;
     }
     #authDrawer { width: 420px !important; }
+    #authDrawer.auth-drawer--wide { width: 700px !important; }
 
     /* Add Wanted — floating card, centred both axes */
     #addWantedDrawer,
