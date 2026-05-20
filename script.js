@@ -1595,8 +1595,14 @@ async function ensureSupabaseConversation(conv) {
     // General enquiry path: listing_id is null, use conv.sellerId directly
     if (conv.partId === 'general') {
         const sellerId = conv.sellerId;
-        if (!sellerId) { console.warn('ensureConv: general enquiry missing sellerId'); return false; }
+        if (!sellerId) {
+            console.warn('ensureConv: general enquiry missing sellerId', { conv });
+            showToast('Error: could not identify seller — please try again.');
+            return false;
+        }
         if (buyerId === sellerId) { console.warn('ensureConv: self-message blocked'); return false; }
+
+        console.log('ensureConv general enquiry — buyerId:', buyerId, 'sellerId:', sellerId);
 
         const { data: existing } = await sb.from('conversations')
             .select('id').is('listing_id', null)
@@ -1620,8 +1626,8 @@ async function ensureSupabaseConversation(conv) {
         }).select('id').single();
 
         if (error) {
-            console.warn('Conv sync error (general enquiry):', error.message);
-            showToast('Sync error: ' + error.message);
+            console.warn('Conv sync error (general enquiry):', error.message, error.code, error.details, error.hint);
+            showToast('Error: ' + error.message);
             return false;
         }
         conv.supabaseConvId = data.id;
