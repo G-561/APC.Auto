@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=41">
+    <link rel="stylesheet" href="style.css?v=42">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1596,9 +1596,21 @@
                 </div>
             </div>
 
+            <div class="action-container">
+                <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE PROFILE</button>
+            </div>
+
+            <!-- APC Badge trigger — Pro only -->
+            <div id="apcBadgeSection" style="display:none; margin-top:8px;">
+                <button class="apc-badge-trigger-btn" onclick="openApcBadgeModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Create your APC QR Badge
+                </button>
+            </div>
+
             </div><!-- end .ws-col-right -->
 
-            <!-- Left column: Workshop Services + Parts Supply -->
+            <!-- Right column: Workshop Services + Parts Supply -->
             <div class="ws-col-left">
 
             <!-- Services — shown for Service Provider / Parts & Services -->
@@ -1739,19 +1751,6 @@
             </div>
 
             </div><!-- end .ws-col-left -->
-
-            <!-- Save + Badge span both columns -->
-            <div class="action-container">
-                <button class="btn-full-action" onclick="submitWorkshopProfile()">SAVE PROFILE</button>
-            </div>
-
-            <!-- APC Badge trigger — Pro only -->
-            <div id="apcBadgeSection" style="display:none; margin-top:8px;">
-                <button class="apc-badge-trigger-btn" onclick="openApcBadgeModal()">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    Create your APC QR Badge
-                </button>
-            </div>
         </div>
     </div>
 </div>

@@ -4430,10 +4430,8 @@ header {
     /* Workshop profile fields: span full width, then sub-divide into 2 columns */
     #workshopProfileFields { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; align-items: start; }
     #workshopProNotice { grid-column: 1 / -1; }
-    .ws-col-left { grid-column: 1; grid-row: 2; }
-    .ws-col-right { grid-column: 2; grid-row: 2; }
-    #workshopProfileFields > .action-container,
-    #workshopProfileFields > #apcBadgeSection { grid-column: 1 / -1; }
+    .ws-col-right { grid-column: 1; grid-row: 2; }
+    .ws-col-left { grid-column: 2; grid-row: 2; }
 
     /* Banner: remove full-bleed margin inside the right column on desktop */
     .ws-col-right .banner-bleed-wrap { margin: 0 0 4px !important; border-radius: 10px; overflow: hidden; }
