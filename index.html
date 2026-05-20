@@ -1334,13 +1334,9 @@
             <div class="settings-section">
                 <div class="settings-row">
                     <div>
-                        <div class="settings-row-label">Show suburb only to buyers</div>
-                        <div class="settings-row-sub">Hides your exact address from listings</div>
+                        <div class="settings-row-label">Public profile</div>
+                        <div class="settings-row-sub">Turn off to hide your listings &amp; storefront — handy when you're away or on holidays</div>
                     </div>
-                    <label class="settings-toggle"><input type="checkbox" id="settingPrivacySuburb" onchange="saveSettingsToggle('privacySuburbOnly', this.checked)"><span class="settings-toggle-track"></span></label>
-                </div>
-                <div class="settings-row">
-                    <span class="settings-row-label">Public profile</span>
                     <label class="settings-toggle"><input type="checkbox" id="settingPrivacyPublic" onchange="saveSettingsToggle('privacyPublicProfile', this.checked)"><span class="settings-toggle-track"></span></label>
                 </div>
             </div>
@@ -2460,7 +2456,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=77"></script>
+<script src="script.js?v=78"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

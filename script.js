@@ -313,7 +313,6 @@ function getDefaultSettings() {
         notifyMessages:       true,
         notifyPriceDrops:     true,
         notifyNewListings:    true,
-        privacySuburbOnly:    true,
         privacyPublicProfile: true,
         warehouseManagement:  false
     };
@@ -1136,6 +1135,12 @@ function _updateMakesSummary(fieldKey, makes) {
 function saveSettingsToggle(key, value) {
     userSettings[key] = value;
     saveUserSettings();
+    if (key === 'privacyPublicProfile' && currentUserId) {
+        sb.from('profiles').update({ is_public: value }).eq('id', currentUserId);
+        if (value) _hiddenSellerIds.delete(currentUserId);
+        else _hiddenSellerIds.add(currentUserId);
+        renderMainGrid();
+    }
 }
 function closeSettingsDrawer() {
     const el = document.getElementById('settingsDrawer');
@@ -1186,7 +1191,6 @@ function renderSettingsDrawer() {
         settingNotifyMessages:      'notifyMessages',
         settingNotifyPriceDrops:    'notifyPriceDrops',
         settingNotifyNewListings:   'notifyNewListings',
-        settingPrivacySuburb:       'privacySuburbOnly',
         settingPrivacyPublic:       'privacyPublicProfile',
         settingWarehouseManagement: 'warehouseManagement',
         proSettingDefaultFitting:   'defaultFitting'
@@ -1428,16 +1432,18 @@ async function loadPublicListingsFromSupabase(append = false) {
         }
         if (!rows || rows.length < 20) _listingsExhausted = true;
 
-        // Batch-fetch current display names and profile pics
+        // Batch-fetch current display names, profile pics, and visibility status
         const sellerIds = [...new Set((rows || []).map(r => r.seller_id).filter(Boolean))];
         let nameMap = {};
         if (sellerIds.length) {
             const { data: profiles } = await sb.from('profiles')
-                .select('id, display_name, avatar_url')
+                .select('id, display_name, avatar_url, is_public')
                 .in('id', sellerIds);
             (profiles || []).forEach(p => {
                 if (p.display_name) nameMap[p.id] = p.display_name;
                 if (p.avatar_url)   _sellerPicCache[p.id] = p.avatar_url;
+                if (p.is_public === false) _hiddenSellerIds.add(p.id);
+                else _hiddenSellerIds.delete(p.id);
             });
         }
 
@@ -3018,9 +3024,13 @@ function getPublicSellerName() {
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
     const { data: profile } = await sb.from('profiles')
-        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color')
+        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public')
         .eq('id', userId).single();
     if (!profile) return;
+    if (profile.is_public === false && userId !== currentUserId) {
+        showToast('This seller is currently unavailable');
+        return;
+    }
     if (profile.avatar_url)  _sellerPicCache[userId] = profile.avatar_url;
     const sellerName = profile.display_name || 'Seller';
     const grid = document.getElementById('sellerPartsGrid');
@@ -3348,6 +3358,7 @@ function haversineKm(lat1, lng1, lat2, lng2) {
 function getFilteredParts() {
     const search = activeFilters.search.toLowerCase();
     const results = getAllParts().filter(part => {
+        if (_hiddenSellerIds.has(part.sellerId) && part.sellerId !== currentUserId) return false;
         if (search) {
             const isPro = userIsSignedIn && currentUserTier === 'pro';
             const tokens = search.split(/\s+/).filter(Boolean);
@@ -6323,8 +6334,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.profilePic     = profile.avatar_url      || userSettings.profilePic     || '';
                         userSettings.businessLogo   = profile.business_logo   || userSettings.businessLogo   || '';
                         userSettings.businessBanner = profile.business_banner || userSettings.businessBanner || '';
-                        userSettings.bannerColor    = profile.banner_color    || userSettings.bannerColor    || '';
-                        userSettings.postcode       = profile.postcode        || userSettings.postcode       || '';
+                        userSettings.bannerColor         = profile.banner_color    || userSettings.bannerColor    || '';
+                        userSettings.postcode            = profile.postcode        || userSettings.postcode       || '';
+                        userSettings.privacyPublicProfile = profile.is_public !== false;
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderLogoPreview(); renderBannerPreview();
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
@@ -6718,6 +6730,7 @@ const SAVED_STORES_KEY = 'apc.savedStores.v1';
 let savedStores = loadSavedStores(); // Array<{ sellerName, businessName, isPro, savedAt }>
 let currentStorefrontSeller = null;  // tracks whose storefront is open
 let _sellerPicCache = {};            // sellerId → profile_pic URL
+let _hiddenSellerIds = new Set();   // sellers with is_public = false
 let pendingGeneralEnquiry  = null;  // { seller, isPro } — set when contacting from storefront
 
 function loadSavedStores() {
