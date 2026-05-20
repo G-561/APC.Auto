@@ -5415,6 +5415,25 @@ header {
     gap: 6px;
     margin-bottom: 14px;
 }
+.ml-away-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff8e1;
+    border: 1px solid #f59e0b;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: #92400e;
+    cursor: pointer;
+    gap: 8px;
+}
+.ml-away-link {
+    font-weight: 700;
+    white-space: nowrap;
+    color: #f59e0b;
+}
 .my-listings-tab {
     flex: 1;
     background: white;

@@ -3897,6 +3897,9 @@ function renderMyParts() {
     const myPartsList = document.getElementById('myPartsList');
     if (!myPartsList) return;
 
+    const awayBanner = document.getElementById('mlAwayBanner');
+    if (awayBanner) awayBanner.style.display = userSettings.privacyPublicProfile === false ? '' : 'none';
+
     if (userIsSignedIn && currentUserId && !userListings.length) {
         loadUserListingsFromSupabase(currentUserId);
     }
