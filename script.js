@@ -3018,7 +3018,7 @@ async function openStorefrontByUserId(userId) {
     if (profile.avatar_url)  _sellerPicCache[userId] = profile.avatar_url;
     const sellerName = profile.display_name || 'Seller';
     const grid = document.getElementById('sellerPartsGrid');
-    if (grid) grid.dataset.seller = sellerName;
+    if (grid) { grid.dataset.seller = sellerName; grid.dataset.userId = userId; }
     renderStorefront(
         sellerName,
         profile.tier === 'pro' || profile.is_pro || false,
@@ -6039,10 +6039,16 @@ function handleGeneralEnquiry() {
         return;
     }
 
+    let sellerId = document.getElementById('sellerPartsGrid')?.dataset.userId || '';
+    if (!sellerId) {
+        // Fallback: find sellerId from any loaded listing by this seller
+        const match = getAllParts().find(p => p.seller === seller && p.sellerId);
+        if (match) sellerId = match.sellerId;
+    }
     pendingGeneralEnquiry = {
         seller,
         isPro: document.getElementById('sfProBadge')?.style.display !== 'none',
-        sellerId: document.getElementById('sellerPartsGrid')?.dataset.userId || ''
+        sellerId
     };
     currentOpenPartId = null;
 
