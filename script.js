@@ -3087,21 +3087,27 @@ function syncBackdrop() {
 // reposition both top and height to match the visual viewport exactly.
 function syncInboxToKeyboard() {
     if (window.innerWidth >= 900) return;
-    const drawer = document.getElementById('inboxDrawer');
-    if (!drawer || !drawer.classList.contains('active')) return;
     const vv = window.visualViewport;
     if (!vv) return;
     const kbOpen = vv.height < window.innerHeight - 50;
+    ['inboxDrawer', 'chatDrawer'].forEach(drawerId => {
+        const drawer = document.getElementById(drawerId);
+        if (!drawer || !drawer.classList.contains('active')) return;
+        if (kbOpen) {
+            drawer.style.top    = Math.round(vv.offsetTop) + 'px';
+            drawer.style.height = Math.round(vv.height)    + 'px';
+            drawer.style.bottom = 'auto';
+        } else {
+            drawer.style.top    = '';
+            drawer.style.height = '';
+            drawer.style.bottom = '';
+        }
+    });
     if (kbOpen) {
-        drawer.style.top    = Math.round(vv.offsetTop)  + 'px';
-        drawer.style.height = Math.round(vv.height)     + 'px';
-        drawer.style.bottom = 'auto';
         const msgList = document.getElementById('inboxMsgList');
         if (msgList) setTimeout(() => { msgList.scrollTop = msgList.scrollHeight; }, 80);
-    } else {
-        drawer.style.top    = '';
-        drawer.style.height = '';
-        drawer.style.bottom = '';
+        const chatBox = document.getElementById('chatBox');
+        if (chatBox) setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 80);
     }
 }
 
