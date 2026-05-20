@@ -3415,10 +3415,22 @@ function getFilteredParts() {
         }
         return true;
     });
+    const origin = (userSettings.postcode && typeof AU_POSTCODE_COORDS !== 'undefined')
+        ? AU_POSTCODE_COORDS[userSettings.postcode] : null;
+    const kmCache = new Map();
+    const getKm = part => {
+        if (!kmCache.has(part.id)) {
+            const pc = part.postcode || (part.loc.match(/\b(\d{4})\b/) || [])[1];
+            const dest = pc && origin && AU_POSTCODE_COORDS[pc];
+            kmCache.set(part.id, dest ? haversineKm(origin[0], origin[1], dest[0], dest[1]) : null);
+        }
+        return kmCache.get(part.id);
+    };
     results.sort((a, b) => {
         if (sortOrder === 'asc')  { const d = a.price - b.price; if (d !== 0) return d; }
         if (sortOrder === 'desc') { const d = b.price - a.price; if (d !== 0) return d; }
-        return (b.date || 0) - (a.date || 0); // newest first always
+        if (origin) { const d = (getKm(a) ?? 99999) - (getKm(b) ?? 99999); if (d !== 0) return d; }
+        return (b.date || 0) - (a.date || 0);
     });
     return results;
 }
