@@ -1136,7 +1136,11 @@ function saveSettingsToggle(key, value) {
     userSettings[key] = value;
     saveUserSettings();
     if (key === 'privacyPublicProfile' && currentUserId) {
-        sb.from('profiles').update({ is_public: value }).eq('id', currentUserId);
+        sb.from('profiles').update({ is_public: value }).eq('id', currentUserId)
+            .then(({ error }) => {
+                if (error) showToast('Error saving: ' + error.message);
+                else showToast(value ? 'Your profile is now public — listings visible to everyone' : 'Profile hidden — your listings are invisible to other users');
+            });
         if (value) _hiddenSellerIds.delete(currentUserId);
         else _hiddenSellerIds.add(currentUserId);
         renderMainGrid();
