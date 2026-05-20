@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=46">
+    <link rel="stylesheet" href="style.css?v=47">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -381,8 +381,30 @@
 
         <!-- Full-width footer: spans both columns on desktop, scrolls inline on mobile -->
         <div id="dynamicDetailFooter"></div>
+
+        <!-- Report listing link — hidden for own listings and guests -->
+        <div id="reportListingRow" style="display:none; text-align:center; padding: 12px 15px 24px;">
+            <button onclick="openReportSheet()" style="background:none; border:none; color:#bbb; font-size:12px; cursor:pointer; text-decoration:underline; padding:0;">Report this listing</button>
+        </div>
         </div>
     </div>
+</div>
+
+<!-- REPORT LISTING SHEET -->
+<div id="reportBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:4100;" onclick="closeReportSheet()"></div>
+<div id="reportSheet" style="display:none; position:fixed; left:0; right:0; bottom:0; background:#fff; border-radius:16px 16px 0 0; z-index:4101; padding:20px 20px 36px; box-shadow:0 -4px 24px rgba(0,0,0,0.15);">
+    <div style="font-size:15px; font-weight:800; color:#333; margin-bottom:4px;">Report this listing</div>
+    <div style="font-size:13px; color:#888; margin-bottom:16px;">What's the issue?</div>
+    <div id="reportReasons" style="display:flex; flex-direction:column; gap:8px;">
+        <label class="report-reason-row"><input type="radio" name="reportReason" value="wrong_category"> <span>Wrong category</span></label>
+        <label class="report-reason-row"><input type="radio" name="reportReason" value="misleading"> <span>Misleading description or photos</span></label>
+        <label class="report-reason-row"><input type="radio" name="reportReason" value="already_sold"> <span>Item already sold elsewhere</span></label>
+        <label class="report-reason-row"><input type="radio" name="reportReason" value="suspected_fraud"> <span>Suspected fraud or scam</span></label>
+        <label class="report-reason-row"><input type="radio" name="reportReason" value="other"> <span>Other</span></label>
+    </div>
+    <textarea id="reportNote" placeholder="Add a note (optional)" style="width:100%; margin-top:14px; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:13px; resize:none; box-sizing:border-box; outline:none;" rows="2"></textarea>
+    <button onclick="submitReport()" style="margin-top:14px; width:100%; padding:14px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:800; font-size:14px; cursor:pointer;">SUBMIT REPORT</button>
+    <button onclick="closeReportSheet()" style="margin-top:10px; width:100%; padding:12px; background:none; color:#888; border:1px solid #ddd; border-radius:8px; font-size:13px; cursor:pointer;">Cancel</button>
 </div>
 
 <!-- WELCOME MODAL — shown once after first signup -->
@@ -2337,7 +2359,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=63"></script>
+<script src="script.js?v=64"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

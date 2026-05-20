@@ -5066,6 +5066,10 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
         }
     }
 
+    // Show report link only for signed-in non-owners, not in inbox/store context
+    const reportRow = document.getElementById('reportListingRow');
+    if (reportRow) reportRow.style.display = (userIsSignedIn && !isOwnListing && !fromInbox && !inStoreView) ? 'block' : 'none';
+
     // 3. Update the seller header in the overlay
     const sellerHeaderName = document.getElementById('detailSellerName');
     const sellerHeaderSub  = document.getElementById('detailSellerSub');
@@ -5230,6 +5234,40 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
 function onDetailSellerClick() {
     if (!userIsSignedIn) { openAuthDrawer(); return; }
     openStorefront(currentOpenPartId);
+}
+
+function openReportSheet() {
+    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    document.querySelectorAll('#reportReasons input[type="radio"]').forEach(r => r.checked = false);
+    const note = document.getElementById('reportNote');
+    if (note) note.value = '';
+    document.getElementById('reportBackdrop').style.display = 'block';
+    document.getElementById('reportSheet').style.display = 'block';
+}
+
+function closeReportSheet() {
+    document.getElementById('reportBackdrop').style.display = 'none';
+    document.getElementById('reportSheet').style.display = 'none';
+}
+
+async function submitReport() {
+    const selected = document.querySelector('#reportReasons input[type="radio"]:checked');
+    if (!selected) { showToast('Please select a reason.'); return; }
+    const note = (document.getElementById('reportNote')?.value || '').trim();
+    const part = _currentOpenPart;
+    if (!part || !sb) { showToast('Unable to submit — please try again.'); return; }
+    const { error } = await sb.from('reports').insert({
+        listing_id: part.supabaseId || null,
+        reporter_id: currentUserId,
+        reason: selected.value,
+        note: note || null
+    });
+    closeReportSheet();
+    if (error) {
+        showToast('Report received — we\'ll look into it.');
+    } else {
+        showToast('Report submitted. Thank you.');
+    }
 }
 
 function closeDetailOverlay() {
