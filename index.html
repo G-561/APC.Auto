@@ -1256,7 +1256,7 @@
                     <button id="profilePicRemoveBtn" onclick="removeProfilePic()" class="settings-pic-remove-btn" style="display:none;">Remove</button>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-row-label">Display Name</span>
+                    <span class="settings-row-label">Display Name <span style="font-size:11px; color:#bbb; margin-left:4px;">✏️</span></span>
                     <input id="settingsDisplayName" class="settings-inline-input" type="text" placeholder="Your name">
                 </div>
                 <div id="settingsNameError" class="settings-name-error" style="display:none;"></div>
@@ -2460,7 +2460,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=71"></script>
+<script src="script.js?v=72"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
