@@ -1205,7 +1205,7 @@ const BANNER_COLOURS = [
     '#0891b2', // Teal
     '#e53935', // Red
     '#be185d', // Pink
-    '#d97706', // Amber
+    '#eab308', // Yellow
     '#374151', // Charcoal
 ];
 
