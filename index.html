@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=47">
+    <link rel="stylesheet" href="style.css?v=48">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -856,16 +856,30 @@
                     <div class="auth-type-tag auth-tag-orange">Free</div>
                 </div>
 
-                <div class="auth-type-card auth-type-pro" onclick="setAuthMode('signup-pro')">
-                    <div class="auth-type-pro-pill">APC PRO</div>
-                    <div class="auth-type-title">Pro / Business</div>
-                    <div class="auth-type-desc">Wreckers, trade sellers &amp; workshops</div>
+                <div class="auth-type-card auth-type-trade" onclick="setAuthMode('signup-trade')">
+                    <div class="auth-trade-pill">APC TRADE</div>
+                    <div class="auth-type-title">Workshop / Trade</div>
+                    <div class="auth-type-desc">Workshops, crash shops &amp; trade sellers</div>
                     <ul class="auth-type-perks">
                         <li>Everything in Personal</li>
+                        <li>Workshop profile</li>
+                        <li>Up to 50 listings</li>
+                        <li>Trade-only listings</li>
+                        <li>APC Trade badge</li>
+                    </ul>
+                    <div class="auth-type-tag auth-tag-green">Free</div>
+                </div>
+
+                <div class="auth-type-card auth-type-pro" onclick="setAuthMode('signup-pro')">
+                    <div class="auth-type-pro-pill">APC PRO</div>
+                    <div class="auth-type-title">Pro / Wrecker</div>
+                    <div class="auth-type-desc">Wreckers, dismantlers &amp; parts suppliers</div>
+                    <ul class="auth-type-perks">
+                        <li>Everything in Trade</li>
                         <li>Unlimited listings</li>
                         <li>Dashboard &amp; analytics</li>
                         <li>Warehouse &amp; QR tools</li>
-                        <li>Workshop profile</li>
+                        <li>Electronic Dismantling</li>
                     </ul>
                     <div class="auth-type-tag auth-tag-blue">3-month free trial</div>
                 </div>
@@ -941,6 +955,40 @@
             </div>
             <button onclick="handleSignUpProSubmit()" style="width:100%; padding:15px; background:#1d4ed8; color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; margin-top:4px;">START FREE TRIAL →</button>
             <div style="text-align:center; font-size:11px; color:#aaa; margin-top:10px;">3 months free · No credit card required</div>
+        </div>
+
+        <!-- SIGN UP: TRADE FORM -->
+        <div id="authSignUpTradeSection" style="display:none;">
+            <button type="button" class="auth-back-btn" onclick="setAuthMode('signup')">← Back</button>
+            <div class="auth-form-heading">Workshop / Trade <span class="auth-trade-inline-badge">APC TRADE</span></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Your Name</label><input type="text" id="authNameTrade" placeholder="Your name"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Business Name</label><input type="text" id="authBusinessNameTrade" placeholder="e.g. Northside Auto Workshop"></div>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
+                <input type="text" id="authAbnTrade" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
+            </div>
+            <div class="input-group" style="margin-bottom:12px;">
+                <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
+                <div class="location-picker-wrap" data-mode="signup">
+                    <input class="loc-postcode-input" id="authPostcodeTrade" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                    <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                </div>
+            </div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailTrade" placeholder="you@example.com"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Password</label><div class="pw-wrap"><input type="password" id="authPasswordTrade" placeholder="Password"><button type="button" class="pw-eye" onclick="togglePwVisibility('authPasswordTrade',this)" aria-label="Show password">👁</button></div></div>
+            <label class="choice-item" style="margin-bottom:16px;"><input type="checkbox" id="authRememberTrade"> Remember me</label>
+            <div class="auth-trade-perks-box">
+                <div class="auth-pro-perks-hdr">What's included with APC Trade</div>
+                <div class="auth-pro-perks-grid">
+                    <span>✓ Workshop profile</span>
+                    <span>✓ Up to 50 listings</span>
+                    <span>✓ Trade-only listings</span>
+                    <span>✓ APC Trade badge</span>
+                    <span>✓ Message buyers</span>
+                    <span>✓ B2B enquiries</span>
+                </div>
+            </div>
+            <button onclick="handleSignUpTradeSubmit()" style="width:100%; padding:15px; background:#16a34a; color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; margin-top:4px;">CREATE TRADE ACCOUNT →</button>
         </div>
 
     </div>
@@ -2359,7 +2407,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=65"></script>
+<script src="script.js?v=66"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

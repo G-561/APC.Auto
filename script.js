@@ -6205,6 +6205,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignUpPersonalSubmit(); });
     });
 
+    // Enter key on any Trade sign-up field submits
+    ['authNameTrade', 'authBusinessNameTrade', 'authAbnTrade', 'authEmailTrade', 'authPasswordTrade'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignUpTradeSubmit(); });
+    });
+
     // Enter key on any Pro sign-up field submits
     ['authNamePro', 'authBusinessNamePro', 'authAbnPro', 'authEmailPro', 'authPasswordPro'].forEach(id => {
         const el = document.getElementById(id);
@@ -7906,7 +7912,7 @@ function setAuthMode(mode) {
 
     const titleEl = document.getElementById('authDrawerTitle');
     if (titleEl) {
-        const titles = { 'signin': 'Sign In', 'signup': 'Create Account', 'signup-personal': 'Personal Account', 'signup-pro': 'Pro Account' };
+        const titles = { 'signin': 'Sign In', 'signup': 'Create Account', 'signup-personal': 'Personal Account', 'signup-trade': 'Trade Account', 'signup-pro': 'Pro Account' };
         titleEl.textContent = titles[mode] || 'Sign In';
     }
 
@@ -7922,6 +7928,7 @@ function setAuthMode(mode) {
         authSignInSection:         mode === 'signin',
         authSignUpSection:         mode === 'signup',
         authSignUpPersonalSection: mode === 'signup-personal',
+        authSignUpTradeSection:    mode === 'signup-trade',
         authSignUpProSection:      mode === 'signup-pro',
     };
     Object.entries(sections).forEach(([id, show]) => {
@@ -7973,7 +7980,7 @@ function showResetPasswordPanel() {
     // Hide sign-in/sign-up tabs, show only the reset form
     const tabBar = document.getElementById('authTabBar');
     if (tabBar) tabBar.style.display = 'none';
-    ['authSignInSection','authSignUpSection','authSignUpPersonalSection','authSignUpProSection'].forEach(id => {
+    ['authSignInSection','authSignUpSection','authSignUpPersonalSection','authSignUpTradeSection','authSignUpProSection'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -8116,6 +8123,48 @@ async function handleSignUpProSubmit() {
     hideAuthError();
     toggleDrawer('authDrawer');
     showToast('Pro account created! Check your email to confirm.');
+    if (authReturnAction) { const next = authReturnAction; authReturnAction = null; next(); }
+    else { setTimeout(showWelcomeModal, 350); }
+}
+
+async function handleSignUpTradeSubmit() {
+    const name         = document.getElementById('authNameTrade')?.value.trim();
+    const businessName = document.getElementById('authBusinessNameTrade')?.value.trim();
+    const abnRaw       = document.getElementById('authAbnTrade')?.value.trim();
+    const pcWrapTrade  = document.querySelector('#authSignUpTradeSection .location-picker-wrap');
+    const postcode     = pcWrapTrade?.dataset.selectedPostcode || document.getElementById('authPostcodeTrade')?.value.trim() || '';
+    const suburb       = pcWrapTrade?.dataset.selectedSuburb   || '';
+    const email        = document.getElementById('authEmailTrade')?.value.trim() || '';
+    const password     = document.getElementById('authPasswordTrade')?.value;
+    if (!name || !businessName || !abnRaw || !email || !password) {
+        showAuthError('Please fill in all fields including your Business Name and ABN.'); return;
+    }
+    const abnDigits = abnRaw.replace(/\s/g, '');
+    if (!/^\d{11}$/.test(abnDigits)) {
+        showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).'); return;
+    }
+    showAuthError('Checking username…', true);
+    const nameAvailableTrade = await isUsernameAvailable(name);
+    if (!nameAvailableTrade) {
+        showAuthError(`"${name}" is already taken.`);
+        showUsernameSuggestions(suggestUsernames(name), 'authNameTrade', 'authUsernameSuggestions');
+        return;
+    }
+    showAuthError('Creating Trade account…', true);
+    const { error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { display_name: name, is_pro: false, tier: 'trade', business_name: businessName, abn: abnDigits, postcode: postcode || '', location: suburb || '' } }
+    });
+    if (error) { showAuthError(error.message); return; }
+    document.getElementById('authPasswordTrade').value = '';
+    userSettings.businessName = businessName;
+    userSettings.abn = abnDigits;
+    if (postcode) userSettings.postcode = postcode;
+    if (suburb)   userSettings.location = suburb;
+    saveUserSettings();
+    hideAuthError();
+    toggleDrawer('authDrawer');
+    showToast('Trade account created! Check your email to confirm.');
     if (authReturnAction) { const next = authReturnAction; authReturnAction = null; next(); }
     else { setTimeout(showWelcomeModal, 350); }
 }

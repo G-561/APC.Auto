@@ -556,6 +556,7 @@ header {
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 .auth-type-personal { border-top: 4px solid var(--apc-orange); }
+.auth-type-trade    { border-top: 4px solid #16a34a; background: #f0fdf4; }
 .auth-type-pro      { border-top: 4px solid #1d4ed8; background: #f0f5ff; }
 .auth-type-pro-pill {
     display: inline-block;
@@ -601,6 +602,7 @@ header {
     margin-top: auto;
 }
 .auth-tag-orange { background: #fff3e0; color: var(--apc-orange); }
+.auth-tag-green  { background: #dcfce7; color: #16a34a; }
 .auth-tag-blue   { background: #dbeafe; color: #1d4ed8; }
 
 /* Sign-up forms */
@@ -635,6 +637,36 @@ header {
     letter-spacing: 0.5px;
     vertical-align: middle;
 }
+.auth-trade-inline-badge {
+    font-size: 9px;
+    font-weight: 900;
+    background: #16a34a;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+.auth-trade-pill {
+    display: inline-block;
+    background: #16a34a;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+    padding: 2px 7px;
+    margin-bottom: 6px;
+}
+.auth-trade-perks-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+.auth-trade-perks-box .auth-pro-perks-hdr { color: #16a34a; }
+.auth-trade-perks-box .auth-pro-perks-grid { color: #374151; }
 .auth-pro-perks-box {
     background: #f0f5ff;
     border: 1px solid #bfdbfe;
