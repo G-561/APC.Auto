@@ -4164,6 +4164,7 @@ header {
         gap: 0 24px;
     }
     #settingsDrawer .settings-col-left,
+    #settingsDrawer .settings-col-centre,
     #settingsDrawer .settings-col-right { min-width: 0; }
     #settingsProfileCard { grid-column: 1 / -1; margin: -20px -20px 20px -20px; }
 
