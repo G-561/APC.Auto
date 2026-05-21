@@ -1960,6 +1960,19 @@
     </div>
 </div>
 
+<!-- SPONSOR BUILDER CROP MODAL -->
+<div id="spbCropModal" style="display:none; position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,0.92); flex-direction:column; align-items:center; justify-content:center; gap:20px; padding:20px;">
+    <div id="spbCropTitle" style="color:#fff; font-size:15px; font-weight:700; letter-spacing:0.2px;">Move &amp; Scale</div>
+    <div id="spbCropViewport" style="width:280px; height:280px; overflow:hidden; position:relative; cursor:grab; box-shadow:0 0 0 9999px rgba(0,0,0,0.75); border:2.5px solid rgba(255,255,255,0.35); flex-shrink:0; border-radius:10px; max-width:calc(100vw - 40px);">
+        <img id="spbCropImage" src="" alt="" draggable="false" style="position:absolute; top:50%; left:50%; transform-origin:center center; max-width:none; max-height:none; user-select:none; -webkit-user-drag:none; pointer-events:none;">
+    </div>
+    <div style="color:rgba(255,255,255,0.5); font-size:12px;">Drag to reposition · Pinch or scroll to zoom</div>
+    <div style="display:flex; gap:12px;">
+        <button onclick="cancelSpbCrop()" style="padding:13px 30px; border-radius:12px; border:2px solid rgba(255,255,255,0.25); background:transparent; color:#fff; font-size:14px; font-weight:700; cursor:pointer;">Cancel</button>
+        <button id="spbCropConfirmBtn" onclick="confirmSpbCrop()" style="padding:13px 30px; border-radius:12px; border:none; background:var(--apc-orange); color:#fff; font-size:14px; font-weight:700; cursor:pointer;">Use Image</button>
+    </div>
+</div>
+
 <!-- APC BADGE MODAL -->
 <div id="apcBadgeBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:4000; backdrop-filter:blur(2px);" onclick="closeApcBadgeModal()"></div>
 <div id="apcBadgeModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(360px,calc(100vw - 32px)); background:#fff; border-radius:20px; padding:24px; box-shadow:0 8px 50px rgba(0,0,0,0.28); z-index:4001;">

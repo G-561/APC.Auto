@@ -1021,6 +1021,150 @@ async function confirmBannerCrop() {
     img.src = URL.createObjectURL(_bannerCropFile);
 }
 
+// ── SPONSOR BUILDER IMAGE CROP ────────────────────────────────
+let _spbCropFile           = null;
+let _spbCropCallback       = null;
+let _spbCropVpW            = 280;
+let _spbCropVpH            = 280;
+let _spbCropOutW           = 560;
+let _spbCropOutH           = 560;
+let _spbCropScale          = 1;
+let _spbCropMinScale       = 1;
+let _spbCropOffsetX        = 0;
+let _spbCropOffsetY        = 0;
+let _spbCropImgW           = 0;
+let _spbCropImgH           = 0;
+let _spbCropEventsAttached = false;
+
+function openSpbCropper(file, vpW, vpH, outW, outH, title, confirmLabel, callback) {
+    _spbCropFile     = file;
+    _spbCropCallback = callback;
+    _spbCropVpW      = vpW;
+    _spbCropVpH      = vpH;
+    _spbCropOutW     = outW;
+    _spbCropOutH     = outH;
+
+    const vp = document.getElementById('spbCropViewport');
+    vp.style.width  = vpW + 'px';
+    vp.style.height = vpH + 'px';
+
+    const titleEl = document.getElementById('spbCropTitle');
+    if (titleEl) titleEl.textContent = title || 'Move & Scale';
+    const confirmBtn = document.getElementById('spbCropConfirmBtn');
+    if (confirmBtn) confirmBtn.textContent = confirmLabel || 'Use Image';
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById('spbCropImage');
+        img.onload = () => {
+            _spbCropImgW     = img.naturalWidth;
+            _spbCropImgH     = img.naturalHeight;
+            _spbCropMinScale = Math.max(vpW / _spbCropImgW, vpH / _spbCropImgH);
+            _spbCropScale    = _spbCropMinScale;
+            _spbCropOffsetX  = 0;
+            _spbCropOffsetY  = 0;
+            _applySpbCropTransform();
+            document.getElementById('spbCropModal').style.display = 'flex';
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    if (!_spbCropEventsAttached) { _attachSpbCropEvents(); _spbCropEventsAttached = true; }
+}
+
+function _applySpbCropTransform() {
+    const maxX = Math.max(0, (_spbCropImgW * _spbCropScale - _spbCropVpW) / 2);
+    const maxY = Math.max(0, (_spbCropImgH * _spbCropScale - _spbCropVpH) / 2);
+    _spbCropOffsetX = Math.max(-maxX, Math.min(maxX, _spbCropOffsetX));
+    _spbCropOffsetY = Math.max(-maxY, Math.min(maxY, _spbCropOffsetY));
+    const img = document.getElementById('spbCropImage');
+    img.style.transform = `translate(calc(-50% + ${_spbCropOffsetX}px), calc(-50% + ${_spbCropOffsetY}px)) scale(${_spbCropScale})`;
+}
+
+function _attachSpbCropEvents() {
+    const vp = document.getElementById('spbCropViewport');
+    let lastTouches = null;
+
+    vp.addEventListener('touchstart', e => {
+        e.preventDefault();
+        lastTouches = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+    }, { passive: false });
+
+    vp.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const cur = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+        if (!lastTouches) { lastTouches = cur; return; }
+        if (cur.length === 1 && lastTouches.length >= 1) {
+            _spbCropOffsetX += cur[0].x - lastTouches[0].x;
+            _spbCropOffsetY += cur[0].y - lastTouches[0].y;
+        } else if (cur.length === 2) {
+            const prevDist = lastTouches.length === 2
+                ? Math.hypot(lastTouches[1].x - lastTouches[0].x, lastTouches[1].y - lastTouches[0].y) : null;
+            const currDist = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);
+            if (prevDist) _spbCropScale = Math.max(_spbCropMinScale, Math.min(_spbCropScale * (currDist / prevDist), _spbCropMinScale * 4));
+            _spbCropOffsetX += (cur[0].x + cur[1].x) / 2 - (lastTouches[0].x + lastTouches[1].x) / 2;
+            _spbCropOffsetY += (cur[0].y + cur[1].y) / 2 - (lastTouches[0].y + lastTouches[1].y) / 2;
+        }
+        lastTouches = cur;
+        _applySpbCropTransform();
+    }, { passive: false });
+
+    vp.addEventListener('touchend', () => { lastTouches = null; });
+
+    let dragging = false, dragX = 0, dragY = 0;
+    vp.addEventListener('mousedown', e => {
+        dragging = true; dragX = e.clientX; dragY = e.clientY;
+        vp.style.cursor = 'grabbing'; e.preventDefault();
+    });
+    window.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        _spbCropOffsetX += e.clientX - dragX; dragX = e.clientX;
+        _spbCropOffsetY += e.clientY - dragY; dragY = e.clientY;
+        _applySpbCropTransform();
+    });
+    window.addEventListener('mouseup', () => { dragging = false; vp.style.cursor = 'grab'; });
+    vp.addEventListener('wheel', e => {
+        e.preventDefault();
+        _spbCropScale = Math.max(_spbCropMinScale, Math.min(_spbCropScale * (e.deltaY < 0 ? 1.1 : 0.9), _spbCropMinScale * 4));
+        _applySpbCropTransform();
+    }, { passive: false });
+}
+
+function cancelSpbCrop() {
+    document.getElementById('spbCropModal').style.display = 'none';
+    _spbCropFile = null;
+    _spbCropCallback = null;
+}
+
+function confirmSpbCrop() {
+    if (!_spbCropFile || !_spbCropCallback) return;
+    document.getElementById('spbCropModal').style.display = 'none';
+
+    const img = new Image();
+    img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width  = _spbCropOutW;
+        canvas.height = _spbCropOutH;
+        const ctx     = canvas.getContext('2d');
+        const ratioX  = _spbCropOutW / _spbCropVpW;
+        const ratioY  = _spbCropOutH / _spbCropVpH;
+        const drawScale = _spbCropScale * ratioX;
+        const cx = _spbCropOutW / 2 + _spbCropOffsetX * ratioX;
+        const cy = _spbCropOutH / 2 + _spbCropOffsetY * ratioY;
+        ctx.drawImage(img,
+            cx - _spbCropImgW * drawScale / 2,
+            cy - _spbCropImgH * drawScale / 2,
+            _spbCropImgW * drawScale,
+            _spbCropImgH * drawScale);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        _spbCropCallback(dataUrl);
+        _spbCropFile = null;
+        _spbCropCallback = null;
+    };
+    img.src = URL.createObjectURL(_spbCropFile);
+}
+
 function removeBannerImage() {
     userSettings.businessBanner = '';
     saveUserSettings();
@@ -8706,47 +8850,27 @@ function _spbUpdatePreview() {
 function handleSpbLogo(input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 500 * 1024) { showToast('Logo too large — max 500 KB'); input.value = ''; return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX = 400; let w = img.width, h = img.height;
-            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            _spbLogoData = canvas.toDataURL('image/png', 0.9);
-            const prev = document.getElementById('spbLogoPreview');
-            if (prev) prev.innerHTML = `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">`;
-            _spbUpdatePreview();
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    input.value = '';
+    if (file.size > 2 * 1024 * 1024) { showToast('Logo too large — max 2 MB'); return; }
+    openSpbCropper(file, 240, 240, 480, 480, 'Position Logo', 'Use Logo', dataUrl => {
+        _spbLogoData = dataUrl;
+        const prev = document.getElementById('spbLogoPreview');
+        if (prev) prev.innerHTML = `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">`;
+        _spbUpdatePreview();
+    });
 }
 
 function handleSpbImage(input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 1024 * 1024) { showToast('Image too large — max 1 MB'); input.value = ''; return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX = 500; let w = img.width, h = img.height;
-            if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-            canvas.width = w; canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            _spbImageData = canvas.toDataURL('image/jpeg', 0.85);
-            const prev = document.getElementById('spbHeroPreview');
-            if (prev) prev.innerHTML = `<img src="${_spbImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`;
-            _spbUpdatePreview();
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    input.value = '';
+    if (file.size > 4 * 1024 * 1024) { showToast('Image too large — max 4 MB'); return; }
+    openSpbCropper(file, 360, 180, 720, 360, 'Position Image', 'Use Image', dataUrl => {
+        _spbImageData = dataUrl;
+        const prev = document.getElementById('spbHeroPreview');
+        if (prev) prev.innerHTML = `<img src="${_spbImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`;
+        _spbUpdatePreview();
+    });
 }
 
 async function submitSponsoredCard() {
