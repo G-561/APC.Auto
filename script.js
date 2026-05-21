@@ -1718,6 +1718,17 @@ async function loadUserListingsFromSupabase(userId) {
         renderMainGrid();
         renderMyParts();
         refreshInboxThreadHeader();
+
+        // If the storefront is open for this user, refresh it now that listings are loaded
+        const sfGrid   = document.getElementById('sellerPartsGrid');
+        const sfDrawer = document.getElementById('storefrontDrawer');
+        if (sfDrawer?.classList.contains('active') && sfGrid?.dataset.userId === userId) {
+            const sellerName = sfGrid.dataset.seller || '';
+            const parts = getAllParts().filter(p => p.sellerId === userId || p.seller === sellerName);
+            sfGrid.innerHTML = parts.map(p => buildCardHTML(p)).join('');
+            const listEl = document.getElementById('sfStatListings');
+            if (listEl) listEl.textContent = parts.length;
+        }
     } catch (e) { showToast('Load error: ' + (e.message || e)); }
 }
 
