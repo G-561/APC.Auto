@@ -1166,6 +1166,7 @@ function onMenuOpenSettings() {
 function renderSettingsDrawer() {
     renderProfile();
     renderBannerColourPicker();
+    if (isTradeOrPro()) renderSponsorManagement();
     const nameEl     = document.getElementById('settingsDisplayName');
     const proSection = document.getElementById('settingsProSection');
     if (nameEl) nameEl.value = currentUserName || '';
@@ -8576,27 +8577,20 @@ let _spbLogoData = '';
 let _spbImageData = '';
 let _spbExistingCard = null;
 
-function openSponsoredBuilder() {
-    _spbLogoData = '';
-    _spbImageData = '';
-    _spbExistingCard = null;
+function openSponsoredBuilder(card = null) {
+    _spbExistingCard = card || null;
+    _spbTemplate = card?.template || 'supplier';
+    _spbLogoData = card?.logo_data || '';
+    _spbImageData = card?.image_data || '';
     document.getElementById('spbBackdrop').style.display = '';
     const modal = document.getElementById('spbModal');
     modal.style.display = 'flex';
-    if (sb && currentUserId) {
-        sb.from('sponsored_cards').select('*').eq('user_id', currentUserId).single()
-            .then(({ data }) => {
-                _spbExistingCard = data || null;
-                if (data) {
-                    _spbTemplate = data.template || 'supplier';
-                    _spbLogoData = data.logo_data || '';
-                    _spbImageData = data.image_data || '';
-                }
-                _spbBuildForm();
-            });
-    } else {
-        _spbBuildForm();
-    }
+    _spbBuildForm();
+}
+
+async function openSponsoredBuilderById(id) {
+    const { data } = await sb.from('sponsored_cards').select('*').eq('id', id).single();
+    if (data) openSponsoredBuilder(data);
 }
 
 function closeSponsoredBuilder() {
@@ -8614,7 +8608,9 @@ function _spbBuildForm() {
     document.querySelectorAll('.spb-tpl-tab').forEach(t => t.classList.toggle('active', t.dataset.tpl === _spbTemplate));
     const e = _spbExistingCard || {};
     const tpl = _spbTemplate;
-    let html = '';
+    let html = `<div class="input-group"><label>Card Name <span style="font-weight:400;color:#aaa;font-size:11px;">for your reference only</span></label>
+        <input id="spbCardName" type="text" maxlength="50" placeholder="e.g. Main Supplier Card" value="${escapeHtml(e.card_name || '')}">
+    </div>`;
 
     if (tpl === 'supplier') {
         html = `
@@ -8768,12 +8764,14 @@ async function submitSponsoredCard() {
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
     const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
 
+    const cardName = document.getElementById('spbCardName')?.value.trim() || 'My Card';
     const payload = {
         user_id: currentUserId, template: _spbTemplate,
+        card_name: cardName,
         business_name: name, tagline, blurb, price,
         tags: tags.length ? tags : null,
         logo_data: _spbLogoData || null, image_data: _spbImageData || null,
-        button_label: btnLabel, button_url: btnUrl, active: false
+        button_label: btnLabel, button_url: btnUrl, is_active: true
     };
 
     let error;
@@ -8783,9 +8781,10 @@ async function submitSponsoredCard() {
         ({ error } = await sb.from('sponsored_cards').insert(payload));
     }
     if (error) { showToast('Error: ' + error.message); return; }
-    showToast('Submitted for review — we\'ll activate it shortly');
+    showToast(_spbExistingCard?.id ? 'Card updated' : 'Sponsored card created — now live!');
     closeSponsoredBuilder();
-    renderDashSponsoredStatus();
+    renderSponsorManagement();
+    loadSponsoredCards();
 }
 
 function buildSponsoredCardHTML(card) {
@@ -8847,10 +8846,60 @@ function buildSponsoredCardHTML(card) {
     }
 }
 
+async function renderSponsorManagement() {
+    const list   = document.getElementById('settingsSponsorList');
+    const addBtn = document.getElementById('settingsSponsorAddBtn');
+    const countEl = document.getElementById('settingsSponsorCount');
+    if (!list || !sb || !currentUserId) return;
+
+    const { data: cards } = await sb.from('sponsored_cards')
+        .select('id, card_name, template, is_active, created_at')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: true });
+
+    const cardList = cards || [];
+    if (countEl) countEl.textContent = `${cardList.length} / 10`;
+    if (addBtn)  addBtn.style.display = cardList.length >= 10 ? 'none' : '';
+
+    if (!cardList.length) {
+        list.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:12px 0;">No sponsored cards yet — create your first one below</div>`;
+        return;
+    }
+
+    const tplLabel = { supplier: 'Supplier', product: 'Product', partner: 'Partner' };
+    const tplColor = { supplier: '#f07020', product: '#1d4ed8', partner: '#16a34a' };
+
+    list.innerHTML = cardList.map(c => `
+        <div class="sponsor-mgmt-item">
+            <label class="settings-toggle"><input type="checkbox" ${c.is_active ? 'checked' : ''}
+                onchange="toggleSponsorCard('${c.id}', this.checked)"><span class="settings-toggle-track"></span></label>
+            <div class="sponsor-mgmt-name">${escapeHtml(c.card_name || 'Unnamed Card')}</div>
+            <span class="sponsor-mgmt-tpl" style="background:${tplColor[c.template] || '#888'}22;color:${tplColor[c.template] || '#888'};">${tplLabel[c.template] || c.template}</span>
+            <button class="sponsor-mgmt-edit" onclick="openSponsoredBuilderById('${c.id}')">Edit</button>
+            <button class="sponsor-mgmt-boost" onclick="showToast('Boost coming soon!')">⚡</button>
+            <button class="sponsor-mgmt-del" onclick="deleteSponsorCard('${c.id}')">✕</button>
+        </div>
+    `).join('');
+}
+
+async function toggleSponsorCard(id, value) {
+    const { error } = await sb.from('sponsored_cards').update({ is_active: value }).eq('id', id).eq('user_id', currentUserId);
+    if (error) { showToast('Error: ' + error.message); return; }
+    loadSponsoredCards();
+}
+
+async function deleteSponsorCard(id) {
+    if (!confirm('Delete this sponsored card?')) return;
+    const { error } = await sb.from('sponsored_cards').delete().eq('id', id).eq('user_id', currentUserId);
+    if (error) { showToast('Error: ' + error.message); return; }
+    renderSponsorManagement();
+    loadSponsoredCards();
+}
+
 async function loadSponsoredCards() {
     if (!sb) return;
     const { data } = await sb.from('sponsored_cards')
-        .select('*').eq('active', true)
+        .select('*').eq('is_active', true)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: true });
     if (!data?.length) return;

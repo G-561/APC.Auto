@@ -12,7 +12,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=55">
+    <link rel="stylesheet" href="style.css?v=56">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -1417,6 +1417,13 @@
                     </div>
                 </div>
 
+                <!-- SPONSOR CARDS — trade + pro -->
+                <div class="settings-section settings-pro-section">
+                    <div class="settings-pro-section-hdr">Sponsored Cards <span id="settingsSponsorCount" style="font-weight:400;color:#aaa;font-size:11px;"></span></div>
+                    <div id="settingsSponsorList"></div>
+                    <button class="settings-sponsor-add-btn" id="settingsSponsorAddBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
+                </div>
+
                 <div id="settingsProOnlyRows" style="display:none;">
                     <div class="settings-section settings-pro-section">
                         <div class="settings-pro-section-hdr">Search &amp; Discovery</div>
@@ -2460,7 +2467,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=81"></script>
+<script src="script.js?v=82"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

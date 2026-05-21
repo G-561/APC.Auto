@@ -2792,6 +2792,79 @@ header {
     padding: 10px 16px 4px;
     border-bottom: 1px solid #dbeafe;
 }
+.sponsor-mgmt-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.sponsor-mgmt-item:last-child { border-bottom: none; }
+.sponsor-mgmt-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sponsor-mgmt-tpl {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+.sponsor-mgmt-edit {
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: white;
+}
+.sponsor-mgmt-boost {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--apc-orange);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #ffe0c0;
+    background: #fff8f0;
+}
+.sponsor-mgmt-del {
+    font-size: 11px;
+    font-weight: 700;
+    color: #e53935;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #fecaca;
+    background: white;
+}
+.settings-sponsor-add-btn {
+    width: 100%;
+    padding: 10px;
+    background: none;
+    border: 1.5px dashed #ccc;
+    border-radius: 8px;
+    color: #888;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: border-color 0.15s, color 0.15s;
+}
+.settings-sponsor-add-btn:hover {
+    border-color: var(--apc-orange);
+    color: var(--apc-orange);
+}
 
 /* iOS-style toggle */
 .settings-toggle {
