@@ -3244,8 +3244,11 @@ function toggleDrawer(id, allowStack = false) {
 }
 
 function syncBackdrop() {
-    const anyOpen = document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
-        || (window.innerWidth < 900 && document.querySelectorAll('.drawer.active').length > 0);
+    const dashVisible = document.getElementById('dashboardView')?.style.display !== 'none';
+    const anyOpen = !dashVisible && (
+        document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
+        || (window.innerWidth < 900 && document.querySelectorAll('.drawer.active').length > 0)
+    );
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
