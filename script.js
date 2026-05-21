@@ -9017,7 +9017,10 @@ async function loadSponsoredCards() {
         .order('created_at', { ascending: true });
     if (!data?.length) return;
     const panel = document.getElementById('desktopRightPanel');
-    if (panel) panel.innerHTML = '<div class="drp-section-heading">Sponsored</div>' + data.map(buildSponsoredCardHTML).join('');
+    if (!panel) return;
+    panel.innerHTML = `<div id="drpScrollInner"><div class="drp-section-heading">Sponsored</div>${data.map(buildSponsoredCardHTML).join('')}</div>`;
+    // apply current scroll offset immediately in case page is already scrolled
+    document.getElementById('drpScrollInner').style.transform = `translateY(-${window.scrollY}px)`;
 }
 
 async function renderDashSponsoredStatus() {
@@ -9679,8 +9682,8 @@ window.addEventListener('scroll', () => {
 });
 
 window.addEventListener('scroll', () => {
-    const rp = document.getElementById('desktopRightPanel');
-    if (rp) rp.scrollTop = window.scrollY;
+    const inner = document.getElementById('drpScrollInner');
+    if (inner) inner.style.transform = `translateY(-${window.scrollY}px)`;
 }, { passive: true });
 
 // Update the active dot as the carousel is swiped/scrolled
