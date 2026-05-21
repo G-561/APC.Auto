@@ -9678,6 +9678,11 @@ window.addEventListener('scroll', () => {
     lastScrollY = window.scrollY;
 });
 
+window.addEventListener('scroll', () => {
+    const rp = document.getElementById('desktopRightPanel');
+    if (rp) rp.scrollTop = window.scrollY;
+}, { passive: true });
+
 // Update the active dot as the carousel is swiped/scrolled
 function updateCarouselActiveDot() {
     const carousel = document.getElementById('imageCarousel');
