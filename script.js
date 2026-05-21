@@ -3244,7 +3244,9 @@ function toggleDrawer(id, allowStack = false) {
 }
 
 function syncBackdrop() {
-    const anyOpen = document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
+    const dashVisible = document.getElementById('dashboardView')?.style.display !== 'none';
+    const anyOpen = dashVisible
+        || document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
         || (window.innerWidth < 900 && document.querySelectorAll('.drawer.active').length > 0);
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
@@ -10080,7 +10082,6 @@ function openDashboard() {
     if (fd) fd.style.setProperty('display', 'none', 'important');
     if (rp) rp.style.display = 'none';
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
-    syncBackdrop();
     const dv = document.getElementById('dashboardView');
     if (dv) {
         const topBar = document.getElementById('desktopTopBar');
@@ -10088,6 +10089,7 @@ function openDashboard() {
         dv.style.top     = ((topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0)) + 'px';
         dv.style.display = 'block';
     }
+    syncBackdrop();
     closeAccountMenu();
     closeAccountDropdown();
     renderDashboard();
@@ -10105,6 +10107,7 @@ function closeDashboard() {
         if (rp) rp.style.removeProperty('display');
     }
     updateHeaderOffset();
+    syncBackdrop();
 }
 
 function renderDemandWidget() {
