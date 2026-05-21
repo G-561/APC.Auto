@@ -6754,14 +6754,14 @@ function deleteVehicle(id) {
 }
 
 
-// Render the garage list — XSS-safe via createElement + textContent
+// Render the garage chips bar — XSS-safe via createElement + textContent
 function renderGarage() {
-    const list = document.getElementById('garageVehicleList');
-    if (!list) return;
-    list.innerHTML = '';
+    const bar = document.getElementById('garageChipsBar');
+    if (!bar) return;
+    bar.innerHTML = '';
 
     if (myVehicles.length === 0) {
-        list.innerHTML = `
+        bar.innerHTML = `
             <div class="garage-empty">
                 <div class="ico">🏠</div>
                 <div class="title">Your garage is empty</div>
@@ -6773,21 +6773,24 @@ function renderGarage() {
     }
 
     myVehicles.forEach(v => {
-        const meta = [v.year, v.variant, v.nickname].filter(Boolean).join(' · ');
-        const row = document.createElement('div');
-        row.className = 'garage-row';
-        row.dataset.vehicleId = v.id;
-        row.onclick = () => selectGarageVehicle(v.id);
-        row.innerHTML = `
-            <div class="garage-row-info">
-                <div class="garage-row-name">${v.make} ${v.model}</div>
-                ${meta ? `<div class="garage-row-meta">${meta}</div>` : ''}
-            </div>
-            <div class="garage-row-actions">
-                <button class="garage-row-edit" onclick="event.stopPropagation(); openEditVehicleDrawer(${v.id})">Edit</button>
-                <button class="garage-row-delete" onclick="event.stopPropagation(); deleteVehicle(${v.id})">×</button>
-            </div>`;
-        list.appendChild(row);
+        const chip = document.createElement('button');
+        chip.className = 'garage-chip';
+        chip.dataset.vehicleId = v.id;
+        chip.onclick = () => selectGarageVehicle(v.id);
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'garage-chip-name';
+        nameEl.textContent = v.nickname || `${v.make} ${v.model}`;
+        chip.appendChild(nameEl);
+
+        if (v.year) {
+            const yearEl = document.createElement('span');
+            yearEl.className = 'garage-chip-year';
+            yearEl.textContent = v.year;
+            chip.appendChild(yearEl);
+        }
+
+        bar.appendChild(chip);
     });
 
     if (myVehicles[0]) selectGarageVehicle(myVehicles[0].id);
@@ -6796,8 +6799,8 @@ function renderGarage() {
 function selectGarageVehicle(vehicleId) {
     currentVehicleId  = vehicleId;
     currentVehicleTab = 'wanted';
-    document.querySelectorAll('#garageVehicleList .garage-row').forEach(r => {
-        r.classList.toggle('garage-row-selected', Number(r.dataset.vehicleId) === vehicleId);
+    document.querySelectorAll('#garageChipsBar .garage-chip').forEach(c => {
+        c.classList.toggle('active', Number(c.dataset.vehicleId) === vehicleId);
     });
     renderGarageInlineDetail();
 }
@@ -6809,6 +6812,32 @@ function renderGarageInlineDetail() {
     if (!v) { detail.style.display = 'none'; return; }
 
     detail.style.display = 'block';
+
+    const header = document.getElementById('garageVehicleHeader');
+    if (header) {
+        header.innerHTML = '';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'garage-vh-name';
+        nameEl.textContent = [v.make, v.model, v.year, v.variant].filter(Boolean).join(' · ');
+
+        const actions = document.createElement('div');
+        actions.className = 'garage-vh-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'garage-vh-edit';
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => openEditVehicleDrawer(v.id);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'garage-vh-delete';
+        delBtn.textContent = '×';
+        delBtn.onclick = () => deleteVehicle(v.id);
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        header.appendChild(nameEl);
+        header.appendChild(actions);
+    }
 
     document.querySelectorAll('#garageInlineDetail .seg').forEach(s => {
         s.classList.toggle('active', s.dataset.gtab === 'wanted');
