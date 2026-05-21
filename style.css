@@ -4492,10 +4492,18 @@ header {
         border-right: 1px solid #e8e8e8;
     }
 
-    /* Wide drawers: full viewport width like the dashboard — settings, workshop, workshop detail */
+    /* Wide drawers: full viewport width like the dashboard — square corners, no shadow */
     #settingsDrawer,
     #workshopDrawer,
-    #workshopDetailDrawer {
+    #workshopDetailDrawer,
+    #garageDrawer,
+    #myPartsDrawer,
+    #wantedListDrawer,
+    #savedPartsDrawer,
+    #recentlyViewedDrawer,
+    #inboxDrawer,
+    #chatDrawer,
+    #messageDetailDrawer {
         left: max(0px, calc(50vw - 700px)) !important;
         right: max(0px, calc(50vw - 700px)) !important;
         width: auto !important;
@@ -4508,15 +4516,9 @@ header {
     /* Detail overlay always sits above other open drawers (e.g. garage) */
     #detailOverlay { z-index: 2050; }
 
-    /* Card-style drawers: rounded corners + shadow, stay as full-column drawers */
+    /* Card-style drawers: rounded corners + shadow */
     /* top is set dynamically by updateHeaderOffset() — no hardcoded value here */
     #detailOverlay,
-    #garageDrawer,
-    #myPartsDrawer,
-    #wantedListDrawer,
-    #savedPartsDrawer,
-    #recentlyViewedDrawer,
-    #inboxDrawer,
     #vehicleMakesDrawer,
     #helpDrawer,
     #sellOverlay {
