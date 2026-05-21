@@ -3142,6 +3142,14 @@ header {
     font-family: inherit;
     letter-spacing: 0.3px;
 }
+.sun-promo-card--pro {
+    background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 60%, #bfdbfe 100%);
+    border-color: #93c5fd;
+}
+.sun-promo-card--pro .sun-badge { background: #1d4ed8; }
+.sun-promo-card--pro .sun-features li { color: #1e3a5f; }
+.sun-promo-card--pro .sun-features li::before { color: #1d4ed8; }
+.sun-promo-card--pro .sun-promo-btn { background: #1d4ed8; }
 
 /* Settings profile strip */
 .spc-card {
