@@ -3985,164 +3985,107 @@ header {
     right: 0;
     width: 220px;
     overflow-y: auto;
-    padding: 10px 10px 20px;
+    padding: 0 10px 20px;
     box-sizing: border-box;
     background: #f4f4f4;
 }
 
-/* Sidebar cards — base */
-.drp-card {
-    background: white;
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    margin-bottom: 12px;
-    overflow: hidden;
-}
-
-/* Sponsored / Featured / Partner tag */
-.drp-sponsored-tag {
-    display: inline-block;
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: white;
-    background: var(--apc-orange);
-    padding: 4px 10px;
-    border-radius: 14px 0 8px 0;
-}
-.drp-sponsored-tag--subtle {
-    color: #aaa;
-    background: #f0f0f0;
-    border-radius: 6px;
-    padding: 3px 7px;
-}
-
-/* Featured Supplier card */
-.drp-supplier-card { padding-bottom: 14px; }
-.drp-supplier-img-ph {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--apc-orange), #e05000);
-}
-.drp-supplier-img-ph span {
-    font-size: 22px;
-    font-weight: 900;
-    color: white;
-    letter-spacing: 1px;
-}
-.drp-supplier-name {
-    font-size: 13px;
-    font-weight: 800;
-    color: #222;
-    padding: 10px 12px 3px;
-    line-height: 1.2;
-}
-.drp-supplier-tagline {
-    font-size: 10px;
-    color: #888;
-    padding: 0 12px 10px;
-    line-height: 1.4;
-}
-.drp-supplier-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 0 12px 10px;
-}
-.drp-tag {
-    font-size: 9px;
-    font-weight: 700;
-    color: var(--apc-orange);
-    background: #fff3e8;
-    border: 1px solid #ffd5a8;
-    border-radius: 20px;
-    padding: 2px 8px;
-}
-.drp-supplier-btn {
-    display: block;
-    width: calc(100% - 24px);
-    margin: 0 12px;
-    padding: 8px 0;
-    background: var(--apc-orange);
-    color: white;
-    border: none;
-    border-radius: 8px;
+/* Sponsored section heading — aligns with grid-heading */
+.drp-section-heading {
     font-size: 11px;
     font-weight: 800;
-    cursor: pointer;
+    color: #aaa;
     letter-spacing: 0.3px;
+    text-transform: uppercase;
+    padding: 12px 2px 6px;
 }
 
-/* Individual sponsored part card */
-.drp-sp-card {
-    cursor: pointer;
+/* Unified sponsored card — matches desktop .item-card style */
+.drp-card {
+    height: 240px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 10px;
     overflow: hidden;
-    padding: 0;
-    transition: box-shadow 0.15s, transform 0.15s;
-}
-.drp-sp-card:hover {
-    box-shadow: 0 4px 18px rgba(0,0,0,0.13);
-    transform: translateY(-1px);
-}
-.drp-sp-img-wrap {
     position: relative;
-    overflow: hidden;
-    border-radius: 14px 14px 0 0;
+    cursor: pointer;
+    background: #eee;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.drp-sp-img {
+.drp-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--apc-orange);
+    box-shadow: 0 6px 18px rgba(247,148,29,0.15);
+}
+.drp-card-img {
     width: 100%;
-    height: 120px;
+    height: 100%;
     object-fit: cover;
     display: block;
-    background: #eee;
 }
-.drp-sp-img--contain {
+.drp-card-img--contain {
     object-fit: contain;
     background: #f8f8f8;
 }
-.drp-sp-img-wrap .drp-sponsored-tag {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-.drp-sp-info { padding: 8px 10px 12px; }
-.drp-sp-price { font-size: 15px; font-weight: 900; color: var(--apc-blue-bg); margin-bottom: 3px; }
-.drp-sp-title {
-    font-size: 11px; font-weight: 700; color: #222; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    margin-bottom: 3px;
-}
-.drp-sp-seller { font-size: 9px; color: #aaa; }
-
-/* Partner / affiliate card */
-.drp-partner-img-ph {
+.drp-card-ph {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #2d3a8c, #1a1a2e);
 }
-.drp-partner-img-ph span {
-    font-size: 22px;
+.drp-card-ph span {
+    font-size: 28px;
     font-weight: 900;
     color: white;
     letter-spacing: 1px;
 }
-.drp-partner-card { padding: 10px 12px 14px; }
-.drp-partner-name { font-size: 12px; font-weight: 800; color: #222; margin-bottom: 4px; }
-.drp-partner-desc { font-size: 10px; color: #888; line-height: 1.4; margin-bottom: 10px; }
-.drp-partner-btn {
-    display: block;
-    width: 100%;
-    padding: 7px 0;
-    background: #f0f0f0;
-    color: #444;
-    border: none;
-    border-radius: 8px;
-    font-size: 11px;
+.drp-type-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 9px;
     font-weight: 800;
-    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    pointer-events: none;
+}
+.drp-type-badge--featured  { background: var(--apc-orange); color: white; }
+.drp-type-badge--sponsored { background: rgba(0,0,0,0.45); color: white; }
+.drp-type-badge--partner   { background: rgba(30,40,130,0.8); color: white; }
+.drp-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(6px);
+    padding: 8px 10px 10px;
+    pointer-events: none;
+}
+.drp-info-price {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--apc-blue-bg);
+    margin-bottom: 2px;
+}
+.drp-info-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+.drp-info-sub {
+    font-size: 10px;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
 }
 
 /* DETAIL OVERLAY — desktop image column (hidden on mobile) */
@@ -4156,7 +4099,7 @@ header {
 @media (min-width: 900px) {
     /* Show utility bar, right panel. Hide nav sidebar and bottom nav */
     .desktop-top-bar { display: flex; }
-    .desktop-right-panel { display: block; }
+    .desktop-right-panel { display: flex; flex-direction: column; }
     .desktop-sidebar { display: none !important; }
     .bottom-nav { display: none !important; }
 

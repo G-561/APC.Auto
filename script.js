@@ -8913,64 +8913,50 @@ async function submitSponsoredCard() {
 }
 
 function buildSponsoredCardHTML(card) {
-    const tpl      = card.template;
-    const name     = escapeHtml(card.business_name || '');
-    const tagline  = escapeHtml(card.tagline || '');
-    const blurb    = escapeHtml(card.blurb || '');
-    const price    = escapeHtml(card.price || '');
-    const btnLabel = escapeHtml(card.button_label || 'Visit →');
-    const btnUrl   = escapeHtml(card.button_url || '#');
-    const tags     = (card.tags || []).slice(0, 3);
-    const logo     = card.logo_data || '';
-    const image    = card.image_data || '';
+    const tpl  = card.template;
+    const name = escapeHtml(card.business_name || '');
+    const logo = card.logo_data  || '';
+    const image = card.image_data || '';
 
-    const userId  = card.user_id || '';
     const safeUrl = /^https:\/\//i.test(card.button_url || '') ? escapeHtml(card.button_url) : '#';
+    const userId  = card.user_id || '';
     const openCmd = userId ? `openStorefrontByUserId('${userId}')` : `window.open('${safeUrl}','_blank')`;
 
+    let imgHtml, badgeClass, badgeLabel, sub;
+
     if (tpl === 'supplier') {
-        const logoHtml = logo
-            ? `<img src="${logo}" class="drp-sp-img drp-sp-img--contain" alt="">`
-            : `<div class="drp-sp-img drp-supplier-img-ph"><span>${name.slice(0, 3).toUpperCase()}</span></div>`;
-        const tagsHtml = tags.map(t => `<span class="drp-tag">${escapeHtml(t)}</span>`).join('');
-        return `<div class="drp-card drp-supplier-card">
-            <div class="drp-sp-img-wrap">${logoHtml}
-                <div class="drp-sponsored-tag">Featured</div>
-            </div>
-            <div class="drp-supplier-name">${name}</div>
-            ${tagline ? `<div class="drp-supplier-tagline">${tagline}</div>` : ''}
-            ${tagsHtml ? `<div class="drp-supplier-tags">${tagsHtml}</div>` : ''}
-            <button class="drp-supplier-btn" onclick="${openCmd}">View Store →</button>
-        </div>`;
+        imgHtml    = logo
+            ? `<img src="${logo}" class="drp-card-img drp-card-img--contain" alt="">`
+            : `<div class="drp-card-ph" style="background:linear-gradient(135deg,var(--apc-orange),#e05000)"><span>${name.slice(0, 3).toUpperCase()}</span></div>`;
+        badgeClass = 'drp-type-badge--featured';
+        badgeLabel = 'Featured';
+        sub        = escapeHtml(card.tagline || '');
     } else if (tpl === 'product') {
-        const imgHtml = image
-            ? `<img src="${image}" class="drp-sp-img" alt="">`
-            : `<div class="drp-sp-img" style="background:#eee;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:11px;">No image</div>`;
-        return `<div class="drp-card drp-sp-card" onclick="${openCmd}" style="cursor:pointer;">
-            <div class="drp-sp-img-wrap">${imgHtml}
-                <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Sponsored</div>
-            </div>
-            <div class="drp-sp-info">
-                ${price ? `<div class="drp-sp-price">${price}</div>` : ''}
-                <div class="drp-sp-title">${name}</div>
-                ${tagline ? `<div class="drp-sp-seller">${tagline}</div>` : ''}
-            </div>
-        </div>`;
+        imgHtml    = image
+            ? `<img src="${image}" class="drp-card-img" alt="">`
+            : `<div class="drp-card-ph" style="background:#ddd"><span style="color:#999;font-size:12px;">No image</span></div>`;
+        badgeClass = 'drp-type-badge--sponsored';
+        badgeLabel = 'Sponsored';
+        sub        = escapeHtml(card.tagline || '');
     } else {
-        const heroHtml = logo
-            ? `<img src="${logo}" class="drp-sp-img drp-sp-img--contain" alt="">`
-            : `<div class="drp-sp-img drp-partner-img-ph"><span>${name.slice(0, 2).toUpperCase()}</span></div>`;
-        return `<div class="drp-card">
-            <div class="drp-sp-img-wrap">${heroHtml}
-                <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Partner</div>
-            </div>
-            <div class="drp-partner-card">
-                <div class="drp-partner-name">${name}</div>
-                ${blurb ? `<div class="drp-partner-desc">${blurb}</div>` : ''}
-                <button class="drp-partner-btn" onclick="${openCmd}">View Store →</button>
-            </div>
-        </div>`;
+        imgHtml    = logo
+            ? `<img src="${logo}" class="drp-card-img drp-card-img--contain" alt="">`
+            : `<div class="drp-card-ph" style="background:linear-gradient(135deg,#2d3a8c,#1a1a2e)"><span>${name.slice(0, 2).toUpperCase()}</span></div>`;
+        badgeClass = 'drp-type-badge--partner';
+        badgeLabel = 'Partner';
+        sub        = escapeHtml(card.blurb || '');
     }
+
+    const price = escapeHtml(card.price || '');
+    return `<div class="drp-card" onclick="${openCmd}">
+        ${imgHtml}
+        <span class="drp-type-badge ${badgeClass}">${badgeLabel}</span>
+        <div class="drp-info">
+            ${price ? `<div class="drp-info-price">${price}</div>` : ''}
+            <div class="drp-info-name">${name}</div>
+            ${sub ? `<div class="drp-info-sub">${sub}</div>` : ''}
+        </div>
+    </div>`;
 }
 
 async function renderSponsorManagement() {
@@ -9031,7 +9017,7 @@ async function loadSponsoredCards() {
         .order('created_at', { ascending: true });
     if (!data?.length) return;
     const panel = document.getElementById('desktopRightPanel');
-    if (panel) panel.innerHTML = data.map(buildSponsoredCardHTML).join('');
+    if (panel) panel.innerHTML = '<div class="drp-section-heading">Sponsored</div>' + data.map(buildSponsoredCardHTML).join('');
 }
 
 async function renderDashSponsoredStatus() {
