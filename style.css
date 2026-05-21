@@ -4020,27 +4020,23 @@ header {
 
 /* Featured Supplier card */
 .drp-supplier-card { padding-bottom: 14px; }
-.drp-supplier-logo {
-    margin: 10px 12px 8px;
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--apc-orange), #e05000);
+.drp-supplier-img-ph {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: linear-gradient(135deg, var(--apc-orange), #e05000);
 }
-.drp-supplier-logo-placeholder {
-    font-size: 12px;
+.drp-supplier-img-ph span {
+    font-size: 22px;
     font-weight: 900;
     color: white;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 .drp-supplier-name {
     font-size: 13px;
     font-weight: 800;
     color: #222;
-    padding: 0 12px 3px;
+    padding: 10px 12px 3px;
     line-height: 1.2;
 }
 .drp-supplier-tagline {
@@ -4102,6 +4098,10 @@ header {
     display: block;
     background: #eee;
 }
+.drp-sp-img--contain {
+    object-fit: contain;
+    background: #f8f8f8;
+}
 .drp-sp-img-wrap .drp-sponsored-tag {
     position: absolute;
     top: 0;
@@ -4117,8 +4117,19 @@ header {
 .drp-sp-seller { font-size: 9px; color: #aaa; }
 
 /* Partner / affiliate card */
+.drp-partner-img-ph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #2d3a8c, #1a1a2e);
+}
+.drp-partner-img-ph span {
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 1px;
+}
 .drp-partner-card { padding: 10px 12px 14px; }
-.drp-partner-logo { font-size: 24px; margin-bottom: 6px; }
 .drp-partner-name { font-size: 12px; font-weight: 800; color: #222; margin-bottom: 4px; }
 .drp-partner-desc { font-size: 10px; color: #888; line-height: 1.4; margin-bottom: 10px; }
 .drp-partner-btn {

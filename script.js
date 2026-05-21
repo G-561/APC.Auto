@@ -8806,12 +8806,13 @@ function buildSponsoredCardHTML(card) {
 
     if (tpl === 'supplier') {
         const logoHtml = logo
-            ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" alt="">`
-            : `<div class="drp-supplier-logo-placeholder">${name.slice(0, 3).toUpperCase()}</div>`;
+            ? `<img src="${logo}" class="drp-sp-img drp-sp-img--contain" alt="">`
+            : `<div class="drp-sp-img drp-supplier-img-ph"><span>${name.slice(0, 3).toUpperCase()}</span></div>`;
         const tagsHtml = tags.map(t => `<span class="drp-tag">${escapeHtml(t)}</span>`).join('');
         return `<div class="drp-card drp-supplier-card">
-            <div class="drp-sponsored-tag">Featured</div>
-            <div class="drp-supplier-logo">${logoHtml}</div>
+            <div class="drp-sp-img-wrap">${logoHtml}
+                <div class="drp-sponsored-tag">Featured</div>
+            </div>
             <div class="drp-supplier-name">${name}</div>
             ${tagline ? `<div class="drp-supplier-tagline">${tagline}</div>` : ''}
             ${tagsHtml ? `<div class="drp-supplier-tags">${tagsHtml}</div>` : ''}
@@ -8832,13 +8833,14 @@ function buildSponsoredCardHTML(card) {
             </div>
         </div>`;
     } else {
-        const logoHtml = logo
-            ? `<img src="${logo}" style="max-width:44px;max-height:44px;object-fit:contain;border-radius:6px;margin-bottom:6px;" alt="">`
-            : '';
+        const heroHtml = logo
+            ? `<img src="${logo}" class="drp-sp-img drp-sp-img--contain" alt="">`
+            : `<div class="drp-sp-img drp-partner-img-ph"><span>${name.slice(0, 2).toUpperCase()}</span></div>`;
         return `<div class="drp-card">
-            <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Partner</div>
+            <div class="drp-sp-img-wrap">${heroHtml}
+                <div class="drp-sponsored-tag drp-sponsored-tag--subtle">Partner</div>
+            </div>
             <div class="drp-partner-card">
-                ${logoHtml}
                 <div class="drp-partner-name">${name}</div>
                 ${blurb ? `<div class="drp-partner-desc">${blurb}</div>` : ''}
                 <button class="drp-partner-btn" onclick="${openCmd}">View Store →</button>
