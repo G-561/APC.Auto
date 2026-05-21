@@ -8585,6 +8585,8 @@ function openSponsoredBuilder(card = null) {
     document.getElementById('spbBackdrop').style.display = '';
     const modal = document.getElementById('spbModal');
     modal.style.display = 'flex';
+    const nameEl = document.getElementById('spbCardName');
+    if (nameEl) nameEl.value = card?.card_name || '';
     _spbBuildForm();
 }
 
@@ -8608,9 +8610,7 @@ function _spbBuildForm() {
     document.querySelectorAll('.spb-tpl-tab').forEach(t => t.classList.toggle('active', t.dataset.tpl === _spbTemplate));
     const e = _spbExistingCard || {};
     const tpl = _spbTemplate;
-    let html = `<div class="input-group"><label>Card Name <span style="font-weight:400;color:#aaa;font-size:11px;">for your reference only</span></label>
-        <input id="spbCardName" type="text" maxlength="50" placeholder="e.g. Main Supplier Card" value="${escapeHtml(e.card_name || '')}">
-    </div>`;
+    let html = '';
 
     if (tpl === 'supplier') {
         html = `

@@ -1937,6 +1937,10 @@
         <span class="spb-title">Sponsored Card Builder</span>
         <button class="spb-close" onclick="closeSponsoredBuilder()">×</button>
     </div>
+    <div style="padding:12px 20px 0; border-bottom:1px solid #f0f0f0;">
+        <input id="spbCardName" type="text" maxlength="50" placeholder="Card name — e.g. Summer Promo, Main Services Card…"
+            style="width:100%; padding:9px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-weight:700; outline:none; box-sizing:border-box; margin-bottom:12px;">
+    </div>
     <div style="overflow-y:auto; flex:1; min-height:0;">
         <div class="spb-tabs">
             <button class="spb-tpl-tab active" data-tpl="supplier" onclick="selectSponsoredTemplate('supplier')">Services</button>
@@ -2467,7 +2471,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=83"></script>
+<script src="script.js?v=84"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
