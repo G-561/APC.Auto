@@ -1939,14 +1939,14 @@
     </div>
     <div style="overflow-y:auto; flex:1; min-height:0;">
         <div class="spb-tabs">
-            <button class="spb-tpl-tab active" data-tpl="supplier" onclick="selectSponsoredTemplate('supplier')">Supplier</button>
-            <button class="spb-tpl-tab" data-tpl="product" onclick="selectSponsoredTemplate('product')">Product</button>
+            <button class="spb-tpl-tab active" data-tpl="supplier" onclick="selectSponsoredTemplate('supplier')">Services</button>
+            <button class="spb-tpl-tab" data-tpl="product" onclick="selectSponsoredTemplate('product')">Products</button>
             <button class="spb-tpl-tab" data-tpl="partner" onclick="selectSponsoredTemplate('partner')">Partner</button>
         </div>
         <div class="spb-body">
             <div class="spb-form-col">
                 <div id="spbFormFields"></div>
-                <button class="btn-full-action" style="margin-top:8px;" onclick="submitSponsoredCard()">Submit for Review</button>
+                <button class="btn-full-action" style="margin-top:8px;" onclick="submitSponsoredCard()">Submit</button>
             </div>
             <div class="spb-preview-col">
                 <div class="spb-preview-label">Live Preview</div>
@@ -2467,7 +2467,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=82"></script>
+<script src="script.js?v=83"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

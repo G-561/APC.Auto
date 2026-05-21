@@ -8764,7 +8764,8 @@ async function submitSponsoredCard() {
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
     const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
 
-    const cardName = document.getElementById('spbCardName')?.value.trim() || 'My Card';
+    const cardName = document.getElementById('spbCardName')?.value.trim();
+    if (!cardName) { showToast('Please give your card a name'); return; }
     const payload = {
         user_id: currentUserId, template: _spbTemplate,
         card_name: cardName,
@@ -8809,7 +8810,7 @@ function buildSponsoredCardHTML(card) {
             : `<div class="drp-supplier-logo-placeholder">${name.slice(0, 3).toUpperCase()}</div>`;
         const tagsHtml = tags.map(t => `<span class="drp-tag">${escapeHtml(t)}</span>`).join('');
         return `<div class="drp-card drp-supplier-card">
-            <div class="drp-sponsored-tag">Featured Supplier</div>
+            <div class="drp-sponsored-tag">Featured</div>
             <div class="drp-supplier-logo">${logoHtml}</div>
             <div class="drp-supplier-name">${name}</div>
             ${tagline ? `<div class="drp-supplier-tagline">${tagline}</div>` : ''}
@@ -8866,7 +8867,7 @@ async function renderSponsorManagement() {
         return;
     }
 
-    const tplLabel = { supplier: 'Supplier', product: 'Product', partner: 'Partner' };
+    const tplLabel = { supplier: 'Services', product: 'Products', partner: 'Partner' };
     const tplColor = { supplier: '#f07020', product: '#1d4ed8', partner: '#16a34a' };
 
     list.innerHTML = cardList.map(c => `
