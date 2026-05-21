@@ -3449,6 +3449,7 @@ function applyFiltersAndRender() {
     getFilterValues();
     renderMainGrid();
     updateFilterChip();
+    refreshSponsoredCards();
     if (window.innerWidth < 900) toggleDrawer('filterDrawer');
 }
 
@@ -3462,6 +3463,7 @@ function applyFiltersLive() {
     getFilterValues();
     renderMainGrid();
     updateFilterChip();
+    refreshSponsoredCards();
 }
 
 function clearAllFilters() {
@@ -8716,6 +8718,8 @@ function submitHelpContact() {
     showToast('Opening your email app…');
 }
 // ===== SPONSORED CARD BUILDER =====
+let _sponsoredCardsData = [];
+
 let _spbTemplate = 'supplier';
 let _spbLogoData = '';
 let _spbImageData = '';
@@ -8800,6 +8804,9 @@ function _spbBuildForm() {
             </div>
             <div class="input-group"><label>Link URL <span style="color:#e53935;">*</span></label>
                 <input id="spbBtnUrl" type="url" placeholder="https://..." value="${escapeHtml(e.button_url || '')}">
+            </div>
+            <div class="input-group"><label>Tags <span style="font-weight:400;color:#aaa;">comma-separated — used for targeting</span></label>
+                <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Brakes, Toyota, Suspension" value="${escapeHtml((e.tags || []).join(', '))}">
             </div>`;
     } else {
         html = `
@@ -8820,6 +8827,9 @@ function _spbBuildForm() {
             </div>
             <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
                 <input id="spbBtnUrl" type="url" placeholder="https://..." value="${escapeHtml(e.button_url || '')}">
+            </div>
+            <div class="input-group"><label>Tags <span style="font-weight:400;color:#aaa;">comma-separated — used for targeting</span></label>
+                <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Insurance, All Makes, Delivery" value="${escapeHtml((e.tags || []).join(', '))}">
             </div>`;
     }
 
@@ -9015,12 +9025,44 @@ async function loadSponsoredCards() {
         .select('*').eq('is_active', true)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: true });
-    if (!data?.length) return;
+    _sponsoredCardsData = data || [];
+    refreshSponsoredCards();
+}
+
+function scoreCardByContext(card, filters) {
+    const tags = (card.tags || []).map(t => t.toLowerCase().trim()).filter(Boolean);
+    if (!tags.length) return 0;
+
+    const terms = [
+        ...(filters.search || '').toLowerCase().split(/\s+/),
+        filters.make   || '',
+        filters.model  || '',
+        filters.category !== 'all' ? (filters.category || '') : '',
+    ].map(t => t.trim()).filter(Boolean);
+
+    if (!terms.length) return 0;
+
+    let score = 0;
+    for (const term of terms) {
+        if (tags.some(tag => tag.includes(term) || term.includes(tag))) score++;
+    }
+    return score;
+}
+
+function refreshSponsoredCards() {
+    if (!_sponsoredCardsData.length) return;
     const panel = document.getElementById('desktopRightPanel');
     if (!panel) return;
-    panel.innerHTML = `<div id="drpScrollInner"><div class="drp-section-heading">Sponsored</div>${data.map(buildSponsoredCardHTML).join('')}</div>`;
-    // apply current scroll offset immediately in case page is already scrolled
-    document.getElementById('drpScrollInner').style.transform = `translateY(-${window.scrollY}px)`;
+
+    const sorted = [..._sponsoredCardsData].sort((a, b) => {
+        const scoreDiff = scoreCardByContext(b, activeFilters) - scoreCardByContext(a, activeFilters);
+        if (scoreDiff !== 0) return scoreDiff;
+        return (b.priority || 0) - (a.priority || 0);
+    });
+
+    panel.innerHTML = `<div id="drpScrollInner"><div class="drp-section-heading">Sponsored</div>${sorted.map(buildSponsoredCardHTML).join('')}</div>`;
+    const inner = document.getElementById('drpScrollInner');
+    if (inner) inner.style.transform = `translateY(-${window.scrollY}px)`;
 }
 
 async function renderDashSponsoredStatus() {
@@ -10464,6 +10506,7 @@ document.addEventListener('DOMContentLoaded', () => {
             activeFilters.search = searchInput.value.trim();
             renderMainGrid();
             updateFilterChip();
+            refreshSponsoredCards();
         }, 300));
     }
 
