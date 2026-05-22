@@ -4009,6 +4009,131 @@ function setListingStatus(id, status) {
     syncListingStatusToSupabase(part, status);
 }
 
+function showBuyerFeedbackDialog(listingId) {
+    const listing = userListings.find(p => p.id === listingId);
+    if (!listing) return;
+
+    const enquirers = [...new Set(
+        conversations
+            .filter(c => c.partId === listing.supabaseId || c.partId === listingId)
+            .map(c => c.with)
+            .filter(Boolean)
+    )];
+
+    const existing = document.getElementById('apcFeedbackDialog');
+    if (existing) existing.remove();
+
+    let selectedBuyer = enquirers.length ? enquirers[0] : null;
+    let isOther = enquirers.length === 0;
+    let selectedStars = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'apcFeedbackDialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.innerHTML = `<div style="font-weight:800;font-size:17px;color:#111;margin-bottom:4px;">Who bought it?</div>
+        <div style="font-size:12px;color:#888;margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</div>`;
+    box.appendChild(hdr);
+
+    // Buyer chips
+    const pickerWrap = document.createElement('div');
+    pickerWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;';
+
+    const otherInput = document.createElement('input');
+    otherInput.type = 'text';
+    otherInput.placeholder = 'Enter name…';
+    otherInput.style.cssText = 'width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;margin-top:8px;display:' + (isOther ? '' : 'none');
+
+    const makeChip = (label, isSelected, onClick) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = label;
+        btn.style.cssText = `padding:7px 14px;border-radius:20px;border:1.5px solid ${isSelected ? 'var(--apc-orange)' : '#ddd'};background:${isSelected ? '#fff5ee' : '#fff'};color:${isSelected ? 'var(--apc-orange)' : '#555'};font-weight:700;font-size:12px;cursor:pointer;transition:all 0.15s;font-family:inherit;`;
+        btn.onclick = () => {
+            onClick();
+            pickerWrap.querySelectorAll('button').forEach(b => {
+                b.style.borderColor = '#ddd'; b.style.background = '#fff'; b.style.color = '#555';
+            });
+            btn.style.borderColor = 'var(--apc-orange)';
+            btn.style.background  = '#fff5ee';
+            btn.style.color       = 'var(--apc-orange)';
+        };
+        return btn;
+    };
+
+    enquirers.forEach(name => {
+        const chip = makeChip(name, name === selectedBuyer, () => {
+            selectedBuyer = name; isOther = false; otherInput.style.display = 'none';
+        });
+        pickerWrap.appendChild(chip);
+    });
+
+    const otherChip = makeChip('Other…', isOther, () => {
+        selectedBuyer = null; isOther = true; otherInput.style.display = '';
+        otherInput.focus();
+    });
+    pickerWrap.appendChild(otherChip);
+    pickerWrap.appendChild(otherInput);
+    box.appendChild(pickerWrap);
+
+    // Stars
+    const starsSection = document.createElement('div');
+    starsSection.style.cssText = 'margin-bottom:22px;';
+    starsSection.innerHTML = '<div style="font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;">RATE THE BUYER (optional)</div>';
+    const starsRow = document.createElement('div');
+    starsRow.style.cssText = 'display:flex;gap:6px;';
+    const renderStars = (n) => {
+        selectedStars = n;
+        starsRow.querySelectorAll('span').forEach((s, i) => {
+            s.style.color = i < n ? '#f59e0b' : '#ddd';
+        });
+    };
+    for (let i = 1; i <= 5; i++) {
+        const s = document.createElement('span');
+        s.textContent = '★';
+        s.style.cssText = `font-size:28px;cursor:pointer;color:#ddd;transition:color 0.1s;`;
+        s.onclick = () => renderStars(i);
+        starsRow.appendChild(s);
+    }
+    starsSection.appendChild(starsRow);
+    box.appendChild(starsSection);
+
+    // Buttons
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = 'Skip';
+    skipBtn.style.cssText = 'flex:1;padding:11px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:#555;';
+    skipBtn.onclick = () => overlay.remove();
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.style.cssText = 'flex:2;padding:11px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;';
+    saveBtn.onclick = () => {
+        const buyerName = isOther ? (otherInput.value.trim() || null) : selectedBuyer;
+        listing.buyerRating = { stars: selectedStars || null, buyerName: buyerName || null };
+        listing.soldDate = listing.soldDate || Date.now();
+        saveUserListings();
+        renderMyParts();
+        overlay.remove();
+        showToast(buyerName ? `Saved — sold to ${buyerName}` : 'Sale recorded');
+    };
+
+    btnRow.appendChild(skipBtn);
+    btnRow.appendChild(saveBtn);
+    box.appendChild(btnRow);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+}
+
 function confirmDeleteListing(id) {
     const part = userListings.find(p => p.id === id);
     if (!part) return;
@@ -4044,7 +4169,7 @@ function confirmListingAction(id) {
     overlay.appendChild(box);
     document.body.appendChild(overlay);
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-    document.getElementById('_laBtnSold').onclick   = () => { overlay.remove(); setListingStatus(id, 'sold'); };
+    document.getElementById('_laBtnSold').onclick   = () => { overlay.remove(); setListingStatus(id, 'sold'); showBuyerFeedbackDialog(id); };
     document.getElementById('_laBtnDelete').onclick = () => { overlay.remove(); deleteListing(id); };
     document.getElementById('_laBtnCancel').onclick = () => overlay.remove();
 }
