@@ -197,15 +197,21 @@ function setDtbActive(id) {
     }
 }
 
-// Top-bar nav wrappers — set active state then open the section
-function dtbOpenWorkshops() {
-    setDtbActive('dtbWorkshops');
-    onMenuOpenWorkshops();
+// Top-bar nav wrappers — close any open drawer first, then set active + open
+function _dtbNav(id, fn) {
+    document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
+    syncBackdrop();
+    setDtbActive(id);
+    fn();
 }
-function dtbOpenInbox() {
-    setDtbActive('dtbMessages');
-    onOpenInbox();
-}
+function dtbGoHome()        { goHome(); }
+function dtbOpenDashboard() { _dtbNav('dtbDashboard', openDashboard); }
+function dtbOpenGarage()    { _dtbNav('dtbGarage',    onOpenGarage); }
+function dtbOpenListings()  { _dtbNav('dtbListings',  onMenuOpenMyListings); }
+function dtbOpenWanted()    { _dtbNav('dtbWanted',    openWantedListDrawer); }
+function dtbOpenSaved()     { _dtbNav('dtbSaved',     onMenuOpenSavedParts); }
+function dtbOpenInbox()     { _dtbNav('dtbMessages',  onOpenInbox); }
+function dtbOpenWorkshops() { _dtbNav('dtbWorkshops', onMenuOpenWorkshops); }
 
 function clearRecentlyViewed() {
     recentlyViewed = [];
@@ -3698,6 +3704,7 @@ function goHome() {
     renderMainGrid();
     window.scrollTo(0, 0);
     setActiveNav('homeNavItem');
+    setDtbActive('dtbHome');
 }
 
 // --- RENDER MAIN HOME GRID ---

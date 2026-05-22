@@ -29,12 +29,13 @@
 <div id="desktopTopBar" class="desktop-top-bar">
     <div class="dtb-logo-zone"></div>
     <div class="dtb-nav" id="dtbNavItems" style="display:none;">
-        <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="openDashboard()" style="display:none;">Dashboard</span>
-        <span class="dtb-link" onclick="onOpenGarage()">Garage</span>
-        <span class="dtb-link" onclick="onMenuOpenMyListings()">Listings</span>
-        <span class="dtb-link" onclick="openWantedListDrawer()">Wanted</span>
-        <span class="dtb-link" onclick="onMenuOpenSavedParts()">Saved</span>
-        <span id="dtbMessages" class="dtb-link" onclick="dtbOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
+        <span id="dtbHome"      class="dtb-link" onclick="dtbGoHome()">Home</span>
+        <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="dtbOpenDashboard()" style="display:none;">Dashboard</span>
+        <span id="dtbGarage"    class="dtb-link" onclick="dtbOpenGarage()">Garage</span>
+        <span id="dtbListings"  class="dtb-link" onclick="dtbOpenListings()">Listings</span>
+        <span id="dtbWanted"    class="dtb-link" onclick="dtbOpenWanted()">Wanted</span>
+        <span id="dtbSaved"     class="dtb-link" onclick="dtbOpenSaved()">Saved</span>
+        <span id="dtbMessages"  class="dtb-link" onclick="dtbOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
         <span id="dtbWorkshops" class="dtb-link" onclick="dtbOpenWorkshops()">Workshops</span>
     </div>
     <div class="dtb-right-zone">

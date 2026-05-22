@@ -4097,7 +4097,7 @@ header {
     text-decoration: none;
 }
 .dtb-link:hover { color: var(--apc-orange); background: var(--apc-orange-light, #fff4e6); }
-.dtb-active { color: var(--apc-orange) !important; }
+.dtb-active { color: var(--apc-orange) !important; border-bottom: 2px solid var(--apc-orange); }
 .dtb-sell { color: var(--apc-orange) !important; font-weight: 900; }
 .dtb-badge {
     background: #FF3B30;
