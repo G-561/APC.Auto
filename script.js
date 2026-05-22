@@ -4022,6 +4022,35 @@ function confirmDeleteListing(id) {
     );
 }
 
+function confirmListingAction(id) {
+    const part = userListings.find(p => p.id === id);
+    if (!part) return;
+    const existing = document.getElementById('apcConfirmDialog');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'apcConfirmDialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+    box.innerHTML = `
+        <div style="font-weight:800;font-size:17px;margin-bottom:8px;color:#111;">Update Listing</div>
+        <div style="font-size:13px;color:#666;margin-bottom:22px;line-height:1.4;">${escapeHtml(part.title)}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button id="_laBtnSold"   style="padding:12px 20px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:800;font-size:12px;letter-spacing:0.4px;cursor:pointer;">MARK AS SOLD</button>
+            <button id="_laBtnDelete" style="padding:12px 20px;border:none;border-radius:8px;background:#ef4444;color:#fff;font-weight:800;font-size:12px;letter-spacing:0.4px;cursor:pointer;">DELETE LISTING</button>
+            <button id="_laBtnCancel" style="padding:10px 20px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:12px;cursor:pointer;color:#555;">Cancel</button>
+        </div>`;
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    document.getElementById('_laBtnSold').onclick   = () => { overlay.remove(); setListingStatus(id, 'sold'); };
+    document.getElementById('_laBtnDelete').onclick = () => { overlay.remove(); deleteListing(id); };
+    document.getElementById('_laBtnCancel').onclick = () => overlay.remove();
+}
+
 async function deleteListing(id) {
     const idx = userListings.findIndex(p => p.id === id);
     if (idx === -1) return;
@@ -4139,9 +4168,8 @@ function renderMyParts() {
             overlay.onclick = (e) => e.stopPropagation();
             overlay.innerHTML = isSold
                 ? `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
-                   <button class="my-card-delete-btn" onclick="confirmDeleteListing(${part.id})">×</button>`
-                : `<button class="my-card-action-btn" onclick="openEditListing(${part.id})">MANAGE</button>
-                   <button class="my-card-delete-btn" onclick="confirmDeleteListing(${part.id})">×</button>`;
+                   <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`
+                : `<button class="my-card-delete-btn" style="margin-left:auto" onclick="confirmListingAction(${part.id})">×</button>`;
             card.appendChild(overlay);
         }
 
@@ -4579,9 +4607,9 @@ function renderBuyerPicker(listingId, currentName) {
 }
 
 function openEditListing(listingId) {
-    const listing = userListings.find(l => l.id === listingId);
+    const listing = userListings.find(l => l.id === listingId || l.supabaseId === listingId);
     if (!listing) return;
-    currentEditingListingId = listingId;
+    currentEditingListingId = listing.id;
     sellListingImages = [...listing.images];
 
     document.getElementById('sellTitle').value = listing.title || '';
@@ -4634,6 +4662,10 @@ function openEditListing(listingId) {
     if (noteEl) noteEl.value = br.note || '';
 
     updateSellFittingToggleVisibility();
+    // Close detail overlay so edit form isn't stacked behind it
+    const detailEl = document.getElementById('detailOverlay');
+    if (detailEl) detailEl.classList.remove('active');
+
     const sellOverlayEl = document.getElementById('sellOverlay');
     if (sellOverlayEl) sellOverlayEl.style.zIndex = '3200';
     toggleDrawer('sellOverlay', true);
@@ -5252,7 +5284,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             detailMsgBtn.style.color       = 'white';
             detailMsgBtn.style.boxShadow   = '0 4px 12px rgba(0,122,255,0.2)';
             detailMsgBtn.style.cursor      = 'pointer';
-            detailMsgBtn.onclick           = () => openEditListing(part.id);
+            detailMsgBtn.onclick           = () => openEditListing(part.supabaseId || part.id);
         } else {
             detailMsgBtn.style.display = '';
             detailMsgBtn.innerHTML     = '✉️ MESSAGE SELLER';

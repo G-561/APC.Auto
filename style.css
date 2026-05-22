@@ -3824,7 +3824,7 @@ header {
 .my-card-wrap--sold .item-img { filter: grayscale(0.5); }
 .my-card-actions-overlay {
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     right: 0;
     z-index: 2;
