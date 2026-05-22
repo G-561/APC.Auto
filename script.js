@@ -11138,6 +11138,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 recordSearch(searchInput.value.trim());
             }
         });
+
+        searchInput.addEventListener('focus', () => {
+            if (window.innerWidth >= 900) closeDetailOverlay();
+        });
     }
 
     // Wire up the filter "Update Results" button
