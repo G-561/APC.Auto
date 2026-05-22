@@ -11192,7 +11192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         searchInput.addEventListener('focus', () => {
-            if (window.innerWidth >= 900) closeDetailOverlay();
+            closeDetailOverlay();
+            goHome();
         });
     }
 
