@@ -281,19 +281,17 @@ function _renderRvList(allParts) {
         ? `${parts.length} of ${allParts.length} part${allParts.length === 1 ? '' : 's'}`
         : `${allParts.length} part${allParts.length === 1 ? '' : 's'} · last 14 days`;
 
-    list.innerHTML = `
-        <div class="rv-drawer-count-row"><span class="rv-drawer-count">${countLabel}</span></div>
-        ${parts.length === 0 ? `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No matches for "${escapeHtml(_rvSearchQuery)}"</div>` : ''}
-        ${parts.map(part => `
-            <div class="rv-drawer-row" onclick="toggleDrawer('recentlyViewedDrawer'); openItemDetail('${part.supabaseId || part.id}')">
-                <img src="${part.images?.[0] || ''}" alt="" class="rv-drawer-img">
-                <div class="rv-drawer-info">
-                    <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
-                    <div class="rv-drawer-meta">${escapeHtml(part.loc || '')}</div>
-                </div>
-                <div class="rv-drawer-price">$${part.price}</div>
-            </div>
-        `).join('')}`;
+    const grid = document.createElement('div');
+    grid.className = 'results-grid';
+    parts.forEach(part => {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = buildCardHTML(part);
+        grid.appendChild(wrap);
+    });
+
+    list.innerHTML = `<div class="rv-drawer-count-row"><span class="rv-drawer-count">${countLabel}</span></div>
+        ${parts.length === 0 ? `<div style="text-align:center;padding:40px 20px;color:#aaa;font-size:13px;">No matches for "${escapeHtml(_rvSearchQuery)}"</div>` : ''}`;
+    if (parts.length) list.appendChild(grid);
 }
 
 const SETTINGS_STORAGE_KEY = 'apc.settings.v1';

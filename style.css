@@ -4390,9 +4390,10 @@ header {
     .grid-heading { padding: 12px 14px 4px; }
     .grid-heading-label { font-size: 14px; }
 
-    /* ── MY LISTINGS + SAVED — 7-column grid (full-width drawer) ─ */
+    /* ── MY LISTINGS + SAVED + RECENTLY VIEWED — 7-col (full-width drawers) ─ */
     #myPartsList .results-grid,
-    #savedPartsContent .results-grid {
+    #savedPartsContent .results-grid,
+    #rvListContent .results-grid {
         grid-template-columns: repeat(7, 1fr);
     }
 
