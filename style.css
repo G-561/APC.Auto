@@ -2511,6 +2511,13 @@ header {
     color: var(--apc-orange);
     flex-shrink: 0;
 }
+.sp-active-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
 .sp-unsave-btn {
     background: none;
     border: 1.5px solid #ddd;
@@ -4327,6 +4334,108 @@ header {
     }
     .grid-heading { padding: 12px 14px 4px; }
     .grid-heading-label { font-size: 14px; }
+
+    /* ── MY LISTINGS — 2-column card grid ─────────────────────── */
+    #myPartsList {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+    .my-part-row {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        margin-bottom: 0;
+        overflow: hidden;
+    }
+    .my-part-thumb {
+        width: 100%;
+        height: 160px;
+        border-radius: 12px 12px 0 0;
+        flex-shrink: 0;
+    }
+    .my-part-info { padding: 10px 12px 4px; }
+    .my-part-title { white-space: normal; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; }
+    .my-part-actions {
+        padding: 8px 12px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    /* ── SAVED PARTS — 3-column card grid ─────────────────────── */
+    .sp-active-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+    .sp-active-grid .rv-drawer-row {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        overflow: hidden;
+    }
+    .sp-active-grid .rv-drawer-img {
+        width: 100%;
+        height: 150px;
+        border-radius: 10px 10px 0 0;
+        flex-shrink: 0;
+    }
+    .sp-active-grid .rv-drawer-info { padding: 8px 12px 4px; flex: 1; }
+    .sp-active-grid .rv-drawer-title { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; white-space: normal; }
+    .sp-active-card-right {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 12px 10px;
+        flex-shrink: 0;
+    }
+
+    /* ── GARAGE TABS — 3-column grid ──────────────────────────── */
+    #garageInlineTabContent .results-grid {
+        grid-template-columns: repeat(3, 1fr);
+        padding: 0;
+    }
+
+    /* ── WANTED LIST — side-by-side split layout ───────────────── */
+    #wantedListDrawer .drawer-content {
+        display: flex;
+        flex-direction: row;
+        padding: 0;
+        overflow: hidden;
+    }
+    #wantedListBody {
+        width: 340px;
+        flex-shrink: 0;
+        border-right: 1px solid #eee;
+        overflow-y: auto;
+        padding: 16px;
+        background: white;
+    }
+    #wantedMatchesBody {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        background: #f4f4f4;
+    }
+    #wantedMatchesBody .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 0;
+    }
+    .wl-selected {
+        border-color: var(--apc-orange) !important;
+        background: rgba(240,112,32,0.04) !important;
+    }
+    .wl-panel-hdr {
+        font-size: 12px;
+        font-weight: 800;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 14px;
+    }
 
     /* Desktop card sizing + subtle hover — click card to open detail */
     .item-card {

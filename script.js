@@ -4154,6 +4154,9 @@ function renderMyParts() {
         row.appendChild(thumb);
         row.appendChild(info);
 
+        const actions = document.createElement('div');
+        actions.className = 'my-part-actions';
+
         if (isSold) {
             const relistBtn = document.createElement('button');
             relistBtn.className = 'my-part-relist-btn';
@@ -4172,9 +4175,9 @@ function renderMyParts() {
             deleteBtn.title = 'Delete listing';
             deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
 
-            row.appendChild(relistBtn);
-            row.appendChild(rateBtn);
-            row.appendChild(deleteBtn);
+            actions.appendChild(relistBtn);
+            actions.appendChild(rateBtn);
+            actions.appendChild(deleteBtn);
         } else {
             const manageBtn = document.createElement('button');
             manageBtn.className = 'my-part-manage-btn';
@@ -4187,9 +4190,11 @@ function renderMyParts() {
             deleteBtn.title = 'Delete listing';
             deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
 
-            row.appendChild(manageBtn);
-            row.appendChild(deleteBtn);
+            actions.appendChild(manageBtn);
+            actions.appendChild(deleteBtn);
         }
+
+        row.appendChild(actions);
 
         myPartsList.appendChild(row);
     });
@@ -7150,19 +7155,20 @@ function renderSavedParts() {
         </div>`;
     }).join('');
 
-    const buildActiveHTML = (parts) => parts.map(part => `
-        <div class="rv-drawer-row wl-wanted-row" onclick="openItemDetail('${part.supabaseId || part.id}')">
+    const buildActiveHTML = (parts) =>
+        `<div class="sp-active-grid">${parts.map(part => `
+        <div class="rv-drawer-row sp-active-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img src="${part.images[0]}" alt="" class="rv-drawer-img">
             <div class="rv-drawer-info">
                 <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
                 <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
             </div>
-            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+            <div class="sp-active-card-right">
                 <div class="rv-drawer-price">$${part.price}</div>
                 <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
             </div>
         </div>
-    `).join('');
+        `).join('')}</div>`;
 
     let bodyHTML = '';
     if (savedPartsTab === 'all') {
@@ -7408,6 +7414,22 @@ function renderWantedList() {
             group.items.forEach(w => body.appendChild(buildWantedCard(w, [])));
         });
     }
+
+    // Desktop: always show the matches panel — auto-select first match, or show prompt
+    if (window.innerWidth >= 900) {
+        const matchesBody = document.getElementById('wantedMatchesBody');
+        if (matchesBody) matchesBody.style.display = 'block';
+        if (withMatches.length) {
+            selectDesktopWantedPanel(withMatches[0].w, withMatches[0].matches);
+        } else {
+            if (matchesBody) matchesBody.innerHTML = `
+                <div style="text-align:center; padding:60px 20px; color:#aaa;">
+                    <div style="font-size:36px; margin-bottom:12px;">📋</div>
+                    <div style="font-weight:800; font-size:15px; color:#666; margin-bottom:8px;">Select a wanted part</div>
+                    <div style="font-size:13px; line-height:1.5; max-width:280px; margin:0 auto;">Click any item on the left to see available matches.</div>
+                </div>`;
+        }
+    }
 }
 
 async function viewNotifListing(notifId, listingId) {
@@ -7443,6 +7465,38 @@ async function viewNotifListing(notifId, listingId) {
     } catch (e) { showToast('Could not load listing'); }
 }
 
+function selectDesktopWantedPanel(w, matches) {
+    document.querySelectorAll('.wl-wanted-row').forEach(c => c.classList.remove('wl-selected'));
+    const card = document.querySelector(`.wl-wanted-row[data-wanted-id="${w.id}"]`);
+    if (card) card.classList.add('wl-selected');
+    currentMatchesWanted = w;
+    const body = document.getElementById('wantedMatchesBody');
+    if (!body) return;
+    body.innerHTML = '';
+    if (!matches.length) {
+        body.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:#aaa;">
+                <div style="font-size:36px; margin-bottom:12px;">🔍</div>
+                <div style="font-weight:800; font-size:15px; color:#666; margin-bottom:8px;">Watching for matches</div>
+                <div style="font-size:13px; line-height:1.5; max-width:280px; margin:0 auto;">We'll notify you when a <strong>${escapeHtml(w.partName)}</strong>${w.make ? ' for your ' + escapeHtml(w.make) + ' ' + escapeHtml(w.model) : ''} comes up for sale.</div>
+            </div>`;
+        return;
+    }
+    const hdr = document.createElement('div');
+    hdr.className = 'wl-panel-hdr';
+    hdr.textContent = `${matches.length} match${matches.length !== 1 ? 'es' : ''} · ${w.partName}`;
+    body.appendChild(hdr);
+    const total = getAllParts().filter(p => wantedMatchesPart(w, p));
+    body.appendChild(buildMatchesGrid(matches, w.id));
+    const dismissed = total.length - matches.length;
+    if (dismissed > 0) {
+        const row = document.createElement('div');
+        row.style.cssText = 'text-align:center; padding:14px 0 4px; font-size:12px;';
+        row.innerHTML = `<a href="#" onclick="event.preventDefault(); restoreDismissedMatches(${w.id})" style="color:#aaa; text-decoration:underline;">Show ${dismissed} dismissed listing${dismissed !== 1 ? 's' : ''}</a>`;
+        body.appendChild(row);
+    }
+}
+
 function buildWantedCard(w, matches) {
     const hasMatches = matches.length > 0;
     // Notifications for this specific wanted item
@@ -7451,17 +7505,20 @@ function buildWantedCard(w, matches) {
     );
     const card = document.createElement('div');
     card.className = 'rv-drawer-row wl-wanted-row' + (hasMatches ? ' wl-row-match' : ' wl-row-watching');
+    card.dataset.wantedId = w.id;
 
-    if (hasMatches) {
-        card.onclick = () => {
+    card.onclick = () => {
+        if (window.innerWidth >= 900) {
+            selectDesktopWantedPanel(w, matches);
+        } else if (hasMatches) {
             if (matches.length === 1) {
                 openItemDetail(matches[0].supabaseId || matches[0].id);
             } else {
                 const total = getAllParts().filter(p => wantedMatchesPart(w, p));
                 showWantedMatches(w, matches, total.length - matches.length);
             }
-        };
-    }
+        }
+    };
 
     const info = document.createElement('div');
     info.className = 'rv-drawer-info';
@@ -7516,6 +7573,10 @@ function buildWantedCard(w, matches) {
 }
 
 function showWantedMatches(wanted, matches, dismissedCount = 0) {
+    if (window.innerWidth >= 900) {
+        selectDesktopWantedPanel(wanted, matches);
+        return;
+    }
     currentMatchesWanted = wanted;
     document.getElementById('wantedListBody').style.display = 'none';
     document.getElementById('wantedMatchesBody').style.display = 'block';
@@ -7554,6 +7615,11 @@ function buildMatchesGrid(parts, wantedId) {
 }
 
 function backToWantedList() {
+    if (window.innerWidth >= 900) {
+        document.querySelectorAll('.wl-wanted-row').forEach(c => c.classList.remove('wl-selected'));
+        currentMatchesWanted = null;
+        return;
+    }
     currentMatchesWanted = null;
     document.getElementById('wantedMatchesBody').style.display = 'none';
     document.getElementById('wantedListBody').style.display = 'block';
@@ -7562,6 +7628,10 @@ function backToWantedList() {
 }
 
 function closeWantedOrBack() {
+    if (window.innerWidth >= 900) {
+        toggleDrawer('wantedListDrawer');
+        return;
+    }
     const matchesVisible = document.getElementById('wantedMatchesBody')?.style.display !== 'none';
     if (matchesVisible) {
         backToWantedList();
