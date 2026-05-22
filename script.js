@@ -7537,7 +7537,7 @@ function renderSavedParts() {
         return grid;
     };
 
-    content.innerHTML = `<div style="padding: 12px 8px 10px; background:white; margin:-16px -16px 16px; border-bottom:1px solid #eee;">${tabsHTML}</div>`;
+    content.innerHTML = `<div style="padding: 12px 15px 10px; background:white; margin-bottom:12px; border-bottom:1px solid #eee;">${tabsHTML}</div>`;
 
     if (savedPartsTab === 'all') {
         content.appendChild(buildActiveGrid(activeParts));
