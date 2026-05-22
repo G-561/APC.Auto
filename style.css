@@ -3829,9 +3829,8 @@ header {
 .my-part-delete-btn:active { transform: scale(0.85); }
 
 /* MY LISTINGS CARD OVERLAY */
-.my-card-wrap { position: relative; }
-.my-card-wrap--sold .item-card { opacity: 0.6; }
-.my-card-wrap--sold .item-img { filter: grayscale(0.5); }
+.my-card--sold { opacity: 0.6; }
+.my-card--sold .item-img { filter: grayscale(0.5); }
 .my-card-actions-overlay {
     position: absolute;
     top: 0;

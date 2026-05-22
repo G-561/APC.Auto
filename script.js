@@ -4346,32 +4346,31 @@ function renderMyParts() {
     tabParts.forEach(part => {
         const isSold = part.status === 'sold';
 
-        const wrap = document.createElement('div');
-        wrap.className = 'my-card-wrap' + (isSold ? ' my-card-wrap--sold' : '');
-        wrap.innerHTML = buildCardHTML(part);
+        const temp = document.createElement('div');
+        temp.innerHTML = buildCardHTML(part);
+        const card = temp.firstElementChild;
+        if (!card) return;
 
-        const card = wrap.querySelector('.item-card');
-        if (card) {
-            if (isSold) {
-                const soldDateStr = part.soldDate
-                    ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
-                    : '';
-                const overlay = document.createElement('div');
-                overlay.className = 'my-card-actions-overlay';
-                overlay.onclick = (e) => e.stopPropagation();
-                overlay.innerHTML = `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
-                    <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`;
-                card.appendChild(overlay);
-            } else {
-                const xBtn = document.createElement('button');
-                xBtn.className = 'my-card-x-float';
-                xBtn.textContent = '×';
-                xBtn.onclick = (e) => { e.stopPropagation(); confirmListingAction(part.id); };
-                card.appendChild(xBtn);
-            }
+        if (isSold) {
+            card.classList.add('my-card--sold');
+            const soldDateStr = part.soldDate
+                ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
+                : '';
+            const overlay = document.createElement('div');
+            overlay.className = 'my-card-actions-overlay';
+            overlay.onclick = (e) => e.stopPropagation();
+            overlay.innerHTML = `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
+                <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`;
+            card.appendChild(overlay);
+        } else {
+            const xBtn = document.createElement('button');
+            xBtn.className = 'my-card-x-float';
+            xBtn.textContent = '×';
+            xBtn.onclick = (e) => { e.stopPropagation(); confirmListingAction(part.id); };
+            card.appendChild(xBtn);
         }
 
-        grid.appendChild(wrap);
+        grid.appendChild(card);
     });
 
     myPartsList.appendChild(grid);
@@ -7520,19 +7519,17 @@ function renderSavedParts() {
         const grid = document.createElement('div');
         grid.className = 'results-grid';
         parts.forEach(part => {
-            const wrap = document.createElement('div');
-            wrap.className = 'my-card-wrap';
-            wrap.innerHTML = buildCardHTML(part);
-            const card = wrap.querySelector('.item-card');
-            if (card) {
-                const xBtn = document.createElement('button');
-                xBtn.className = 'my-card-x-float';
-                xBtn.title = 'Remove from saved';
-                xBtn.textContent = '×';
-                xBtn.onclick = (e) => { e.stopPropagation(); confirmUnsavePart(part.supabaseId || part.id); };
-                card.appendChild(xBtn);
-            }
-            grid.appendChild(wrap);
+            const temp = document.createElement('div');
+            temp.innerHTML = buildCardHTML(part);
+            const card = temp.firstElementChild;
+            if (!card) return;
+            const xBtn = document.createElement('button');
+            xBtn.className = 'my-card-x-float';
+            xBtn.title = 'Remove from saved';
+            xBtn.textContent = '×';
+            xBtn.onclick = (e) => { e.stopPropagation(); confirmUnsavePart(part.supabaseId || part.id); };
+            card.appendChild(xBtn);
+            grid.appendChild(card);
         });
         return grid;
     };
