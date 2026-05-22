@@ -4631,7 +4631,7 @@ header {
         overflow: hidden;
     }
     #dynamicDetailFooter .detail-mini-card {
-        flex: 0 0 calc(20% - 8px);
+        flex: 0 0 calc(100% / 7 - 9px);
     }
     .desktop-main-img {
         width: 100%;
