@@ -4064,8 +4064,8 @@ header {
 }
 .dtb-avatar:hover { opacity: 0.82; }
 .header-list-btn {
-    background: var(--apc-orange);
-    color: white;
+    background: white;
+    color: var(--apc-orange);
     border: 2px solid var(--apc-orange);
     border-radius: 8px;
     padding: 11px 22px;
@@ -4074,13 +4074,11 @@ header {
     cursor: pointer;
     font-family: inherit;
     letter-spacing: 0.3px;
-    transition: background 0.15s, transform 0.1s;
-    box-shadow: 0 4px 14px rgba(240,112,32,0.28);
+    transition: background 0.15s, color 0.15s;
 }
 .header-list-btn:hover {
-    background: white;
-    color: var(--apc-orange);
-    box-shadow: 0 4px 14px rgba(240,112,32,0.2);
+    background: var(--apc-orange);
+    color: white;
 }
 .dtb-left, .dtb-right { display: flex; align-items: center; gap: 4px; }
 .dtb-link {
