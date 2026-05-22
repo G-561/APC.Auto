@@ -4157,18 +4157,23 @@ function renderMyParts() {
 
         const card = wrap.querySelector('.item-card');
         if (card) {
-            const soldDateStr = isSold && part.soldDate
-                ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
-                : '';
-
-            const overlay = document.createElement('div');
-            overlay.className = 'my-card-actions-overlay';
-            overlay.onclick = (e) => e.stopPropagation();
-            overlay.innerHTML = isSold
-                ? `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
-                   <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`
-                : `<button class="my-card-delete-btn" style="margin-left:auto" onclick="confirmListingAction(${part.id})">×</button>`;
-            card.appendChild(overlay);
+            if (isSold) {
+                const soldDateStr = part.soldDate
+                    ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
+                    : '';
+                const overlay = document.createElement('div');
+                overlay.className = 'my-card-actions-overlay';
+                overlay.onclick = (e) => e.stopPropagation();
+                overlay.innerHTML = `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
+                    <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`;
+                card.appendChild(overlay);
+            } else {
+                const xBtn = document.createElement('button');
+                xBtn.className = 'my-card-x-float';
+                xBtn.textContent = '×';
+                xBtn.onclick = (e) => { e.stopPropagation(); confirmListingAction(part.id); };
+                card.appendChild(xBtn);
+            }
         }
 
         grid.appendChild(wrap);

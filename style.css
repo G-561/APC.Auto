@@ -3872,6 +3872,26 @@ header {
     transition: background 0.15s, color 0.15s;
 }
 .my-card-delete-btn:hover { background: rgba(239,68,68,0.8); color: #fff; border-color: transparent; }
+.my-card-x-float {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.45);
+    border: none;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s;
+}
+.my-card-x-float:hover { background: rgba(239,68,68,0.85); }
 
 /* MANAGE LISTING — status pills + rate buyer (edit mode only) */
 .manage-section {
