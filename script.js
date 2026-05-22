@@ -4129,11 +4129,12 @@ function renderMyParts() {
 
             const overlay = document.createElement('div');
             overlay.className = 'my-card-actions-overlay';
+            overlay.onclick = (e) => e.stopPropagation();
             overlay.innerHTML = isSold
-                ? `${soldDateStr}<button class="my-card-action-btn" onclick="event.stopPropagation();relistPart('${part.id}')">RELIST</button>
-                   <button class="my-card-delete-btn" onclick="event.stopPropagation();confirmDeleteListing('${part.id}')">×</button>`
-                : `<button class="my-card-action-btn" onclick="event.stopPropagation();openEditListing('${part.id}')">MANAGE</button>
-                   <button class="my-card-delete-btn" onclick="event.stopPropagation();confirmDeleteListing('${part.id}')">×</button>`;
+                ? `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
+                   <button class="my-card-delete-btn" onclick="confirmDeleteListing(${part.id})">×</button>`
+                : `<button class="my-card-action-btn" onclick="openEditListing(${part.id})">MANAGE</button>
+                   <button class="my-card-delete-btn" onclick="confirmDeleteListing(${part.id})">×</button>`;
             card.appendChild(overlay);
         }
 
@@ -7098,20 +7099,26 @@ function renderSavedParts() {
         </div>`;
     }).join('');
 
-    const buildActiveHTML = (parts) =>
-        `<div class="sp-active-grid">${parts.map(part => `
-        <div class="rv-drawer-row sp-active-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
-            <img src="${part.images[0]}" alt="" class="rv-drawer-img">
-            <div class="rv-drawer-info">
-                <div class="rv-drawer-title">${escapeHtml(part.title)}</div>
-                <div class="rv-drawer-meta">${escapeHtml(part.loc)}</div>
-            </div>
-            <div class="sp-active-card-right">
-                <div class="rv-drawer-price">$${part.price}</div>
-                <button class="sp-unsave-btn" onclick="event.stopPropagation(); toggleSavedPart(${part.id})" aria-label="Remove from saved">×</button>
-            </div>
-        </div>
-        `).join('')}</div>`;
+    const buildActiveHTML = (parts) => {
+        const grid = document.createElement('div');
+        grid.className = 'results-grid';
+        parts.forEach(part => {
+            const wrap = document.createElement('div');
+            wrap.className = 'my-card-wrap';
+            wrap.innerHTML = buildCardHTML(part);
+            const card = wrap.querySelector('.item-card');
+            if (card) {
+                const overlay = document.createElement('div');
+                overlay.className = 'my-card-actions-overlay';
+                overlay.onclick = (e) => e.stopPropagation();
+                overlay.innerHTML = `<span style="flex:1"></span>
+                    <button class="my-card-delete-btn" onclick="toggleSavedPart(${part.id})" title="Remove from saved">×</button>`;
+                card.appendChild(overlay);
+            }
+            grid.appendChild(wrap);
+        });
+        return grid.outerHTML;
+    };
 
     let bodyHTML = '';
     if (savedPartsTab === 'all') {

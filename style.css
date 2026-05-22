@@ -3827,6 +3827,7 @@ header {
     bottom: 0;
     left: 0;
     right: 0;
+    z-index: 2;
     background: rgba(0,0,0,0.62);
     display: flex;
     align-items: center;
@@ -4388,34 +4389,6 @@ header {
     }
     .grid-heading { padding: 12px 14px 4px; }
     .grid-heading-label { font-size: 14px; }
-
-    /* ── SAVED PARTS — 3-column card grid ─────────────────────── */
-    .sp-active-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 14px;
-    }
-    .sp-active-grid .rv-drawer-row {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0;
-        overflow: hidden;
-    }
-    .sp-active-grid .rv-drawer-img {
-        width: 100%;
-        height: 150px;
-        border-radius: 10px 10px 0 0;
-        flex-shrink: 0;
-    }
-    .sp-active-grid .rv-drawer-info { padding: 8px 12px 4px; flex: 1; }
-    .sp-active-grid .rv-drawer-title { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; white-space: normal; }
-    .sp-active-card-right {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 12px 10px;
-        flex-shrink: 0;
-    }
 
     /* ── GARAGE TABS — 3-column grid ──────────────────────────── */
     #garageInlineTabContent .results-grid {
