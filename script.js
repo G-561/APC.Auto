@@ -6091,6 +6091,7 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
 
 let _sfRatings = [];
 let _detailRatings = [];
+let _dataLoadStarted = false; // guard against double-loading on session restore
 
 function openSellerRatings(ratings = _sfRatings) {
     if (!ratings?.length) return;
@@ -6756,6 +6757,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+            _dataLoadStarted = true;
             currentUserId = session.user.id;
             // Use display_name from session metadata (set at sign-up) — avoids showing email prefix
             const emailName = session.user.email.split('@')[0];
@@ -11076,6 +11078,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (remembered && remembered.name) {
         signIn(remembered.name, remembered.tier || 'standard', true, remembered.email || '');
     }
+
+    // Fallback for private/incognito mode where INITIAL_SESSION fires with null despite a valid
+    // stored JWT — getSession() reads the token directly and triggers the data load if missed.
+    if (sb) {
+        sb.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user && !_dataLoadStarted) {
+                _dataLoadStarted = true;
+                currentUserId = session.user.id;
+                loadPublicListingsFromSupabase();
+                loadUserListingsFromSupabase(session.user.id);
+                loadConversationsFromSupabase(session.user.id);
+                loadVehiclesFromSupabase(session.user.id);
+                loadWantedFromSupabase(session.user.id);
+                loadSavedListingsFromSupabase(session.user.id);
+                loadPublicWantedFromSupabase();
+                loadNotificationsFromSupabase();
+            }
+        });
+    }
+
     renderMyParts();           // after sign-in so seller filter uses correct name
     renderAccountState();      // sets pill label/colour, hides pro toggle, sizes the grid offset
 
