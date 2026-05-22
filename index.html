@@ -27,6 +27,7 @@
 
 <!-- DESKTOP UTILITY BAR — hidden on mobile -->
 <div id="desktopTopBar" class="desktop-top-bar">
+    <div class="dtb-logo-zone"></div>
     <div class="dtb-nav" id="dtbNavItems" style="display:none;">
         <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="openDashboard()" style="display:none;">Dashboard</span>
         <span class="dtb-link" onclick="onOpenGarage()">Garage</span>
@@ -36,8 +37,7 @@
         <span id="dtbMessages" class="dtb-link" onclick="dtbOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
         <span id="dtbWorkshops" class="dtb-link" onclick="dtbOpenWorkshops()">Workshops</span>
     </div>
-    <div class="dtb-actions">
-        <span class="dtb-link dtb-sell-btn" onclick="openSellOverlay()">+ SELL A PART</span>
+    <div class="dtb-right-zone">
         <div class="dtb-avatar" id="dtbAvatar" style="display:none;" onclick="onAccountPillClick(event)">G</div>
     </div>
 </div>
@@ -54,6 +54,7 @@
             <div id="accountPillZone">
                 <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
                 <div id="signUpPrompt" class="sign-up-prompt">Not a member? <a href="#" class="sign-up-link" onclick="openAuthDrawer(null,'signup');return false;">Sign up free</a></div>
+                <button class="header-list-btn" id="headerListBtn" onclick="openSellOverlay()" style="display:none;">List a Part</button>
             </div>
         </div>
 

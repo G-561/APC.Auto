@@ -4029,29 +4029,23 @@ header {
     z-index: 3100;
     box-sizing: border-box;
 }
+.dtb-logo-zone {
+    width: 240px;
+    flex-shrink: 0;
+}
 .dtb-nav {
-    display: flex;
-    align-items: center;
     flex: 1;
-}
-.dtb-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-left: auto;
+    justify-content: space-evenly;
 }
-.dtb-sell-btn {
-    background: var(--apc-orange);
-    color: white !important;
-    font-weight: 900;
-    border-radius: 6px;
-    padding: 0 14px;
-    height: 26px;
-    font-size: 11px;
-    letter-spacing: 0.5px;
-    transition: background 0.15s;
+.dtb-right-zone {
+    width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.dtb-sell-btn:hover { background: #d95f10 !important; color: white !important; }
 .dtb-avatar {
     width: 28px;
     height: 28px;
@@ -4061,6 +4055,7 @@ header {
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
+    display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -4068,6 +4063,25 @@ header {
     transition: opacity 0.15s;
 }
 .dtb-avatar:hover { opacity: 0.82; }
+.header-list-btn {
+    background: var(--apc-orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    transition: background 0.15s, transform 0.1s;
+    box-shadow: 0 4px 14px rgba(240,112,32,0.28);
+}
+.header-list-btn:hover {
+    background: #c44d00;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(240,112,32,0.35);
+}
 .dtb-left, .dtb-right { display: flex; align-items: center; gap: 4px; }
 .dtb-link {
     padding: 0 12px;

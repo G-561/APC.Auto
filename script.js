@@ -9607,13 +9607,11 @@ function renderAccountState() {
         }
     }
 
-    // On desktop when signed in, hide the header pill — top bar avatar replaces it
-    const pillZone = document.getElementById('accountPillZone');
-    if (pillZone) {
-        const hideOnDesktop = window.innerWidth >= 900 && userIsSignedIn;
-        pillZone.style.pointerEvents = hideOnDesktop ? 'none' : '';
-        pillZone.style.opacity       = hideOnDesktop ? '0'    : '';
-    }
+    // On desktop when signed in: show "List a Part" button, hide the avatar pill
+    const headerListBtn  = document.getElementById('headerListBtn');
+    const desktopSignedIn = !isMobile && userIsSignedIn;
+    if (pill)          pill.style.display          = desktopSignedIn ? 'none' : '';
+    if (headerListBtn) headerListBtn.style.display = desktopSignedIn ? ''     : 'none';
 
     // Sync desktop dropdown
     const ddAvatar  = document.getElementById('acctDdAvatar');
