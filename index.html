@@ -2163,7 +2163,7 @@
                 <div id="inboxConvList" class="inbox-conv-list"></div>
             </div>
 
-            <!-- Right: thread view -->
+            <!-- Centre: thread view -->
             <div class="inbox-thread-col" id="inboxThreadCol">
                 <div id="inboxThreadEmpty" class="inbox-thread-empty">
                     <div style="font-size:40px; margin-bottom:8px;">💬</div>
@@ -2213,6 +2213,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Desktop right: listing context panel -->
+            <div id="inboxContextPanel" class="inbox-context-panel">
+                <div id="inboxContextEmpty" class="inbox-context-empty">
+                    <div style="font-size:36px;margin-bottom:10px;">💬</div>
+                    <div>Select a conversation</div>
+                </div>
+                <div id="inboxContextContent" style="display:none; flex-direction:column; height:100%; overflow-y:auto;">
+                    <img id="inboxContextImg" class="inbox-context-img" src="" alt="">
+                    <div class="inbox-context-info">
+                        <div id="inboxContextStatus" class="inbox-context-status"></div>
+                        <div id="inboxContextTitle" class="inbox-context-title"></div>
+                        <div id="inboxContextPrice" class="inbox-context-price"></div>
+                        <div id="inboxContextWith" class="inbox-context-with"></div>
+                        <button class="inbox-context-view-btn" onclick="viewConvListing()">View Listing →</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Notifications: existing inbox items (matches, alerts) -->

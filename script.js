@@ -2527,7 +2527,39 @@ function openInboxConv(id) {
     tc.style.display = 'flex';
     document.getElementById('inboxConvCol').classList.add('slide-away');
     document.getElementById('inboxThreadCol').classList.add('slide-in');
+    refreshInboxContextPanel(conv, part);
     setTimeout(() => document.getElementById('inboxReplyInput')?.focus(), 300);
+}
+
+function refreshInboxContextPanel(conv, part) {
+    const empty   = document.getElementById('inboxContextEmpty');
+    const content = document.getElementById('inboxContextContent');
+    if (!empty || !content) return;
+
+    if (!part || conv?.partId === 'general') {
+        empty.style.display   = '';
+        content.style.display = 'none';
+        return;
+    }
+
+    const img    = document.getElementById('inboxContextImg');
+    const status = document.getElementById('inboxContextStatus');
+    const title  = document.getElementById('inboxContextTitle');
+    const price  = document.getElementById('inboxContextPrice');
+    const withEl = document.getElementById('inboxContextWith');
+
+    if (img)    { img.src = part.images?.[0] || ''; img.style.display = part.images?.[0] ? '' : 'none'; }
+    if (title)  safeText(title, part.title);
+    if (price)  safeText(price, part.price ? '$' + part.price : '');
+    if (withEl) safeText(withEl, conv.with ? 'Conversation with ' + conv.with : '');
+    if (status) {
+        const s = part.status || 'active';
+        status.textContent = s.toUpperCase();
+        status.className = 'inbox-context-status' + (s === 'pending' ? ' status-pending' : s === 'sold' ? ' status-sold' : '');
+    }
+
+    empty.style.display   = 'none';
+    content.style.display = 'flex';
 }
 
 function buildOfferCardHTML(o, sent, convId, msgIdx) {
@@ -8309,6 +8341,7 @@ function onOpenInbox() {
     activeConvId = null;
     document.getElementById('inboxThreadContent').style.display = 'none';
     document.getElementById('inboxThreadEmpty').style.display = '';
+    refreshInboxContextPanel(null, null);
     toggleDrawer('inboxDrawer');
     switchInboxTab('chats');
     // Always refresh from Supabase when inbox opens — catches messages missed during realtime gaps

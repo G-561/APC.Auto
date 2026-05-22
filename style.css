@@ -5812,12 +5812,92 @@ header {
 .inbox-reply-input:focus { border-color: var(--apc-orange); background: white; }
 .inbox-send-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--apc-blue); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
+/* Inbox context panel — desktop only */
+.inbox-context-panel { display: none; }
+
 @media (max-width: 899px) {
     .inbox-conv-col { width: 100%; position: absolute; inset: 0; transition: transform 0.28s ease; z-index: 1; }
     .inbox-conv-col.slide-away { transform: translateX(-100%); }
     .inbox-thread-col { position: absolute; inset: 0; transform: translateX(100%); transition: transform 0.28s ease; z-index: 2; }
     .inbox-thread-col.slide-in { transform: translateX(0); }
     .inbox-two-panel { position: relative; overflow: hidden; }
+}
+
+@media (min-width: 900px) {
+    .inbox-context-panel {
+        display: flex;
+        flex-direction: column;
+        width: 280px;
+        flex-shrink: 0;
+        border-left: 1px solid #eee;
+        background: #fafafa;
+        overflow: hidden;
+    }
+    .inbox-context-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #ccc;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .inbox-context-img {
+        width: 100%;
+        aspect-ratio: 4/3;
+        object-fit: cover;
+        display: block;
+        background: #f0f0f0;
+    }
+    .inbox-context-info {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .inbox-context-status {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #22c55e;
+    }
+    .inbox-context-status.status-pending { color: #f59e0b; }
+    .inbox-context-status.status-sold    { color: #ef4444; }
+    .inbox-context-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #1a1a1a;
+        line-height: 1.35;
+    }
+    .inbox-context-price {
+        font-size: 20px;
+        font-weight: 900;
+        color: var(--apc-orange);
+    }
+    .inbox-context-with {
+        font-size: 12px;
+        color: #888;
+        padding-top: 4px;
+        border-top: 1px solid #eee;
+    }
+    .inbox-context-view-btn {
+        margin-top: 4px;
+        padding: 10px 16px;
+        background: var(--apc-orange);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+        font-family: inherit;
+        text-align: center;
+    }
+    .inbox-context-view-btn:hover { background: #d95f10; }
+    /* Hide the View Listing button from the thread header — context panel covers it */
+    .inbox-view-btn { display: none; }
 }
 
 /* Dashboard — label button */
