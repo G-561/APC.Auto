@@ -4145,6 +4145,24 @@ function showBuyerFeedbackDialog(listingId) {
         renderMyParts();
         overlay.remove();
         showToast(buyerName ? `Saved — sold to ${buyerName}` : 'Sale recorded');
+
+        // Notify buyer to rate the seller (only when a named enquirer was selected, not walk-in)
+        if (!isOther && buyerName && sb && listing.supabaseId) {
+            const matchedConv = conversations.find(c =>
+                (c.partId === listing.supabaseId || c.partId === listingId) && c.with === buyerName
+            );
+            const buyerUserId = matchedConv?.buyerId;
+            if (buyerUserId) {
+                sb.from('notifications').insert({
+                    user_id:    buyerUserId,
+                    type:       'rate_seller',
+                    title:      'How was your purchase?',
+                    body:       `You bought "${listing.title}" from ${currentUserName || 'a seller'} — leave a quick rating.`,
+                    listing_id: listing.supabaseId,
+                    read:       false
+                }).then(({ error }) => { if (error) console.warn('rate_seller notif:', error.message); });
+            }
+        }
     };
 
     btnRow.appendChild(skipBtn);
@@ -8177,7 +8195,8 @@ function onOpenInbox() {
 
 function updateInboxBadge() {
     const unreadConvs  = conversations.filter(c => c.unread).length;
-    const unreadNotifs = inboxItems.filter(i => i.unread).length;
+    const unreadNotifs = inboxItems.filter(i => i.unread).length
+                       + myNotifications.filter(n => !n.read && n.type === 'rate_seller').length;
     const total = unreadConvs + unreadNotifs;
     const text  = total > 99 ? '99+' : String(total);
     const show  = total > 0;
@@ -8210,17 +8229,173 @@ function renderInboxContent() {
     if (!content) return;
     content.innerHTML = '';
 
+    // Rate-seller prompts from Supabase — always shown at top of notifications tab
+    const rateNotifs = myNotifications.filter(n => !n.read && n.type === 'rate_seller');
+    rateNotifs.forEach(n => content.appendChild(buildRateSellerCard(n)));
+
     let filtered = inboxItems;
     if (currentInboxTab !== 'all') {
         filtered = inboxItems.filter(n => n.type === currentInboxTab);
     }
 
-    if (!filtered.length) {
+    if (!rateNotifs.length && !filtered.length) {
         content.innerHTML = '<div style="text-align:center; padding:40px; color:#888; font-weight:700;">No notifications.</div>';
         return;
     }
 
     filtered.forEach(item => content.appendChild(buildInboxItemNode(item)));
+}
+
+function buildRateSellerCard(notif) {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff5ee;border:1.5px solid var(--apc-orange);border-radius:12px;padding:14px 16px;margin-bottom:10px;';
+
+    const top = document.createElement('div');
+    top.style.cssText = 'display:flex;align-items:flex-start;gap:10px;';
+
+    const icon = document.createElement('div');
+    icon.textContent = '⭐';
+    icon.style.cssText = 'font-size:20px;flex-shrink:0;margin-top:1px;';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:800;font-size:13px;color:#111;margin-bottom:3px;';
+    title.textContent = notif.title || 'How was your purchase?';
+
+    const body = document.createElement('div');
+    body.style.cssText = 'font-size:12px;color:#666;line-height:1.4;';
+    body.textContent = notif.body || '';
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;margin-top:12px;';
+
+    const rateBtn = document.createElement('button');
+    rateBtn.textContent = 'Rate Seller';
+    rateBtn.style.cssText = 'flex:1;padding:9px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.3px;';
+    rateBtn.onclick = () => showSellerRatingDialog(notif);
+
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = 'Dismiss';
+    skipBtn.style.cssText = 'padding:9px 14px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;color:#888;';
+    skipBtn.onclick = () => { dismissNotification(notif.id); renderInboxContent(); updateInboxBadge(); };
+
+    info.appendChild(title);
+    info.appendChild(body);
+    btnRow.appendChild(rateBtn);
+    btnRow.appendChild(skipBtn);
+    top.appendChild(icon);
+    top.appendChild(info);
+    card.appendChild(top);
+    card.appendChild(btnRow);
+    return card;
+}
+
+async function showSellerRatingDialog(notif) {
+    // Resolve seller_id — try local cache first, fall back to Supabase
+    let sellerId = null;
+    let listingTitle = notif.body || '';
+    const localPart = notif.listing_id ? findPartAnywhere(notif.listing_id) : null;
+    if (localPart) {
+        sellerId = localPart.sellerId;
+        listingTitle = localPart.title;
+    } else if (sb && notif.listing_id) {
+        const { data } = await sb.from('listings').select('seller_id, title').eq('id', notif.listing_id).maybeSingle();
+        if (data) { sellerId = data.seller_id; listingTitle = data.title; }
+    }
+
+    const existing = document.getElementById('apcSellerRatingDialog');
+    if (existing) existing.remove();
+
+    let selectedStars = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'apcSellerRatingDialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+
+    box.innerHTML = `<div style="font-weight:800;font-size:17px;color:#111;margin-bottom:4px;">Rate your seller</div>
+        <div style="font-size:12px;color:#888;margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listingTitle)}</div>`;
+
+    // Stars
+    const starsLabel = document.createElement('div');
+    starsLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
+    starsLabel.textContent = 'HOW WAS THE SELLER?';
+    const starsRow = document.createElement('div');
+    starsRow.style.cssText = 'display:flex;gap:6px;margin-bottom:18px;';
+    const renderStars = (n) => {
+        selectedStars = n;
+        starsRow.querySelectorAll('span').forEach((s, i) => { s.style.color = i < n ? '#f59e0b' : '#ddd'; });
+    };
+    for (let i = 1; i <= 5; i++) {
+        const s = document.createElement('span');
+        s.textContent = '★';
+        s.style.cssText = 'font-size:28px;cursor:pointer;color:#ddd;transition:color 0.1s;';
+        s.onclick = () => renderStars(i);
+        starsRow.appendChild(s);
+    }
+
+    // Note
+    const noteLabel = document.createElement('div');
+    noteLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
+    noteLabel.textContent = 'ADD A NOTE (optional)';
+    const noteInput = document.createElement('textarea');
+    noteInput.maxLength = 120;
+    noteInput.rows = 2;
+    noteInput.placeholder = 'e.g. Friendly, item as described…';
+    noteInput.style.cssText = 'width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.4;margin-bottom:4px;';
+    const noteCount = document.createElement('div');
+    noteCount.style.cssText = 'text-align:right;font-size:11px;color:#bbb;margin-bottom:18px;';
+    noteCount.textContent = '0 / 120';
+    noteInput.oninput = () => { noteCount.textContent = `${noteInput.value.length} / 120`; };
+
+    // Buttons
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = 'Skip';
+    skipBtn.style.cssText = 'flex:1;padding:11px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:#555;';
+    skipBtn.onclick = () => { dismissNotification(notif.id); overlay.remove(); renderInboxContent(); updateInboxBadge(); };
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Submit Rating';
+    saveBtn.style.cssText = 'flex:2;padding:11px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;';
+    saveBtn.onclick = async () => {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving…';
+        const note = noteInput.value.trim() || null;
+        if (sb) {
+            const { error } = await sb.from('seller_ratings').insert({
+                listing_id: notif.listing_id || null,
+                rater_id:   currentUserId,
+                seller_id:  sellerId || null,
+                stars:      selectedStars || null,
+                note
+            });
+            if (error) { showToast('Could not save rating: ' + error.message); saveBtn.disabled = false; saveBtn.textContent = 'Submit Rating'; return; }
+        }
+        await dismissNotification(notif.id);
+        overlay.remove();
+        renderInboxContent();
+        updateInboxBadge();
+        showToast('Rating submitted — thank you!');
+    };
+
+    box.appendChild(starsLabel);
+    box.appendChild(starsRow);
+    box.appendChild(noteLabel);
+    box.appendChild(noteInput);
+    box.appendChild(noteCount);
+    btnRow.appendChild(skipBtn);
+    btnRow.appendChild(saveBtn);
+    box.appendChild(btnRow);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 }
 
 function buildInboxItemNode(item) {
