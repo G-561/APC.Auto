@@ -4746,17 +4746,6 @@ header {
     #messageDetailDrawer,
     #chatDrawer,
     #inboxDrawer,
-    #helpDrawer {
-        left: calc(max(0px, 50vw - 700px) + 240px) !important;
-        right: calc(max(0px, 50vw - 700px) + 220px) !important;
-        width: auto !important;
-        height: auto !important;
-        /* top is set dynamically by updateHeaderOffset() */
-        bottom: 0;
-        box-shadow: none !important;
-        border-left: 1px solid #e8e8e8;
-        border-right: 1px solid #e8e8e8;
-    }
 
     /* Wide drawers: full viewport width like the dashboard — square corners, no shadow */
     #settingsDrawer,
@@ -4769,7 +4758,8 @@ header {
     #recentlyViewedDrawer,
     #inboxDrawer,
     #chatDrawer,
-    #messageDetailDrawer {
+    #messageDetailDrawer,
+    #helpDrawer {
         left: max(0px, calc(50vw - 700px)) !important;
         right: max(0px, calc(50vw - 700px)) !important;
         width: auto !important;
@@ -4786,7 +4776,6 @@ header {
     /* top is set dynamically by updateHeaderOffset() — no hardcoded value here */
     #detailOverlay,
     #vehicleMakesDrawer,
-    #helpDrawer,
     #sellOverlay {
         bottom: 16px !important;
         border-radius: 16px !important;
@@ -5945,6 +5934,20 @@ header {
     color: #1a1a1a;
 }
 .help-contact-form textarea:focus { border-color: var(--apc-orange); }
+
+@media (min-width: 900px) {
+    .help-drawer-content {
+        padding: 32px 40px 60px;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+    .help-two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+    }
+}
 
 /* PULL-TO-DISMISS drag handle */
 .detail-drag-handle-bar {
