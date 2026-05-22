@@ -9626,28 +9626,6 @@ function refreshSponsoredCards() {
     if (inner) inner.style.transform = `translateY(-${window.scrollY}px)`;
 }
 
-async function renderDashSponsoredStatus() {
-    if (!sb || !currentUserId) return;
-    const { data } = await sb.from('sponsored_cards').select('*').eq('user_id', currentUserId).single();
-    const badge = document.getElementById('dashSponsoredStatusBadge');
-    const preview = document.getElementById('dashSponsoredPreview');
-    const btn = document.getElementById('dashSponsoredBtn');
-    if (!data) {
-        if (badge) { badge.textContent = ''; }
-        if (preview) preview.innerHTML = '';
-        if (btn) btn.textContent = '+ Create Sponsored Card';
-        return;
-    }
-    if (badge) {
-        badge.textContent = data.active ? '● Live' : '⏳ Pending review';
-        badge.style.color = data.active ? '#2e7d32' : '#f97316';
-    }
-    if (preview) {
-        preview.innerHTML = `<div style="pointer-events:none; transform:scale(0.8); transform-origin:top left; width:125%;">${buildSponsoredCardHTML(data)}</div>`;
-    }
-    if (btn) btn.textContent = 'Edit Card';
-}
-
 function onMenuOpenWorkshops() {
     if (!userIsSignedIn) {
         openAuthDrawer(onMenuOpenWorkshops);
@@ -10830,7 +10808,6 @@ function renderDashboard() {
     renderDashActivity();
     renderDemandWidget();
     renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
-    renderDashSponsoredStatus();
 }
 
 function renderDashboardCharts(myListings) {
