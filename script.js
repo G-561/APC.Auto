@@ -7183,6 +7183,11 @@ function renderGarageTab() {
              (!w.year || !v.year || String(w.year) === String(v.year)))
     );
 
+    if (window.innerWidth >= 900) {
+        renderGarageDesktopSections(c, v, vehicleWanted);
+        return;
+    }
+
     if (currentVehicleTab === 'wanted') {
         if (!vehicleWanted.length) {
             c.appendChild(buildVehicleEmpty(
@@ -7226,6 +7231,53 @@ function renderGarageTab() {
         } else {
             c.appendChild(buildPartsGrid(matchingParts));
         }
+    }
+}
+
+function renderGarageDesktopSections(c, v, vehicleWanted) {
+    function section(labelHTML, content) {
+        const wrap = document.createElement('div');
+        wrap.className = 'garage-section';
+        const hdr = document.createElement('div');
+        hdr.className = 'garage-section-hdr';
+        hdr.innerHTML = labelHTML;
+        wrap.appendChild(hdr);
+        wrap.appendChild(content);
+        c.appendChild(wrap);
+    }
+
+    // Wanted parts
+    const wantedHdr = `WANTED PARTS <span class="garage-section-count${vehicleWanted.length ? '' : ''}">${vehicleWanted.length}</span>
+        <button class="garage-section-add" onclick="openAddWantedForVehicle(${v.id})">+ Add</button>`;
+    if (vehicleWanted.length) {
+        section(wantedHdr, buildWantedGrid(vehicleWanted));
+    } else {
+        const emp = document.createElement('div');
+        emp.className = 'garage-section-empty';
+        emp.textContent = `No wanted parts for your ${v.make} ${v.model} yet.`;
+        section(wantedHdr, emp);
+    }
+
+    // Matches
+    const matchingParts = getAllParts().filter(p => {
+        const mw = vehicleWanted.filter(w => wantedMatchesPart(w, p));
+        return mw.length && mw.some(w => !dismissedMatches[String(w.id)]?.has(p.id));
+    });
+    if (matchingParts.length) {
+        section(`MATCHES <span class="garage-section-count has-matches">${matchingParts.length}</span>`,
+            buildPartsGrid(matchingParts));
+    }
+
+    // Saved for this car
+    const savedFitting = getAllParts().filter(p =>
+        savedParts.has(p.supabaseId || p.id) && (
+            (p.fits?.length > 0 && partFitsVehicle(p, v)) ||
+            vehicleWanted.some(w => wantedMatchesPart(w, p))
+        )
+    );
+    if (savedFitting.length) {
+        section(`SAVED FOR THIS CAR <span class="garage-section-count">${savedFitting.length}</span>`,
+            buildPartsGrid(savedFitting));
     }
 }
 

@@ -1999,17 +1999,22 @@
             <div class="dh-close" onclick="toggleDrawer('garageDrawer')">×</div>
         </div>
     </div>
-    <div class="drawer-content" style="background: #f4f4f4;">
-        <div id="garageChipsBar" class="garage-chips-bar"></div>
-
-        <div id="garageInlineDetail" style="display:none;">
-            <div id="garageVehicleHeader" class="garage-vehicle-header"></div>
-            <div class="segmented-control" style="margin-bottom:12px;">
-                <div class="seg active" data-gtab="wanted"  onclick="setGarageTab('wanted')">Wanted</div>
-                <div class="seg"        data-gtab="saved"   onclick="setGarageTab('saved')">Saved</div>
-                <div class="seg"        data-gtab="matches" onclick="setGarageTab('matches')">Matches</div>
+    <div class="drawer-content garage-two-col">
+        <!-- Left: vehicle list -->
+        <div class="garage-left-col">
+            <div id="garageChipsBar" class="garage-chips-bar"></div>
+        </div>
+        <!-- Right: vehicle detail -->
+        <div class="garage-right-col">
+            <div id="garageInlineDetail" style="display:none;">
+                <div id="garageVehicleHeader" class="garage-vehicle-header"></div>
+                <div class="segmented-control" id="garageSegControl" style="margin-bottom:12px;">
+                    <div class="seg active" data-gtab="wanted"  onclick="setGarageTab('wanted')">Wanted</div>
+                    <div class="seg"        data-gtab="saved"   onclick="setGarageTab('saved')">Saved</div>
+                    <div class="seg"        data-gtab="matches" onclick="setGarageTab('matches')">Matches</div>
+                </div>
+                <div id="garageInlineTabContent"></div>
             </div>
-            <div id="garageInlineTabContent"></div>
         </div>
     </div>
 </div>
