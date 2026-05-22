@@ -6048,7 +6048,109 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     const searchEl = document.getElementById('storefrontSearch');
     if (searchEl) searchEl.value = '';
 
+    // Ratings
+    _sfRatings = [];
+    const ratingEl = document.getElementById('sfRatingStat');
+    if (ratingEl) ratingEl.style.display = 'none';
+    if (userId && sb) {
+        sb.from('seller_ratings')
+            .select('stars, note, created_at, listing_id')
+            .eq('seller_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(100)
+            .then(({ data }) => {
+                if (!data?.length) return;
+                _sfRatings = data;
+                const avg = data.reduce((s, r) => s + (r.stars || 0), 0) / data.length;
+                if (ratingEl) {
+                    ratingEl.textContent = `★ ${avg.toFixed(1)}  (${data.length})`;
+                    ratingEl.style.display = '';
+                }
+            });
+    }
+
     syncStoreSaveButton();
+}
+
+let _sfRatings = [];
+
+function openSellerRatings() {
+    if (!_sfRatings.length) return;
+
+    const existing = document.getElementById('sfRatingsSheet');
+    if (existing) { existing.remove(); return; }
+
+    const avg   = _sfRatings.reduce((s, r) => s + (r.stars || 0), 0) / _sfRatings.length;
+    const total = _sfRatings.length;
+    const counts = [5,4,3,2,1].map(n => ({ n, c: _sfRatings.filter(r => r.stars === n).length }));
+
+    const sheet = document.createElement('div');
+    sheet.id = 'sfRatingsSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:3400;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:rgba(0,0,0,0.45);';
+    sheet.onclick = (e) => { if (e.target === sheet) sheet.remove(); };
+
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:680px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 30px rgba(0,0,0,0.15);';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;';
+    hdr.innerHTML = `<div style="font-weight:800;font-size:17px;color:#111;">Seller Ratings</div>
+        <button onclick="document.getElementById('sfRatingsSheet').remove()" style="background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;padding:0;line-height:1;">×</button>`;
+
+    // Summary strip
+    const summary = document.createElement('div');
+    summary.style.cssText = 'display:flex;align-items:center;gap:20px;padding:16px 20px 14px;border-bottom:1px solid #f0f0f0;flex-shrink:0;';
+
+    const bigStar = document.createElement('div');
+    bigStar.style.cssText = 'text-align:center;flex-shrink:0;';
+    bigStar.innerHTML = `<div style="font-size:40px;font-weight:900;color:#111;line-height:1;">${avg.toFixed(1)}</div>
+        <div style="font-size:18px;color:#f59e0b;letter-spacing:2px;">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5 - Math.round(avg))}</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">${total} rating${total !== 1 ? 's' : ''}</div>`;
+
+    const bars = document.createElement('div');
+    bars.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:4px;';
+    counts.forEach(({ n, c }) => {
+        const pct = total ? Math.round((c / total) * 100) : 0;
+        bars.innerHTML += `<div style="display:flex;align-items:center;gap:6px;font-size:11px;">
+            <span style="color:#f59e0b;width:14px;text-align:right;font-weight:700;">${n}</span>
+            <div style="flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:#f59e0b;border-radius:3px;"></div>
+            </div>
+            <span style="color:#888;width:18px;">${c}</span>
+        </div>`;
+    });
+
+    summary.appendChild(bigStar);
+    summary.appendChild(bars);
+
+    // Reviews list
+    const list = document.createElement('div');
+    list.style.cssText = 'overflow-y:auto;flex:1;padding:0 20px 20px;';
+
+    _sfRatings.forEach(r => {
+        const part = r.listing_id ? findPartAnywhere(r.listing_id) : null;
+        const listingTitle = part ? part.title : null;
+        const stars = r.stars ? '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars) : '';
+        const date  = r.created_at ? new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+        const row = document.createElement('div');
+        row.style.cssText = 'padding:14px 0;border-bottom:1px solid #f5f5f5;';
+        row.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                <span style="color:#f59e0b;font-size:15px;letter-spacing:1px;">${escapeHtml(stars)}</span>
+                <span style="font-size:11px;color:#bbb;">${escapeHtml(date)}</span>
+            </div>
+            ${r.note ? `<div style="font-size:13px;color:#333;line-height:1.5;margin-bottom:4px;">"${escapeHtml(r.note)}"</div>` : ''}
+            ${listingTitle ? `<div style="font-size:11px;color:#aaa;">Re: ${escapeHtml(listingTitle)}</div>` : ''}`;
+        list.appendChild(row);
+    });
+
+    panel.appendChild(hdr);
+    panel.appendChild(summary);
+    panel.appendChild(list);
+    sheet.appendChild(panel);
+    document.body.appendChild(sheet);
 }
 
 function filterStorefront() {

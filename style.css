@@ -965,6 +965,10 @@ header {
 .sf-bar-stat {
     font-size: 13px; color: #555; font-weight: 500; white-space: nowrap;
 }
+.sf-rating-stat {
+    color: #f59e0b; font-weight: 700; cursor: pointer;
+}
+.sf-rating-stat:hover { text-decoration: underline; }
 .sf-bar-num {
     font-weight: 800; color: var(--apc-charcoal);
 }
