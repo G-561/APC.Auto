@@ -1271,6 +1271,15 @@ header {
     background: #E4E6EB;
     margin-top: 0;
 }
+/* Mobile: grids in padded drawer containers break out to screen edges */
+#myPartsList .results-grid {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+#savedPartsContent .results-grid {
+    margin-left: -16px;
+    margin-right: -16px;
+}
 #sellerPartsGrid {
     margin-top: 0 !important;
 }
@@ -2440,7 +2449,7 @@ header {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
+    padding: 12px 8px;
     border-bottom: 1px solid #f0f0f0;
 }
 .rv-search-input {
@@ -2461,7 +2470,7 @@ header {
     background: #fff;
 }
 .rv-drawer-count-row {
-    padding: 7px 16px 4px;
+    padding: 7px 8px 4px;
 }
 .rv-drawer-count {
     font-size: 12px;
@@ -4422,6 +4431,8 @@ header {
     #savedPartsContent .results-grid,
     #rvListContent .results-grid {
         grid-template-columns: repeat(7, 1fr);
+        margin-left: 0;
+        margin-right: 0;
     }
 
     /* ── GARAGE — 2-column desktop layout ─────────────────────── */
