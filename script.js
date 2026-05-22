@@ -3700,6 +3700,13 @@ function updateGridHeading(label, count) {
 
 function goHome() {
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
+    // Dashboard is not a drawer — close it explicitly and restore panels
+    const dv = document.getElementById('dashboardView');
+    if (dv) dv.style.display = 'none';
+    const fd = document.getElementById('filterDrawer');
+    const rp = document.querySelector('.desktop-right-panel');
+    if (fd) fd.style.removeProperty('display');
+    if (rp) rp.style.removeProperty('display');
     syncBackdrop();
     renderMainGrid();
     window.scrollTo(0, 0);
