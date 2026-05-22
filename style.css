@@ -4066,7 +4066,7 @@ header {
 .header-list-btn {
     background: var(--apc-orange);
     color: white;
-    border: none;
+    border: 2px solid var(--apc-orange);
     border-radius: 8px;
     padding: 11px 22px;
     font-size: 14px;
@@ -4078,9 +4078,9 @@ header {
     box-shadow: 0 4px 14px rgba(240,112,32,0.28);
 }
 .header-list-btn:hover {
-    background: #c44d00;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(240,112,32,0.35);
+    background: white;
+    color: var(--apc-orange);
+    box-shadow: 0 4px 14px rgba(240,112,32,0.2);
 }
 .dtb-left, .dtb-right { display: flex; align-items: center; gap: 4px; }
 .dtb-link {
