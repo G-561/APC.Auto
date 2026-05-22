@@ -4029,6 +4029,45 @@ header {
     z-index: 3100;
     box-sizing: border-box;
 }
+.dtb-nav {
+    display: flex;
+    align-items: center;
+    flex: 1;
+}
+.dtb-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+.dtb-sell-btn {
+    background: var(--apc-orange);
+    color: white !important;
+    font-weight: 900;
+    border-radius: 6px;
+    padding: 0 14px;
+    height: 26px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+}
+.dtb-sell-btn:hover { background: #d95f10 !important; color: white !important; }
+.dtb-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--apc-orange);
+    color: white;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
+.dtb-avatar:hover { opacity: 0.82; }
 .dtb-left, .dtb-right { display: flex; align-items: center; gap: 4px; }
 .dtb-link {
     padding: 0 12px;

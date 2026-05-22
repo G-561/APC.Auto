@@ -8616,9 +8616,13 @@ function closeAccountMenu() {
 }
 
 document.addEventListener('click', function(e) {
-    const dd   = document.getElementById('accountDropdown');
-    const pill = document.getElementById('accountPill');
-    if (dd && dd.classList.contains('active') && !dd.contains(e.target) && !(pill && pill.contains(e.target))) {
+    const dd     = document.getElementById('accountDropdown');
+    const pill   = document.getElementById('accountPill');
+    const avatar = document.getElementById('dtbAvatar');
+    if (dd && dd.classList.contains('active') &&
+        !dd.contains(e.target) &&
+        !(pill && pill.contains(e.target)) &&
+        !(avatar && avatar.contains(e.target))) {
         closeAccountDropdown();
     }
 });
@@ -9586,6 +9590,31 @@ function renderAccountState() {
     if (dtbMessages)      dtbMessages.style.display      = userIsSignedIn ? '' : 'none';
     if (desktopInboxItem) desktopInboxItem.style.display = userIsSignedIn ? '' : 'none';
 
+    // Top bar full nav + avatar (desktop only)
+    const dtbNavItems = document.getElementById('dtbNavItems');
+    const dtbAvatar   = document.getElementById('dtbAvatar');
+    if (dtbNavItems) dtbNavItems.style.display = userIsSignedIn ? 'flex' : 'none';
+    if (dtbAvatar) {
+        dtbAvatar.style.display = userIsSignedIn ? 'flex' : 'none';
+        if (userIsSignedIn) {
+            if (pic) {
+                dtbAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+                dtbAvatar.style.background = 'transparent';
+            } else {
+                dtbAvatar.textContent = initial;
+                dtbAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
+            }
+        }
+    }
+
+    // On desktop when signed in, hide the header pill — top bar avatar replaces it
+    const pillZone = document.getElementById('accountPillZone');
+    if (pillZone) {
+        const hideOnDesktop = window.innerWidth >= 900 && userIsSignedIn;
+        pillZone.style.pointerEvents = hideOnDesktop ? 'none' : '';
+        pillZone.style.opacity       = hideOnDesktop ? '0'    : '';
+    }
+
     // Sync desktop dropdown
     const ddAvatar  = document.getElementById('acctDdAvatar');
     const ddName    = document.getElementById('acctDdName');
@@ -9692,7 +9721,7 @@ function updateHeaderOffset() {
             if (authDrawer)           authDrawer.style.top           = totalH + 'px';
             if (dashView)             dashView.style.top             = totalH + 'px';
             if (rightPanel)           rightPanel.style.top           = totalH + 'px';
-            if (accountDropdown)      accountDropdown.style.top      = (totalH + 8) + 'px';
+            if (accountDropdown)      accountDropdown.style.top      = (topBarH + 8) + 'px';
         }
     }
 }
