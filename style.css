@@ -3818,6 +3818,60 @@ header {
 .my-part-delete-btn:hover { border-color: #FF3B30; color: #FF3B30; }
 .my-part-delete-btn:active { transform: scale(0.85); }
 
+/* MY LISTINGS CARD OVERLAY */
+.my-card-wrap { position: relative; }
+.my-card-wrap--sold .item-card { opacity: 0.6; }
+.my-card-wrap--sold .item-img { filter: grayscale(0.5); }
+.my-card-actions-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.62);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+}
+.my-overlay-sold-date {
+    flex: 1;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.2px;
+}
+.my-card-action-btn {
+    flex: 1;
+    background: var(--apc-orange);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    font-family: inherit;
+}
+.my-card-action-btn:hover { background: var(--apc-orange-dark); }
+.my-card-delete-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    font-size: 16px;
+    color: rgba(255,255,255,0.8);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+.my-card-delete-btn:hover { background: rgba(239,68,68,0.8); color: #fff; border-color: transparent; }
+
 /* MANAGE LISTING — status pills + rate buyer (edit mode only) */
 .manage-section {
     margin-top: 4px;
@@ -4334,36 +4388,6 @@ header {
     }
     .grid-heading { padding: 12px 14px 4px; }
     .grid-heading-label { font-size: 14px; }
-
-    /* ── MY LISTINGS — 2-column card grid ─────────────────────── */
-    #myPartsList {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-    }
-    .my-part-row {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0;
-        margin-bottom: 0;
-        overflow: hidden;
-    }
-    .my-part-thumb {
-        width: 100%;
-        height: 160px;
-        border-radius: 12px 12px 0 0;
-        flex-shrink: 0;
-    }
-    .my-part-info { padding: 10px 12px 4px; }
-    .my-part-title { white-space: normal; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; }
-    .my-part-actions {
-        padding: 8px 12px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-top: auto;
-    }
 
     /* ── SAVED PARTS — 3-column card grid ─────────────────────── */
     .sp-active-grid {

@@ -4111,93 +4111,36 @@ function renderMyParts() {
         return;
     }
 
+    const grid = document.createElement('div');
+    grid.className = 'results-grid';
+
     tabParts.forEach(part => {
-        const isSold    = part.status === 'sold';
-        const isPending = part.status === 'pending';
+        const isSold = part.status === 'sold';
 
-        const row = document.createElement('div');
-        row.className = 'my-part-row' + (isSold ? ' sold' : '');
+        const wrap = document.createElement('div');
+        wrap.className = 'my-card-wrap' + (isSold ? ' my-card-wrap--sold' : '');
+        wrap.innerHTML = buildCardHTML(part);
 
-        const thumb = document.createElement('img');
-        thumb.src = part.images[0];
-        thumb.className = 'my-part-thumb';
-        if (!isSold) {
-            thumb.style.cursor = 'pointer';
-            thumb.onclick = (e) => { e.stopPropagation(); openItemDetail(part.supabaseId || part.id); };
+        const card = wrap.querySelector('.item-card');
+        if (card) {
+            const soldDateStr = isSold && part.soldDate
+                ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
+                : '';
+
+            const overlay = document.createElement('div');
+            overlay.className = 'my-card-actions-overlay';
+            overlay.innerHTML = isSold
+                ? `${soldDateStr}<button class="my-card-action-btn" onclick="event.stopPropagation();relistPart('${part.id}')">RELIST</button>
+                   <button class="my-card-delete-btn" onclick="event.stopPropagation();confirmDeleteListing('${part.id}')">×</button>`
+                : `<button class="my-card-action-btn" onclick="event.stopPropagation();openEditListing('${part.id}')">MANAGE</button>
+                   <button class="my-card-delete-btn" onclick="event.stopPropagation();confirmDeleteListing('${part.id}')">×</button>`;
+            card.appendChild(overlay);
         }
 
-        const info = document.createElement('div');
-        info.className = 'my-part-info';
-
-        const title = document.createElement('div');
-        title.className = 'my-part-title';
-        title.textContent = part.title;
-
-        const sub = document.createElement('div');
-        sub.className = 'my-part-sub';
-
-        const price = document.createElement('span');
-        price.className = 'my-part-price';
-        price.textContent = '$' + part.price;
-        sub.appendChild(price);
-
-        if (isSold && part.soldDate) {
-            const dateEl = document.createElement('span');
-            dateEl.className = 'my-part-sold-date';
-            dateEl.textContent = 'Sold ' + new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-            sub.appendChild(dateEl);
-        }
-
-        info.appendChild(title);
-        info.appendChild(sub);
-
-        row.appendChild(thumb);
-        row.appendChild(info);
-
-        const actions = document.createElement('div');
-        actions.className = 'my-part-actions';
-
-        if (isSold) {
-            const relistBtn = document.createElement('button');
-            relistBtn.className = 'my-part-relist-btn';
-            relistBtn.textContent = 'RELIST';
-            relistBtn.onclick = (e) => { e.stopPropagation(); relistPart(part.id); };
-
-            const rateBtn = document.createElement('button');
-            rateBtn.className = 'my-part-rate-btn';
-            rateBtn.textContent = '★';
-            rateBtn.title = 'Rate buyer';
-            rateBtn.onclick = (e) => { e.stopPropagation(); showToast('Buyer ratings coming soon'); };
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'my-part-delete-btn';
-            deleteBtn.textContent = '×';
-            deleteBtn.title = 'Delete listing';
-            deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
-
-            actions.appendChild(relistBtn);
-            actions.appendChild(rateBtn);
-            actions.appendChild(deleteBtn);
-        } else {
-            const manageBtn = document.createElement('button');
-            manageBtn.className = 'my-part-manage-btn';
-            manageBtn.textContent = 'MANAGE';
-            manageBtn.onclick = (e) => { e.stopPropagation(); openEditListing(part.id); };
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'my-part-delete-btn';
-            deleteBtn.textContent = '×';
-            deleteBtn.title = 'Delete listing';
-            deleteBtn.onclick = (e) => { e.stopPropagation(); confirmDeleteListing(part.id); };
-
-            actions.appendChild(manageBtn);
-            actions.appendChild(deleteBtn);
-        }
-
-        row.appendChild(actions);
-
-        myPartsList.appendChild(row);
+        grid.appendChild(wrap);
     });
+
+    myPartsList.appendChild(grid);
 }
 
 function showSellError(msg) {
