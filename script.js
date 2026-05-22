@@ -3113,7 +3113,7 @@ function findPartAnywhere(id) {
     return undefined;
 }
 function getPartById(id) {
-    return getAllParts().find(p => p.id === id);
+    return getAllParts().find(p => p.id === id || (p.supabaseId && p.supabaseId === id));
 }
 
 function findSimilarActiveParts(stalePart) {
@@ -5412,7 +5412,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
     safeText(document.getElementById('detailDescription'), part.description || 'Fully functional part. Tested and ready for installation.');
-    syncDetailSaveButton(part.id);
+    syncDetailSaveButton(part.supabaseId || part.id);
 
     // Show "Make an Offer" button only when the part has offers enabled and the viewer isn't the seller
     const offerSection = document.getElementById('detailOfferSection');
@@ -7291,7 +7291,7 @@ function toggleSavedPart(partId, btn) {
         showToast('Saved');
     }
     // Keep saves count live on user-created listings
-    const listing = userListings.find(l => l.id === partId);
+    const listing = userListings.find(l => l.id === partId || l.supabaseId === partId);
     if (listing) {
         listing.saves = Math.max(0, (listing.saves || 0) + (wasSaved ? -1 : 1));
         saveUserListings();
@@ -7420,7 +7420,7 @@ function renderSavedParts() {
                 overlay.className = 'my-card-actions-overlay';
                 overlay.onclick = (e) => e.stopPropagation();
                 overlay.innerHTML = `<span style="flex:1"></span>
-                    <button class="my-card-delete-btn" onclick="toggleSavedPart(${part.id})" title="Remove from saved">×</button>`;
+                    <button class="my-card-delete-btn" onclick="toggleSavedPart(${part.supabaseId || part.id})" title="Remove from saved">×</button>`;
                 card.appendChild(overlay);
             }
             grid.appendChild(wrap);
