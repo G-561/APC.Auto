@@ -4675,7 +4675,7 @@ header {
     /* With seller section hidden, push × to the right — !important overrides inline style */
     #detailOverlay .drawer-header { display: none !important; }
     #detailScrollArea { height: 100% !important; }
-    .detail-float-close { display: flex; right: 29px; }
+    .detail-float-close { display: flex; right: 16px; }
 
     /* Storefront: same centre-panel positioning as detail overlay */
     #storefrontDrawer {
@@ -4774,12 +4774,19 @@ header {
 
     /* Card-style drawers: rounded corners + shadow */
     /* top is set dynamically by updateHeaderOffset() — no hardcoded value here */
-    #detailOverlay,
     #vehicleMakesDrawer,
     #sellOverlay {
         bottom: 16px !important;
         border-radius: 16px !important;
         box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important;
+        border: none !important;
+        overflow: hidden;
+    }
+
+    #detailOverlay {
+        bottom: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
         border: none !important;
         overflow: hidden;
     }
