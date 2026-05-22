@@ -4390,6 +4390,12 @@ header {
     .grid-heading { padding: 12px 14px 4px; }
     .grid-heading-label { font-size: 14px; }
 
+    /* ── MY LISTINGS + SAVED — 7-column grid (full-width drawer) ─ */
+    #myPartsList .results-grid,
+    #savedPartsContent .results-grid {
+        grid-template-columns: repeat(7, 1fr);
+    }
+
     /* ── GARAGE TABS — 3-column grid ──────────────────────────── */
     #garageInlineTabContent .results-grid {
         grid-template-columns: repeat(3, 1fr);
@@ -5684,7 +5690,7 @@ header {
 /* My Listings tabs */
 .my-listings-tabs {
     display: flex;
-    gap: 6px;
+    gap: 14px;
     margin-bottom: 14px;
 }
 .ml-away-banner {
@@ -5707,38 +5713,29 @@ header {
     color: #f59e0b;
 }
 .my-listings-tab {
-    flex: 1;
-    background: white;
-    border: 1.5px solid #e5e5e5;
-    border-radius: 10px;
-    padding: 8px 4px;
+    background: #e8e8e8;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
     font-size: 12px;
-    font-weight: 800;
-    color: #888;
+    font-weight: 700;
+    color: #555;
     cursor: pointer;
     font-family: inherit;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
 }
-.my-listings-tab[data-tab="active"].active  { background: #28a745; border-color: #28a745; color: white; }
-.my-listings-tab[data-tab="pending"].active { background: var(--apc-orange); border-color: var(--apc-orange); color: white; }
-.my-listings-tab[data-tab="sold"].active    { background: #aaa;    border-color: #aaa;    color: white; }
+.my-listings-tab:hover { opacity: 0.8; }
+.my-listings-tab.active { background: var(--apc-orange); color: white; }
 .ml-tab-badge {
-    background: rgba(255,255,255,0.3);
-    border-radius: 10px;
+    display: inline-block;
+    background: rgba(0,0,0,0.1);
+    border-radius: 99px;
     padding: 1px 6px;
     font-size: 10px;
-    font-weight: 900;
-    min-width: 16px;
-    text-align: center;
+    font-weight: 700;
+    margin-left: 3px;
 }
-.my-listings-tab:not(.active) .ml-tab-badge {
-    background: #eee;
-    color: #666;
-}
+.my-listings-tab.active .ml-tab-badge { background: rgba(255,255,255,0.25); }
 .my-part-sold-date {
     font-size: 11px;
     color: #aaa;
