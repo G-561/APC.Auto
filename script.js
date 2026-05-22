@@ -3734,7 +3734,6 @@ function renderMainGrid() {
     if (!mainGrid) return;
 
     mainGrid.innerHTML = '';
-    recordSearch(activeFilters.search);
 
     if (currentSearchMode === 'wanted') {
         setDtbActive(null);
@@ -11108,12 +11107,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wire up live search with debounce
     const searchInput = document.getElementById('mainSearchInput');
     if (searchInput) {
+        let _recordSearchTimer = null;
+
+        const scheduleRecordSearch = (term) => {
+            clearTimeout(_recordSearchTimer);
+            _recordSearchTimer = setTimeout(() => recordSearch(term), 2500);
+        };
+
         searchInput.addEventListener('input', debounce(() => {
             activeFilters.search = searchInput.value.trim();
             renderMainGrid();
             updateFilterChip();
             refreshSponsoredCards();
+            scheduleRecordSearch(activeFilters.search);
         }, 300));
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(_recordSearchTimer);
+                recordSearch(searchInput.value.trim());
+            }
+        });
     }
 
     // Wire up the filter "Update Results" button
