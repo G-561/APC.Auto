@@ -4104,6 +4104,26 @@ function showBuyerFeedbackDialog(listingId) {
     starsSection.appendChild(starsRow);
     box.appendChild(starsSection);
 
+    // Note
+    const noteWrap = document.createElement('div');
+    noteWrap.style.cssText = 'margin-bottom:20px;';
+    const noteLabel = document.createElement('div');
+    noteLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
+    noteLabel.textContent = 'ADD A NOTE (optional)';
+    const noteInput = document.createElement('textarea');
+    noteInput.maxLength = 120;
+    noteInput.rows = 2;
+    noteInput.placeholder = 'e.g. Great buyer, paid quickly…';
+    noteInput.style.cssText = 'width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.4;';
+    const noteCount = document.createElement('div');
+    noteCount.style.cssText = 'text-align:right;font-size:11px;color:#bbb;margin-top:3px;';
+    noteCount.textContent = '0 / 120';
+    noteInput.oninput = () => { noteCount.textContent = `${noteInput.value.length} / 120`; };
+    noteWrap.appendChild(noteLabel);
+    noteWrap.appendChild(noteInput);
+    noteWrap.appendChild(noteCount);
+    box.appendChild(noteWrap);
+
     // Buttons
     const btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:10px;';
@@ -4118,7 +4138,8 @@ function showBuyerFeedbackDialog(listingId) {
     saveBtn.style.cssText = 'flex:2;padding:11px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;';
     saveBtn.onclick = () => {
         const buyerName = isOther ? (otherInput.value.trim() || null) : selectedBuyer;
-        listing.buyerRating = { stars: selectedStars || null, buyerName: buyerName || null };
+        const note = noteInput.value.trim() || null;
+        listing.buyerRating = { stars: selectedStars || null, buyerName: buyerName || null, note };
         listing.soldDate = listing.soldDate || Date.now();
         saveUserListings();
         renderMyParts();
