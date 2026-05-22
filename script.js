@@ -7416,12 +7416,12 @@ function renderSavedParts() {
             wrap.innerHTML = buildCardHTML(part);
             const card = wrap.querySelector('.item-card');
             if (card) {
-                const overlay = document.createElement('div');
-                overlay.className = 'my-card-actions-overlay';
-                overlay.onclick = (e) => e.stopPropagation();
-                overlay.innerHTML = `<span style="flex:1"></span>
-                    <button class="my-card-delete-btn" onclick="toggleSavedPart(${part.supabaseId || part.id})" title="Remove from saved">×</button>`;
-                card.appendChild(overlay);
+                const xBtn = document.createElement('button');
+                xBtn.className = 'my-card-x-float';
+                xBtn.title = 'Remove from saved';
+                xBtn.textContent = '×';
+                xBtn.onclick = (e) => { e.stopPropagation(); toggleSavedPart(part.supabaseId || part.id); };
+                card.appendChild(xBtn);
             }
             grid.appendChild(wrap);
         });
