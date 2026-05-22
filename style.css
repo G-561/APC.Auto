@@ -4554,15 +4554,13 @@ header {
 
     /* Detail overlay: fills center column between sidebars */
     #detailOverlay {
-        left: calc(max(0px, 50vw - 700px) + 240px) !important;
-        right: calc(max(0px, 50vw - 700px) + 220px) !important;
+        left: max(0px, calc(50vw - 700px)) !important;
+        right: max(0px, calc(50vw - 700px)) !important;
         width: auto !important;
         height: auto !important;
-        top: 36px; /* overridden by updateHeaderOffset() — aligns with top of search bar */
+        /* top is set dynamically by updateHeaderOffset() */
         bottom: 0;
         box-shadow: none !important;
-        border-left: 1px solid #e8e8e8;
-        border-right: 1px solid #e8e8e8;
     }
     /* Two-column layout: images left, info right — footer strip pinned below */
     #detailScrollArea {
