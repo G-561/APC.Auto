@@ -7324,6 +7324,12 @@ function toggleSavedPart(partId, btn) {
     if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
 }
 
+function confirmUnsavePart(partId) {
+    const part = getPartById(partId);
+    const title = part ? part.title : 'this listing';
+    showConfirmDialog('Remove from Saved', `Remove "${title}" from your saved parts?`, 'Remove', () => toggleSavedPart(partId));
+}
+
 function closeSavedPartsDrawer() {
     const el = document.getElementById('savedPartsDrawer');
     if (el) el.classList.remove('active');
@@ -7407,7 +7413,7 @@ function renderSavedParts() {
         </div>`;
     }).join('');
 
-    const buildActiveHTML = (parts) => {
+    const buildActiveGrid = (parts) => {
         const grid = document.createElement('div');
         grid.className = 'results-grid';
         parts.forEach(part => {
@@ -7420,31 +7426,30 @@ function renderSavedParts() {
                 xBtn.className = 'my-card-x-float';
                 xBtn.title = 'Remove from saved';
                 xBtn.textContent = '×';
-                xBtn.onclick = (e) => { e.stopPropagation(); toggleSavedPart(part.supabaseId || part.id); };
+                xBtn.onclick = (e) => { e.stopPropagation(); confirmUnsavePart(part.supabaseId || part.id); };
                 card.appendChild(xBtn);
             }
             grid.appendChild(wrap);
         });
-        return grid.outerHTML;
+        return grid;
     };
 
-    let bodyHTML = '';
-    if (savedPartsTab === 'all') {
-        bodyHTML = buildActiveHTML(activeParts);
-        if (staleParts.length) bodyHTML += `<div class="stale-section-hdr">No longer available</div>${buildStaleHTML(staleParts)}`;
-    } else if (savedPartsTab === 'active') {
-        bodyHTML = activeParts.length
-            ? buildActiveHTML(activeParts)
-            : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">All your saved listings have ended.</div>`;
-    } else {
-        bodyHTML = staleParts.length
-            ? buildStaleHTML(staleParts)
-            : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No ended listings — all your saves are still live.</div>`;
-    }
+    content.innerHTML = `<div style="padding: 12px 8px 10px; background:white; margin:-16px -16px 16px; border-bottom:1px solid #eee;">${tabsHTML}</div>`;
 
-    content.innerHTML = `
-        <div style="padding: 12px 8px 10px; background:white; margin:-16px -16px 16px; border-bottom:1px solid #eee;">${tabsHTML}</div>
-        ${bodyHTML}`;
+    if (savedPartsTab === 'all') {
+        content.appendChild(buildActiveGrid(activeParts));
+        if (staleParts.length) content.insertAdjacentHTML('beforeend', `<div class="stale-section-hdr">No longer available</div>${buildStaleHTML(staleParts)}`);
+    } else if (savedPartsTab === 'active') {
+        if (activeParts.length) {
+            content.appendChild(buildActiveGrid(activeParts));
+        } else {
+            content.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">All your saved listings have ended.</div>`);
+        }
+    } else {
+        content.insertAdjacentHTML('beforeend', staleParts.length
+            ? buildStaleHTML(staleParts)
+            : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No ended listings — all your saves are still live.</div>`);
+    }
 }
 
 function dismissStalePart(partId) {
