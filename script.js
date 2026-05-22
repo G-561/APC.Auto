@@ -5518,6 +5518,23 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (colName)   colName.textContent   = part.seller;
     if (colProBadge) colProBadge.style.display = part.isPro ? 'inline-block' : 'none';
 
+    // Seller rating in header
+    _detailRatings = [];
+    const detailRatingEl = document.getElementById('detailSellerRating');
+    if (detailRatingEl) detailRatingEl.style.display = 'none';
+    if (part.sellerId && sb) {
+        sb.from('seller_ratings').select('stars, note, created_at, rater_id').eq('seller_id', part.sellerId).order('created_at', { ascending: false }).limit(100)
+          .then(({ data }) => {
+              if (!data?.length) return;
+              _detailRatings = data;
+              const avg = data.reduce((s, r) => s + (r.stars || 0), 0) / data.length;
+              if (detailRatingEl) {
+                  detailRatingEl.textContent = `★ ${avg.toFixed(1)}`;
+                  detailRatingEl.style.display = '';
+              }
+          });
+    }
+
     // Apply blur lock to col seller card (also gets .locked class for overlay visibility — done above)
     if (detailSellerColCard) detailSellerColCard.classList.toggle('blurred-detail', !userIsSignedIn);
 
@@ -6073,16 +6090,17 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
 }
 
 let _sfRatings = [];
+let _detailRatings = [];
 
-function openSellerRatings() {
-    if (!_sfRatings.length) return;
+function openSellerRatings(ratings = _sfRatings) {
+    if (!ratings?.length) return;
 
     const existing = document.getElementById('sfRatingsSheet');
     if (existing) { existing.remove(); return; }
 
-    const avg   = _sfRatings.reduce((s, r) => s + (r.stars || 0), 0) / _sfRatings.length;
-    const total = _sfRatings.length;
-    const counts = [5,4,3,2,1].map(n => ({ n, c: _sfRatings.filter(r => r.stars === n).length }));
+    const avg   = ratings.reduce((s, r) => s + (r.stars || 0), 0) / ratings.length;
+    const total = ratings.length;
+    const counts = [5,4,3,2,1].map(n => ({ n, c: ratings.filter(r => r.stars === n).length }));
 
     const sheet = document.createElement('div');
     sheet.id = 'sfRatingsSheet';
@@ -6128,7 +6146,7 @@ function openSellerRatings() {
     const list = document.createElement('div');
     list.style.cssText = 'overflow-y:auto;flex:1;padding:0 20px 20px;';
 
-    _sfRatings.forEach(r => {
+    ratings.forEach(r => {
         const part = r.listing_id ? findPartAnywhere(r.listing_id) : null;
         const listingTitle = part ? part.title : null;
         const stars = r.stars ? '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars) : '';
