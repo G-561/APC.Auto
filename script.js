@@ -7283,7 +7283,7 @@ function renderGarageDesktopSections(c, v, vehicleWanted) {
 // --- SAVED PARTS: data model + persistence ---
 const SAVED_STORAGE_KEY = 'apc.saved.v1';
 let savedParts = loadSavedParts();   // Set<partId>
-let savedPartsTab = 'all';           // 'all' | 'active' | 'ended' | 'stores'
+let savedPartsTab = 'active';        // 'active' | 'ended' | 'stores'
 
 // --- SAVED STORES ---
 const SAVED_STORES_KEY = 'apc.savedStores.v1';
@@ -7439,7 +7439,7 @@ function closeSavedPartsDrawer() {
 }
 function onMenuOpenSavedParts() {
     closeAccountDropdown();
-    savedPartsTab = 'all';
+    savedPartsTab = 'active';
     renderSavedParts();
     toggleDrawer('savedPartsDrawer');
 }
@@ -7448,9 +7448,8 @@ function setSavedPartsTab(tab) {
     savedPartsTab = tab;
     renderSavedParts();
 }
-function buildSavedTabsHTML(total, active, ended) {
+function buildSavedTabsHTML(active, ended) {
     return `<div class="sp-tabs">
-        <button class="sp-tab ${savedPartsTab === 'all'    ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('all')">All <span class="sp-tab-count">${total}</span></button>
         <button class="sp-tab ${savedPartsTab === 'active' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('active')">Active <span class="sp-tab-count">${active}</span></button>
         <button class="sp-tab ${savedPartsTab === 'ended'  ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('ended')">Ended <span class="sp-tab-count sp-tab-count-ended">${ended}</span></button>
         <button class="sp-tab ${savedPartsTab === 'stores' ? 'sp-tab-active' : ''}" onclick="setSavedPartsTab('stores')">Stores <span class="sp-tab-count">${savedStores.length}</span></button>
@@ -7462,7 +7461,7 @@ function renderSavedParts() {
 
     if (savedPartsTab === 'stores') {
         const totalCount = [...savedParts].filter(id => getPartById(id)).length + [...savedParts].filter(id => !getPartById(id) && findPartAnywhere(id)).length;
-        const tabsHTML = buildSavedTabsHTML(totalCount, [...savedParts].filter(id => getPartById(id)).length, [...savedParts].filter(id => !getPartById(id) && findPartAnywhere(id)).length);
+        const tabsHTML = buildSavedTabsHTML([...savedParts].filter(id => getPartById(id)).length, [...savedParts].filter(id => !getPartById(id) && findPartAnywhere(id)).length);
         content.innerHTML = tabsHTML + '<div id="savedStoresBody"></div>';
         renderSavedStores(document.getElementById('savedStoresBody'));
         return;
@@ -7492,7 +7491,7 @@ function renderSavedParts() {
 
     const totalCount = activeParts.length + staleParts.length;
 
-    const tabsHTML = buildSavedTabsHTML(totalCount, activeParts.length, staleParts.length);
+    const tabsHTML = buildSavedTabsHTML(activeParts.length, staleParts.length);
 
     const buildStaleHTML = (parts) => parts.map(part => {
         const similar = findSimilarActiveParts(part);
@@ -7536,16 +7535,13 @@ function renderSavedParts() {
 
     content.innerHTML = `<div style="padding: 12px 15px 10px; background:white; margin-bottom:12px; border-bottom:1px solid #eee;">${tabsHTML}</div>`;
 
-    if (savedPartsTab === 'all') {
-        content.appendChild(buildActiveGrid(activeParts));
-        if (staleParts.length) content.insertAdjacentHTML('beforeend', `<div class="stale-section-hdr">No longer available</div>${buildStaleHTML(staleParts)}`);
-    } else if (savedPartsTab === 'active') {
+    if (savedPartsTab === 'active') {
         if (activeParts.length) {
             content.appendChild(buildActiveGrid(activeParts));
         } else {
             content.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">All your saved listings have ended.</div>`);
         }
-    } else {
+    } else if (savedPartsTab === 'ended') {
         content.insertAdjacentHTML('beforeend', staleParts.length
             ? buildStaleHTML(staleParts)
             : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No ended listings — all your saves are still live.</div>`);
