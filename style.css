@@ -4661,11 +4661,11 @@ header {
         bottom: 0;
         box-shadow: none !important;
     }
-    /* Two-column layout: images left, info right — footer strip pinned below */
+    /* Two-column layout: images left, info right — footer scrolls inside info column */
     #detailScrollArea {
         display: grid !important;
         grid-template-columns: 55% 45%;
-        grid-template-rows: 1fr auto;
+        grid-template-rows: 1fr;
         height: 100% !important;
         overflow: hidden !important;
         padding-bottom: 0 !important;
@@ -4716,11 +4716,11 @@ header {
         pointer-events: none;
     }
     #dynamicDetailFooter {
-        grid-column: 1 / -1;
         border-top: 1px solid #e8e8e8;
         background: #fafafa;
         padding: 12px 16px 14px;
         overflow: hidden;
+        margin-top: 8px;
     }
     #dynamicDetailFooter .detail-footer-strip {
         display: flex;
@@ -4730,7 +4730,7 @@ header {
         overflow: hidden;
     }
     #dynamicDetailFooter .detail-mini-card {
-        flex: 0 0 calc(100% / 7 - 9px);
+        flex: 0 0 calc(100% / 4 - 8px);
     }
     .desktop-main-img {
         width: 100%;
