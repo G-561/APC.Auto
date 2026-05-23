@@ -6435,12 +6435,21 @@ function _drawApcBadgeCanvas(biz, qrTemp) {
     const logoImg = new Image();
     logoImg.onload  = () => _paintBadge(canvas, biz, qrTemp, logoImg);
     logoImg.onerror = () => _paintBadge(canvas, biz, qrTemp, null);
-    logoImg.src = 'images/APC.logo.black.png';
+    logoImg.src = 'images/APC.logo.png';
 }
 
 function _paintBadge(canvas, biz, qrTemp, logoImg) {
-    const W = 210, H = 250;
-    const SCALE = 4; // 840×1000px download — print-ready
+    const BORDER = 8, PAD = 16, QR = 140, W = 210, SCALE = 4;
+
+    // Logo same width as QR; height from natural aspect ratio, capped at 55px
+    const logoW = QR;
+    const logoH = (logoImg && logoImg.naturalWidth > 0)
+        ? Math.min(Math.round(logoImg.naturalHeight * (logoW / logoImg.naturalWidth)), 55)
+        : 40;
+
+    // Canvas height fits logo + QR + labels dynamically
+    const H = BORDER * 2 + PAD + logoH + 12 + QR + 14 + 20 + PAD;
+
     canvas.width  = W * SCALE;
     canvas.height = H * SCALE;
     canvas.style.width  = `${W}px`;
@@ -6449,8 +6458,6 @@ function _paintBadge(canvas, biz, qrTemp, logoImg) {
     const ctx = canvas.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(SCALE, SCALE);
-
-    const BORDER = 8;
 
     // Orange outer background (acts as border)
     ctx.fillStyle = '#f07020';
@@ -6462,41 +6469,37 @@ function _paintBadge(canvas, biz, qrTemp, logoImg) {
     _roundRect(ctx, BORDER, BORDER, W - BORDER * 2, H - BORDER * 2, 10);
     ctx.fill();
 
-    const innerW = W - BORDER * 2;
-
-    // APC logo image (or orange text fallback)
+    // APC logo — same width as QR, centered
+    const logoX = Math.round((W - logoW) / 2);
+    const logoY = BORDER + PAD;
     if (logoImg && logoImg.naturalWidth > 0) {
-        const logoH = 32;
-        const logoW = Math.round(logoImg.naturalWidth * (logoH / logoImg.naturalHeight));
-        const logoX = BORDER + Math.round((innerW - logoW) / 2);
-        ctx.drawImage(logoImg, logoX, BORDER + 12, logoW, logoH);
+        ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
     } else {
         ctx.fillStyle = '#f07020';
         ctx.font = '900 28px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('APC', W / 2, BORDER + 38);
+        ctx.fillText('APC', W / 2, logoY + 32);
         ctx.textAlign = 'left';
     }
 
-    // QR code
-    const qrSize = 140;
-    const qrX = Math.round((W - qrSize) / 2);
-    const qrY = BORDER + 54;
+    // QR code — centered, same x as logo
+    const qrX = Math.round((W - QR) / 2);
+    const qrY = logoY + logoH + 12;
     const qrImg = qrTemp?.querySelector('img') || qrTemp?.querySelector('canvas');
     if (qrImg) {
-        try { ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize); } catch (e) {}
+        try { ctx.drawImage(qrImg, qrX, qrY, QR, QR); } catch (e) {}
     }
 
     // Business name
     ctx.textAlign = 'center';
     ctx.fillStyle = '#333';
     ctx.font = `${biz ? '700' : '500'} 9px system-ui, -apple-system, sans-serif`;
-    ctx.fillText(biz || 'autopartsconnection.com.au', W / 2, qrY + qrSize + 16);
+    ctx.fillText(biz || 'autopartsconnection.com.au', W / 2, qrY + QR + 16);
 
     // Scan label
     ctx.fillStyle = '#999';
     ctx.font = '500 8px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Scan to view our store', W / 2, qrY + qrSize + 28);
+    ctx.fillText('Scan to view our store', W / 2, qrY + QR + 28);
     ctx.textAlign = 'left';
 }
 
