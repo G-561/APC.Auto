@@ -4748,6 +4748,7 @@ header {
         display: flex;
         gap: 8px;
         margin-top: 12px;
+        margin-bottom: 16px;
         flex-wrap: wrap;
     }
     .desktop-thumb {
