@@ -1011,7 +1011,7 @@ header {
 }
 .sf-search-input {
     width: 100%; padding: 10px 16px;
-    border-radius: 20px; border: 1.5px solid #e8e8e8;
+    border-radius: 8px; border: 1.5px solid #e8e8e8;
     font-size: 13px; outline: none; background: #f9f9f9;
     box-sizing: border-box;
     font-family: inherit;
