@@ -6805,7 +6805,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.bannerColor         = profile.banner_color    || userSettings.bannerColor    || '';
                         userSettings.postcode            = profile.postcode        || userSettings.postcode       || '';
                         userSettings.privacyPublicProfile = profile.is_public !== false;
-                        saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderLogoPreview(); renderBannerPreview();
+                        saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderBannerPreview();
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
                         try {
@@ -9857,7 +9857,6 @@ function openWorkshopProfileEditor() {
     const wreckingMakesRow = document.getElementById('wsWreckingMakesRow');
     if (wreckingMakesRow) wreckingMakesRow.style.display = workshopProfile.wrecking ? 'block' : 'none';
     _updateMakesSummary('wreckingMakes', workshopProfile.wreckingMakes);
-    renderLogoPreview();
     renderBannerPreview();
     // Badge trigger button — Pro users only
     const badgeSec = document.getElementById('apcBadgeSection');
