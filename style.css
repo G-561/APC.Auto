@@ -4721,12 +4721,15 @@ header {
         letter-spacing: 0.5px;
         pointer-events: none;
     }
+    #detailWorkshopSection { padding-bottom: 20px !important; }
+    #detailWorkshopCards { grid-template-columns: repeat(3, 1fr); gap: 8px; }
     #dynamicDetailFooter {
         grid-column: 1 / -1;
         border-top: 1px solid #e8e8e8;
         background: #fafafa;
-        padding: 16px 20px 20px;
+        padding: 16px 20px 24px;
     }
+    #dynamicDetailFooter .detail-footer-label { margin-bottom: 12px; }
     #dynamicDetailFooter .detail-footer-strip {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
