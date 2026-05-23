@@ -4715,6 +4715,7 @@ function openSellOverlay() {
     const manageSection = document.getElementById('manageSection');
     if (manageSection) manageSection.style.display = 'none';
     updateSellFittingToggleVisibility();
+    closeDashboard();
     toggleDrawer('sellOverlay');
 }
 
