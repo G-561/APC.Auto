@@ -3199,7 +3199,7 @@ function getPublicSellerName() {
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
     const { data: profile } = await sb.from('profiles')
-        .select('*')
+        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public')
         .eq('id', userId).single();
     if (!profile) return;
     if (profile.is_public === false && currentUserId && userId !== currentUserId) {
