@@ -226,6 +226,35 @@ function addToRecentlyViewed(partId) {
         ...recentlyViewed.filter(e => e.id !== partId),
     ].slice(0, RECENTLY_VIEWED_MAX);
     saveRecentlyViewed();
+    if (sb && currentUserId && partId) {
+        sb.from('recently_viewed')
+            .upsert({ user_id: currentUserId, listing_id: partId, viewed_at: new Date(now).toISOString() },
+                    { onConflict: 'user_id,listing_id' })
+            .then(() => {});
+    }
+}
+
+async function loadRecentlyViewedFromSupabase(userId) {
+    if (!sb || !userId) return;
+    const cutoff = new Date(Date.now() - RECENTLY_VIEWED_TTL).toISOString();
+    const { data } = await sb.from('recently_viewed')
+        .select('listing_id, viewed_at')
+        .eq('user_id', userId)
+        .gte('viewed_at', cutoff)
+        .order('viewed_at', { ascending: false })
+        .limit(RECENTLY_VIEWED_MAX);
+    if (!data?.length) return;
+    const merged = new Map();
+    [...recentlyViewed,
+     ...data.map(r => ({ id: r.listing_id, viewedAt: new Date(r.viewed_at).getTime() }))
+    ].forEach(e => {
+        const existing = merged.get(e.id);
+        if (!existing || e.viewedAt > existing.viewedAt) merged.set(e.id, e);
+    });
+    recentlyViewed = [...merged.values()]
+        .sort((a, b) => b.viewedAt - a.viewedAt)
+        .slice(0, RECENTLY_VIEWED_MAX);
+    saveRecentlyViewed();
 }
 function onOpenRecentlyViewed() {
     setActiveNav('recentNavItem');
@@ -6896,6 +6925,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadSavedListingsFromSupabase(session.user.id);
             loadPublicWantedFromSupabase();
             loadNotificationsFromSupabase();
+            loadRecentlyViewedFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
             unsubscribeRealtime();
             userIsSignedIn = false;
