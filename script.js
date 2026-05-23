@@ -1589,6 +1589,19 @@ async function loadPublicListingsFromSupabase(append = false) {
         if (append && newCount === 0) _listingsExhausted = true;
 
         renderMainGrid();
+        // If the storefront opened before listings arrived (deep-link), refresh its grid now
+        const _sfDrawer = document.getElementById('storefrontDrawer');
+        if (_sfDrawer?.classList.contains('active')) {
+            const _sfGrid = document.getElementById('sellerPartsGrid');
+            if (_sfGrid) {
+                const _sfUserId = _sfGrid.dataset.userId || '';
+                const _sfSeller = currentStorefrontSeller || '';
+                const _sfParts  = getAllParts().filter(p =>
+                    _sfUserId ? (p.sellerId === _sfUserId || p.seller === _sfSeller) : p.seller === _sfSeller
+                );
+                _sfGrid.innerHTML = _sfParts.map(p => buildCardHTML(p)).join('');
+            }
+        }
         if (!append) {
             refreshInboxThreadHeader();
             if (_pendingStoreOpen) {
