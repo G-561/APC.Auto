@@ -2156,9 +2156,8 @@ async function loadSavedListingsFromSupabase(userId) {
 
         let changed = false;
         rows.forEach(r => {
-            const part = [...partDatabase, ...userListings].find(p => p.supabaseId === r.listing_id);
-            if (part && !savedParts.has(part.id)) {
-                savedParts.add(part.id);
+            if (!savedParts.has(r.listing_id)) {
+                savedParts.add(r.listing_id);
                 changed = true;
             }
         });
@@ -3678,7 +3677,7 @@ function buildCardHTML(part, eager = false) {
 
     const locationHTML = `📍 ${escapeHtml(part.loc)}`;
 
-    const savedDot = savedParts.has(part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
+    const savedDot = savedParts.has(part.supabaseId || part.id) ? '<div class="card-saved-dot">&#x2665;&#xFE0E;</div>' : '';
 
     const pendingBanner = part.status === 'pending'
         ? `<div class="card-pending-banner">PENDING</div>`
@@ -7208,7 +7207,7 @@ function renderGarageTab() {
 
     } else if (currentVehicleTab === 'saved') {
         const savedFitting = getAllParts().filter(p =>
-            savedParts.has(p.id) && (
+            savedParts.has(p.supabaseId || p.id) && (
                 (p.fits?.length > 0 && partFitsVehicle(p, v)) ||
                 vehicleWanted.some(w => wantedMatchesPart(w, p))
             )
