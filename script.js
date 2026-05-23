@@ -3189,7 +3189,7 @@ async function openStorefrontByUserId(userId) {
         .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public')
         .eq('id', userId).single();
     if (!profile) return;
-    if (profile.is_public === false && userId !== currentUserId) {
+    if (profile.is_public === false && currentUserId && userId !== currentUserId) {
         showToast('This seller is currently unavailable');
         return;
     }
@@ -11195,9 +11195,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', e => { if (!e.target.closest('#inboxStatusWrap')) closeInboxStatusPicker(); });
     updateHeaderOffset();
     initFilterVehicleDropdowns();
-    // Deep-link: ?store=USERID opens that seller's storefront once listings are loaded
+    // Deep-link: ?store=USERID — open the storefront directly (profile fetch is independent of listings)
     const _storeParam = new URLSearchParams(location.search).get('store');
-    if (_storeParam) _pendingStoreOpen = _storeParam;
+    if (_storeParam) openStorefrontByUserId(_storeParam);
 
     renderSkeletonGrid();
     loadPublicListingsFromSupabase();
