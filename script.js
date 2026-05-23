@@ -9590,6 +9590,16 @@ async function submitSponsoredCard() {
     loadSponsoredCards();
 }
 
+function handleSponsoredCardClick(cardId, userId, url) {
+    if (cardId && sb) {
+        sb.from('sponsored_clicks')
+            .insert({ card_id: cardId, user_id: currentUserId || null })
+            .then(() => {});
+    }
+    if (userId) openStorefrontByUserId(userId);
+    else if (url && url !== '#') window.open(url, '_blank');
+}
+
 function buildSponsoredCardHTML(card) {
     const tpl  = card.template;
     const name = escapeHtml(card.business_name || '');
@@ -9598,7 +9608,8 @@ function buildSponsoredCardHTML(card) {
 
     const safeUrl = /^https:\/\//i.test(card.button_url || '') ? escapeHtml(card.button_url) : '#';
     const userId  = card.user_id || '';
-    const openCmd = userId ? `openStorefrontByUserId('${userId}')` : `window.open('${safeUrl}','_blank')`;
+    const cardId  = card.id || '';
+    const openCmd = `handleSponsoredCardClick('${cardId}','${userId}','${safeUrl}')`;
 
     let imgHtml, badgeClass, badgeLabel, sub;
 
