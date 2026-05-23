@@ -4731,10 +4731,12 @@ header {
     }
     #dynamicDetailFooter .detail-footer-label { margin-bottom: 12px; }
     #dynamicDetailFooter .detail-footer-strip {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        display: flex;
+        flex-wrap: nowrap;
         gap: 10px;
+        overflow: hidden;
     }
+    #dynamicDetailFooter .detail-mini-card { flex: 1; }
     .desktop-main-img {
         width: 100%;
         aspect-ratio: 1/1;
