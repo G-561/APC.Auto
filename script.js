@@ -1737,6 +1737,18 @@ async function loadUserListingsFromSupabase(userId) {
 }
 
 // ── SUPABASE MESSAGES ─────────────────────────────────────────
+function timeAgo(ms) {
+    const d = Math.floor((Date.now() - ms) / 1000);
+    if (d < 120)   return 'Posted just now';
+    if (d < 3600)  return `Posted ${Math.floor(d / 60)}m ago`;
+    if (d < 86400) return `Posted ${Math.floor(d / 3600)}h ago`;
+    const days = Math.floor(d / 86400);
+    if (days < 7)  return `Posted ${days} day${days !== 1 ? 's' : ''} ago`;
+    const wks = Math.floor(days / 7);
+    if (wks < 5)   return `Posted ${wks} week${wks !== 1 ? 's' : ''} ago`;
+    const mths = Math.floor(days / 30);
+    return `Posted ${mths} month${mths !== 1 ? 's' : ''} ago`;
+}
 function formatMsgDate(isoString) {
     const d = new Date(isoString);
     const now = new Date();
@@ -5437,6 +5449,12 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
         } else {
             detailOdoEl.style.display = 'none';
         }
+    }
+    const detailMetaEl = document.getElementById('detailMeta');
+    if (detailMetaEl) {
+        safeText(document.getElementById('detailPosted'), part.date ? timeAgo(part.date) : '');
+        safeText(document.getElementById('detailWatching'), part.saves > 0 ? `${part.saves} watching` : '');
+        detailMetaEl.style.display = 'flex';
     }
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
