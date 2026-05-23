@@ -2244,6 +2244,16 @@ header {
     display: flex; align-items: flex-start; gap: 8px;
 }
 .demand-insight-ico { font-size: 16px; flex-shrink: 0; }
+.demand-periods {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.demand-pill {
+    padding: 4px 12px; border-radius: 99px; border: 1.5px solid #ddd;
+    background: #fff; font-size: 12px; font-weight: 600; color: #666;
+    cursor: pointer; transition: border-color 0.15s, color 0.15s;
+}
+.demand-pill:hover { border-color: #f07020; color: #f07020; }
+.demand-pill.active { border-color: #f07020; color: #f07020; background: rgba(240,112,32,0.07); }
 
 /* WANTED LIST — cards for personal wanted drawer */
 /* WANTED LIST DRAWER */

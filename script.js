@@ -1376,28 +1376,39 @@ function recordSearch(term) {
     const clean = (term || '').toLowerCase().trim();
     if (!clean || clean.length < 3 || clean === _lastRecordedSearch) return;
     _lastRecordedSearch = clean;
+    const now = Date.now();
     const data = loadSearchDemand();
-    data.push({ term: clean, ts: Date.now() });
-    const cutoff = Date.now() - 180 * 24 * 60 * 60 * 1000;
-    saveSearchDemand(data.filter(d => d.ts > cutoff).slice(-3000));
+    data.push({ term: clean, ts: now });
+    saveSearchDemand(data.filter(d => d.ts > Date.now() - 180 * 24 * 60 * 60 * 1000).slice(-3000));
+    if (sb) {
+        sb.from('search_demand')
+            .insert({ term: clean, ts: new Date(now).toISOString(), user_id: currentUserId || null })
+            .then(() => {});
+    }
 }
 
-const _demandSeed = [];
-
-function getDemandReport() {
-    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-    const real = loadSearchDemand().filter(d => d.ts >= monthStart.getTime());
+async function getDemandReport(fromTs, toTs) {
+    if (sb) {
+        const { data } = await sb.from('search_demand')
+            .select('term')
+            .gte('ts', new Date(fromTs).toISOString())
+            .lte('ts', new Date(toTs).toISOString());
+        if (data?.length) {
+            const counts = {};
+            data.forEach(d => { counts[d.term] = (counts[d.term] || 0) + 1; });
+            return Object.entries(counts)
+                .map(([term, count]) => ({ term, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+        }
+    }
+    const local = loadSearchDemand().filter(d => d.ts >= fromTs && d.ts <= toTs);
     const counts = {};
-    real.forEach(d => { counts[d.term] = (counts[d.term] || 0) + 1; });
-    const realEntries = Object.entries(counts).map(([term, count]) => ({ term, count }));
-    // Merge seed data, boosting any real matches
-    const merged = [..._demandSeed];
-    realEntries.forEach(r => {
-        const existing = merged.find(m => m.term.toLowerCase() === r.term);
-        if (existing) existing.count += r.count;
-        else merged.push({ term: r.term, count: r.count });
-    });
-    return merged.sort((a, b) => b.count - a.count).slice(0, 10);
+    local.forEach(d => { counts[d.term] = (counts[d.term] || 0) + 1; });
+    return Object.entries(counts)
+        .map(([term, count]) => ({ term, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
 }
 let userListings = loadUserListings();
 let sellListingImages = [];
@@ -10867,29 +10878,61 @@ function closeDashboard() {
     syncBackdrop();
 }
 
-function renderDemandWidget() {
+function setDemandPeriod(period) {
+    const card = document.getElementById('dashDemandCard');
+    if (card) { card.dataset.period = period; renderDemandWidget(); }
+}
+
+async function renderDemandWidget() {
     const card = document.getElementById('dashDemandCard');
     if (!card) return;
 
-    const report = getDemandReport();
-    const monthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    const period = card.dataset.period || 'month';
+    const now = Date.now();
+    let fromTs, periodLabel;
+    if (period === 'week') {
+        fromTs = now - 7 * 24 * 60 * 60 * 1000;
+        periodLabel = 'Last 7 Days';
+    } else if (period === '90') {
+        fromTs = now - 90 * 24 * 60 * 60 * 1000;
+        periodLabel = 'Last 90 Days';
+    } else {
+        const ms = new Date(); ms.setDate(1); ms.setHours(0, 0, 0, 0);
+        fromTs = ms.getTime();
+        periodLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+
+    const pills = `<div class="demand-periods">
+        <button class="demand-pill${period === 'week' ? ' active' : ''}" onclick="setDemandPeriod('week')">This Week</button>
+        <button class="demand-pill${period === 'month' ? ' active' : ''}" onclick="setDemandPeriod('month')">This Month</button>
+        <button class="demand-pill${period === '90' ? ' active' : ''}" onclick="setDemandPeriod('90')">Last 90 Days</button>
+    </div>`;
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Search Demand</span>
+            <span class="dash-card-meta">${periodLabel}</span>
+        </div>
+        ${pills}
+        <div class="dash-empty-state" style="padding:16px 0;color:#aaa;">Loading…</div>
+    `;
+
+    const report = await getDemandReport(fromTs, now);
+
     if (!report.length) {
         card.innerHTML = `
             <div class="dash-card-hdr">
                 <span class="dash-card-title">Search Demand</span>
-                <span class="dash-card-meta">${monthLabel}</span>
+                <span class="dash-card-meta">${periodLabel}</span>
             </div>
-            <div class="dash-empty-state" style="padding:20px 0;">No search data yet — demand trends will appear here as buyers search APC.</div>
+            ${pills}
+            <div class="dash-empty-state" style="padding:20px 0;">No search data for this period — trends appear as buyers search APC.</div>
         `;
         return;
     }
-    const maxCount = report[0].count;
 
-    // Find how many top terms have no matching listings
-    const gaps = report.filter(r => {
-        const t = r.term.toLowerCase();
-        return !getAllParts().some(p => p.title.toLowerCase().includes(t));
-    });
+    const maxCount = report[0].count;
+    const gaps = report.filter(r => !getAllParts().some(p => p.title.toLowerCase().includes(r.term.toLowerCase())));
 
     const bars = report.map(r => {
         const pct = Math.round((r.count / maxCount) * 100);
@@ -10906,16 +10949,17 @@ function renderDemandWidget() {
     const insight = gaps.length
         ? `<div class="demand-insight">
                <span class="demand-insight-ico">💡</span>
-               <div><strong>${gaps.length} stocking ${gaps.length === 1 ? 'gap' : 'gaps'} this month</strong> — no listings match: ${gaps.slice(0,3).map(g => `<em>${escapeHtml(g.term)}</em>`).join(', ')}${gaps.length > 3 ? ` +${gaps.length - 3} more` : ''}. Consider sourcing these at auction.</div>
+               <div><strong>${gaps.length} stocking ${gaps.length === 1 ? 'gap' : 'gaps'}</strong> — no listings match: ${gaps.slice(0,3).map(g => `<em>${escapeHtml(g.term)}</em>`).join(', ')}${gaps.length > 3 ? ` +${gaps.length - 3} more` : ''}. Consider sourcing these.</div>
            </div>`
         : '';
 
     card.innerHTML = `
         <div class="dash-card-hdr">
             <span class="dash-card-title">Search Demand</span>
-            <span class="dash-card-meta">${monthLabel}</span>
+            <span class="dash-card-meta">${periodLabel}</span>
         </div>
-        <p class="demand-subtitle">Most searched terms on APC this month — orange bars have no matching listings</p>
+        ${pills}
+        <p class="demand-subtitle">Most searched terms on APC — orange bars have no matching listings</p>
         <div class="demand-bars">${bars}</div>
         ${insight}
     `;
