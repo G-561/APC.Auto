@@ -5430,6 +5430,21 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             detailVehicleEl.style.display = 'none';
         }
     }
+    const detailGarageMatchEl = document.getElementById('detailGarageMatch');
+    if (detailGarageMatchEl) {
+        const hasExplicitFits = part.fits && part.fits.length > 0;
+        const matchedVehicle = hasExplicitFits && userIsSignedIn && myVehicles.length > 0
+            ? myVehicles.find(v => partFitsVehicle(part, v))
+            : null;
+        if (matchedVehicle) {
+            const vLabel = matchedVehicle.nickname ||
+                [matchedVehicle.year, matchedVehicle.make, matchedVehicle.model].filter(Boolean).join(' ');
+            safeText(detailGarageMatchEl, `✓ This item fits your ${vLabel} in your Garage`);
+            detailGarageMatchEl.style.display = 'block';
+        } else {
+            detailGarageMatchEl.style.display = 'none';
+        }
+    }
     const detailPendingBanner = document.getElementById('detailPendingBanner');
     if (detailPendingBanner) detailPendingBanner.style.display = part.status === 'pending' ? '' : 'none';
     const detailApcIdEl = document.getElementById('detailApcId');
