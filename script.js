@@ -9650,8 +9650,11 @@ function handleSponsoredCardClick(cardId, userId, url) {
             .insert({ card_id: cardId, user_id: currentUserId || null })
             .then(() => {});
     }
-    if (userId) openStorefrontByUserId(userId);
-    else if (url && url !== '#') window.open(url, '_blank');
+    if (url && url !== '#') {
+        window.open(url, '_blank');
+    } else if (userId) {
+        openStorefrontByUserId(userId);
+    }
 }
 
 function buildSponsoredCardHTML(card) {
