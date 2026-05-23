@@ -635,39 +635,6 @@ function saveSettingsProBusiness() {
     }
     showToast('Business details saved');
 }
-function handleLogoUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
-    if (file.size > 1024 * 1024) { showToast('Image too large — please use an image under 1 MB'); input.value = ''; return; }
-    const reader = new FileReader();
-    reader.onload = async e => {
-        userSettings.businessLogo = e.target.result;
-        saveUserSettings();
-        renderLogoPreview();
-        showToast('Logo saved');
-        if (!currentUserId || !sb) return;
-        const path = `business-logos/${currentUserId}`;
-        const { error: upErr } = await sb.storage.from('listing-images').upload(path, file, { upsert: true, contentType: file.type });
-        if (upErr) { console.warn('Logo upload failed:', upErr.message); return; }
-        const { data: urlData } = sb.storage.from('listing-images').getPublicUrl(path);
-        const url = urlData.publicUrl + '?t=' + Date.now();
-        userSettings.businessLogo = url;
-        saveUserSettings();
-        renderLogoPreview();
-        await sb.from('profiles').update({ business_logo: url }).eq('id', currentUserId);
-    };
-    reader.readAsDataURL(file);
-}
-
-function removeBusinessLogo() {
-    userSettings.businessLogo = '';
-    saveUserSettings();
-    const fileInput = document.getElementById('logoFileInput');
-    if (fileInput) fileInput.value = '';
-    renderLogoPreview();
-    showToast('Logo removed');
-    if (currentUserId && sb) sb.from('profiles').update({ business_logo: null }).eq('id', currentUserId);
-}
 
 // ── PROFILE PIC CROP ─────────────────────────────────────────
 const CROP_VP  = 280;  // viewport circle diameter (px)
@@ -865,17 +832,6 @@ function renderProfilePicPreview() {
     renderAccountState();
 }
 
-function renderLogoPreview() {
-    const logo     = userSettings.businessLogo || '';
-    const initial  = (currentUserName || 'G').charAt(0).toUpperCase();
-    const img      = document.getElementById('logoPreviewImg');
-    const initials = document.getElementById('logoPreviewInitials');
-    const removeBtn = document.getElementById('logoRemoveBtn');
-    if (img) { img.src = logo; img.style.display = logo ? 'block' : 'none'; }
-    if (initials) initials.style.display = logo ? 'none' : '';
-    if (initials && !logo) initials.textContent = initial;
-    if (removeBtn) removeBtn.style.display = logo ? '' : 'none';
-}
 
 function handleBannerUpload(input) {
     const file = input.files[0];
