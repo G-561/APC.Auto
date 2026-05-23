@@ -7385,22 +7385,18 @@ function renderSavedStores(container) {
     }).join('');
 }
 function openStoreFromSaved(sellerName) {
-    const part = [...partDatabase, ...userListings].find(p => p.seller === sellerName);
-    const store = savedStores.find(s => s.sellerName === sellerName);
     closeSavedPartsDrawer();
-    const isOwnStore = sellerName === getCurrentSellerName();
-    const storeLogo  = isOwnStore ? (userSettings.profilePic || userSettings.businessLogo || '') : '';
-    renderStorefront(
-        sellerName, store?.isPro || (isOwnStore && currentUserTier === 'pro'),
-        storeLogo, store?.businessName || (isOwnStore ? userSettings.businessName || '' : ''),
-        '', isOwnStore ? userSettings.about || '' : '', isOwnStore ? userSettings.location || '' : '', '',
-        isOwnStore ? (userSettings.bannerColor || null) : null
-    );
-    const grid = document.getElementById('sellerPartsGrid');
-    if (grid) grid.dataset.seller = sellerName;
-    const backBar3 = document.getElementById('storefrontBackBar');
-    if (backBar3) backBar3.style.display = 'none';
-    toggleDrawer('storefrontDrawer');
+    const part = [...partDatabase, ...userListings].find(p => p.seller === sellerName && p.sellerId);
+    if (part?.sellerId) {
+        openStorefrontByUserId(part.sellerId);
+        return;
+    }
+    if (!sb) { showToast('Could not open store'); return; }
+    sb.from('profiles').select('id').eq('display_name', sellerName).single()
+        .then(({ data }) => {
+            if (data?.id) openStorefrontByUserId(data.id);
+            else showToast('Could not find this seller');
+        });
 }
 
 function loadSavedParts() {
