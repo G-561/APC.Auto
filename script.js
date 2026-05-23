@@ -11268,10 +11268,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemParam = new URLSearchParams(location.search).get('item');
     if (itemParam) openItemDetail(itemParam.includes('-') ? itemParam : Number(itemParam));
 
-    // Deep-link: if URL contains ?store=userId, open that workshop/supplier storefront
-    const storeParam = new URLSearchParams(location.search).get('store');
-    if (storeParam) handleStoreDeepLink(storeParam);
-
     // Lightbox keyboard navigation
     document.addEventListener('keydown', e => {
         const lightbox = document.getElementById('imageLightbox');
