@@ -3216,7 +3216,7 @@ async function openStorefrontByUserId(userId) {
     const backBar = document.getElementById('storefrontBackBar');
     if (sfEl)    sfEl.style.zIndex    = '';
     if (backBar) backBar.style.display = 'none';
-    toggleDrawer('storefrontDrawer', true);
+    openDrawer('storefrontDrawer');
 }
 
 // --- CORE UI CONTROLS ---
@@ -3244,6 +3244,17 @@ function toggleDrawer(id, allowStack = false) {
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
+}
+
+function openDrawer(id) {
+    const drawer = document.getElementById(id);
+    if (!drawer) return;
+    drawer.classList.add('active');
+    const content = drawer.querySelector('.drawer-content');
+    if (content) content.scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+    const backdrop = document.getElementById('drawerBackdrop');
+    if (backdrop) backdrop.classList.add('active');
 }
 
 function syncBackdrop() {
@@ -6222,7 +6233,7 @@ function openStorefront(partId) {
         const backBar = document.getElementById('storefrontBackBar');
         if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
         if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
-        toggleDrawer('storefrontDrawer', true);
+        openDrawer('storefrontDrawer');
     }
 
     if (isOwn) {
@@ -6272,7 +6283,7 @@ function openWorkshopStorefront(data, fromBrowser = false) {
     const backBar = document.getElementById('storefrontBackBar');
     if (sfEl) sfEl.style.zIndex = '';
     if (backBar) backBar.style.display = 'none';
-    toggleDrawer('storefrontDrawer', true);
+    openDrawer('storefrontDrawer');
 }
 
 function renderWorkshopStorefront(data) {
@@ -6421,51 +6432,72 @@ function generateApcBadge() {
 function _drawApcBadgeCanvas(biz, qrTemp) {
     const canvas = document.getElementById('apcBadgeCanvas');
     if (!canvas) return;
+    const logoImg = new Image();
+    logoImg.onload  = () => _paintBadge(canvas, biz, qrTemp, logoImg);
+    logoImg.onerror = () => _paintBadge(canvas, biz, qrTemp, null);
+    logoImg.src = 'images/APC.logo.black.png';
+}
 
-    const W = 420, H = 126;
-    const SCALE = 4; // 1680×504px download — print-ready at 300 DPI (~5.6" wide)
+function _paintBadge(canvas, biz, qrTemp, logoImg) {
+    const W = 210, H = 250;
+    const SCALE = 4; // 840×1000px download — print-ready
     canvas.width  = W * SCALE;
     canvas.height = H * SCALE;
-    canvas.style.width  = '300px';
-    canvas.style.height = '90px';
+    canvas.style.width  = `${W}px`;
+    canvas.style.height = `${H}px`;
 
     const ctx = canvas.getContext('2d');
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(SCALE, SCALE);
 
-    // Background
-    ctx.fillStyle = '#F7941D';
-    _roundRect(ctx, 0, 0, W, H, 12);
+    const BORDER = 8;
+
+    // Orange outer background (acts as border)
+    ctx.fillStyle = '#f07020';
+    _roundRect(ctx, 0, 0, W, H, 16);
     ctx.fill();
 
-    // Left text
-    ctx.fillStyle = 'white';
-    ctx.font = '700 11px system-ui, -apple-system, sans-serif';
-    ctx.fillText('FIND US ON', 22, 32);
-    ctx.font = '900 48px system-ui, -apple-system, sans-serif';
-    ctx.fillText('APC', 18, 84);
-    ctx.font = biz ? '700 13px system-ui, -apple-system, sans-serif' : '600 11px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = biz ? 'white' : 'rgba(255,255,255,0.7)';
-    ctx.fillText(biz || 'Auto Parts Connection', 22, 108);
-
-    // White QR box
-    const qx = W - 132, qy = 10, qs = 106;
-    ctx.fillStyle = 'white';
-    _roundRect(ctx, qx, qy, qs, qs, 8);
+    // White inner panel
+    ctx.fillStyle = '#ffffff';
+    _roundRect(ctx, BORDER, BORDER, W - BORDER * 2, H - BORDER * 2, 10);
     ctx.fill();
 
-    // "Scan to view profile" label
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.font = '600 9px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Scan to view profile', qx + qs / 2, H - 4);
-    ctx.textAlign = 'left';
+    const innerW = W - BORDER * 2;
 
-    // Draw QR image into the white box
+    // APC logo image (or orange text fallback)
+    if (logoImg && logoImg.naturalWidth > 0) {
+        const logoH = 32;
+        const logoW = Math.round(logoImg.naturalWidth * (logoH / logoImg.naturalHeight));
+        const logoX = BORDER + Math.round((innerW - logoW) / 2);
+        ctx.drawImage(logoImg, logoX, BORDER + 12, logoW, logoH);
+    } else {
+        ctx.fillStyle = '#f07020';
+        ctx.font = '900 28px system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('APC', W / 2, BORDER + 38);
+        ctx.textAlign = 'left';
+    }
+
+    // QR code
+    const qrSize = 140;
+    const qrX = Math.round((W - qrSize) / 2);
+    const qrY = BORDER + 54;
     const qrImg = qrTemp?.querySelector('img') || qrTemp?.querySelector('canvas');
     if (qrImg) {
-        try { ctx.drawImage(qrImg, qx + 3, qy + 3, qs - 6, qs - 6); } catch (e) {}
+        try { ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize); } catch (e) {}
     }
+
+    // Business name
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#333';
+    ctx.font = `${biz ? '700' : '500'} 9px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(biz || 'autopartsconnection.com.au', W / 2, qrY + qrSize + 16);
+
+    // Scan label
+    ctx.fillStyle = '#999';
+    ctx.font = '500 8px system-ui, -apple-system, sans-serif';
+    ctx.fillText('Scan to view our store', W / 2, qrY + qrSize + 28);
+    ctx.textAlign = 'left';
 }
 
 function _roundRect(ctx, x, y, w, h, r) {
