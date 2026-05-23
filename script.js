@@ -3185,10 +3185,12 @@ function getPublicSellerName() {
 
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
-    const { data: profile } = await sb.from('profiles')
+    console.log('[APC] openStorefrontByUserId called', userId);
+    const { data: profile, error: profErr } = await sb.from('profiles')
         .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public')
         .eq('id', userId).single();
-    if (!profile) return;
+    console.log('[APC] profile fetch result', { profile, profErr });
+    if (!profile) { console.warn('[APC] no profile — aborting'); return; }
     if (profile.is_public === false && currentUserId && userId !== currentUserId) {
         showToast('This seller is currently unavailable');
         return;
@@ -3216,7 +3218,9 @@ async function openStorefrontByUserId(userId) {
     const backBar = document.getElementById('storefrontBackBar');
     if (sfEl)    sfEl.style.zIndex    = '';
     if (backBar) backBar.style.display = 'none';
+    console.log('[APC] calling openDrawer for storefrontDrawer');
     openDrawer('storefrontDrawer');
+    console.log('[APC] storefrontDrawer active?', document.getElementById('storefrontDrawer')?.classList.contains('active'));
 }
 
 // --- CORE UI CONTROLS ---
