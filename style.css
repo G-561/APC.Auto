@@ -6583,6 +6583,11 @@ header {
     padding: 10px 6px; gap: 10px; border-right: 3px solid rgba(255,255,255,0.4);
 }
 .edw-sg-zarrow { font-size: 10px; flex-shrink: 0; }
+.edw-sg-zone-badge {
+    background: rgba(255,255,255,0.9); color: #f07020;
+    font-size: 11px; font-weight: 700; border-radius: 10px; padding: 1px 6px;
+    flex-shrink: 0;
+}
 .edw-sg-zname {
     writing-mode: vertical-lr; transform: rotate(180deg);
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fff;

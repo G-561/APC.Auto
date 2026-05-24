@@ -11393,10 +11393,15 @@ function _buildEdwGrid() {
     EDW_TAXONOMY.forEach((zone, zI) => {
         const zoneActive = _edwActiveZone === zI;
 
+        const zoneCount = zone.assemblies.reduce((n, asm, aI) =>
+            n + asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length, 0);
+
         if (!zoneActive) {
             cells += `
                 <div class="edw-sg-zone edw-sg-zone-col" style="grid-row:${row};grid-column:1" onclick="_edwSelectZone(${zI})">
-                    <span class="edw-sg-zarrow">▶</span>${escapeHtml(zone.zone)}
+                    <span class="edw-sg-zarrow">▶</span>
+                    <span>${escapeHtml(zone.zone)}</span>
+                    ${zoneCount ? `<span class="edw-sg-zone-badge">${zoneCount}</span>` : ''}
                 </div>
                 <div class="edw-sg-zone-spacer" style="grid-row:${row};grid-column:2/-1" onclick="_edwSelectZone(${zI})"></div>
             `;
@@ -11411,6 +11416,7 @@ function _buildEdwGrid() {
             cells += `
                 <div class="edw-sg-zone edw-sg-zone-expanded" style="grid-row:${zoneStart}/span ${zoneRows};grid-column:1" onclick="_edwSelectZone(${zI})">
                     <span class="edw-sg-zarrow">▼</span>
+                    ${zoneCount ? `<span class="edw-sg-zone-badge">${zoneCount}</span>` : ''}
                     <span class="edw-sg-zname">${escapeHtml(zone.zone)}</span>
                 </div>
             `;
