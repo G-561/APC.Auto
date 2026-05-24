@@ -6558,8 +6558,8 @@ header {
 #edwSgWrap { overflow-x: auto; }
 .edw-sg {
     display: grid;
-    grid-template-columns: 160px 148px 1fr 112px 86px 1fr 70px 34px;
-    min-width: 800px;
+    grid-template-columns: 240px 148px 1fr 112px 86px 1fr 70px 34px;
+    min-width: 880px;
     width: 100%;
 }
 .edw-sg-th {
