@@ -10988,6 +10988,8 @@ function onDashboardMenuTap() {
     }
 }
 
+let _dashJobsPollInterval = null;
+
 function openDashboard() {
     if (window.innerWidth < 900) return;
     setDtbActive('dtbDashboard');
@@ -11007,11 +11009,14 @@ function openDashboard() {
     closeAccountMenu();
     closeAccountDropdown();
     renderDashboard();
+    clearInterval(_dashJobsPollInterval);
+    _dashJobsPollInterval = setInterval(renderDashJobs, 30000);
 }
 
 function closeDashboard() {
     const dv = document.getElementById('dashboardView');
     if (!dv || dv.style.display === 'none') return;
+    clearInterval(_dashJobsPollInterval);
     dv.style.display = 'none';
     setDtbActive(null);
     if (window.innerWidth >= 900) {
@@ -11998,7 +12003,10 @@ async function renderDashJobs() {
     card.innerHTML = `
         <div class="dash-card-hdr">
             <span class="dash-card-title">Dismantling Jobs</span>
-            <span class="dash-card-meta">${jobs.length} active</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="dash-card-meta">${jobs.length} active</span>
+                <button onclick="renderDashJobs()" class="dash-jobs-refresh" title="Refresh">↻</button>
+            </div>
         </div>
         <div class="dash-jobs-list">${rows}</div>
     `;
