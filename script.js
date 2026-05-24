@@ -1410,6 +1410,150 @@ async function getDemandReport(fromTs, toTs) {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 }
+
+// ─── EDW TAXONOMY — Zone → Assembly → Part ────────────────────────────────
+// Add new zones/assemblies/parts here. Gary: tap any zone on the checklist to expand it.
+const EDW_TAXONOMY = [
+    {
+        zone: 'Engine Bay',
+        apcCategory: 'engine',
+        assemblies: [
+            { name: 'Engine', parts: ['Complete Engine', 'Engine Block', 'Cylinder Head', 'Rocker Cover', 'Sump / Oil Pan', 'Timing Cover', 'Timing Chain Kit', 'Timing Belt Kit', 'Engine Mount (Left)', 'Engine Mount (Right)'] },
+            { name: 'Transmission', parts: ['Manual Gearbox', 'Automatic Gearbox', 'Transfer Case', 'Torque Converter', 'Gearbox Mount'] },
+            { name: 'Cooling', parts: ['Radiator', 'Intercooler', 'Radiator Fan (Electric)', 'Radiator Fan (Clutch)', 'Overflow / Header Tank', 'Thermostat Housing', 'Water Pump'] },
+            { name: 'Fuel System', parts: ['Fuel Tank', 'Fuel Pump (In-tank)', 'High Pressure Fuel Pump', 'Fuel Rail', 'Fuel Injectors (Set)', 'Fuel Filter (In-line)'] },
+            { name: 'Air Intake', parts: ['Air Filter Box', 'Airflow Meter / MAF Sensor', 'Turbocharger', 'Supercharger', 'Intercooler Hose Kit', 'Throttle Body', 'Idle Control Valve', 'Intake Manifold'] },
+            { name: 'Engine Electrics', parts: ['Alternator', 'Starter Motor', 'Engine ECU / PCM', 'Fuse Box (Engine Bay)', 'Engine Wiring Harness', 'Ignition Coil Pack', 'Distributor'] },
+            { name: 'Ancillaries', parts: ['Power Steering Pump', 'Power Steering Reservoir', 'AC Compressor', 'Brake Master Cylinder', 'Brake Booster', 'Vacuum Pump'] },
+        ]
+    },
+    {
+        zone: 'Body Exterior',
+        apcCategory: 'body',
+        assemblies: [
+            { name: 'Front End', parts: ['Bonnet / Hood', 'Front Bumper Bar', 'Front Bumper Reinforcement', 'Grille', 'Radiator Support Panel', 'Front Crossmember', 'Bonnet Latch / Release'] },
+            { name: 'Front Guards', parts: ['Front Guard (Left)', 'Front Guard (Right)'] },
+            { name: 'Rear End', parts: ['Boot Lid', 'Tailgate', 'Tray (Ute)', 'Rear Bumper Bar', 'Rear Bumper Reinforcement', 'Rear Quarter Panel (Left)', 'Rear Quarter Panel (Right)'] },
+            { name: 'Roof & Pillars', parts: ['Roof Panel', 'Sunroof Assembly', 'A Pillar (Left)', 'A Pillar (Right)', 'B Pillar (Left)', 'B Pillar (Right)', 'C Pillar (Left)', 'C Pillar (Right)'] },
+        ]
+    },
+    {
+        zone: 'Doors',
+        apcCategory: 'body',
+        assemblies: [
+            { name: 'Left Front Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Mirror', 'Mirror Glass', 'Mirror Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)', 'Window Switch'] },
+            { name: 'Right Front Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Mirror', 'Mirror Glass', 'Mirror Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)', 'Window Switch'] },
+            { name: 'Left Rear Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)'] },
+            { name: 'Right Rear Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)'] },
+            { name: 'Sliding Door', parts: ['Complete Sliding Door Shell', 'Sliding Door Rail Kit', 'Window Glass', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal'] },
+            { name: 'Tailgate Door', parts: ['Complete Tailgate', 'Window Glass (Rear)', 'Tailgate Lock / Latch', 'Tailgate Handle', 'Tailgate Struts', 'Tailgate Hinges'] },
+        ]
+    },
+    {
+        zone: 'Lighting',
+        apcCategory: 'electrical',
+        assemblies: [
+            { name: 'Front Lighting', parts: ['Headlight (Left)', 'Headlight (Right)', 'Fog Light (Left)', 'Fog Light (Right)', 'DRL / LED Bar (Left)', 'DRL / LED Bar (Right)', 'Indicator (Front Left)', 'Indicator (Front Right)'] },
+            { name: 'Rear Lighting', parts: ['Taillight (Left)', 'Taillight (Right)', 'High-Mount Brake Light', 'Indicator (Rear Left)', 'Indicator (Rear Right)', 'Number Plate Light', 'Reverse Light (Left)', 'Reverse Light (Right)'] },
+            { name: 'Other Lighting', parts: ['Side Marker (Left)', 'Side Marker (Right)', 'Map Light / Dome Light', 'Boot / Cargo Light', 'Work Lights (Ute / 4WD)'] },
+        ]
+    },
+    {
+        zone: 'Glass',
+        apcCategory: 'glass',
+        assemblies: [
+            { name: 'Glass', parts: ['Windscreen (Front)', 'Rear Window', 'Sunroof Glass', 'Door Glass (Front Left)', 'Door Glass (Front Right)', 'Door Glass (Rear Left)', 'Door Glass (Rear Right)', 'Quarter Glass (Left)', 'Quarter Glass (Right)', 'Vent Glass (Front Left)', 'Vent Glass (Front Right)'] },
+        ]
+    },
+    {
+        zone: 'Interior',
+        apcCategory: 'interior',
+        assemblies: [
+            { name: 'Dashboard', parts: ['Dashboard Assembly', 'Instrument Cluster', 'Steering Wheel', 'Airbag — Driver', 'Airbag — Passenger', 'Glove Box', 'Centre Console', 'Dash Trim Panels', 'Heater / AC Controls', 'Head Unit / Infotainment', 'Navigation Screen', 'Rear View Mirror (Interior)'] },
+            { name: 'Seats', parts: ['Front Seat — Driver (Complete)', 'Front Seat — Passenger (Complete)', 'Rear Seat (Full)', 'Rear Seat (Left)', 'Rear Seat (Right)', 'Rear Seat (Centre)', '3rd Row Seat'] },
+            { name: 'Seat Belts', parts: ['Seat Belt — Driver', 'Seat Belt — Passenger', 'Seat Belt — Rear Left', 'Seat Belt — Rear Right', 'Seat Belt — Rear Centre'] },
+            { name: 'Trim & Carpet', parts: ['Floor Carpet (Full Set)', 'Boot / Cargo Carpet', 'Headliner / Roof Lining', 'Sun Visor (Left)', 'Sun Visor (Right)', 'Door Sill Trim (Left)', 'Door Sill Trim (Right)', 'Parcel Shelf'] },
+            { name: 'Controls', parts: ['Steering Column', 'Indicator / Wiper Stalk', 'Brake Pedal', 'Clutch Pedal', 'Accelerator Pedal'] },
+        ]
+    },
+    {
+        zone: 'Electrical',
+        apcCategory: 'electrical',
+        assemblies: [
+            { name: 'Modules & ECUs', parts: ['Body Control Module (BCM)', 'ABS Module / Pump', 'Airbag ECU / SRS Module', 'Transmission ECU', 'Central Locking Module', 'Immobiliser / Transponder', 'Keyless Entry Module', 'Park Assist Module'] },
+            { name: 'Sensors', parts: ['ABS Sensor (Front Left)', 'ABS Sensor (Front Right)', 'ABS Sensor (Rear Left)', 'ABS Sensor (Rear Right)', 'O2 Sensor (Front / Upstream)', 'O2 Sensor (Rear / Downstream)', 'MAP Sensor', 'Camshaft Position Sensor', 'Crankshaft Position Sensor', 'Coolant Temp Sensor', 'Knock Sensor', 'Throttle Position Sensor'] },
+            { name: 'Wiring & Fuses', parts: ['Engine Wiring Harness', 'Body Wiring Harness', 'Door Wiring Loom (Front Left)', 'Door Wiring Loom (Front Right)', 'Fuse Box (Cabin / Interior)', 'Trailer Wiring Harness'] },
+            { name: 'Battery & Charging', parts: ['Battery', 'Battery Tray / Holder', 'Alternator'] },
+        ]
+    },
+    {
+        zone: 'Suspension & Steering',
+        apcCategory: 'suspension',
+        assemblies: [
+            { name: 'Front Suspension', parts: ['Strut / Shock Absorber (Front Left)', 'Strut / Shock Absorber (Front Right)', 'Coil Spring (Front Left)', 'Coil Spring (Front Right)', 'Lower Control Arm (Left)', 'Lower Control Arm (Right)', 'Upper Control Arm (Left)', 'Upper Control Arm (Right)', 'Ball Joint (Front Left)', 'Ball Joint (Front Right)', 'Sway Bar (Front)', 'Sway Bar Link (Front Left)', 'Sway Bar Link (Front Right)', 'Hub / Wheel Bearing (Front Left)', 'Hub / Wheel Bearing (Front Right)'] },
+            { name: 'Rear Suspension', parts: ['Shock Absorber (Rear Left)', 'Shock Absorber (Rear Right)', 'Coil Spring (Rear Left)', 'Coil Spring (Rear Right)', 'Leaf Spring (Rear Left)', 'Leaf Spring (Rear Right)', 'Trailing Arm (Left)', 'Trailing Arm (Right)', 'Panhard / Lateral Rod', 'Sway Bar (Rear)', 'Sway Bar Link (Rear Left)', 'Sway Bar Link (Rear Right)', 'Hub / Wheel Bearing (Rear Left)', 'Hub / Wheel Bearing (Rear Right)'] },
+            { name: 'Steering', parts: ['Steering Rack', 'Steering Box', 'Power Steering Rack', 'Tie Rod (Left)', 'Tie Rod (Right)', 'Drag Link', 'Steering Shaft / Intermediate Shaft', 'Steering Column'] },
+        ]
+    },
+    {
+        zone: 'Brakes',
+        apcCategory: 'brakes',
+        assemblies: [
+            { name: 'Front Brakes', parts: ['Disc Rotor (Front Left)', 'Disc Rotor (Front Right)', 'Brake Caliper (Front Left)', 'Brake Caliper (Front Right)', 'Brake Pads (Front Set)'] },
+            { name: 'Rear Brakes', parts: ['Disc Rotor (Rear Left)', 'Disc Rotor (Rear Right)', 'Brake Caliper (Rear Left)', 'Brake Caliper (Rear Right)', 'Brake Drum (Rear Left)', 'Brake Drum (Rear Right)', 'Brake Pads (Rear Set)', 'Brake Shoes (Rear Set)'] },
+            { name: 'Brake System', parts: ['Brake Master Cylinder', 'Brake Booster', 'ABS Module / Pump', 'Handbrake / Park Brake Mechanism', 'Brake Lines (Set)'] },
+        ]
+    },
+    {
+        zone: 'Drivetrain',
+        apcCategory: 'transmission',
+        assemblies: [
+            { name: 'Driveshafts', parts: ['Front Driveshaft (Left)', 'Front Driveshaft (Right)', 'Rear Driveshaft (Left)', 'Rear Driveshaft (Right)', 'Propshaft (Front)', 'Propshaft (Rear)', 'Centre Bearing'] },
+            { name: 'Diff & Axles', parts: ['Diff (Front)', 'Diff (Rear)', 'Diff Centre', 'Rear Axle (Left)', 'Rear Axle (Right)', 'Front Axle (Left)', 'Front Axle (Right)'] },
+            { name: 'Clutch', parts: ['Clutch Kit (Plate, Pressure Plate, Bearing)', 'Flywheel', 'Dual Mass Flywheel', 'Clutch Master Cylinder', 'Clutch Slave Cylinder'] },
+        ]
+    },
+    {
+        zone: 'Exhaust',
+        apcCategory: 'engine',
+        assemblies: [
+            { name: 'Exhaust System', parts: ['Exhaust Manifold', 'Front Pipe / Downpipe', 'Catalytic Converter', 'DPF (Diesel Particulate Filter)', 'Centre Pipe', 'Muffler / Centre Silencer', 'Rear Muffler', 'Exhaust Tips'] },
+        ]
+    },
+    {
+        zone: 'Heating & AC',
+        apcCategory: 'cooling',
+        assemblies: [
+            { name: 'HVAC', parts: ['AC Compressor', 'Condenser', 'Evaporator', 'Heater Core', 'Blower Motor', 'AC Receiver / Drier', 'Expansion Valve', 'Climate Control Module', 'Rear AC Unit'] },
+        ]
+    },
+    {
+        zone: 'Wheels & Tyres',
+        apcCategory: 'wheels',
+        assemblies: [
+            { name: 'Wheels', parts: ['Alloy Wheel (Each)', 'Steel Wheel (Each)', 'Full Set of Wheels x4', 'Spare Wheel', 'Centre Cap / Hubcap'] },
+            { name: 'Tyres', parts: ['Tyre (Each)', 'Full Set of Tyres x4', 'Spare Tyre'] },
+        ]
+    },
+    {
+        zone: '4WD / Off-road',
+        apcCategory: '4x4',
+        assemblies: [
+            { name: '4WD Components', parts: ['Transfer Case', 'Front Locker / Diff Lock', 'Rear Locker / Diff Lock', 'Diff Lock Actuator', 'Free Wheeling Hubs (Set)', '4WD Selector / Switch'] },
+        ]
+    },
+    {
+        zone: 'Accessories',
+        apcCategory: 'other',
+        assemblies: [
+            { name: 'Towing', parts: ['Tow Bar / Tow Hitch', 'Tow Ball', 'Trailer Wiring Harness'] },
+            { name: 'Protection', parts: ['Bull Bar', 'Nudge Bar', 'Side Steps / Running Boards', 'Rock Sliders', 'Skid Plates'] },
+            { name: 'Ute Accessories', parts: ['Sports Bar', 'Hard Lid / Canopy', 'Tonneau Cover', 'Tray Liner', 'Toolbox'] },
+            { name: 'Other Accessories', parts: ['Roof Racks', 'Snorkel', 'Spare Wheel Carrier', 'Winch', 'Aerial / Antenna'] },
+        ]
+    },
+];
+
 let userListings = loadUserListings();
 let sellListingImages = [];
 
@@ -10963,6 +11107,428 @@ async function renderDemandWidget() {
         <div class="demand-bars">${bars}</div>
         ${insight}
     `;
+}
+
+// ─── ELECTRONIC DISMANTLING WORKFLOW (EDW) ────────────────────────────────
+
+let _edwVehicle = {};   // step 1 vehicle fields
+let _edwItems   = {};   // key: "zI:aI:pI" → { grade, notes, price }
+let _edwStep    = 1;
+let _edwExpandedZones = new Set(); // which zone accordions are open
+
+function openEdw() {
+    if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
+    _edwVehicle = {};
+    _edwItems   = {};
+    _edwStep    = 1;
+    _edwExpandedZones = new Set([0]); // open first zone by default
+    const drawer = document.getElementById('edwDrawer');
+    if (drawer) drawer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    _renderEdw();
+}
+
+function closeEdw() {
+    const drawer = document.getElementById('edwDrawer');
+    if (drawer) drawer.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function _renderEdw() {
+    _renderEdwHeader();
+    if (_edwStep === 1) _renderEdwStep1();
+    else if (_edwStep === 2) _renderEdwStep2();
+    else if (_edwStep === 3) _renderEdwStep3();
+}
+
+function _renderEdwHeader() {
+    const ind = document.getElementById('edwStepIndicator');
+    if (!ind) return;
+    const steps = ['Vehicle Details', 'Walk-around', 'Review & Price'];
+    ind.innerHTML = steps.map((s, i) => `
+        <div class="edw-step-dot ${i + 1 === _edwStep ? 'active' : i + 1 < _edwStep ? 'done' : ''}">
+            <div class="edw-step-num">${i + 1 < _edwStep ? '✓' : i + 1}</div>
+            <div class="edw-step-lbl">${s}</div>
+        </div>
+    `).join('<div class="edw-step-line"></div>');
+}
+
+function _renderEdwStep1() {
+    const body = document.getElementById('edwBody');
+    const footer = document.getElementById('edwFooter');
+    if (!body || !footer) return;
+
+    const makes = Object.keys(VEHICLE_DB || {}).sort();
+    const v = _edwVehicle;
+
+    body.innerHTML = `
+        <div class="edw-section-title">Vehicle to Dismantle</div>
+        <div class="edw-form-grid">
+            <div class="edw-field">
+                <label class="edw-label">Make *</label>
+                <select id="edwMake" class="edw-input" onchange="_edwOnMakeChange()">
+                    <option value="">Select make…</option>
+                    ${makes.map(m => `<option value="${escapeHtml(m)}"${v.make === m ? ' selected' : ''}>${escapeHtml(m)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Model *</label>
+                <select id="edwModel" class="edw-input" onchange="_edwOnModelChange()">
+                    <option value="">Select model…</option>
+                    ${v.make && VEHICLE_DB[v.make] ? Object.keys(VEHICLE_DB[v.make]).sort().map(m => `<option value="${escapeHtml(m)}"${v.model === m ? ' selected' : ''}>${escapeHtml(m)}</option>`).join('') : ''}
+                </select>
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Year *</label>
+                <select id="edwYear" class="edw-input" onchange="_edwSaveField('year', this.value)">
+                    <option value="">Select year…</option>
+                    ${_edwYearOptions(v.make, v.model, v.year)}
+                </select>
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Series / Variant</label>
+                <input id="edwSeries" class="edw-input" type="text" placeholder="e.g. N70, GX, Workmate" value="${escapeHtml(v.series || '')}" oninput="_edwSaveField('series', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Body Type</label>
+                <select id="edwBodyType" class="edw-input" onchange="_edwSaveField('bodyType', this.value)">
+                    <option value="">Select…</option>
+                    ${['Sedan','Hatchback','Wagon','Ute / Pickup','SUV / 4WD','Van','Coupe','Convertible','People Mover'].map(t => `<option value="${t}"${v.bodyType === t ? ' selected' : ''}>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Colour</label>
+                <input id="edwColour" class="edw-input" type="text" placeholder="e.g. Graphite Grey" value="${escapeHtml(v.colour || '')}" oninput="_edwSaveField('colour', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">VIN / Chassis</label>
+                <input id="edwVin" class="edw-input" type="text" placeholder="17-char VIN" value="${escapeHtml(v.vin || '')}" oninput="_edwSaveField('vin', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Paint Code</label>
+                <input id="edwPaintCode" class="edw-input" type="text" placeholder="e.g. 1G3, NH883P" value="${escapeHtml(v.paintCode || '')}" oninput="_edwSaveField('paintCode', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Engine Code</label>
+                <input id="edwEngineCode" class="edw-input" type="text" placeholder="e.g. 1GR-FE, RB26" value="${escapeHtml(v.engineCode || '')}" oninput="_edwSaveField('engineCode', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Transmission Code</label>
+                <input id="edwTransCode" class="edw-input" type="text" placeholder="e.g. A750E, R154" value="${escapeHtml(v.transCode || '')}" oninput="_edwSaveField('transCode', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Odometer (km)</label>
+                <input id="edwOdo" class="edw-input" type="number" placeholder="e.g. 187000" value="${v.odometer || ''}" oninput="_edwSaveField('odometer', this.value)">
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Build Date</label>
+                <input id="edwBuild" class="edw-input" type="text" placeholder="e.g. 08/2018" value="${escapeHtml(v.buildDate || '')}" oninput="_edwSaveField('buildDate', this.value)">
+            </div>
+        </div>
+    `;
+
+    footer.innerHTML = `<button class="edw-btn-primary" onclick="_edwStep1Next()">Start Walk-around →</button>`;
+}
+
+function _edwYearOptions(make, model, selectedYear) {
+    if (!make || !model || !VEHICLE_DB[make]?.[model]) return '';
+    const range = VEHICLE_DB[make][model];
+    const start = range[0] || 1970;
+    const end   = range[1] || new Date().getFullYear();
+    let html = '';
+    for (let y = end; y >= start; y--) {
+        html += `<option value="${y}"${selectedYear == y ? ' selected' : ''}>${y}</option>`;
+    }
+    return html;
+}
+
+function _edwOnMakeChange() {
+    const make = document.getElementById('edwMake')?.value;
+    _edwVehicle.make  = make;
+    _edwVehicle.model = '';
+    _edwVehicle.year  = '';
+    const modelSel = document.getElementById('edwModel');
+    if (modelSel && VEHICLE_DB[make]) {
+        const models = Object.keys(VEHICLE_DB[make]).sort();
+        modelSel.innerHTML = `<option value="">Select model…</option>${models.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}`;
+    }
+    const yearSel = document.getElementById('edwYear');
+    if (yearSel) yearSel.innerHTML = '<option value="">Select year…</option>';
+}
+
+function _edwOnModelChange() {
+    const make  = document.getElementById('edwMake')?.value;
+    const model = document.getElementById('edwModel')?.value;
+    _edwVehicle.model = model;
+    _edwVehicle.year  = '';
+    const yearSel = document.getElementById('edwYear');
+    if (yearSel) yearSel.innerHTML = `<option value="">Select year…</option>${_edwYearOptions(make, model, '')}`;
+}
+
+function _edwSaveField(field, value) {
+    _edwVehicle[field] = value;
+}
+
+function _edwStep1Next() {
+    if (!_edwVehicle.make || !_edwVehicle.model || !_edwVehicle.year) {
+        showToast('Please select Make, Model and Year to continue');
+        return;
+    }
+    _edwStep = 2;
+    _renderEdw();
+    document.getElementById('edwBody')?.scrollTo(0, 0);
+}
+
+function _renderEdwStep2() {
+    const body   = document.getElementById('edwBody');
+    const footer = document.getElementById('edwFooter');
+    if (!body || !footer) return;
+
+    const v = _edwVehicle;
+    const vehicleLabel = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const checkedCount = Object.keys(_edwItems).length;
+
+    body.innerHTML = `
+        <div class="edw-vehicle-banner">
+            <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
+            ${v.vin ? `<div class="edw-vehicle-sub">VIN: ${escapeHtml(v.vin)}</div>` : ''}
+            ${v.colour ? `<div class="edw-vehicle-sub">Colour: ${escapeHtml(v.colour)}</div>` : ''}
+        </div>
+        <div class="edw-checklist-hint">Tap a zone to expand it. Tick each part you're pulling from the vehicle.</div>
+        <div id="edwZoneList">${_buildZoneAccordions()}</div>
+    `;
+
+    footer.innerHTML = `
+        <div class="edw-footer-meta">${checkedCount} part${checkedCount !== 1 ? 's' : ''} selected</div>
+        <button class="edw-btn-secondary" onclick="_edwStep=1;_renderEdw()">← Back</button>
+        <button class="edw-btn-primary" onclick="_edwStep2Next()">Review ${checkedCount} Part${checkedCount !== 1 ? 's' : ''} →</button>
+    `;
+}
+
+function _buildZoneAccordions() {
+    return EDW_TAXONOMY.map((zone, zI) => {
+        const isOpen = _edwExpandedZones.has(zI);
+        const zoneChecked = Object.keys(_edwItems).filter(k => k.startsWith(zI + ':')).length;
+        return `
+            <div class="edw-zone">
+                <button class="edw-zone-hdr" onclick="_edwToggleZone(${zI})">
+                    <span class="edw-zone-name">${escapeHtml(zone.zone)}</span>
+                    ${zoneChecked ? `<span class="edw-zone-badge">${zoneChecked}</span>` : ''}
+                    <span class="edw-zone-chevron">${isOpen ? '▲' : '▼'}</span>
+                </button>
+                ${isOpen ? `<div class="edw-zone-body">${_buildAssemblies(zone, zI)}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function _buildAssemblies(zone, zI) {
+    return zone.assemblies.map((asm, aI) => `
+        <div class="edw-assembly">
+            <div class="edw-assembly-name">${escapeHtml(asm.name)}</div>
+            ${asm.parts.map((part, pI) => {
+                const key   = `${zI}:${aI}:${pI}`;
+                const item  = _edwItems[key];
+                const checked = !!item;
+                return `
+                    <div class="edw-part-row${checked ? ' checked' : ''}">
+                        <label class="edw-part-check">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}', ${zI}, ${aI}, ${pI}, this.checked)">
+                            <span class="edw-part-name">${escapeHtml(part)}</span>
+                        </label>
+                        ${checked ? `
+                        <div class="edw-part-detail">
+                            <div class="edw-grade-row">
+                                ${['A','B','C','D'].map(g => `<button class="edw-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwSetGrade('${key}',${zI},'${g}')">${g}</button>`).join('')}
+                                <span class="edw-grade-hint">${item.grade === 'A' ? 'Like new' : item.grade === 'B' ? 'Good used' : item.grade === 'C' ? 'Average' : item.grade === 'D' ? 'Damaged' : 'Select grade'}</span>
+                            </div>
+                            <input class="edw-notes-input" type="text" placeholder="Notes (optional)" value="${escapeHtml(item.notes || '')}" oninput="_edwSetNotes('${key}', this.value)">
+                        </div>` : ''}
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `).join('');
+}
+
+function _edwToggleZone(zI) {
+    if (_edwExpandedZones.has(zI)) _edwExpandedZones.delete(zI);
+    else _edwExpandedZones.add(zI);
+    document.getElementById('edwZoneList').innerHTML = _buildZoneAccordions();
+    _updateEdwFooterCount();
+}
+
+function _edwTogglePart(key, zI, aI, pI, checked) {
+    if (checked) {
+        _edwItems[key] = { grade: 'B', notes: '', price: '' };
+    } else {
+        delete _edwItems[key];
+    }
+    // Re-render just the zone list to avoid losing scroll position on body
+    const zoneList = document.getElementById('edwZoneList');
+    if (zoneList) zoneList.innerHTML = _buildZoneAccordions();
+    _updateEdwFooterCount();
+}
+
+function _edwSetGrade(key, zI, grade) {
+    if (!_edwItems[key]) return;
+    _edwItems[key].grade = grade;
+    const zoneList = document.getElementById('edwZoneList');
+    if (zoneList) zoneList.innerHTML = _buildZoneAccordions();
+}
+
+function _edwSetNotes(key, value) {
+    if (_edwItems[key]) _edwItems[key].notes = value;
+}
+
+function _updateEdwFooterCount() {
+    const count = Object.keys(_edwItems).length;
+    const meta = document.querySelector('.edw-footer-meta');
+    if (meta) meta.textContent = `${count} part${count !== 1 ? 's' : ''} selected`;
+    const reviewBtn = document.querySelector('#edwFooter .edw-btn-primary');
+    if (reviewBtn) reviewBtn.textContent = `Review ${count} Part${count !== 1 ? 's' : ''} →`;
+}
+
+function _edwStep2Next() {
+    if (!Object.keys(_edwItems).length) { showToast('Tick at least one part to continue'); return; }
+    _edwStep = 3;
+    _renderEdw();
+    document.getElementById('edwBody')?.scrollTo(0, 0);
+}
+
+function _renderEdwStep3() {
+    const body   = document.getElementById('edwBody');
+    const footer = document.getElementById('edwFooter');
+    if (!body || !footer) return;
+
+    const v = _edwVehicle;
+    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
+
+    const cards = Object.entries(_edwItems).map(([key, item]) => {
+        const [zI, aI, pI] = key.split(':').map(Number);
+        const zone  = EDW_TAXONOMY[zI];
+        const asm   = zone?.assemblies[aI];
+        const part  = asm?.parts[pI] || '';
+        const listingTitle = `${part} to suit ${vehicleTitle}`;
+        return `
+            <div class="edw-review-card">
+                <div class="edw-review-card-top">
+                    <div class="edw-review-part-name">${escapeHtml(part)}</div>
+                    <span class="edw-review-grade grade-${item.grade}">${item.grade} — ${gradeLabel[item.grade] || ''}</span>
+                </div>
+                <div class="edw-review-title">${escapeHtml(listingTitle)}</div>
+                ${item.notes ? `<div class="edw-review-notes">${escapeHtml(item.notes)}</div>` : ''}
+                <div class="edw-price-row">
+                    <span class="edw-price-lbl">Price $</span>
+                    <input class="edw-price-input" type="number" min="0" step="1" placeholder="0.00"
+                        value="${item.price || ''}" oninput="_edwItems['${key}'].price = this.value">
+                    <button class="edw-remove-btn" onclick="_edwRemoveItem('${key}')">Remove</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    body.innerHTML = `
+        <div class="edw-vehicle-banner">
+            <div class="edw-vehicle-title">${escapeHtml(vehicleTitle)}</div>
+        </div>
+        <div class="edw-review-hint">Set a price for each part. Leave blank to publish at $0 (negotiable). You can edit listings individually after publishing.</div>
+        <div class="edw-review-list">${cards}</div>
+    `;
+
+    footer.innerHTML = `
+        <div class="edw-footer-meta">${Object.keys(_edwItems).length} listings to publish</div>
+        <button class="edw-btn-secondary" onclick="_edwStep=2;_renderEdw()">← Back</button>
+        <button class="edw-btn-primary" onclick="_edwPublish()">Publish All Listings</button>
+    `;
+}
+
+function _edwRemoveItem(key) {
+    delete _edwItems[key];
+    _renderEdwStep3();
+}
+
+async function _edwPublish() {
+    if (!sb || !currentUserId) { showToast('Sign in required'); return; }
+    const items = Object.entries(_edwItems);
+    if (!items.length) { showToast('Nothing to publish'); return; }
+
+    const footer = document.getElementById('edwFooter');
+    if (footer) footer.innerHTML = `<div class="edw-footer-meta">Publishing ${items.length} listings…</div>`;
+
+    const v = _edwVehicle;
+    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const gradeToCondition = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
+
+    // Save job record
+    const { data: job } = await sb.from('dismantling_jobs').insert({
+        user_id: currentUserId,
+        make: v.make, model: v.model, year: Number(v.year),
+        series: v.series || null, body_type: v.bodyType || null,
+        vin: v.vin || null, paint_code: v.paintCode || null,
+        engine_code: v.engineCode || null, transmission_code: v.transCode || null,
+        odometer: v.odometer ? Number(v.odometer) : null,
+        build_date: v.buildDate || null, colour: v.colour || null,
+    }).select('id').single();
+
+    let published = 0;
+    for (const [key, item] of items) {
+        const [zI, aI, pI] = key.split(':').map(Number);
+        const zone  = EDW_TAXONOMY[zI];
+        const asm   = zone?.assemblies[aI];
+        const part  = asm?.parts[pI] || '';
+        const title = `${part} to suit ${vehicleTitle}`;
+        const price = item.price ? Number(item.price) : 0;
+
+        const { data: listing } = await sb.from('listings').insert({
+            seller_id: currentUserId,
+            title,
+            price,
+            category: zone.apcCategory,
+            condition: gradeToCondition[item.grade] || 'good',
+            status: 'active',
+            description: item.notes || '',
+            fits_year: Number(v.year),
+            chassis_vin: v.vin || null,
+            is_pro_listing: true,
+        }).select('id').single();
+
+        if (listing?.id) {
+            // Link vehicle
+            await sb.from('listing_vehicles').insert({
+                listing_id: listing.id,
+                make: v.make, model: v.model,
+                series: v.series || null,
+            });
+            // Save dismantling item record
+            if (job?.id) {
+                await sb.from('dismantling_items').insert({
+                    job_id: job.id, user_id: currentUserId,
+                    zone: zone.zone, assembly: asm.name, part_name: part,
+                    grade: item.grade, notes: item.notes || '',
+                    price, listing_id: listing.id, status: 'published',
+                });
+            }
+            published++;
+        }
+    }
+
+    await loadUserListingsFromSupabase(currentUserId);
+    renderMyParts();
+    renderMainGrid();
+
+    const body = document.getElementById('edwBody');
+    if (body) body.innerHTML = `
+        <div class="edw-success">
+            <div class="edw-success-ico">✓</div>
+            <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
+            <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
+            <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
+        </div>
+    `;
+    if (footer) footer.innerHTML = `<button class="edw-btn-secondary" onclick="closeEdw()">Close</button>`;
+    showToast(`${published} listings published`);
 }
 
 function refreshDashSavesFromSupabase() {

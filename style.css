@@ -6267,3 +6267,161 @@ header {
 @media (min-width: 900px) {
     #reportSheet { left: max(0px, calc(50vw - 280px)); right: max(0px, calc(50vw - 280px)); border-radius: 16px; bottom: auto; top: 50%; transform: translateY(-50%); }
 }
+
+/* ─── EDW — Electronic Dismantling Workflow ─────────────────────────────── */
+#edwDrawer { border-radius: 0 !important; top: 0; }
+.edw-shell {
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    background: #f2f2f7;
+}
+.edw-header {
+    flex-shrink: 0; background: #1a1a2e; color: #fff;
+    padding: 14px 16px 12px;
+    display: flex; flex-direction: column; gap: 12px;
+}
+.edw-header-title {
+    font-size: 15px; font-weight: 800; letter-spacing: 0.3px; color: #fff;
+    text-align: center;
+}
+.edw-close-btn {
+    position: absolute; top: 14px; right: 16px;
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 32px; height: 32px; color: #fff; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+/* Step indicator */
+.edw-step-indicator {
+    display: flex; align-items: center; justify-content: center; gap: 0;
+}
+.edw-step-dot {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.edw-step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5);
+}
+.edw-step-dot.active .edw-step-num { border-color: #f07020; color: #f07020; }
+.edw-step-dot.done .edw-step-num { border-color: #22c55e; background: #22c55e; color: #fff; }
+.edw-step-lbl { font-size: 10px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+.edw-step-dot.active .edw-step-lbl { color: #fff; }
+.edw-step-line { width: 32px; height: 2px; background: rgba(255,255,255,0.15); margin-bottom: 16px; flex-shrink: 0; }
+
+/* Body & footer */
+.edw-body { flex: 1; overflow-y: auto; padding: 16px; }
+.edw-footer {
+    flex-shrink: 0; background: #fff; border-top: 1px solid #eee;
+    padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+}
+.edw-footer-meta { flex: 1; font-size: 12px; color: #888; }
+
+/* Buttons */
+.edw-btn-primary {
+    background: #f07020; color: #fff; border: none; border-radius: 8px;
+    padding: 11px 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+    white-space: nowrap;
+}
+.edw-btn-primary:hover { background: #d95f10; }
+.edw-btn-secondary {
+    background: #fff; color: #555; border: 1.5px solid #ddd; border-radius: 8px;
+    padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+    white-space: nowrap;
+}
+.edw-btn-secondary:hover { border-color: #aaa; }
+
+/* Step 1 — Vehicle form */
+.edw-section-title { font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+.edw-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.edw-field { display: flex; flex-direction: column; gap: 5px; }
+.edw-label { font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.3px; }
+.edw-input {
+    padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+    font-size: 14px; color: #333; background: #fff; width: 100%; box-sizing: border-box;
+}
+.edw-input:focus { outline: none; border-color: #f07020; }
+@media (max-width: 600px) { .edw-form-grid { grid-template-columns: 1fr; } }
+
+/* Step 2 — Checklist */
+.edw-vehicle-banner {
+    background: #1a1a2e; color: #fff; border-radius: 10px;
+    padding: 12px 15px; margin-bottom: 14px;
+}
+.edw-vehicle-title { font-size: 15px; font-weight: 800; }
+.edw-vehicle-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+.edw-checklist-hint { font-size: 12px; color: #888; margin-bottom: 12px; }
+
+/* Zone accordion */
+.edw-zone { background: #fff; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+.edw-zone-hdr {
+    width: 100%; display: flex; align-items: center; gap: 8px;
+    padding: 13px 15px; background: #fff; border: none; cursor: pointer;
+    text-align: left;
+}
+.edw-zone-hdr:hover { background: #fafafa; }
+.edw-zone-name { flex: 1; font-size: 14px; font-weight: 700; color: #333; }
+.edw-zone-badge {
+    background: #f07020; color: #fff; border-radius: 99px;
+    padding: 2px 8px; font-size: 11px; font-weight: 700;
+}
+.edw-zone-chevron { font-size: 10px; color: #aaa; }
+.edw-zone-body { border-top: 1px solid #f0f0f0; padding: 0 0 8px; }
+
+/* Assembly & parts */
+.edw-assembly { padding: 10px 15px 4px; }
+.edw-assembly-name { font-size: 11px; font-weight: 700; color: #f07020; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.edw-part-row { padding: 7px 0; border-bottom: 1px solid #f4f4f4; }
+.edw-part-row:last-child { border-bottom: none; }
+.edw-part-row.checked { background: #fffaf7; border-radius: 6px; padding: 7px 8px; margin: 0 -8px; }
+.edw-part-check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.edw-part-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: #f07020; flex-shrink: 0; }
+.edw-part-name { font-size: 14px; color: #333; }
+.edw-part-detail { margin-top: 8px; padding-left: 28px; display: flex; flex-direction: column; gap: 7px; }
+.edw-grade-row { display: flex; align-items: center; gap: 6px; }
+.edw-grade-btn {
+    width: 32px; height: 32px; border-radius: 6px; border: 1.5px solid #ddd;
+    background: #fff; font-size: 13px; font-weight: 700; color: #666; cursor: pointer;
+}
+.edw-grade-btn.active { border-color: #f07020; background: #f07020; color: #fff; }
+.edw-grade-hint { font-size: 11px; color: #aaa; margin-left: 4px; }
+.edw-notes-input {
+    width: 100%; padding: 7px 10px; border: 1.5px solid #e8e8e8; border-radius: 6px;
+    font-size: 13px; color: #444; box-sizing: border-box;
+}
+.edw-notes-input:focus { outline: none; border-color: #f07020; }
+
+/* Step 3 — Review */
+.edw-review-hint { font-size: 12px; color: #888; margin-bottom: 12px; }
+.edw-review-list { display: flex; flex-direction: column; gap: 10px; }
+.edw-review-card { background: #fff; border-radius: 10px; padding: 14px; }
+.edw-review-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.edw-review-part-name { font-size: 15px; font-weight: 700; color: #333; }
+.edw-review-grade { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; }
+.edw-review-grade.grade-A { background: #dcfce7; color: #15803d; }
+.edw-review-grade.grade-B { background: #dbeafe; color: #1d4ed8; }
+.edw-review-grade.grade-C { background: #fef9c3; color: #92400e; }
+.edw-review-grade.grade-D { background: #fee2e2; color: #991b1b; }
+.edw-review-title { font-size: 12px; color: #888; margin-bottom: 6px; }
+.edw-review-notes { font-size: 12px; color: #666; background: #f9f9f9; border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; }
+.edw-price-row { display: flex; align-items: center; gap: 8px; }
+.edw-price-lbl { font-size: 13px; font-weight: 700; color: #333; white-space: nowrap; }
+.edw-price-input {
+    flex: 1; padding: 9px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+    font-size: 15px; font-weight: 700; color: #333; box-sizing: border-box;
+}
+.edw-price-input:focus { outline: none; border-color: #f07020; }
+.edw-remove-btn {
+    background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; padding: 0;
+}
+
+/* Success screen */
+.edw-success { text-align: center; padding: 60px 20px; }
+.edw-success-ico { font-size: 56px; margin-bottom: 16px; color: #22c55e; }
+.edw-success-title { font-size: 22px; font-weight: 800; color: #333; margin-bottom: 8px; }
+.edw-success-sub { font-size: 14px; color: #666; }
+
+/* Desktop: constrain width */
+@media (min-width: 900px) {
+    #edwDrawer { left: max(0px, calc(50vw - 420px)); right: max(0px, calc(50vw - 420px)); }
+}
