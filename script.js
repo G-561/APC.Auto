@@ -11622,7 +11622,7 @@ function _edwSelectZone(zI) {
         _edwActiveAsm  = null;
     } else {
         _edwActiveZone = zI;
-        _edwActiveAsm  = 0;
+        _edwActiveAsm  = null;
     }
     const wrap = document.getElementById('edwSgWrap');
     if (wrap) wrap.innerHTML = _buildEdwGrid();
