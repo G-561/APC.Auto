@@ -11111,17 +11111,21 @@ async function renderDemandWidget() {
 
 // ─── ELECTRONIC DISMANTLING WORKFLOW (EDW) ────────────────────────────────
 
-let _edwVehicle = {};   // step 1 vehicle fields
-let _edwItems   = {};   // key: "zI:aI:pI" → { grade, notes, price }
-let _edwStep    = 1;
-let _edwExpandedZones = new Set(); // which zone accordions are open
+let _edwVehicle       = {};
+let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, photos: [] }
+let _edwStep          = 1;
+let _edwExpandedZones = new Set();
+let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
+
+const EDW_VEHICLE_ANGLES = ['Front Left', 'Front Right', 'Rear Left', 'Rear Right', 'Instrument Cluster', 'Compliance Plate'];
 
 function openEdw() {
     if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
-    _edwVehicle = {};
-    _edwItems   = {};
-    _edwStep    = 1;
-    _edwExpandedZones = new Set([0]); // open first zone by default
+    _edwVehicle       = {};
+    _edwItems         = {};
+    _edwStep          = 1;
+    _edwExpandedZones = new Set([0]);
+    _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
     const drawer = document.getElementById('edwDrawer');
     if (drawer) drawer.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -11225,9 +11229,61 @@ function _renderEdwStep1() {
                 <input id="edwBuild" class="edw-input" type="text" placeholder="e.g. 08/2018" value="${escapeHtml(v.buildDate || '')}" oninput="_edwSaveField('buildDate', this.value)">
             </div>
         </div>
+
+        <div class="edw-section-title" style="margin-top:22px;">Vehicle Photos <span style="font-weight:400;text-transform:none;font-size:11px;color:#aaa;">(optional)</span></div>
+        <div class="edw-vp-hint">Tap a photo to toggle whether it gets added to listings without their own part photo.</div>
+        <div class="edw-vp-grid" id="edwVpGrid">${_buildVehiclePhotoSlots()}</div>
     `;
 
     footer.innerHTML = `<button class="edw-btn-primary" onclick="_edwStep1Next()">Start Walk-around →</button>`;
+}
+
+function _buildVehiclePhotoSlots() {
+    return _edwVehiclePhotos.map((vp, i) => {
+        if (vp.file) {
+            return `
+                <div class="edw-vp-slot">
+                    <div class="edw-vp-thumb-wrap ${vp.selected ? 'selected' : 'deselected'}" onclick="_edwToggleVehiclePhoto(${i})">
+                        <img class="edw-vp-thumb" src="${vp.previewUrl}" alt="${escapeHtml(vp.angle)}">
+                        <div class="edw-vp-overlay">${vp.selected ? '✓' : '✕'}</div>
+                    </div>
+                    <div class="edw-vp-label">${escapeHtml(vp.angle)}</div>
+                </div>`;
+        }
+        return `
+            <div class="edw-vp-slot">
+                <label class="edw-vp-empty">
+                    <input type="file" accept="image/*" style="display:none" onchange="_edwAddVehiclePhoto(${i}, this)">
+                    <span class="edw-vp-add-ico">+</span>
+                </label>
+                <div class="edw-vp-label">${escapeHtml(vp.angle)}</div>
+            </div>`;
+    }).join('');
+}
+
+function _edwAddVehiclePhoto(index, input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    _edwVehiclePhotos[index].file = file;
+    _edwVehiclePhotos[index].previewUrl = URL.createObjectURL(file);
+    _edwVehiclePhotos[index].selected = true;
+    const grid = document.getElementById('edwVpGrid');
+    if (grid) grid.innerHTML = _buildVehiclePhotoSlots();
+}
+
+function _edwToggleVehiclePhoto(index) {
+    _edwVehiclePhotos[index].selected = !_edwVehiclePhotos[index].selected;
+    const grid = document.getElementById('edwVpGrid');
+    if (grid) grid.innerHTML = _buildVehiclePhotoSlots();
+}
+
+function _fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 function _edwYearOptions(make, model, selectedYear) {
@@ -11343,6 +11399,10 @@ function _buildAssemblies(zone, zI) {
                                 <span class="edw-grade-hint">${item.grade === 'A' ? 'Like new' : item.grade === 'B' ? 'Good used' : item.grade === 'C' ? 'Average' : item.grade === 'D' ? 'Damaged' : 'Select grade'}</span>
                             </div>
                             <input class="edw-notes-input" type="text" placeholder="Notes (optional)" value="${escapeHtml(item.notes || '')}" oninput="_edwSetNotes('${key}', this.value)">
+                            <label class="edw-part-photo-btn">
+                                <input type="file" accept="image/*" multiple style="display:none" onchange="_edwAddPartPhoto('${key}', this)">
+                                <span>+ Photos${item.photos?.length ? ` (${item.photos.length})` : ''}</span>
+                            </label>
                         </div>` : ''}
                     </div>
                 `;
@@ -11360,7 +11420,7 @@ function _edwToggleZone(zI) {
 
 function _edwTogglePart(key, zI, aI, pI, checked) {
     if (checked) {
-        _edwItems[key] = { grade: 'B', notes: '', price: '' };
+        _edwItems[key] = { grade: 'B', notes: '', price: '', photos: [] };
     } else {
         delete _edwItems[key];
     }
@@ -11379,6 +11439,17 @@ function _edwSetGrade(key, zI, grade) {
 
 function _edwSetNotes(key, value) {
     if (_edwItems[key]) _edwItems[key].notes = value;
+}
+
+function _edwAddPartPhoto(key, input) {
+    if (!_edwItems[key] || !input.files?.length) return;
+    if (!_edwItems[key].photos) _edwItems[key].photos = [];
+    Array.from(input.files).forEach(file => {
+        _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) });
+    });
+    // Re-render zone list to update photo count badge
+    const zoneList = document.getElementById('edwZoneList');
+    if (zoneList) zoneList.innerHTML = _buildZoneAccordions();
 }
 
 function _updateEdwFooterCount() {
@@ -11501,6 +11572,23 @@ async function _edwPublish() {
                 make: v.make, model: v.model,
                 series: v.series || null,
             });
+
+            // Photos: use part photos if present, otherwise selected vehicle photos
+            const partPhotos    = item.photos?.filter(p => p.file) || [];
+            const vehiclePhotos = partPhotos.length > 0
+                ? []
+                : _edwVehiclePhotos.filter(p => p.file && p.selected);
+            const photosToUse = partPhotos.length > 0 ? partPhotos : vehiclePhotos;
+            if (photosToUse.length) {
+                const base64s = await Promise.all(photosToUse.map(p => _fileToBase64(p.file)));
+                const urls = await uploadListingImagesToStorage(String(listing.id), base64s);
+                if (urls.length) {
+                    await sb.from('listing_images').insert(
+                        urls.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i }))
+                    );
+                }
+            }
+
             // Save dismantling item record
             if (job?.id) {
                 await sb.from('dismantling_items').insert({
