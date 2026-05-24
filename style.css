@@ -6349,23 +6349,51 @@ header {
 }
 .edw-vehicle-title { font-size: 15px; font-weight: 800; }
 .edw-vehicle-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
-.edw-checklist-hint { font-size: 12px; color: #888; margin-bottom: 12px; }
+/* Zone master-detail split */
+.edw-split {
+    flex: 1; display: flex; overflow: hidden; min-height: 0;
+}
+.edw-zone-nav {
+    width: 150px; flex-shrink: 0; overflow-y: auto;
+    border-right: 2px solid #eee; background: #fafafa;
+}
+.edw-zone-nav-item {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    gap: 6px; padding: 13px 12px; border: none; background: none;
+    text-align: left; cursor: pointer; border-bottom: 1px solid #f0f0f0;
+    transition: background 0.1s;
+}
+.edw-zone-nav-item:hover { background: #f0f0f0; }
+.edw-zone-nav-item.active {
+    background: #fff; border-right: 3px solid #f07020; font-weight: 700;
+}
+.edw-zone-nav-name { font-size: 13px; color: #333; line-height: 1.3; }
+.edw-zone-nav-item.active .edw-zone-nav-name { color: #f07020; }
+.edw-zone-nav-badge {
+    flex-shrink: 0; background: #f07020; color: #fff;
+    border-radius: 99px; padding: 1px 7px; font-size: 11px; font-weight: 700;
+}
+.edw-zone-detail { flex: 1; overflow-y: auto; padding: 16px; }
 
-/* Zone accordion */
-.edw-zone { background: #fff; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
-.edw-zone-hdr {
-    width: 100%; display: flex; align-items: center; gap: 8px;
-    padding: 13px 15px; background: #fff; border: none; cursor: pointer;
-    text-align: left;
+/* Mobile: horizontal zone pills */
+@media (max-width: 600px) {
+    .edw-split { flex-direction: column; }
+    .edw-zone-nav {
+        width: 100%; display: flex; flex-direction: row;
+        overflow-x: auto; overflow-y: hidden; border-right: none;
+        border-bottom: 2px solid #eee; padding: 8px; gap: 6px;
+        flex-shrink: 0;
+    }
+    .edw-zone-nav-item {
+        flex-shrink: 0; border-radius: 20px; border: 1.5px solid #ddd;
+        padding: 7px 12px; border-bottom: 1.5px solid #ddd; white-space: nowrap;
+        justify-content: center; gap: 6px;
+    }
+    .edw-zone-nav-item.active {
+        border-color: #f07020; background: rgba(240,112,32,0.08); border-right: 1.5px solid #f07020;
+    }
+    .edw-zone-detail { padding: 12px; }
 }
-.edw-zone-hdr:hover { background: #fafafa; }
-.edw-zone-name { flex: 1; font-size: 14px; font-weight: 700; color: #333; }
-.edw-zone-badge {
-    background: #f07020; color: #fff; border-radius: 99px;
-    padding: 2px 8px; font-size: 11px; font-weight: 700;
-}
-.edw-zone-chevron { font-size: 10px; color: #aaa; }
-.edw-zone-body { border-top: 1px solid #f0f0f0; padding: 0 0 8px; }
 
 /* Assembly & parts */
 .edw-assembly { padding: 10px 15px 4px; }
@@ -6466,9 +6494,7 @@ header {
     .edw-form-grid { grid-template-columns: repeat(3, 1fr); }
     .edw-vp-grid { grid-template-columns: repeat(6, 1fr); }
     .edw-review-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .edw-checklist-hint { padding: 0 0 4px; }
-    #edwZoneList { columns: 2; gap: 12px; }
-    #edwZoneList .edw-zone { break-inside: avoid; }
+    .edw-zone-nav { width: 180px; }
 }
 
 /* ─── EDW — Job Sent Screen ─────────────────────────────────────────────── */

@@ -11116,7 +11116,7 @@ async function renderDemandWidget() {
 let _edwVehicle       = {};
 let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, photos: [] }
 let _edwStep          = 1;
-let _edwExpandedZones = new Set();
+let _edwSelectedZone  = 0;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
 
 const EDW_VEHICLE_ANGLES = ['Front Left', 'Front Right', 'Rear Left', 'Rear Right', 'Instrument Cluster', 'Compliance Plate'];
@@ -11126,7 +11126,7 @@ function openEdw() {
     _edwVehicle       = {};
     _edwItems         = {};
     _edwStep          = 1;
-    _edwExpandedZones = new Set([0]);
+    _edwSelectedZone  = 0;
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
     const drawer = document.getElementById('edwDrawer');
     if (drawer) {
@@ -11344,42 +11344,56 @@ function _renderEdwStep2() {
     const footer = document.getElementById('edwFooter');
     if (!body || !footer) return;
 
+    body.style.padding       = '0';
+    body.style.overflow      = 'hidden';
+    body.style.display       = 'flex';
+    body.style.flexDirection = 'column';
+
     const v = _edwVehicle;
     const vehicleLabel = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
     const checkedCount = Object.keys(_edwItems).length;
 
     body.innerHTML = `
-        <div class="edw-vehicle-banner">
+        <div class="edw-vehicle-banner" style="flex-shrink:0;">
             <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
             ${v.vin ? `<div class="edw-vehicle-sub">VIN: ${escapeHtml(v.vin)}</div>` : ''}
-            ${v.colour ? `<div class="edw-vehicle-sub">Colour: ${escapeHtml(v.colour)}</div>` : ''}
         </div>
-        <div class="edw-checklist-hint">Tap a zone to expand it. Tick each part you're pulling from the vehicle.</div>
-        <div id="edwZoneList">${_buildZoneAccordions()}</div>
+        <div class="edw-split" id="edwSplit">
+            <div class="edw-zone-nav" id="edwZoneNav">${_buildZoneNav()}</div>
+            <div class="edw-zone-detail" id="edwZoneDetail">${_buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone)}</div>
+        </div>
     `;
 
     footer.innerHTML = `
         <div class="edw-footer-meta">${checkedCount} part${checkedCount !== 1 ? 's' : ''} selected</div>
-        <button class="edw-btn-secondary" onclick="_edwStep=1;_renderEdw()">← Back</button>
+        <button class="edw-btn-secondary" onclick="_edwStep2Back()">← Back</button>
         <button class="edw-btn-primary" onclick="_edwStep2Next()">Review ${checkedCount} Part${checkedCount !== 1 ? 's' : ''} →</button>
     `;
 }
 
-function _buildZoneAccordions() {
+function _edwStep2Back() {
+    const body = document.getElementById('edwBody');
+    if (body) { body.style.padding = ''; body.style.overflow = ''; body.style.display = ''; body.style.flexDirection = ''; }
+    _edwStep = 1; _renderEdw();
+}
+
+function _buildZoneNav() {
     return EDW_TAXONOMY.map((zone, zI) => {
-        const isOpen = _edwExpandedZones.has(zI);
-        const zoneChecked = Object.keys(_edwItems).filter(k => k.startsWith(zI + ':')).length;
+        const count = Object.keys(_edwItems).filter(k => k.startsWith(zI + ':')).length;
         return `
-            <div class="edw-zone">
-                <button class="edw-zone-hdr" onclick="_edwToggleZone(${zI})">
-                    <span class="edw-zone-name">${escapeHtml(zone.zone)}</span>
-                    ${zoneChecked ? `<span class="edw-zone-badge">${zoneChecked}</span>` : ''}
-                    <span class="edw-zone-chevron">${isOpen ? '▲' : '▼'}</span>
-                </button>
-                ${isOpen ? `<div class="edw-zone-body">${_buildAssemblies(zone, zI)}</div>` : ''}
-            </div>
-        `;
+        <button class="edw-zone-nav-item${_edwSelectedZone === zI ? ' active' : ''}" onclick="_edwSelectZone(${zI})">
+            <span class="edw-zone-nav-name">${escapeHtml(zone.zone)}</span>
+            ${count ? `<span class="edw-zone-nav-badge">${count}</span>` : ''}
+        </button>`;
     }).join('');
+}
+
+function _edwSelectZone(zI) {
+    _edwSelectedZone = zI;
+    const nav = document.getElementById('edwZoneNav');
+    if (nav) nav.innerHTML = _buildZoneNav();
+    const detail = document.getElementById('edwZoneDetail');
+    if (detail) { detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[zI], zI); detail.scrollTop = 0; }
 }
 
 function _buildAssemblies(zone, zI) {
@@ -11415,30 +11429,24 @@ function _buildAssemblies(zone, zI) {
     `).join('');
 }
 
-function _edwToggleZone(zI) {
-    if (_edwExpandedZones.has(zI)) _edwExpandedZones.delete(zI);
-    else _edwExpandedZones.add(zI);
-    document.getElementById('edwZoneList').innerHTML = _buildZoneAccordions();
-    _updateEdwFooterCount();
-}
-
 function _edwTogglePart(key, zI, aI, pI, checked) {
     if (checked) {
         _edwItems[key] = { grade: 'B', notes: '', price: '', photos: [] };
     } else {
         delete _edwItems[key];
     }
-    // Re-render just the zone list to avoid losing scroll position on body
-    const zoneList = document.getElementById('edwZoneList');
-    if (zoneList) zoneList.innerHTML = _buildZoneAccordions();
+    const detail = document.getElementById('edwZoneDetail');
+    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
+    const nav = document.getElementById('edwZoneNav');
+    if (nav) nav.innerHTML = _buildZoneNav();
     _updateEdwFooterCount();
 }
 
 function _edwSetGrade(key, zI, grade) {
     if (!_edwItems[key]) return;
     _edwItems[key].grade = grade;
-    const zoneList = document.getElementById('edwZoneList');
-    if (zoneList) zoneList.innerHTML = _buildZoneAccordions();
+    const detail = document.getElementById('edwZoneDetail');
+    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
 }
 
 function _edwSetNotes(key, value) {
@@ -11451,9 +11459,8 @@ function _edwAddPartPhoto(key, input) {
     Array.from(input.files).forEach(file => {
         _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) });
     });
-    // Re-render zone list to update photo count badge
-    const zoneList = document.getElementById('edwZoneList');
-    if (zoneList) zoneList.innerHTML = _buildZoneAccordions();
+    const detail = document.getElementById('edwZoneDetail');
+    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
 }
 
 function _updateEdwFooterCount() {
