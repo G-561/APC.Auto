@@ -11348,7 +11348,95 @@ function _renderEdwStep2() {
     const body   = document.getElementById('edwBody');
     const footer = document.getElementById('edwFooter');
     if (!body || !footer) return;
+    if (window.innerWidth >= 900) {
+        _renderEdwStep2Table(body, footer);
+    } else {
+        _renderEdwStep2MasterDetail(body, footer);
+    }
+}
 
+function _renderEdwStep2Table(body, footer) {
+    body.style.padding       = '0';
+    body.style.overflow      = 'auto';
+    body.style.display       = '';
+    body.style.flexDirection = '';
+
+    const v = _edwVehicle;
+    const vehicleLabel = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const checkedCount = Object.keys(_edwItems).length;
+
+    let rows = '';
+    EDW_TAXONOMY.forEach((zone, zI) => {
+        rows += `<tr class="edw-tbl-zone-hdr"><td colspan="7">${escapeHtml(zone.zone)}</td></tr>`;
+        zone.assemblies.forEach((asm, aI) => {
+            asm.parts.forEach((part, pI) => {
+                const key        = `${zI}:${aI}:${pI}`;
+                const item       = _edwItems[key];
+                const checked    = !!item;
+                const grade      = item?.grade || 'B';
+                const price      = item?.price || '';
+                const notes      = item?.notes || '';
+                const photoCount = item?.photos?.length || 0;
+                rows += `
+                <tr class="edw-tbl-row${checked ? ' checked' : ''}" id="edwtrow-${key}">
+                    <td class="edw-tbl-td edw-tbl-check">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTableToggle('${key}',${zI},${aI},${pI},this.checked)">
+                    </td>
+                    <td class="edw-tbl-td edw-tbl-asm">${escapeHtml(asm.name)}</td>
+                    <td class="edw-tbl-td edw-tbl-part">${escapeHtml(part)}</td>
+                    <td class="edw-tbl-td edw-tbl-grade">
+                        ${['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${checked && grade === g ? ' active' : ''}" ${checked ? '' : 'disabled'} onclick="_edwTableGrade('${key}','${g}')">${g}</button>`).join('')}
+                    </td>
+                    <td class="edw-tbl-td edw-tbl-price">
+                        <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="$"
+                            value="${escapeHtml(String(price))}" ${checked ? '' : 'disabled'}
+                            oninput="_edwTablePrice('${key}', this.value)">
+                    </td>
+                    <td class="edw-tbl-td edw-tbl-notes">
+                        <input class="edw-tbl-notes-inp" type="text" placeholder="Notes"
+                            value="${escapeHtml(notes)}" ${checked ? '' : 'disabled'}
+                            oninput="_edwTableNotes('${key}', this.value)">
+                    </td>
+                    <td class="edw-tbl-td edw-tbl-photo">
+                        <label class="edw-tbl-photo-lbl${checked ? '' : ' disabled'}">
+                            <input type="file" accept="image/*" multiple style="display:none" ${checked ? '' : 'disabled'} onchange="_edwTablePhoto('${key}', this)">
+                            <span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${photoCount ? ` (${photoCount})` : ''}</span>
+                        </label>
+                    </td>
+                </tr>`;
+            });
+        });
+    });
+
+    body.innerHTML = `
+        <div class="edw-vehicle-banner" style="flex-shrink:0;">
+            <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
+            ${v.vin ? `<div class="edw-vehicle-sub">VIN: ${escapeHtml(v.vin)}</div>` : ''}
+        </div>
+        <table class="edw-parts-table">
+            <thead>
+                <tr>
+                    <th class="edw-tbl-th-chk">✓</th>
+                    <th>Assembly</th>
+                    <th>Part</th>
+                    <th>Grade</th>
+                    <th>Price $</th>
+                    <th>Notes</th>
+                    <th>Photo</th>
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+
+    footer.innerHTML = `
+        <div class="edw-footer-meta">${checkedCount} part${checkedCount !== 1 ? 's' : ''} selected</div>
+        <button class="edw-btn-secondary" onclick="_edwStep2Back()">← Back</button>
+        <button class="edw-btn-primary" onclick="_edwStep2Next()">Review ${checkedCount} Part${checkedCount !== 1 ? 's' : ''} →</button>
+    `;
+}
+
+function _renderEdwStep2MasterDetail(body, footer) {
     body.style.padding       = '0';
     body.style.overflow      = 'hidden';
     body.style.display       = 'flex';
@@ -11474,6 +11562,58 @@ function _updateEdwFooterCount() {
     if (meta) meta.textContent = `${count} part${count !== 1 ? 's' : ''} selected`;
     const reviewBtn = document.querySelector('#edwFooter .edw-btn-primary');
     if (reviewBtn) reviewBtn.textContent = `Review ${count} Part${count !== 1 ? 's' : ''} →`;
+}
+
+function _edwTableToggle(key, zI, aI, pI, checked) {
+    if (checked) {
+        _edwItems[key] = { grade: 'B', notes: '', price: '', photos: [] };
+    } else {
+        delete _edwItems[key];
+    }
+    const row = document.getElementById(`edwtrow-${key}`);
+    if (row) {
+        const item = _edwItems[key] || {};
+        row.className = `edw-tbl-row${checked ? ' checked' : ''}`;
+        row.querySelectorAll('.edw-tbl-grade-btn').forEach(btn => {
+            btn.disabled = !checked;
+            btn.classList.toggle('active', checked && btn.textContent === (item.grade || 'B'));
+        });
+        const priceInp = row.querySelector('.edw-tbl-price-inp');
+        if (priceInp) { priceInp.disabled = !checked; if (checked) priceInp.value = ''; }
+        const notesInp = row.querySelector('.edw-tbl-notes-inp');
+        if (notesInp) { notesInp.disabled = !checked; if (checked) notesInp.value = ''; }
+        const photoLbl = row.querySelector('.edw-tbl-photo-lbl');
+        if (photoLbl) photoLbl.classList.toggle('disabled', !checked);
+        const photoInp = row.querySelector('input[type="file"]');
+        if (photoInp) photoInp.disabled = !checked;
+    }
+    _updateEdwFooterCount();
+}
+
+function _edwTableGrade(key, grade) {
+    if (!_edwItems[key]) return;
+    _edwItems[key].grade = grade;
+    const row = document.getElementById(`edwtrow-${key}`);
+    if (row) row.querySelectorAll('.edw-tbl-grade-btn').forEach(btn => btn.classList.toggle('active', btn.textContent === grade));
+}
+
+function _edwTablePrice(key, value) {
+    if (_edwItems[key]) _edwItems[key].price = value ? Number(value) : '';
+}
+
+function _edwTableNotes(key, value) {
+    if (_edwItems[key]) _edwItems[key].notes = value;
+}
+
+function _edwTablePhoto(key, input) {
+    if (!_edwItems[key] || !input.files?.length) return;
+    if (!_edwItems[key].photos) _edwItems[key].photos = [];
+    Array.from(input.files).forEach(file => {
+        _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) });
+    });
+    const row = document.getElementById(`edwtrow-${key}`);
+    const countSpan = row?.querySelector('.edw-tbl-photo-count');
+    if (countSpan) countSpan.textContent = ` (${_edwItems[key].photos.length})`;
 }
 
 function _edwStep2Next() {

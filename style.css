@@ -6497,6 +6497,57 @@ header {
     .edw-zone-nav { width: 180px; }
 }
 
+/* ─── EDW — Desktop Spreadsheet Table (Step 2) ──────────────────────────── */
+.edw-parts-table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.edw-parts-table thead th {
+    background: #f4f4f4; padding: 8px 10px; text-align: left;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888;
+    border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 1;
+}
+.edw-tbl-th-chk { width: 36px; text-align: center !important; }
+.edw-tbl-zone-hdr td {
+    background: #1a1a2e; color: #fff;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    padding: 5px 12px;
+}
+.edw-tbl-row { border-bottom: 1px solid #f0f0f0; }
+.edw-tbl-td { padding: 5px 8px; vertical-align: middle; }
+.edw-tbl-check { width: 36px; text-align: center; }
+.edw-tbl-check input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: #f07020; }
+.edw-tbl-asm { width: 130px; font-size: 12px; color: #aaa; white-space: nowrap; }
+.edw-tbl-part { font-size: 13px; font-weight: 600; color: #aaa; }
+.edw-tbl-row.checked .edw-tbl-asm { color: #888; }
+.edw-tbl-row.checked .edw-tbl-part { color: #333; }
+.edw-tbl-grade { width: 118px; white-space: nowrap; }
+.edw-tbl-grade-btn {
+    border: 1px solid #ddd; background: #f4f4f4; border-radius: 4px;
+    padding: 2px 7px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 2px;
+    color: #bbb;
+}
+.edw-tbl-grade-btn.active { background: #f07020; color: #fff; border-color: #f07020; }
+.edw-tbl-grade-btn:disabled { opacity: 0.3; cursor: default; }
+.edw-tbl-price { width: 82px; }
+.edw-tbl-price-inp {
+    width: 70px; border: 1px solid #ddd; border-radius: 4px;
+    padding: 4px 6px; font-size: 13px; color: #333;
+}
+.edw-tbl-price-inp:disabled { background: transparent; border-color: transparent; color: transparent; }
+.edw-tbl-notes-inp {
+    width: 100%; min-width: 140px; border: 1px solid #ddd; border-radius: 4px;
+    padding: 4px 6px; font-size: 13px; color: #333;
+}
+.edw-tbl-notes-inp:disabled { background: transparent; border-color: transparent; color: transparent; }
+.edw-tbl-photo { width: 72px; }
+.edw-tbl-photo-lbl {
+    cursor: pointer; padding: 4px 8px; background: #f4f4f4;
+    border-radius: 4px; font-size: 12px; display: inline-flex; align-items: center;
+    gap: 3px; white-space: nowrap; user-select: none;
+}
+.edw-tbl-photo-lbl.disabled { opacity: 0.25; pointer-events: none; }
+.edw-tbl-photo-count { font-size: 11px; color: #f07020; font-weight: 700; }
+
 /* ─── EDW — Job Sent Screen ─────────────────────────────────────────────── */
 .edw-sent-screen { text-align: center; padding: 32px 20px; }
 .edw-sent-qr { margin: 20px auto; display: inline-block; }
