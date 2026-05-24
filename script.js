@@ -11123,6 +11123,7 @@ let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, phot
 let _edwStep          = 1;
 let _edwSelectedZone  = 0;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
+let _edwActiveKey     = null; // currently expanded accordion row in step 2 table
 
 const EDW_VEHICLE_ANGLES = ['Front Left', 'Front Right', 'Rear Left', 'Rear Right', 'Instrument Cluster', 'Compliance Plate'];
 
@@ -11367,43 +11368,28 @@ function _renderEdwStep2Table(body, footer) {
 
     let rows = '';
     EDW_TAXONOMY.forEach((zone, zI) => {
-        rows += `<tr class="edw-tbl-zone-hdr"><td colspan="7">${escapeHtml(zone.zone)}</td></tr>`;
+        rows += `<tr class="edw-tbl-zone-hdr"><td colspan="6">${escapeHtml(zone.zone)}</td></tr>`;
         zone.assemblies.forEach((asm, aI) => {
             asm.parts.forEach((part, pI) => {
-                const key        = `${zI}:${aI}:${pI}`;
-                const item       = _edwItems[key];
-                const checked    = !!item;
-                const grade      = item?.grade || 'B';
-                const price      = item?.price || '';
-                const notes      = item?.notes || '';
-                const photoCount = item?.photos?.length || 0;
+                const key      = `${zI}:${aI}:${pI}`;
+                const item     = _edwItems[key];
+                const selected = !!item;
+                const isActive = _edwActiveKey === key;
+
                 rows += `
-                <tr class="edw-tbl-row${checked ? ' checked' : ''}" id="edwtrow-${key}">
-                    <td class="edw-tbl-td edw-tbl-check">
-                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTableToggle('${key}',${zI},${aI},${pI},this.checked)">
+                <tr class="edw-acc-row${selected ? ' selected' : ''}" id="edwacc-${key}" onclick="_edwAccClick('${key}',${zI},${aI},${pI})">
+                    <td class="edw-acc-name-cell">
+                        <span class="edw-acc-part">${escapeHtml(part)}</span>
+                        <span class="edw-acc-asm">${escapeHtml(asm.name)}</span>
                     </td>
-                    <td class="edw-tbl-td edw-tbl-asm">${escapeHtml(asm.name)}</td>
-                    <td class="edw-tbl-td edw-tbl-part">${escapeHtml(part)}</td>
-                    <td class="edw-tbl-td edw-tbl-grade">
-                        ${['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${checked && grade === g ? ' active' : ''}" ${checked ? '' : 'disabled'} onclick="_edwTableGrade('${key}','${g}')">${g}</button>`).join('')}
-                    </td>
-                    <td class="edw-tbl-td edw-tbl-price">
-                        <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="$"
-                            value="${escapeHtml(String(price))}" ${checked ? '' : 'disabled'}
-                            oninput="_edwTablePrice('${key}', this.value)">
-                    </td>
-                    <td class="edw-tbl-td edw-tbl-notes">
-                        <input class="edw-tbl-notes-inp" type="text" placeholder="Notes"
-                            value="${escapeHtml(notes)}" ${checked ? '' : 'disabled'}
-                            oninput="_edwTableNotes('${key}', this.value)">
-                    </td>
-                    <td class="edw-tbl-td edw-tbl-photo">
-                        <label class="edw-tbl-photo-lbl${checked ? '' : ' disabled'}">
-                            <input type="file" accept="image/*" multiple style="display:none" ${checked ? '' : 'disabled'} onchange="_edwTablePhoto('${key}', this)">
-                            <span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${photoCount ? ` (${photoCount})` : ''}</span>
-                        </label>
-                    </td>
+                    <td class="edw-acc-grade-cell">${selected ? `<span class="edw-acc-grade-badge grade-${item.grade}">${item.grade}</span>` : ''}</td>
+                    <td class="edw-acc-price-cell">${selected && item.price ? `<span class="edw-acc-price-sum">$${escapeHtml(String(item.price))}</span>` : ''}</td>
+                    <td class="edw-acc-notes-cell">${selected && item.notes ? `<span class="edw-acc-notes-sum">${escapeHtml(item.notes)}</span>` : ''}</td>
+                    <td class="edw-acc-photo-cell">${selected && item.photos?.length ? `<span class="edw-acc-photo-sum">📷 ${item.photos.length}</span>` : ''}</td>
+                    <td class="edw-acc-rm-cell">${selected ? `<button class="edw-acc-remove" onclick="_edwAccRemove('${key}',event)">×</button>` : ''}</td>
                 </tr>`;
+
+                if (selected) rows += _buildAccDetailRow(key, item, isActive);
             });
         });
     });
@@ -11416,13 +11402,12 @@ function _renderEdwStep2Table(body, footer) {
         <table class="edw-parts-table">
             <thead>
                 <tr>
-                    <th class="edw-tbl-th-chk">✓</th>
-                    <th>Assembly</th>
                     <th>Part</th>
-                    <th>Grade</th>
-                    <th>Price $</th>
-                    <th>Notes</th>
-                    <th>Photo</th>
+                    <th class="edw-acc-th-grade">Grade</th>
+                    <th class="edw-acc-th-price">Price</th>
+                    <th class="edw-acc-th-notes">Notes</th>
+                    <th class="edw-acc-th-photo">Photos</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
@@ -11564,56 +11549,121 @@ function _updateEdwFooterCount() {
     if (reviewBtn) reviewBtn.textContent = `Review ${count} Part${count !== 1 ? 's' : ''} →`;
 }
 
-function _edwTableToggle(key, zI, aI, pI, checked) {
-    if (checked) {
-        _edwItems[key] = { grade: 'B', notes: '', price: '', photos: [] };
-    } else {
-        delete _edwItems[key];
+function _buildAccDetailRow(key, item, visible) {
+    return `
+    <tr class="edw-acc-detail-row" id="edwdet-${key}"${visible ? '' : ' style="display:none"'}>
+        <td colspan="6">
+            <div class="edw-acc-detail-inner">
+                <div class="edw-acc-field">
+                    <span class="edw-acc-field-label">Grade</span>
+                    <div class="edw-acc-grade-btns">
+                        ${['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwAccGrade('${key}','${g}')">${g}</button>`).join('')}
+                    </div>
+                </div>
+                <div class="edw-acc-field">
+                    <span class="edw-acc-field-label">Price $</span>
+                    <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0"
+                        value="${item.price || ''}" oninput="_edwAccPrice('${key}', this.value)">
+                </div>
+                <div class="edw-acc-field edw-acc-field-notes">
+                    <span class="edw-acc-field-label">Notes</span>
+                    <input class="edw-tbl-notes-inp" type="text" placeholder="Optional"
+                        value="${escapeHtml(item.notes || '')}" oninput="_edwAccNotes('${key}', this.value)">
+                </div>
+                <div class="edw-acc-field">
+                    <span class="edw-acc-field-label">Photos</span>
+                    <label class="edw-tbl-photo-lbl">
+                        <input type="file" accept="image/*" multiple style="display:none" onchange="_edwAccPhoto('${key}', this)">
+                        <span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span>
+                    </label>
+                </div>
+            </div>
+        </td>
+    </tr>`;
+}
+
+function _edwAccClick(key, zI, aI, pI) {
+    const wasActive   = _edwActiveKey === key;
+    const wasSelected = !!_edwItems[key];
+
+    // Collapse previously active row
+    if (_edwActiveKey && _edwActiveKey !== key) {
+        const prevDet = document.getElementById(`edwdet-${_edwActiveKey}`);
+        if (prevDet) prevDet.style.display = 'none';
+        _edwActiveKey = null;
     }
-    const row = document.getElementById(`edwtrow-${key}`);
-    if (row) {
-        const item = _edwItems[key] || {};
-        row.className = `edw-tbl-row${checked ? ' checked' : ''}`;
-        row.querySelectorAll('.edw-tbl-grade-btn').forEach(btn => {
-            btn.disabled = !checked;
-            btn.classList.toggle('active', checked && btn.textContent === (item.grade || 'B'));
-        });
-        const priceInp = row.querySelector('.edw-tbl-price-inp');
-        if (priceInp) { priceInp.disabled = !checked; if (checked) priceInp.value = ''; }
-        const notesInp = row.querySelector('.edw-tbl-notes-inp');
-        if (notesInp) { notesInp.disabled = !checked; if (checked) notesInp.value = ''; }
-        const photoLbl = row.querySelector('.edw-tbl-photo-lbl');
-        if (photoLbl) photoLbl.classList.toggle('disabled', !checked);
-        const photoInp = row.querySelector('input[type="file"]');
-        if (photoInp) photoInp.disabled = !checked;
+
+    if (!wasSelected) {
+        _edwItems[key] = { grade: 'B', notes: '', price: '', photos: [] };
+        const accRow = document.getElementById(`edwacc-${key}`);
+        if (accRow) {
+            accRow.classList.add('selected');
+            const cells = accRow.querySelectorAll('td');
+            cells[1].innerHTML = `<span class="edw-acc-grade-badge grade-B">B</span>`;
+            cells[5].innerHTML = `<button class="edw-acc-remove" onclick="_edwAccRemove('${key}',event)">×</button>`;
+            accRow.insertAdjacentHTML('afterend', _buildAccDetailRow(key, _edwItems[key], true));
+        }
+        _edwActiveKey = key;
+        _updateEdwFooterCount();
+        return;
+    }
+
+    // Toggle expand/collapse for already-selected row
+    const detRow = document.getElementById(`edwdet-${key}`);
+    if (wasActive) {
+        if (detRow) detRow.style.display = 'none';
+        _edwActiveKey = null;
+    } else {
+        if (detRow) detRow.style.display = '';
+        _edwActiveKey = key;
+    }
+}
+
+function _edwAccRemove(key, event) {
+    event.stopPropagation();
+    delete _edwItems[key];
+    if (_edwActiveKey === key) _edwActiveKey = null;
+    document.getElementById(`edwdet-${key}`)?.remove();
+    const accRow = document.getElementById(`edwacc-${key}`);
+    if (accRow) {
+        accRow.classList.remove('selected');
+        accRow.querySelectorAll('td').forEach((td, i) => { if (i > 0) td.innerHTML = ''; });
     }
     _updateEdwFooterCount();
 }
 
-function _edwTableGrade(key, grade) {
+function _edwAccGrade(key, grade) {
     if (!_edwItems[key]) return;
     _edwItems[key].grade = grade;
-    const row = document.getElementById(`edwtrow-${key}`);
-    if (row) row.querySelectorAll('.edw-tbl-grade-btn').forEach(btn => btn.classList.toggle('active', btn.textContent === grade));
+    document.getElementById(`edwdet-${key}`)?.querySelectorAll('.edw-tbl-grade-btn')
+        .forEach(btn => btn.classList.toggle('active', btn.textContent === grade));
+    const badge = document.getElementById(`edwacc-${key}`)?.querySelector('.edw-acc-grade-badge');
+    if (badge) { badge.textContent = grade; badge.className = `edw-acc-grade-badge grade-${grade}`; }
 }
 
-function _edwTablePrice(key, value) {
-    if (_edwItems[key]) _edwItems[key].price = value ? Number(value) : '';
+function _edwAccPrice(key, value) {
+    if (!_edwItems[key]) return;
+    _edwItems[key].price = value ? Number(value) : '';
+    const cell = document.getElementById(`edwacc-${key}`)?.querySelectorAll('td')[2];
+    if (cell) cell.innerHTML = value ? `<span class="edw-acc-price-sum">$${escapeHtml(String(value))}</span>` : '';
 }
 
-function _edwTableNotes(key, value) {
-    if (_edwItems[key]) _edwItems[key].notes = value;
+function _edwAccNotes(key, value) {
+    if (!_edwItems[key]) return;
+    _edwItems[key].notes = value;
+    const cell = document.getElementById(`edwacc-${key}`)?.querySelectorAll('td')[3];
+    if (cell) cell.innerHTML = value ? `<span class="edw-acc-notes-sum">${escapeHtml(value)}</span>` : '';
 }
 
-function _edwTablePhoto(key, input) {
+function _edwAccPhoto(key, input) {
     if (!_edwItems[key] || !input.files?.length) return;
     if (!_edwItems[key].photos) _edwItems[key].photos = [];
-    Array.from(input.files).forEach(file => {
-        _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) });
-    });
-    const row = document.getElementById(`edwtrow-${key}`);
-    const countSpan = row?.querySelector('.edw-tbl-photo-count');
-    if (countSpan) countSpan.textContent = ` (${_edwItems[key].photos.length})`;
+    Array.from(input.files).forEach(file => _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) }));
+    const count = _edwItems[key].photos.length;
+    document.getElementById(`edwdet-${key}`)?.querySelector('.edw-tbl-photo-count')
+        && (document.getElementById(`edwdet-${key}`).querySelector('.edw-tbl-photo-count').textContent = ` (${count})`);
+    const cell = document.getElementById(`edwacc-${key}`)?.querySelectorAll('td')[4];
+    if (cell) cell.innerHTML = `<span class="edw-acc-photo-sum">📷 ${count}</span>`;
 }
 
 function _edwStep2Next() {
