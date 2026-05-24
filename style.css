@@ -6563,6 +6563,7 @@ header {
     min-width: 880px;
     width: 100%;
 }
+.edw-sg > * { box-sizing: border-box; overflow: hidden; }
 .edw-sg-th {
     background: #f4f4f4; padding: 8px 10px;
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600;
