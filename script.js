@@ -12129,7 +12129,6 @@ async function _jrPublish(jobId) {
             status: 'active', description: item.notes || '',
             fits_year: Number(job.year), chassis_vin: job.vin || null,
             stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
-            is_pro_listing: true,
         }).select('id').single();
 
         if (listing?.id) {
