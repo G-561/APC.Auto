@@ -11185,6 +11185,10 @@ function _renderEdwStep1() {
         <div class="edw-section-title">Vehicle to Dismantle</div>
         <div class="edw-form-grid">
             <div class="edw-field">
+                <label class="edw-label">Stock Number</label>
+                <input id="edwStockNumber" class="edw-input" type="text" placeholder="e.g. VH2847, 2025-042" value="${escapeHtml(v.stockNumber || '')}" oninput="_edwSaveField('stockNumber', this.value)">
+            </div>
+            <div class="edw-field">
                 <label class="edw-label">Make *</label>
                 <select id="edwMake" class="edw-input" onchange="_edwOnMakeChange()">
                     <option value="">Select make…</option>
@@ -11595,7 +11599,7 @@ function _edwPrintStrippingList() {
     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
         <div>
             <h1>Stripping List</h1>
-            <div class="sub">${vehicleTitle}${v.vin ? ' &nbsp;|&nbsp; VIN: ' + v.vin : ''}${v.colour ? ' &nbsp;|&nbsp; ' + v.colour : ''}${v.odometer ? ' &nbsp;|&nbsp; ' + Number(v.odometer).toLocaleString() + ' km' : ''}</div>
+            <div class="sub">${vehicleTitle}${v.stockNumber ? ' &nbsp;|&nbsp; Stock: ' + v.stockNumber : ''}${v.vin ? ' &nbsp;|&nbsp; VIN: ' + v.vin : ''}${v.colour ? ' &nbsp;|&nbsp; ' + v.colour : ''}${v.odometer ? ' &nbsp;|&nbsp; ' + Number(v.odometer).toLocaleString() + ' km' : ''}</div>
         </div>
         <div style="text-align:right; font-size:12px; color:#888;">
             <div>Printed: ${date}</div>
@@ -11641,9 +11645,11 @@ async function _edwPublish() {
         engine_code: v.engineCode || null, transmission_code: v.transCode || null,
         odometer: v.odometer ? Number(v.odometer) : null,
         build_date: v.buildDate || null, colour: v.colour || null,
+        stock_number: v.stockNumber || null,
     }).select('id').single();
 
     let published = 0;
+    let partSeq = 1;
     for (const [key, item] of items) {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone  = EDW_TAXONOMY[zI];
@@ -11662,6 +11668,7 @@ async function _edwPublish() {
             description: item.notes || '',
             fits_year: Number(v.year),
             chassis_vin: v.vin || null,
+            stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
             is_pro_listing: true,
         }).select('id').single();
 
@@ -11699,6 +11706,7 @@ async function _edwPublish() {
                 });
             }
             published++;
+            partSeq++;
         }
     }
 
