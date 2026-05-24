@@ -10435,7 +10435,9 @@ function renderAccountState() {
     const dtbDash   = document.getElementById('dtbDashboard');
     const amenuDash = document.getElementById('amenuDashboard');
     if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
-    if (amenuDash) amenuDash.style.display = isPro ? 'flex'   : 'none';
+    if (amenuDash) amenuDash.style.display = isPro ? 'flex' : 'none';
+    const amenuEdw = document.getElementById('amenuEdw');
+    if (amenuEdw)  amenuEdw.style.display  = isPro ? 'flex' : 'none';
 
     const headerInboxBtn   = document.getElementById('headerInboxBtn');
     const dtbMessages      = document.getElementById('dtbMessages');
@@ -11131,9 +11133,13 @@ function openEdw() {
         if (window.innerWidth >= 900) {
             const topBar = document.getElementById('desktopTopBar');
             const hdr    = document.getElementById('mainHeader');
-            drawer.style.top = ((topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0)) + 'px';
+            const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+            const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
+            drawer.style.top   = topOffset + 'px';
+            drawer.style.left  = sideOffset + 'px';
+            drawer.style.right = sideOffset + 'px';
         } else {
-            drawer.style.top = '';
+            drawer.style.top = drawer.style.left = drawer.style.right = '';
         }
         drawer.classList.add('active');
     }
