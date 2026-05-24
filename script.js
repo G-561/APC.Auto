@@ -11529,10 +11529,11 @@ function _renderEdwStep3() {
     `;
 
     footer.innerHTML = `
-        <div class="edw-footer-meta">${Object.keys(_edwItems).length} listings to publish</div>
+        <div class="edw-footer-meta">${Object.keys(_edwItems).length} parts</div>
         <button class="edw-btn-secondary" onclick="_edwStep=2;_renderEdw()">← Back</button>
-        <button class="edw-btn-secondary" onclick="_edwPrintStrippingList()">Print Stripping List</button>
-        <button class="edw-btn-primary" onclick="_edwPublish()">Publish All Listings</button>
+        <button class="edw-btn-secondary" onclick="_edwPrintStrippingList()">Print List</button>
+        <button class="edw-btn-secondary" onclick="_edwSendToWorkers()">Send to Workers</button>
+        <button class="edw-btn-primary" onclick="_edwPublish()">Publish Now</button>
     `;
 }
 
@@ -11730,6 +11731,440 @@ async function _edwPublish() {
     showToast(`${published} listings published`);
 }
 
+// ─── EDW — SEND TO WORKERS ────────────────────────────────────────────────
+
+async function _edwSendToWorkers() {
+    if (!sb || !currentUserId) { showToast('Sign in required'); return; }
+    const items = Object.entries(_edwItems);
+    if (!items.length) { showToast('No parts selected'); return; }
+
+    const footer = document.getElementById('edwFooter');
+    if (footer) footer.innerHTML = `<div class="edw-footer-meta">Creating job…</div>`;
+
+    const v = _edwVehicle;
+    const { data: job, error } = await sb.from('dismantling_jobs').insert({
+        user_id: currentUserId,
+        make: v.make, model: v.model, year: Number(v.year),
+        series: v.series || null, body_type: v.bodyType || null,
+        vin: v.vin || null, paint_code: v.paintCode || null,
+        engine_code: v.engineCode || null, transmission_code: v.transCode || null,
+        odometer: v.odometer ? Number(v.odometer) : null,
+        build_date: v.buildDate || null, colour: v.colour || null,
+        stock_number: v.stockNumber || null,
+        status: 'stripping',
+    }).select('id, job_token').single();
+
+    if (error || !job) { showToast('Failed to create job'); _renderEdwStep3(); return; }
+
+    const itemRows = items.map(([key, item]) => {
+        const [zI, aI, pI] = key.split(':').map(Number);
+        const zone = EDW_TAXONOMY[zI];
+        const asm  = zone?.assemblies[aI];
+        const part = asm?.parts[pI] || '';
+        return {
+            job_id: job.id, user_id: currentUserId,
+            zone: zone?.zone || '', assembly: asm?.name || '', part_name: part,
+            grade: item.grade, notes: item.notes || '',
+            price: item.price ? Number(item.price) : null,
+            worker_done: false,
+        };
+    });
+
+    await sb.from('dismantling_items').insert(itemRows);
+    _renderEdwJobSent(job.job_token, items.length);
+}
+
+function _renderEdwJobSent(jobToken, count) {
+    const body   = document.getElementById('edwBody');
+    const footer = document.getElementById('edwFooter');
+    if (!body || !footer) return;
+
+    const url   = `${location.origin}${location.pathname}?job=${jobToken}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+
+    body.innerHTML = `
+        <div class="edw-sent-screen">
+            <div class="edw-success-ico">✓</div>
+            <div class="edw-success-title">Stripping Job Created</div>
+            <div class="edw-success-sub">${count} part${count !== 1 ? 's' : ''} ready for your team</div>
+            <div class="edw-sent-qr"><img src="${qrUrl}" alt="Job QR" width="200" height="200"></div>
+            <div class="edw-sent-url-label">Or share this link:</div>
+            <div class="edw-sent-url-box">
+                <span class="edw-sent-url-text">${escapeHtml(url)}</span>
+                <button class="edw-copy-btn" onclick="_edwCopyJobUrl('${escapeHtml(url)}')">Copy</button>
+            </div>
+            <p class="edw-sent-hint">Workers open this on their phone or tablet — no login needed. Once done, you'll see the job in your dashboard to review and publish.</p>
+        </div>
+    `;
+    footer.innerHTML = `<button class="edw-btn-primary" onclick="closeEdw()">Done</button>`;
+}
+
+function _edwCopyJobUrl(url) {
+    navigator.clipboard?.writeText(url).then(() => showToast('Link copied')).catch(() => showToast('Copy failed'));
+}
+
+// ─── WORKER VIEW ──────────────────────────────────────────────────────────
+
+let _wJob   = null;
+let _wItems = [];
+
+async function initWorkerView(token) {
+    document.body.innerHTML = `<div id="workerApp" style="min-height:100vh;background:#f2f2f7;font-family:-apple-system,sans-serif;"><div style="padding:60px 20px;text-align:center;color:#888;">Loading job…</div></div>`;
+
+    const { data: job } = await sb.from('dismantling_jobs').select('*').eq('job_token', token).single();
+    if (!job) {
+        document.getElementById('workerApp').innerHTML = `<div class="w-empty"><div class="w-empty-ico">✕</div><div class="w-empty-title">Job not found</div><div class="w-empty-sub">This link may have expired or been entered incorrectly.</div></div>`;
+        return;
+    }
+
+    const { data: items } = await sb.from('dismantling_items').select('*').eq('job_id', job.id).order('id');
+    _wJob   = job;
+    _wItems = items || [];
+    _renderWorkerView();
+}
+
+function _renderWorkerView() {
+    const app = document.getElementById('workerApp');
+    if (!app) return;
+
+    const j = _wJob;
+    const vehicleTitle = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+    const done    = _wItems.filter(i => i.worker_done).length;
+    const total   = _wItems.length;
+    const allDone = done === total && total > 0;
+    const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
+
+    const parts = _wItems.map(item => {
+        const photosHtml = (item.worker_photos || []).map(p =>
+            `<img src="${escapeHtml(p)}" class="w-photo-thumb" alt="part photo">`
+        ).join('');
+        return `
+        <div class="w-part-card${item.worker_done ? ' w-done' : ''}" id="wpart-${item.id}">
+            <div class="w-part-header" onclick="_wToggleExpand(${item.id})">
+                <div class="w-check${item.worker_done ? ' checked' : ''}"></div>
+                <div class="w-part-info">
+                    <div class="w-part-name">${escapeHtml(item.part_name)}</div>
+                    <div class="w-part-zone">${escapeHtml(item.zone)} › ${escapeHtml(item.assembly)}</div>
+                </div>
+                <div class="w-grade-badge grade-${item.grade || 'B'}">${item.grade || 'B'}</div>
+                <div class="w-expand-chevron">›</div>
+            </div>
+            <div class="w-part-body" id="wbody-${item.id}">
+                <div class="w-section-label">Condition Grade</div>
+                <div class="w-grade-row">
+                    ${['A','B','C','D'].map(g => `
+                        <button class="w-grade-btn${item.grade === g ? ' active' : ''}" onclick="_wSetGrade(${item.id},'${g}')">
+                            <strong>${g}</strong><span>${gradeLabel[g]}</span>
+                        </button>`).join('')}
+                </div>
+                <div class="w-section-label">Notes</div>
+                <textarea class="w-notes" rows="3" placeholder="Damage, missing parts, anything to flag…"
+                    onblur="_wSetNotes(${item.id}, this.value)">${escapeHtml(item.notes || '')}</textarea>
+                <div class="w-section-label">Photos</div>
+                <div class="w-photos-row" id="wphotos-${item.id}">${photosHtml}</div>
+                <label class="w-add-photo-btn">
+                    <input type="file" accept="image/*" multiple capture="environment" style="display:none"
+                        onchange="_wAddPhotos(${item.id}, this)">
+                    + Add Photos
+                </label>
+                <button class="w-done-btn${item.worker_done ? ' w-undone' : ''}" onclick="_wMarkDone(${item.id})">
+                    ${item.worker_done ? '✕ Mark Not Done' : '✓ Mark as Stripped'}
+                </button>
+            </div>
+        </div>`;
+    }).join('');
+
+    app.innerHTML = `
+        <div class="w-header">
+            <div class="w-header-logo">APC</div>
+            <div class="w-vehicle-title">${escapeHtml(vehicleTitle)}</div>
+            ${j.stock_number ? `<div class="w-stock-num">${escapeHtml(j.stock_number)}</div>` : ''}
+            <div class="w-progress">
+                <div class="w-progress-bar"><div class="w-progress-fill" style="width:${total ? Math.round(done/total*100) : 0}%"></div></div>
+                <div class="w-progress-text">${done} of ${total} parts done</div>
+            </div>
+        </div>
+        <div class="w-parts-list">${parts}</div>
+        <div class="w-submit-wrap">
+            ${allDone ? `<button class="w-submit-btn" onclick="_wSubmitForReview()">Submit for Review →</button>` : ''}
+        </div>
+        <div style="height:40px;"></div>
+    `;
+}
+
+function _wToggleExpand(itemId) {
+    const body = document.getElementById(`wbody-${itemId}`);
+    if (!body) return;
+    const isOpen = body.classList.contains('open');
+    document.querySelectorAll('.w-part-body.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) body.classList.add('open');
+}
+
+async function _wSetGrade(itemId, grade) {
+    const item = _wItems.find(i => i.id === itemId);
+    if (!item) return;
+    item.grade = grade;
+    if (sb) sb.from('dismantling_items').update({ grade }).eq('id', itemId).then(() => {});
+    const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
+    const body = document.getElementById(`wbody-${itemId}`);
+    if (body) {
+        body.querySelector('.w-grade-row').innerHTML = ['A','B','C','D'].map(g => `
+            <button class="w-grade-btn${grade === g ? ' active' : ''}" onclick="_wSetGrade(${itemId},'${g}')">
+                <strong>${g}</strong><span>${gradeLabel[g]}</span>
+            </button>`).join('');
+    }
+    const badge = document.querySelector(`#wpart-${itemId} .w-grade-badge`);
+    if (badge) { badge.className = `w-grade-badge grade-${grade}`; badge.textContent = grade; }
+}
+
+async function _wSetNotes(itemId, notes) {
+    const item = _wItems.find(i => i.id === itemId);
+    if (!item) return;
+    item.notes = notes;
+    if (sb) sb.from('dismantling_items').update({ notes }).eq('id', itemId).then(() => {});
+}
+
+async function _wAddPhotos(itemId, input) {
+    const item = _wItems.find(i => i.id === itemId);
+    if (!item || !sb) return;
+    const files = Array.from(input.files);
+    if (!files.length) return;
+    showToast('Uploading…');
+    const uploaded = [];
+    for (const file of files) {
+        const ext  = file.name.split('.').pop() || 'jpg';
+        const path = `${_wJob.job_token}/${itemId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await sb.storage.from('edw-photos').upload(path, file, { contentType: file.type });
+        if (!error) {
+            const { data: pub } = sb.storage.from('edw-photos').getPublicUrl(path);
+            uploaded.push(pub.publicUrl);
+        }
+    }
+    if (!uploaded.length) { showToast('Upload failed'); return; }
+    const merged = [...(item.worker_photos || []), ...uploaded];
+    item.worker_photos = merged;
+    await sb.from('dismantling_items').update({ worker_photos: merged }).eq('id', itemId);
+    const row = document.getElementById(`wphotos-${itemId}`);
+    if (row) row.innerHTML = merged.map(p => `<img src="${escapeHtml(p)}" class="w-photo-thumb" alt="part photo">`).join('');
+    showToast(`${uploaded.length} photo${uploaded.length !== 1 ? 's' : ''} saved`);
+    input.value = '';
+}
+
+async function _wMarkDone(itemId) {
+    const item = _wItems.find(i => i.id === itemId);
+    if (!item) return;
+    item.worker_done = !item.worker_done;
+    if (sb) await sb.from('dismantling_items').update({ worker_done: item.worker_done }).eq('id', itemId);
+    _renderWorkerView();
+}
+
+async function _wSubmitForReview() {
+    if (!sb || !_wJob) return;
+    await sb.from('dismantling_jobs').update({ status: 'ready' }).eq('id', _wJob.id);
+    const app = document.getElementById('workerApp');
+    if (app) app.innerHTML = `
+        <div class="w-empty">
+            <div class="w-empty-ico" style="color:#22c55e;">✓</div>
+            <div class="w-empty-title">Job Submitted</div>
+            <div class="w-empty-sub">Your manager will review the parts and publish the listings. You're done!</div>
+        </div>`;
+}
+
+// ─── DASHBOARD — DISMANTLING JOBS ─────────────────────────────────────────
+
+async function renderDashJobs() {
+    const card = document.getElementById('dashJobsCard');
+    if (!card || !sb || !currentUserId) return;
+
+    const { data: jobs } = await sb.from('dismantling_jobs')
+        .select('id, make, model, year, series, stock_number, status, created_at')
+        .eq('user_id', currentUserId)
+        .in('status', ['stripping', 'ready'])
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+    if (!jobs?.length) { card.style.display = 'none'; return; }
+    card.style.display = '';
+
+    const statusLabel = { stripping: 'Stripping', ready: 'Ready for Review' };
+    const statusCls   = { stripping: 'job-status-stripping', ready: 'job-status-ready' };
+
+    const rows = jobs.map(j => {
+        const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+        const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        return `
+        <div class="dash-job-row" onclick="openJobReview(${j.id})">
+            <div class="dash-job-info">
+                <div class="dash-job-title">${escapeHtml(title)}</div>
+                <div class="dash-job-meta">${j.stock_number ? escapeHtml(j.stock_number) + ' · ' : ''}${date}</div>
+            </div>
+            <span class="dash-job-status ${statusCls[j.status] || ''}">${statusLabel[j.status] || j.status}</span>
+            <span class="dash-job-arrow">›</span>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Dismantling Jobs</span>
+            <span class="dash-card-meta">${jobs.length} active</span>
+        </div>
+        <div class="dash-jobs-list">${rows}</div>
+    `;
+}
+
+async function openJobReview(jobId) {
+    if (!sb) return;
+    const { data: job }   = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
+    const { data: items } = await sb.from('dismantling_items').select('*').eq('job_id', jobId).order('id');
+    if (!job) { showToast('Job not found'); return; }
+    _openEdwShell(job, items || []);
+}
+
+function _openEdwShell(job, items) {
+    const drawer = document.getElementById('edwDrawer');
+    if (!drawer) return;
+    if (window.innerWidth >= 900) {
+        const topBar    = document.getElementById('desktopTopBar');
+        const hdr       = document.getElementById('mainHeader');
+        const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+        const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
+        drawer.style.top   = topOffset + 'px';
+        drawer.style.left  = sideOffset + 'px';
+        drawer.style.right = sideOffset + 'px';
+        drawer.style.width = 'auto';
+    } else {
+        drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
+    }
+    drawer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    const ind = document.getElementById('edwStepIndicator');
+    if (ind) ind.innerHTML = '';
+    _renderJobReviewView(job, items);
+}
+
+function _renderJobReviewView(job, items) {
+    const body   = document.getElementById('edwBody');
+    const footer = document.getElementById('edwFooter');
+    if (!body || !footer) return;
+
+    const vehicleTitle = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}`.trim();
+    const gradeLabel   = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
+    const done  = items.filter(i => i.worker_done).length;
+    const total = items.length;
+
+    const workerBanner = job.status === 'ready'
+        ? `<div class="jr-banner jr-done">Worker finished — ${done} of ${total} parts marked done. Review below and publish.</div>`
+        : `<div class="jr-banner jr-pending">Stripping in progress — ${done} of ${total} parts done so far. You can publish any time.</div>`;
+
+    const cards = items.map(item => {
+        const photos = (item.worker_photos || []).map(p =>
+            `<img src="${escapeHtml(p)}" class="edw-review-photo" alt="part photo">`
+        ).join('');
+        return `
+        <div class="edw-review-card" id="jrcard-${item.id}">
+            <div class="edw-review-card-top">
+                <div class="edw-review-part-name">${escapeHtml(item.part_name)}</div>
+                <span class="edw-review-grade grade-${item.grade || 'B'}">${item.grade || 'B'} — ${gradeLabel[item.grade] || ''}</span>
+            </div>
+            <div class="edw-review-title">${escapeHtml(item.assembly)} › ${escapeHtml(item.zone)}</div>
+            ${item.notes ? `<div class="edw-review-notes">${escapeHtml(item.notes)}</div>` : ''}
+            ${photos ? `<div class="edw-review-photos">${photos}</div>` : `<div class="edw-review-no-photo">No photos yet</div>`}
+            <div class="edw-price-row">
+                <span class="edw-price-lbl">Price $</span>
+                <input class="edw-price-input" type="number" min="0" step="1" placeholder="0.00"
+                    value="${item.price || ''}" oninput="_jrUpdatePrice(${item.id}, this.value)">
+                <button class="edw-remove-btn" onclick="_jrRemoveItem(${item.id}, this)">Remove</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+        <div class="edw-vehicle-banner">
+            <div class="edw-vehicle-title">${escapeHtml(vehicleTitle)}${job.stock_number ? ` — ${escapeHtml(job.stock_number)}` : ''}</div>
+        </div>
+        ${workerBanner}
+        <div class="edw-review-hint">Set prices, remove anything not wanted, then publish.</div>
+        <div class="edw-review-list" id="jrReviewList">${cards}</div>
+    `;
+    footer.innerHTML = `
+        <div class="edw-footer-meta" id="jrMeta">${items.length} parts</div>
+        <button class="edw-btn-secondary" onclick="closeEdw()">Close</button>
+        <button class="edw-btn-primary" onclick="_jrPublish(${job.id})">Publish All →</button>
+    `;
+
+    window._jrItems = items.map(i => ({ ...i }));
+    window._jrJob   = job;
+}
+
+function _jrUpdatePrice(itemId, val) {
+    const item = window._jrItems?.find(i => i.id === itemId);
+    if (item) item.price = val ? Number(val) : null;
+}
+
+function _jrRemoveItem(itemId, btn) {
+    if (window._jrItems) window._jrItems = window._jrItems.filter(i => i.id !== itemId);
+    btn.closest('.edw-review-card')?.remove();
+    const meta = document.getElementById('jrMeta');
+    if (meta && window._jrItems) meta.textContent = `${window._jrItems.length} parts`;
+}
+
+async function _jrPublish(jobId) {
+    if (!sb || !currentUserId || !window._jrItems?.length) { showToast('Nothing to publish'); return; }
+    const footer = document.getElementById('edwFooter');
+    if (footer) footer.innerHTML = `<div class="edw-footer-meta">Publishing…</div>`;
+
+    const job   = window._jrJob;
+    const items = window._jrItems;
+    const vehicleTitle = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}`.trim();
+    const condMap = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
+    let published = 0;
+
+    for (const item of items) {
+        const zoneData = EDW_TAXONOMY.find(z => z.zone === item.zone);
+        const category = zoneData?.apcCategory || 'general';
+        const title    = `${item.part_name} to suit ${vehicleTitle}`;
+        const { data: listing } = await sb.from('listings').insert({
+            seller_id: currentUserId, title, price: item.price || 0,
+            category, condition: condMap[item.grade] || 'good',
+            status: 'active', description: item.notes || '',
+            fits_year: Number(job.year), chassis_vin: job.vin || null,
+            stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
+            is_pro_listing: true,
+        }).select('id').single();
+
+        if (listing?.id) {
+            await sb.from('listing_vehicles').insert({
+                listing_id: listing.id, make: job.make, model: job.model, series: job.series || null,
+            });
+            const photos = item.worker_photos || [];
+            if (photos.length) {
+                await sb.from('listing_images').insert(
+                    photos.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i }))
+                );
+            }
+            await sb.from('dismantling_items').update({ listing_id: listing.id, status: 'published' }).eq('id', item.id);
+            published++;
+        }
+    }
+
+    await sb.from('dismantling_jobs').update({ status: 'published' }).eq('id', jobId);
+    await loadUserListingsFromSupabase(currentUserId);
+    renderMyParts(); renderMainGrid();
+
+    const body = document.getElementById('edwBody');
+    if (body) body.innerHTML = `
+        <div class="edw-success">
+            <div class="edw-success-ico">✓</div>
+            <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
+            <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
+            <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
+        </div>
+    `;
+    if (footer) footer.innerHTML = `<button class="edw-btn-secondary" onclick="closeEdw()">Close</button>`;
+    showToast(`${published} listings published`);
+    renderDashJobs();
+}
+
 function refreshDashSavesFromSupabase() {
     if (!currentUserId || !sb || !userListings.length) return;
     const ids = userListings.map(l => l.supabaseId).filter(Boolean);
@@ -11824,6 +12259,7 @@ function renderDashboard() {
     renderDashboardCharts(myListings);
     renderDashActivity();
     renderDemandWidget();
+    renderDashJobs();
     renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
 }
 
@@ -12041,6 +12477,10 @@ function dashFmtDate(ts) {
 
 // --- INIT ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Worker view: ?job=TOKEN — replace app entirely, no auth needed
+    const _workerToken = new URLSearchParams(location.search).get('job');
+    if (_workerToken && sb) { initWorkerView(_workerToken); return; }
+
     // Always start with a blank filter postcode — never pre-fill from browser autocomplete or profile
     const fp = document.getElementById('filterPostcode');
     if (fp) fp.value = '';

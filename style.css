@@ -6470,3 +6470,83 @@ header {
     #edwZoneList { columns: 2; gap: 12px; }
     #edwZoneList .edw-zone { break-inside: avoid; }
 }
+
+/* ─── EDW — Job Sent Screen ─────────────────────────────────────────────── */
+.edw-sent-screen { text-align: center; padding: 32px 20px; }
+.edw-sent-qr { margin: 20px auto; display: inline-block; }
+.edw-sent-qr img { border: 3px solid #eee; border-radius: 12px; display: block; }
+.edw-sent-url-label { font-size: 12px; color: #888; margin-bottom: 8px; }
+.edw-sent-url-box { display: flex; align-items: center; gap: 8px; background: #f4f4f4; border-radius: 8px; padding: 10px 14px; max-width: 520px; margin: 0 auto 16px; }
+.edw-sent-url-text { flex: 1; font-size: 11px; color: #555; word-break: break-all; text-align: left; }
+.edw-copy-btn { flex-shrink: 0; background: #f07020; color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.edw-copy-btn:hover { background: #d95f10; }
+.edw-sent-hint { font-size: 13px; color: #888; max-width: 420px; margin: 0 auto; line-height: 1.6; }
+
+/* ─── Worker View ────────────────────────────────────────────────────────── */
+.w-header { background: #1a1a2e; color: #fff; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 10; }
+.w-header-logo { font-size: 10px; font-weight: 800; color: #f07020; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+.w-vehicle-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.w-stock-num { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+.w-progress { margin-top: 10px; }
+.w-progress-bar { height: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.w-progress-fill { height: 100%; background: #22c55e; border-radius: 3px; transition: width 0.4s; }
+.w-progress-text { font-size: 12px; color: rgba(255,255,255,0.6); }
+.w-parts-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.w-part-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); transition: opacity 0.2s; }
+.w-part-card.w-done { opacity: 0.55; }
+.w-part-header { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; }
+.w-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ddd; flex-shrink: 0; position: relative; }
+.w-check.checked { background: #22c55e; border-color: #22c55e; }
+.w-check.checked::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+.w-part-info { flex: 1; min-width: 0; }
+.w-part-name { font-size: 14px; font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-part-zone { font-size: 11px; color: #888; margin-top: 2px; }
+.w-grade-badge { font-size: 12px; font-weight: 800; padding: 3px 9px; border-radius: 6px; flex-shrink: 0; }
+.w-expand-chevron { color: #ccc; font-size: 20px; flex-shrink: 0; transition: transform 0.2s; }
+.w-part-body { display: none; padding: 0 14px 16px; border-top: 1px solid #f0f0f0; }
+.w-part-body.open { display: block; }
+.w-section-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 8px; }
+.w-grade-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.w-grade-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border: 2px solid #eee; border-radius: 10px; background: #fafafa; cursor: pointer; transition: border-color 0.15s; }
+.w-grade-btn strong { font-size: 18px; font-weight: 800; color: #333; }
+.w-grade-btn span { font-size: 10px; color: #888; }
+.w-grade-btn.active { border-color: #f07020; background: rgba(240,112,32,0.06); }
+.w-grade-btn.active strong { color: #f07020; }
+.w-notes { width: 100%; box-sizing: border-box; border: 1.5px solid #eee; border-radius: 8px; padding: 10px; font-size: 13px; font-family: inherit; resize: vertical; }
+.w-notes:focus { outline: none; border-color: #f07020; }
+.w-photos-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; min-height: 4px; }
+.w-photo-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+.w-add-photo-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: #f4f4f4; border: 1.5px dashed #ccc; border-radius: 8px; font-size: 13px; font-weight: 600; color: #555; cursor: pointer; margin-bottom: 12px; }
+.w-done-btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: #22c55e; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+.w-done-btn.w-undone { background: #f0f0f0; color: #888; }
+.w-submit-wrap { padding: 0 12px 16px; }
+.w-submit-btn { width: 100%; padding: 18px; border: none; border-radius: 12px; background: #f07020; color: #fff; font-size: 17px; font-weight: 800; cursor: pointer; }
+.w-empty { text-align: center; padding: 80px 24px; }
+.w-empty-ico { font-size: 48px; color: #ef4444; margin-bottom: 16px; }
+.w-empty-title { font-size: 22px; font-weight: 800; color: #333; margin-bottom: 8px; }
+.w-empty-sub { font-size: 14px; color: #666; line-height: 1.5; }
+@media (min-width: 700px) {
+    .w-parts-list { max-width: 680px; margin: 0 auto; }
+    .w-grade-row { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ─── Dashboard — Dismantling Jobs ──────────────────────────────────────── */
+.dash-jobs-list { padding: 4px 0; }
+.dash-job-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; border-radius: 8px; margin: 0 -16px; transition: background 0.12s; }
+.dash-job-row:hover { background: #f8f8f8; }
+.dash-job-row + .dash-job-row { border-top: 1px solid #f0f0f0; }
+.dash-job-info { flex: 1; min-width: 0; }
+.dash-job-title { font-size: 14px; font-weight: 700; color: #333; }
+.dash-job-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.dash-job-status { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; flex-shrink: 0; }
+.job-status-stripping { background: #fef9c3; color: #92400e; }
+.job-status-ready { background: #dcfce7; color: #15803d; }
+.dash-job-arrow { color: #ccc; font-size: 18px; flex-shrink: 0; }
+
+/* ─── Job Review — worker photos + banners ──────────────────────────────── */
+.edw-review-photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.edw-review-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; cursor: pointer; }
+.edw-review-no-photo { font-size: 12px; color: #bbb; margin: 6px 0 8px; }
+.jr-banner { font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
+.jr-done { background: #dcfce7; color: #15803d; }
+.jr-pending { background: #fef9c3; color: #92400e; }
