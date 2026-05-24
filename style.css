@@ -6271,7 +6271,7 @@ header {
 /* ─── EDW — Electronic Dismantling Workflow ─────────────────────────────── */
 #edwDrawer { border-radius: 0 !important; top: 0; }
 .edw-shell {
-    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column; height: 100%; overflow: hidden;
     background: #f2f2f7;
 }
 .edw-header {
@@ -6460,9 +6460,13 @@ header {
 }
 .edw-part-photo-btn:hover { background: rgba(240,112,32,0.12); }
 
-/* Desktop: full-width layout */
+/* Desktop: match the 1400px content zone */
 @media (min-width: 900px) {
-    #edwDrawer { left: 0; right: 0; }
+    #edwDrawer {
+        left: max(0px, calc(50vw - 700px)) !important;
+        right: max(0px, calc(50vw - 700px)) !important;
+    }
+    .edw-shell { height: 100%; }
     .edw-body { padding: 24px 32px; }
     .edw-form-grid { grid-template-columns: repeat(3, 1fr); }
     .edw-vp-grid { grid-template-columns: repeat(6, 1fr); }

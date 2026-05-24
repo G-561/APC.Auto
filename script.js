@@ -11127,7 +11127,16 @@ function openEdw() {
     _edwExpandedZones = new Set([0]);
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
     const drawer = document.getElementById('edwDrawer');
-    if (drawer) drawer.classList.add('active');
+    if (drawer) {
+        if (window.innerWidth >= 900) {
+            const topBar = document.getElementById('desktopTopBar');
+            const hdr    = document.getElementById('mainHeader');
+            drawer.style.top = ((topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0)) + 'px';
+        } else {
+            drawer.style.top = '';
+        }
+        drawer.classList.add('active');
+    }
     document.body.style.overflow = 'hidden';
     _renderEdw();
 }
