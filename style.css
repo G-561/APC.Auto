@@ -6552,8 +6552,8 @@ header {
 #edwSgWrap { overflow-x: auto; }
 .edw-sg {
     display: grid;
-    grid-template-columns: 130px 1fr 84px 88px 1fr 74px 34px;
-    min-width: 640px;
+    grid-template-columns: 120px 148px 1fr 82px 86px 1fr 70px 34px;
+    min-width: 720px;
     width: 100%;
 }
 .edw-sg-th {
@@ -6561,6 +6561,7 @@ header {
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600;
     border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 2;
 }
+/* Zone column */
 .edw-sg-zone {
     background: #1a1a2e; color: #fff;
     cursor: pointer; user-select: none;
@@ -6570,27 +6571,49 @@ header {
     display: flex; align-items: center; gap: 8px; padding: 9px 10px;
     font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
 }
-.edw-sg-zone-col:hover { background: #2a2a3e; }
-.edw-sg-zone-rest {
-    background: #1a1a2e; cursor: pointer; border-bottom: 1px solid #2a2a4e;
-}
-.edw-sg-zone-rest:hover { background: #2a2a3e; }
+.edw-sg-zone-col:hover, .edw-sg-zone-expanded:hover { background: #2a2a3e; }
 .edw-sg-zone-expanded {
     display: flex; flex-direction: column; align-items: center;
-    padding: 10px 6px; gap: 10px;
-    border-right: 3px solid #f07020;
+    padding: 10px 6px; gap: 10px; border-right: 3px solid #f07020;
 }
-.edw-sg-zone-expanded:hover { background: #2a2a3e; }
 .edw-sg-zarrow { font-size: 10px; flex-shrink: 0; }
 .edw-sg-zname {
     writing-mode: vertical-lr; transform: rotate(180deg);
     font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fff;
 }
-.edw-sg-asm {
-    background: #f0f0f0; padding: 4px 10px;
-    font-size: 11px; color: #888; font-weight: 600;
+/* Assembly column */
+.edw-sg-asm-col {
+    display: flex; align-items: center; gap: 6px; padding: 8px 10px; min-height: 36px;
+    background: #f0f0f0; color: #888;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; user-select: none;
     border-bottom: 1px solid #e8e8e8;
 }
+.edw-sg-asm-col:hover { background: #e8e8e8; color: #555; }
+.edw-sg-asm-badge {
+    margin-left: auto; background: #f07020; color: #fff;
+    font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 6px;
+}
+.edw-sg-asm-exp {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 6px; gap: 10px;
+    background: #fff; border-right: 3px solid #f07020;
+    cursor: pointer; user-select: none;
+    border-bottom: 1px solid #f0f0f0;
+}
+.edw-sg-asm-exp:hover { background: #fafafa; }
+.edw-sg-aarrow { font-size: 10px; flex-shrink: 0; color: #888; }
+.edw-sg-asm-exp .edw-sg-aarrow { color: #f07020; }
+.edw-sg-aname {
+    writing-mode: vertical-lr; transform: rotate(180deg);
+    font-size: 11px; font-weight: 700; color: #333;
+}
+/* Spacer cells for collapsed rows */
+.edw-sg-spacer {
+    background: #f8f8f8; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+}
+.edw-sg-spacer:hover { background: #f0f0f0; }
+/* Part rows */
 .edw-sg-part {
     display: flex; align-items: center; padding: 6px 10px; min-height: 38px;
     background: #fff; border-bottom: 1px solid #f0f0f0;

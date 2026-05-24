@@ -11123,7 +11123,8 @@ let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, phot
 let _edwStep          = 1;
 let _edwSelectedZone  = 0;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
-let _edwExpandedZones = new Set(); // zI values of expanded zones in step 2 grid
+let _edwActiveZone = null; // currently expanded zone index in step 2 grid
+let _edwActiveAsm  = null; // currently expanded assembly index within active zone
 
 const EDW_VEHICLE_ANGLES = ['Front Left', 'Front Right', 'Rear Left', 'Rear Right', 'Instrument Cluster', 'Compliance Plate'];
 
@@ -11385,67 +11386,90 @@ function _buildEdwGrid() {
     let cells = '';
     let row   = 2; // row 1 = sticky header
 
-    ['Zone', 'Part', 'Grade', 'Price $', 'Notes', 'Photos', ''].forEach((h, i) => {
+    ['Zone', 'Assembly', 'Part', 'Grade', 'Price $', 'Notes', 'Photos', ''].forEach((h, i) => {
         cells += `<div class="edw-sg-th" style="grid-row:1;grid-column:${i + 1}">${h}</div>`;
     });
 
     EDW_TAXONOMY.forEach((zone, zI) => {
-        const expanded = _edwExpandedZones.has(zI);
+        const zoneActive = _edwActiveZone === zI;
 
-        if (!expanded) {
+        if (!zoneActive) {
             cells += `
-                <div class="edw-sg-zone edw-sg-zone-col" style="grid-row:${row};grid-column:1" onclick="_edwToggleZone(${zI})">
+                <div class="edw-sg-zone edw-sg-zone-col" style="grid-row:${row};grid-column:1" onclick="_edwSelectZone(${zI})">
                     <span class="edw-sg-zarrow">▶</span>${escapeHtml(zone.zone)}
                 </div>
-                <div class="edw-sg-zone-rest" style="grid-row:${row};grid-column:2/-1" onclick="_edwToggleZone(${zI})"></div>
+                <div class="edw-sg-spacer" style="grid-row:${row};grid-column:2/-1" onclick="_edwSelectZone(${zI})"></div>
             `;
             row++;
         } else {
+            const zoneStart = row;
             let zoneRows = 0;
-            zone.assemblies.forEach(asm => zoneRows += asm.parts.length + 1);
+            zone.assemblies.forEach((asm, aI) => {
+                zoneRows += (_edwActiveAsm === aI) ? Math.max(asm.parts.length, 1) : 1;
+            });
 
             cells += `
-                <div class="edw-sg-zone edw-sg-zone-expanded" style="grid-row:${row}/span ${zoneRows};grid-column:1" onclick="_edwToggleZone(${zI})">
+                <div class="edw-sg-zone edw-sg-zone-expanded" style="grid-row:${zoneStart}/span ${zoneRows};grid-column:1" onclick="_edwSelectZone(${zI})">
                     <span class="edw-sg-zarrow">▼</span>
                     <span class="edw-sg-zname">${escapeHtml(zone.zone)}</span>
                 </div>
             `;
 
             zone.assemblies.forEach((asm, aI) => {
-                cells += `<div class="edw-sg-asm" style="grid-row:${row};grid-column:2/-1">${escapeHtml(asm.name)}</div>`;
-                row++;
+                const asmActive = _edwActiveAsm === aI;
 
-                asm.parts.forEach((part, pI) => {
-                    const key = `${zI}:${aI}:${pI}`;
-                    const item = _edwItems[key];
-                    const sel  = !!item;
-                    const sc   = sel ? ' sel' : '';
-
+                if (!asmActive) {
+                    const selCount = asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length;
                     cells += `
-                        <div class="edw-sg-part${sc}" style="grid-row:${row};grid-column:2">
-                            <label class="edw-sg-plabel">
-                                <input type="checkbox" class="edw-sg-chk" ${sel ? 'checked' : ''} onchange="_edwGridToggle('${key}',${zI},${aI},${pI},this.checked)">
-                                <span>${escapeHtml(part)}</span>
-                            </label>
+                        <div class="edw-sg-asm-col" style="grid-row:${row};grid-column:2" onclick="_edwSelectAsm(${aI})">
+                            <span class="edw-sg-aarrow">▶</span>
+                            <span>${escapeHtml(asm.name)}</span>
+                            ${selCount ? `<span class="edw-sg-asm-badge">${selCount}</span>` : ''}
                         </div>
-                        <div class="edw-sg-cell${sc}" id="edwgg-${key}" style="grid-row:${row};grid-column:3">
-                            ${sel ? ['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwGridGrade('${key}','${g}')">${g}</button>`).join('') : ''}
-                        </div>
-                        <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:4">
-                            ${sel ? `<input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0" value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)">` : ''}
-                        </div>
-                        <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:5">
-                            ${sel ? `<input class="edw-tbl-notes-inp" type="text" placeholder="Notes" value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)">` : ''}
-                        </div>
-                        <div class="edw-sg-cell${sc}" id="edwgph-${key}" style="grid-row:${row};grid-column:6">
-                            ${sel ? `<label class="edw-tbl-photo-lbl"><input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)"><span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span></label>` : ''}
-                        </div>
-                        <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:7">
-                            ${sel ? `<button class="edw-sg-remove" onclick="_edwGridRemove('${key}',event)">×</button>` : ''}
-                        </div>
+                        <div class="edw-sg-spacer" style="grid-row:${row};grid-column:3/-1" onclick="_edwSelectAsm(${aI})"></div>
                     `;
                     row++;
-                });
+                } else {
+                    const partCount = asm.parts.length;
+                    cells += `
+                        <div class="edw-sg-asm-exp" style="grid-row:${row}/span ${partCount};grid-column:2" onclick="_edwSelectAsm(${aI})">
+                            <span class="edw-sg-aarrow">▼</span>
+                            <span class="edw-sg-aname">${escapeHtml(asm.name)}</span>
+                        </div>
+                    `;
+
+                    asm.parts.forEach((part, pI) => {
+                        const key  = `${zI}:${aI}:${pI}`;
+                        const item = _edwItems[key];
+                        const sel  = !!item;
+                        const sc   = sel ? ' sel' : '';
+
+                        cells += `
+                            <div class="edw-sg-part${sc}" style="grid-row:${row};grid-column:3">
+                                <label class="edw-sg-plabel">
+                                    <input type="checkbox" class="edw-sg-chk" ${sel ? 'checked' : ''} onchange="_edwGridToggle('${key}',${zI},${aI},${pI},this.checked)">
+                                    <span>${escapeHtml(part)}</span>
+                                </label>
+                            </div>
+                            <div class="edw-sg-cell${sc}" id="edwgg-${key}" style="grid-row:${row};grid-column:4">
+                                ${sel ? ['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwGridGrade('${key}','${g}')">${g}</button>`).join('') : ''}
+                            </div>
+                            <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:5">
+                                ${sel ? `<input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0" value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)">` : ''}
+                            </div>
+                            <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:6">
+                                ${sel ? `<input class="edw-tbl-notes-inp" type="text" placeholder="Notes" value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)">` : ''}
+                            </div>
+                            <div class="edw-sg-cell${sc}" id="edwgph-${key}" style="grid-row:${row};grid-column:7">
+                                ${sel ? `<label class="edw-tbl-photo-lbl"><input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)"><span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span></label>` : ''}
+                            </div>
+                            <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:8">
+                                ${sel ? `<button class="edw-sg-remove" onclick="_edwGridRemove('${key}',event)">×</button>` : ''}
+                            </div>
+                        `;
+                        row++;
+                    });
+                }
             });
         }
     });
@@ -11581,8 +11605,20 @@ function _updateEdwFooterCount() {
     if (reviewBtn) reviewBtn.textContent = `Review ${count} Part${count !== 1 ? 's' : ''} →`;
 }
 
-function _edwToggleZone(zI) {
-    _edwExpandedZones.has(zI) ? _edwExpandedZones.delete(zI) : _edwExpandedZones.add(zI);
+function _edwSelectZone(zI) {
+    if (_edwActiveZone === zI) {
+        _edwActiveZone = null;
+        _edwActiveAsm  = null;
+    } else {
+        _edwActiveZone = zI;
+        _edwActiveAsm  = 0;
+    }
+    const wrap = document.getElementById('edwSgWrap');
+    if (wrap) wrap.innerHTML = _buildEdwGrid();
+}
+
+function _edwSelectAsm(aI) {
+    _edwActiveAsm = (_edwActiveAsm === aI) ? null : aI;
     const wrap = document.getElementById('edwSgWrap');
     if (wrap) wrap.innerHTML = _buildEdwGrid();
 }
