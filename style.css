@@ -6558,8 +6558,8 @@ header {
 #edwSgWrap { overflow-x: auto; }
 .edw-sg {
     display: grid;
-    grid-template-columns: 120px 148px 1fr 82px 86px 1fr 70px 34px;
-    min-width: 720px;
+    grid-template-columns: 120px 148px 1fr 112px 86px 1fr 70px 34px;
+    min-width: 760px;
     width: 100%;
 }
 .edw-sg-th {
@@ -6616,8 +6616,9 @@ header {
     font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 6px;
 }
 .edw-sg-asm-exp {
-    display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
-    padding: 8px 10px; gap: 5px;
+    display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;
+    flex-wrap: wrap; align-content: flex-start;
+    padding: 8px 8px; gap: 6px;
     background: #fff; border-right: 3px solid #f07020;
     cursor: pointer; user-select: none;
     border-bottom: 1px solid #f0f0f0;
