@@ -11452,16 +11452,21 @@ function _buildEdwGrid() {
                                 </label>
                             </div>
                             <div class="edw-sg-cell${sc}" id="edwgg-${key}" style="grid-row:${row};grid-column:4">
-                                ${sel ? ['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwGridGrade('${key}','${g}')">${g}</button>`).join('') : ''}
+                                ${['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${sel && item.grade === g ? ' active' : ''}" ${sel ? `onclick="_edwGridGrade('${key}','${g}')"` : 'disabled'}>${g}</button>`).join('')}
                             </div>
                             <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:5">
-                                ${sel ? `<input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0" value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)">` : ''}
+                                <div class="edw-price-wrap">
+                                    <span class="edw-price-pre">$</span>
+                                    <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0"
+                                        ${sel ? `value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)"` : 'disabled'}>
+                                </div>
                             </div>
                             <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:6">
-                                ${sel ? `<input class="edw-tbl-notes-inp" type="text" placeholder="Notes" value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)">` : ''}
+                                <input class="edw-tbl-notes-inp" type="text" placeholder="Notes"
+                                    ${sel ? `value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)"` : 'disabled'}>
                             </div>
                             <div class="edw-sg-cell${sc}" id="edwgph-${key}" style="grid-row:${row};grid-column:7">
-                                ${sel ? `<label class="edw-tbl-photo-lbl"><input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)"><span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span></label>` : ''}
+                                ${sel ? `<label class="edw-tbl-photo-lbl"><input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)"><span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span></label>` : `<span class="edw-sg-photo-dis">📷</span>`}
                             </div>
                             <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:8">
                                 ${sel ? `<button class="edw-sg-remove" onclick="_edwGridRemove('${key}',event)">×</button>` : ''}

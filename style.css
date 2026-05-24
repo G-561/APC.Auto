@@ -6527,18 +6527,24 @@ header {
     color: #bbb;
 }
 .edw-tbl-grade-btn.active { background: #f07020; color: #fff; border-color: #f07020; }
-.edw-tbl-grade-btn:disabled { opacity: 0.3; cursor: default; }
+.edw-tbl-grade-btn:disabled { opacity: 0.2; cursor: default; }
 .edw-tbl-price { width: 82px; }
 .edw-tbl-price-inp {
-    width: 70px; border: 1px solid #ddd; border-radius: 4px;
+    width: 100%; border: 1px solid #ddd; border-radius: 4px;
     padding: 4px 6px; font-size: 13px; color: #333;
+    -moz-appearance: textfield;
 }
-.edw-tbl-price-inp:disabled { background: transparent; border-color: transparent; color: transparent; }
+.edw-tbl-price-inp::-webkit-outer-spin-button,
+.edw-tbl-price-inp::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.edw-tbl-price-inp:disabled { background: transparent; border-color: #eee; color: #ccc; cursor: default; }
 .edw-tbl-notes-inp {
     width: 100%; min-width: 140px; border: 1px solid #ddd; border-radius: 4px;
     padding: 4px 6px; font-size: 13px; color: #333;
 }
-.edw-tbl-notes-inp:disabled { background: transparent; border-color: transparent; color: transparent; }
+.edw-tbl-notes-inp:disabled { background: transparent; border-color: #eee; color: #ccc; cursor: default; }
+.edw-price-wrap { display: flex; align-items: center; gap: 3px; width: 100%; }
+.edw-price-pre { font-size: 13px; color: #aaa; flex-shrink: 0; }
+.edw-sg-photo-dis { font-size: 16px; opacity: 0.2; }
 .edw-tbl-photo { width: 72px; }
 .edw-tbl-photo-lbl {
     cursor: pointer; padding: 4px 8px; background: #f4f4f4;
