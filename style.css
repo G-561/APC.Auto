@@ -6579,8 +6579,9 @@ header {
 }
 .edw-sg-zone-col:hover, .edw-sg-zone-expanded:hover { background: #ececec; }
 .edw-sg-zone-expanded {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 10px 6px; gap: 10px; border-right: 3px solid #f07020;
+    display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;
+    flex-wrap: wrap; align-content: flex-start;
+    padding: 8px 8px; gap: 6px; border-right: 3px solid #f07020;
 }
 .edw-sg-zarrow { font-size: 10px; flex-shrink: 0; }
 .edw-sg-zone-tag {
