@@ -11457,7 +11457,7 @@ function _buildEdwGrid() {
                                     <span>${escapeHtml(part)}</span>
                                 </label>
                             </div>
-                            <div class="edw-sg-cell${sc}" id="edwgg-${key}" style="grid-row:${row};grid-column:4">
+                            <div class="edw-sg-cell edw-sg-grade-cell${sc}" id="edwgg-${key}" style="grid-row:${row};grid-column:4">
                                 ${['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${sel && item.grade === g ? ' active' : ''}" ${sel ? `onclick="_edwGridGrade('${key}','${g}')"` : 'disabled'}>${g}</button>`).join('')}
                             </div>
                             <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:5">

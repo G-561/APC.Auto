@@ -6523,7 +6523,7 @@ header {
 .edw-tbl-grade { width: 118px; white-space: nowrap; }
 .edw-tbl-grade-btn {
     border: 1px solid #ddd; background: #f4f4f4; border-radius: 4px;
-    padding: 2px 7px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 2px;
+    padding: 2px 6px; font-size: 12px; font-weight: 700; cursor: pointer;
     color: #bbb;
 }
 .edw-tbl-grade-btn.active { background: #f07020; color: #fff; border-color: #f07020; }
@@ -6558,7 +6558,7 @@ header {
 #edwSgWrap { overflow-x: auto; }
 .edw-sg {
     display: grid;
-    grid-template-columns: 240px 148px 1fr 112px 86px 1fr 70px 34px;
+    grid-template-columns: 240px 148px 1fr 130px 86px 1fr 70px 34px;
     grid-auto-rows: 38px;
     min-width: 880px;
     width: 100%;
@@ -6650,6 +6650,7 @@ header {
     display: flex; align-items: center; padding: 6px 8px; min-height: 38px;
     background: #fafafa; border-bottom: 1px solid #f0f0f0;
 }
+.edw-sg-grade-cell { justify-content: center; gap: 2px; }
 .edw-sg-cell.sel { background: #fff8f4; }
 .edw-sg-remove { background: none; border: none; color: #ccc; font-size: 20px; line-height: 1; cursor: pointer; padding: 0; }
 .edw-sg-remove:hover { color: #ef4444; }
