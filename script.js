@@ -11138,8 +11138,9 @@ function openEdw() {
             drawer.style.top   = topOffset + 'px';
             drawer.style.left  = sideOffset + 'px';
             drawer.style.right = sideOffset + 'px';
+            drawer.style.width = 'auto';
         } else {
-            drawer.style.top = drawer.style.left = drawer.style.right = '';
+            drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
         }
         drawer.classList.add('active');
     }
