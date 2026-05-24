@@ -6276,7 +6276,7 @@ header {
 }
 .edw-header {
     flex-shrink: 0; background: #1a1a2e; color: #fff;
-    padding: 14px 16px 12px;
+    padding: 14px 16px 12px; position: relative;
     display: flex; flex-direction: column; gap: 12px;
 }
 .edw-header-title {
@@ -6460,7 +6460,14 @@ header {
 }
 .edw-part-photo-btn:hover { background: rgba(240,112,32,0.12); }
 
-/* Desktop: constrain width */
+/* Desktop: full-width layout */
 @media (min-width: 900px) {
-    #edwDrawer { left: max(0px, calc(50vw - 420px)); right: max(0px, calc(50vw - 420px)); }
+    #edwDrawer { left: 0; right: 0; }
+    .edw-body { padding: 24px 32px; }
+    .edw-form-grid { grid-template-columns: repeat(3, 1fr); }
+    .edw-vp-grid { grid-template-columns: repeat(6, 1fr); }
+    .edw-review-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .edw-checklist-hint { padding: 0 0 4px; }
+    #edwZoneList { columns: 2; gap: 12px; }
+    #edwZoneList .edw-zone { break-inside: avoid; }
 }

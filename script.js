@@ -11511,6 +11511,7 @@ function _renderEdwStep3() {
     footer.innerHTML = `
         <div class="edw-footer-meta">${Object.keys(_edwItems).length} listings to publish</div>
         <button class="edw-btn-secondary" onclick="_edwStep=2;_renderEdw()">← Back</button>
+        <button class="edw-btn-secondary" onclick="_edwPrintStrippingList()">Print Stripping List</button>
         <button class="edw-btn-primary" onclick="_edwPublish()">Publish All Listings</button>
     `;
 }
@@ -11518,6 +11519,89 @@ function _renderEdwStep3() {
 function _edwRemoveItem(key) {
     delete _edwItems[key];
     _renderEdwStep3();
+}
+
+function _edwPrintStrippingList() {
+    const v = _edwVehicle;
+    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
+    const date = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    // Group items by zone and assembly
+    const grouped = {};
+    Object.entries(_edwItems).forEach(([key, item]) => {
+        const [zI, aI, pI] = key.split(':').map(Number);
+        const zone = EDW_TAXONOMY[zI];
+        const asm  = zone?.assemblies[aI];
+        const part = asm?.parts[pI] || '';
+        const zName = zone?.zone || '';
+        const aName = asm?.name || '';
+        if (!grouped[zName]) grouped[zName] = {};
+        if (!grouped[zName][aName]) grouped[zName][aName] = [];
+        grouped[zName][aName].push({ part, grade: item.grade, notes: item.notes });
+    });
+
+    const zoneRows = Object.entries(grouped).map(([zone, assemblies]) => {
+        const asmRows = Object.entries(assemblies).map(([asm, parts]) => {
+            const partRows = parts.map(p => `
+                <tr>
+                    <td style="width:28px; text-align:center;">☐</td>
+                    <td style="padding:6px 10px;">${p.part}</td>
+                    <td style="width:80px; text-align:center;">
+                        <span style="background:${p.grade==='A'?'#dcfce7':p.grade==='B'?'#dbeafe':p.grade==='C'?'#fef9c3':'#fee2e2'};
+                               color:${p.grade==='A'?'#15803d':p.grade==='B'?'#1d4ed8':p.grade==='C'?'#92400e':'#991b1b'};
+                               padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;">${p.grade} — ${gradeLabel[p.grade]||''}</span>
+                    </td>
+                    <td style="padding:6px 10px; font-size:12px; color:#666;">${p.notes || ''}</td>
+                </tr>`).join('');
+            return `
+                <tr><td colspan="4" style="padding:8px 10px 4px; font-size:11px; font-weight:700; color:#f07020; text-transform:uppercase; letter-spacing:0.4px;">${asm}</td></tr>
+                ${partRows}`;
+        }).join('');
+        return `
+            <tr style="background:#1a1a2e;">
+                <td colspan="4" style="padding:10px 12px; color:#fff; font-size:14px; font-weight:800;">${zone}</td>
+            </tr>
+            ${asmRows}`;
+    }).join('');
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Stripping List — ${vehicleTitle}</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; margin: 0; padding: 20px; color: #333; }
+        h1 { font-size: 22px; margin: 0 0 4px; }
+        .sub { font-size: 13px; color: #666; margin-bottom: 18px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        td { border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        @media print { @page { margin: 15mm; } button { display: none !important; } }
+    </style>
+    </head><body>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+            <h1>Stripping List</h1>
+            <div class="sub">${vehicleTitle}${v.vin ? ' &nbsp;|&nbsp; VIN: ' + v.vin : ''}${v.colour ? ' &nbsp;|&nbsp; ' + v.colour : ''}${v.odometer ? ' &nbsp;|&nbsp; ' + Number(v.odometer).toLocaleString() + ' km' : ''}</div>
+        </div>
+        <div style="text-align:right; font-size:12px; color:#888;">
+            <div>Printed: ${date}</div>
+            <div style="margin-top:4px;">${Object.keys(_edwItems).length} parts</div>
+            <button onclick="window.print()" style="margin-top:8px; background:#f07020; color:#fff; border:none; border-radius:6px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer;">Print / Save PDF</button>
+        </div>
+    </div>
+    <table>
+        <thead><tr style="background:#f4f4f4;">
+            <th style="width:28px;"></th>
+            <th style="text-align:left; padding:8px 10px;">Part</th>
+            <th style="width:120px; text-align:center;">Grade</th>
+            <th style="text-align:left; padding:8px 10px;">Notes</th>
+        </tr></thead>
+        <tbody>${zoneRows}</tbody>
+    </table>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); }
+    else showToast('Allow pop-ups to open the stripping list');
+
 }
 
 async function _edwPublish() {
@@ -11615,7 +11699,10 @@ async function _edwPublish() {
             <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
         </div>
     `;
-    if (footer) footer.innerHTML = `<button class="edw-btn-secondary" onclick="closeEdw()">Close</button>`;
+    if (footer) footer.innerHTML = `
+        <button class="edw-btn-secondary" onclick="closeEdw()">Close</button>
+        <button class="edw-btn-secondary" onclick="_edwPrintStrippingList()">Print Stripping List</button>
+    `;
     showToast(`${published} listings published`);
 }
 
