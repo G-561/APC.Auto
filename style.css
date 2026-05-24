@@ -5868,6 +5868,38 @@ header {
     margin-left: 3px;
 }
 .my-listings-tab.active .ml-tab-badge { background: rgba(255,255,255,0.25); }
+
+/* My Listings — bulk select */
+.ml-select-pill {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 5px 13px; border-radius: 20px; border: 1.5px solid #ddd;
+    background: #fff; color: #555; cursor: pointer;
+}
+.ml-select-pill.active { background: #f07020; border-color: #f07020; color: #fff; }
+.ml-bulk-footer {
+    display: none; flex-shrink: 0; align-items: center; gap: 8px;
+    padding: 12px 15px; background: #fff; border-top: 1px solid #eee;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+}
+.ml-bulk-count { flex: 1; font-size: 12px; font-weight: 700; color: #333; }
+.ml-bulk-btn {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 9px 14px; border-radius: 8px; border: none; cursor: pointer;
+}
+.ml-bulk-selall { background: #f4f4f4; color: #555; }
+.ml-bulk-delete { background: #ef4444; color: #fff; }
+.ml-bulk-delete:disabled { opacity: 0.35; cursor: default; }
+.ml-bulk-cancel { background: #f4f4f4; color: #555; }
+.ml-card-selected { outline: 2px solid #f07020; outline-offset: -2px; }
+.ml-select-chk {
+    position: absolute; top: 7px; left: 7px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(255,255,255,0.9);
+    background: rgba(0,0,0,0.22); display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 900; color: #fff;
+    z-index: 5; pointer-events: none;
+}
+.ml-card-selected .ml-select-chk { background: #f07020; border-color: #f07020; }
+
 .my-part-sold-date {
     font-size: 11px;
     color: #aaa;

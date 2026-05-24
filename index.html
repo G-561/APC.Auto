@@ -1576,7 +1576,10 @@
 <div id="myPartsDrawer" class="drawer">
     <div class="drawer-header">
         <span>MY LISTINGS</span>
-        <div class="dh-close" onclick="toggleDrawer('myPartsDrawer')">×</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button id="mlSelectPill" class="ml-select-pill" onclick="toggleMyListingsSelectMode()">Select</button>
+            <div class="dh-close" onclick="toggleDrawer('myPartsDrawer')">×</div>
+        </div>
     </div>
     <div class="drawer-content" style="padding: 15px 0 0; background: #f4f4f4;">
         <div class="input-group" style="margin-bottom: 12px; padding: 0 15px;">
@@ -1593,7 +1596,13 @@
             <button class="my-listings-tab"        data-tab="pending" onclick="setMyListingsTab('pending')">Pending <span id="mlBadge-pending" class="ml-tab-badge"></span></button>
             <button class="my-listings-tab"        data-tab="sold"    onclick="setMyListingsTab('sold')">Sold <span id="mlBadge-sold" class="ml-tab-badge"></span></button>
         </div>
-        <div id="myPartsList" style="padding-bottom: 50px;"></div>
+        <div id="myPartsList" style="padding-bottom: 20px;"></div>
+    </div>
+    <div id="mlBulkFooter" class="ml-bulk-footer">
+        <span id="mlBulkCount" class="ml-bulk-count">0 selected</span>
+        <button class="ml-bulk-btn ml-bulk-selall" onclick="myListingsSelectAll()">Select All</button>
+        <button id="mlBulkDeleteBtn" class="ml-bulk-btn ml-bulk-delete" onclick="bulkDeleteMyListings()" disabled>Delete</button>
+        <button class="ml-bulk-btn ml-bulk-cancel" onclick="toggleMyListingsSelectMode()">Cancel</button>
     </div>
 </div>
 

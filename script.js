@@ -3252,6 +3252,12 @@ function setInboxRoleTab(tab) {
 }
 function setMyListingsTab(tab) {
     _myListingsTab = tab;
+    _myListingsSelectMode = false;
+    _myListingsSelected.clear();
+    const pill = document.getElementById('mlSelectPill');
+    if (pill) pill.classList.remove('active');
+    const footer = document.getElementById('mlBulkFooter');
+    if (footer) footer.style.display = 'none';
     document.querySelectorAll('.my-listings-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     renderMyParts();
 }
@@ -4526,7 +4532,16 @@ function renderMyParts() {
         const card = temp.firstElementChild;
         if (!card) return;
 
-        if (isSold) {
+        if (_myListingsSelectMode) {
+            const isSelected = _myListingsSelected.has(part.id);
+            card.dataset.selectId = part.id;
+            if (isSelected) card.classList.add('ml-card-selected');
+            card.onclick = (e) => { e.stopPropagation(); toggleMyListingCard(part.id); };
+            const chk = document.createElement('div');
+            chk.className = 'ml-select-chk';
+            chk.textContent = isSelected ? '✓' : '';
+            card.appendChild(chk);
+        } else if (isSold) {
             card.classList.add('my-card--sold');
             const soldDateStr = part.soldDate
                 ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
@@ -4549,6 +4564,100 @@ function renderMyParts() {
     });
 
     myPartsList.appendChild(grid);
+    _updateBulkFooterCount();
+}
+
+function toggleMyListingsSelectMode() {
+    _myListingsSelectMode = !_myListingsSelectMode;
+    _myListingsSelected.clear();
+    const pill = document.getElementById('mlSelectPill');
+    if (pill) pill.classList.toggle('active', _myListingsSelectMode);
+    const footer = document.getElementById('mlBulkFooter');
+    if (footer) footer.style.display = _myListingsSelectMode ? 'flex' : 'none';
+    renderMyParts();
+}
+
+function toggleMyListingCard(id) {
+    if (_myListingsSelected.has(id)) {
+        _myListingsSelected.delete(id);
+    } else {
+        _myListingsSelected.add(id);
+    }
+    _updateBulkFooterCount();
+    const card = document.querySelector(`[data-select-id="${id}"]`);
+    if (card) {
+        const isNowSelected = _myListingsSelected.has(id);
+        card.classList.toggle('ml-card-selected', isNowSelected);
+        const chk = card.querySelector('.ml-select-chk');
+        if (chk) chk.textContent = isNowSelected ? '✓' : '';
+    }
+}
+
+function myListingsSelectAll() {
+    const query = (document.getElementById('myPartsSearchInput')?.value || '').toLowerCase().trim();
+    userListings
+        .filter(p => p.status !== 'removed')
+        .filter(p => {
+            const matchTab =
+                _myListingsTab === 'active'  ? (!p.status || p.status === 'active') :
+                _myListingsTab === 'pending' ? p.status === 'pending' :
+                _myListingsTab === 'sold'    ? p.status === 'sold' : true;
+            return matchTab && (!query || p.title.toLowerCase().includes(query));
+        })
+        .forEach(p => _myListingsSelected.add(p.id));
+    _updateBulkFooterCount();
+    document.querySelectorAll('[data-select-id]').forEach(card => {
+        const id = Number(card.dataset.selectId);
+        const isSelected = _myListingsSelected.has(id);
+        card.classList.toggle('ml-card-selected', isSelected);
+        const chk = card.querySelector('.ml-select-chk');
+        if (chk) chk.textContent = isSelected ? '✓' : '';
+    });
+}
+
+function _updateBulkFooterCount() {
+    const countEl = document.getElementById('mlBulkCount');
+    if (countEl) countEl.textContent = `${_myListingsSelected.size} selected`;
+    const deleteBtn = document.getElementById('mlBulkDeleteBtn');
+    if (deleteBtn) deleteBtn.disabled = _myListingsSelected.size === 0;
+}
+
+async function bulkDeleteMyListings() {
+    const count = _myListingsSelected.size;
+    if (count === 0) return;
+    showConfirmDialog(
+        'Delete Listings',
+        `Delete ${count} listing${count !== 1 ? 's' : ''}? This cannot be undone.`,
+        `DELETE ${count}`,
+        async () => {
+            const ids = [..._myListingsSelected];
+            const parts = ids
+                .map(id => userListings.find(l => l.id === id))
+                .filter(p => p && p.sellerId === currentUserId);
+            const supabaseIds = parts.map(p => p.supabaseId).filter(Boolean);
+            parts.forEach(p => {
+                const idx = userListings.indexOf(p);
+                if (idx !== -1) userListings.splice(idx, 1);
+            });
+            saveUserListings();
+            _myListingsSelectMode = false;
+            _myListingsSelected.clear();
+            const pill = document.getElementById('mlSelectPill');
+            if (pill) pill.classList.remove('active');
+            const footer = document.getElementById('mlBulkFooter');
+            if (footer) footer.style.display = 'none';
+            renderMainGrid();
+            renderMyParts();
+            if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+            showToast(`${parts.length} listing${parts.length !== 1 ? 's' : ''} deleted`);
+            for (const sid of supabaseIds) {
+                try {
+                    await sb.from('listing_images').delete().eq('listing_id', sid);
+                    await sb.from('listings').delete().eq('id', sid);
+                } catch (e) { console.warn('Supabase delete error:', e); }
+            }
+        }
+    );
 }
 
 function showSellError(msg) {
@@ -6850,6 +6959,8 @@ let _lastSentConvId    = null;
 let _pendingContactPart = null;
 let _inboxRoleTab = 'buying';
 let _myListingsTab = 'active';
+let _myListingsSelectMode = false;
+let _myListingsSelected = new Set();
 
 function sendContactMessage() {
     const msgEl = document.getElementById('contactCardMsg');
@@ -10355,6 +10466,8 @@ function closeWorkshopDetailDrawer() {
 }
 function onMenuOpenMyListings() {
     closeAccountDropdown();
+    _myListingsSelectMode = false;
+    _myListingsSelected.clear();
     renderMyParts();
     toggleDrawer('myPartsDrawer');
 }
