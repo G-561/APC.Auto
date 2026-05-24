@@ -11416,8 +11416,8 @@ function _buildEdwGrid() {
             cells += `
                 <div class="edw-sg-zone edw-sg-zone-expanded" style="grid-row:${zoneStart}/span ${zoneRows};grid-column:1" onclick="_edwSelectZone(${zI})">
                     <span class="edw-sg-zarrow">▼</span>
+                    <span class="edw-sg-zone-tag">${escapeHtml(zone.zone)}</span>
                     ${zoneCount ? `<span class="edw-sg-zone-badge">${zoneCount}</span>` : ''}
-                    <span class="edw-sg-zname">${escapeHtml(zone.zone)}</span>
                 </div>
             `;
 

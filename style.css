@@ -6569,33 +6569,38 @@ header {
 }
 /* Zone column */
 .edw-sg-zone {
-    background: #f07020; color: #fff;
+    background: #f4f4f4; color: #666;
     cursor: pointer; user-select: none;
-    border-bottom: 1px solid #d95f10;
+    border-bottom: 1px solid #e8e8e8; border-right: 1px solid #e8e8e8;
 }
 .edw-sg-zone-col {
     display: flex; align-items: center; gap: 8px; padding: 9px 10px;
-    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
 }
-.edw-sg-zone-col:hover, .edw-sg-zone-expanded:hover { background: #d95f10; }
+.edw-sg-zone-col:hover, .edw-sg-zone-expanded:hover { background: #ececec; }
 .edw-sg-zone-expanded {
     display: flex; flex-direction: column; align-items: center;
-    padding: 10px 6px; gap: 10px; border-right: 3px solid rgba(255,255,255,0.4);
+    padding: 10px 6px; gap: 10px; border-right: 3px solid #f07020;
 }
 .edw-sg-zarrow { font-size: 10px; flex-shrink: 0; }
+.edw-sg-zone-tag {
+    background: #f07020; color: #fff;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    border-radius: 4px; padding: 3px 7px; white-space: nowrap;
+}
 .edw-sg-zone-badge {
-    background: rgba(255,255,255,0.9); color: #f07020;
+    background: #f07020; color: #fff;
     font-size: 11px; font-weight: 700; border-radius: 10px; padding: 1px 6px;
     flex-shrink: 0;
 }
 .edw-sg-zname {
     writing-mode: vertical-lr; transform: rotate(180deg);
-    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fff;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #666;
 }
 .edw-sg-zone-spacer {
-    background: #f07020; border-bottom: 1px solid #d95f10; cursor: pointer;
+    background: #f4f4f4; border-bottom: 1px solid #e8e8e8; cursor: pointer;
 }
-.edw-sg-zone-spacer:hover { background: #d95f10; }
+.edw-sg-zone-spacer:hover { background: #ececec; }
 /* Assembly column */
 .edw-sg-asm-col {
     display: flex; align-items: center; gap: 6px; padding: 8px 10px; min-height: 36px;
