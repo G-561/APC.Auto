@@ -11398,7 +11398,7 @@ function _buildEdwGrid() {
                 <div class="edw-sg-zone edw-sg-zone-col" style="grid-row:${row};grid-column:1" onclick="_edwSelectZone(${zI})">
                     <span class="edw-sg-zarrow">▶</span>${escapeHtml(zone.zone)}
                 </div>
-                <div class="edw-sg-spacer" style="grid-row:${row};grid-column:2/-1" onclick="_edwSelectZone(${zI})"></div>
+                <div class="edw-sg-zone-spacer" style="grid-row:${row};grid-column:2/-1" onclick="_edwSelectZone(${zI})"></div>
             `;
             row++;
         } else {
