@@ -6550,7 +6550,8 @@ header {
 .w-empty { text-align: center; padding: 80px 24px; }
 .w-empty-ico { font-size: 48px; color: #ef4444; margin-bottom: 16px; }
 .w-empty-title { font-size: 22px; font-weight: 800; color: #333; margin-bottom: 8px; }
-.w-empty-sub { font-size: 14px; color: #666; line-height: 1.5; }
+.w-empty-sub { font-size: 14px; color: #666; line-height: 1.5; margin-bottom: 28px; }
+.w-close-btn { background: #f07020; color: #fff; border: none; border-radius: 10px; padding: 14px 32px; font-size: 15px; font-weight: 700; cursor: pointer; }
 @media (min-width: 700px) {
     .w-parts-list { max-width: 680px; margin: 0 auto; }
     .w-grade-row { grid-template-columns: repeat(4, 1fr); }

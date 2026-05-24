@@ -11958,6 +11958,7 @@ async function _wSubmitForReview() {
             <div class="w-empty-ico" style="color:#22c55e;">✓</div>
             <div class="w-empty-title">Job Submitted</div>
             <div class="w-empty-sub">Your manager will review the parts and publish the listings. You're done!</div>
+            <button onclick="window.close()" class="w-close-btn">Close this window</button>
         </div>`;
 }
 
