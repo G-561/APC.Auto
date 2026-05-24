@@ -5089,7 +5089,8 @@ function renderBuyerPicker(listingId, currentName) {
 }
 
 function openEditListing(listingId) {
-    const listing = userListings.find(l => l.id === listingId || l.supabaseId === listingId);
+    const listing = userListings.find(l => l.supabaseId != null && l.supabaseId === listingId)
+                 || userListings.find(l => l.id === listingId);
     if (!listing) return;
     currentEditingListingId = listing.id;
     sellListingImages = [...listing.images];
@@ -12246,32 +12247,31 @@ async function _wAddPhotos(itemId, input) {
     const files = Array.from(input.files);
     if (!files.length) return;
     showToast('Uploading…');
-    const uploaded = [];
-    for (const file of files) {
+    const results = await Promise.all(files.map(async file => {
         const ext  = file.name.split('.').pop() || 'jpg';
         const path = `${_wJob.job_token}/${itemId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await sb.storage.from('edw-photos').upload(path, file, { contentType: file.type });
-        if (!error) {
-            const { data: pub } = sb.storage.from('edw-photos').getPublicUrl(path);
-            uploaded.push(pub.publicUrl);
-        }
-    }
+        if (error) return null;
+        const { data: pub } = sb.storage.from('edw-photos').getPublicUrl(path);
+        return pub.publicUrl;
+    }));
+    const uploaded = results.filter(Boolean);
     if (!uploaded.length) { showToast('Upload failed'); return; }
     const merged = [...(item.worker_photos || []), ...uploaded];
     item.worker_photos = merged;
-    await sb.from('dismantling_items').update({ worker_photos: merged }).eq('id', itemId);
     const row = document.getElementById(`wphotos-${itemId}`);
     if (row) row.innerHTML = merged.map(p => `<img src="${escapeHtml(p)}" class="w-photo-thumb" alt="part photo">`).join('');
     showToast(`${uploaded.length} photo${uploaded.length !== 1 ? 's' : ''} saved`);
     input.value = '';
+    sb.from('dismantling_items').update({ worker_photos: merged }).eq('id', itemId).then(() => {});
 }
 
 async function _wMarkDone(itemId) {
     const item = _wItems.find(i => i.id === itemId);
     if (!item) return;
     item.worker_done = !item.worker_done;
-    if (sb) await sb.from('dismantling_items').update({ worker_done: item.worker_done }).eq('id', itemId);
     _renderWorkerView();
+    if (sb) sb.from('dismantling_items').update({ worker_done: item.worker_done }).eq('id', itemId).then(() => {});
 }
 
 async function _wSubmitForReview() {
@@ -12698,7 +12698,7 @@ function renderDashListings(tab, btn) {
             <td>
                 ${p.warehouseBin ? `<button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>` : ''}
                 ${p.status === 'pending' ? `<button class="dash-action-btn dash-btn-warning" onclick="clearListingPending(${p.id})">Remove Pending</button>` : ''}
-                <button class="dash-action-btn" onclick="openEditListing(${p.id});">Edit</button>
+                <button class="dash-action-btn" onclick="openEditListing(${p.supabaseId ?? p.id});">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="markSold(${p.id})">Mark Sold</button>
                 <button class="dash-action-btn dash-btn-danger" onclick="if(confirm('Delete this listing?')){deleteListing(${p.id});renderDashboard();}">Delete</button>
             </td></tr>`).join('');
