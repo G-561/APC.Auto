@@ -6548,36 +6548,67 @@ header {
 .edw-tbl-photo-lbl.disabled { opacity: 0.25; pointer-events: none; }
 .edw-tbl-photo-count { font-size: 11px; color: #f07020; font-weight: 700; }
 
-/* ─── EDW — Accordion Part Rows (Step 2 desktop) ───────────────────────── */
-.edw-acc-row { cursor: pointer; border-bottom: 1px solid #f0f0f0; transition: background 0.1s; }
-.edw-acc-row:hover { background: #fafafa; }
-.edw-acc-row.selected { background: #fff8f4; }
-.edw-acc-name-cell { padding: 8px 10px; min-width: 160px; }
-.edw-acc-part { display: block; font-size: 13px; font-weight: 600; color: #bbb; }
-.edw-acc-row.selected .edw-acc-part { color: #333; }
-.edw-acc-asm { display: block; font-size: 11px; color: #ccc; }
-.edw-acc-row.selected .edw-acc-asm { color: #888; }
-.edw-acc-grade-cell, .edw-acc-price-cell, .edw-acc-notes-cell, .edw-acc-photo-cell, .edw-acc-rm-cell { padding: 8px; vertical-align: middle; }
-.edw-acc-th-grade { width: 58px; }
-.edw-acc-th-price { width: 78px; }
-.edw-acc-th-photo { width: 68px; }
-.edw-acc-grade-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
-.grade-A { background: #dcfce7; color: #166534; }
-.grade-B { background: #dbeafe; color: #1e40af; }
-.grade-C { background: #fef9c3; color: #854d0e; }
-.grade-D { background: #fee2e2; color: #991b1b; }
-.edw-acc-price-sum { font-size: 13px; font-weight: 600; color: #333; white-space: nowrap; }
-.edw-acc-notes-sum { font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; display: block; }
-.edw-acc-photo-sum { font-size: 12px; color: #f07020; font-weight: 600; white-space: nowrap; }
-.edw-acc-rm-cell { width: 34px; padding: 0 4px; }
-.edw-acc-remove { background: none; border: none; color: #ccc; font-size: 20px; line-height: 1; cursor: pointer; padding: 0; }
-.edw-acc-remove:hover { color: #ef4444; }
-.edw-acc-detail-row { background: #fafafa; border-bottom: 2px solid #f07020; }
-.edw-acc-detail-inner { display: flex; gap: 20px; padding: 12px 16px; align-items: flex-end; flex-wrap: wrap; }
-.edw-acc-field { display: flex; flex-direction: column; gap: 5px; }
-.edw-acc-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600; }
-.edw-acc-field-notes { flex: 1; min-width: 160px; }
-.edw-acc-grade-btns { display: flex; gap: 4px; }
+/* ─── EDW — Spreadsheet Grid (Step 2 desktop) ──────────────────────────── */
+#edwSgWrap { overflow-x: auto; }
+.edw-sg {
+    display: grid;
+    grid-template-columns: 130px 1fr 84px 88px 1fr 74px 34px;
+    min-width: 640px;
+    width: 100%;
+}
+.edw-sg-th {
+    background: #f4f4f4; padding: 8px 10px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: 600;
+    border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 2;
+}
+.edw-sg-zone {
+    background: #1a1a2e; color: #fff;
+    cursor: pointer; user-select: none;
+    border-bottom: 1px solid #2a2a4e;
+}
+.edw-sg-zone-col {
+    display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.edw-sg-zone-col:hover { background: #2a2a3e; }
+.edw-sg-zone-rest {
+    background: #1a1a2e; cursor: pointer; border-bottom: 1px solid #2a2a4e;
+}
+.edw-sg-zone-rest:hover { background: #2a2a3e; }
+.edw-sg-zone-expanded {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 6px; gap: 10px;
+    border-right: 3px solid #f07020;
+}
+.edw-sg-zone-expanded:hover { background: #2a2a3e; }
+.edw-sg-zarrow { font-size: 10px; flex-shrink: 0; }
+.edw-sg-zname {
+    writing-mode: vertical-lr; transform: rotate(180deg);
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fff;
+}
+.edw-sg-asm {
+    background: #f0f0f0; padding: 4px 10px;
+    font-size: 11px; color: #888; font-weight: 600;
+    border-bottom: 1px solid #e8e8e8;
+}
+.edw-sg-part {
+    display: flex; align-items: center; padding: 6px 10px; min-height: 38px;
+    background: #fff; border-bottom: 1px solid #f0f0f0;
+}
+.edw-sg-part.sel { background: #fff8f4; }
+.edw-sg-plabel {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; font-size: 13px; color: #bbb; font-weight: 500;
+}
+.edw-sg-part.sel .edw-sg-plabel { color: #333; font-weight: 600; }
+.edw-sg-chk { accent-color: #f07020; width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.edw-sg-cell {
+    display: flex; align-items: center; padding: 6px 8px; min-height: 38px;
+    background: #fafafa; border-bottom: 1px solid #f0f0f0;
+}
+.edw-sg-cell.sel { background: #fff8f4; }
+.edw-sg-remove { background: none; border: none; color: #ccc; font-size: 20px; line-height: 1; cursor: pointer; padding: 0; }
+.edw-sg-remove:hover { color: #ef4444; }
 
 /* ─── EDW — Job Sent Screen ─────────────────────────────────────────────── */
 .edw-sent-screen { text-align: center; padding: 32px 20px; }
