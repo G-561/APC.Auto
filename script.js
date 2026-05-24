@@ -11198,15 +11198,13 @@ function _renderEdwStep1() {
             <div class="edw-field">
                 <label class="edw-label">Model *</label>
                 <select id="edwModel" class="edw-input" onchange="_edwOnModelChange()">
-                    <option value="">Select model…</option>
-                    ${v.make && VEHICLE_DB[v.make] ? Object.keys(VEHICLE_DB[v.make]).sort().map(m => `<option value="${escapeHtml(m)}"${v.model === m ? ' selected' : ''}>${escapeHtml(m)}</option>`).join('') : ''}
+                    ${buildModelOptions(v.make, v.model)}
                 </select>
             </div>
             <div class="edw-field">
                 <label class="edw-label">Year *</label>
                 <select id="edwYear" class="edw-input" onchange="_edwSaveField('year', this.value)">
-                    <option value="">Select year…</option>
-                    ${_edwYearOptions(v.make, v.model, v.year)}
+                    ${buildYearOptionsForModel(v.make, v.model, v.year)}
                 </select>
             </div>
             <div class="edw-field">
@@ -11306,17 +11304,6 @@ function _fileToBase64(file) {
     });
 }
 
-function _edwYearOptions(make, model, selectedYear) {
-    if (!make || !model || !VEHICLE_DB[make]?.[model]) return '';
-    const range = VEHICLE_DB[make][model];
-    const start = range[0] || 1970;
-    const end   = range[1] || new Date().getFullYear();
-    let html = '';
-    for (let y = end; y >= start; y--) {
-        html += `<option value="${y}"${selectedYear == y ? ' selected' : ''}>${y}</option>`;
-    }
-    return html;
-}
 
 function _edwOnMakeChange() {
     const make = document.getElementById('edwMake')?.value;
@@ -11324,12 +11311,9 @@ function _edwOnMakeChange() {
     _edwVehicle.model = '';
     _edwVehicle.year  = '';
     const modelSel = document.getElementById('edwModel');
-    if (modelSel && VEHICLE_DB[make]) {
-        const models = Object.keys(VEHICLE_DB[make]).sort();
-        modelSel.innerHTML = `<option value="">Select model…</option>${models.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}`;
-    }
+    if (modelSel) modelSel.innerHTML = buildModelOptions(make, '');
     const yearSel = document.getElementById('edwYear');
-    if (yearSel) yearSel.innerHTML = '<option value="">Select year…</option>';
+    if (yearSel) yearSel.innerHTML = buildYearOptions('');
 }
 
 function _edwOnModelChange() {
@@ -11338,7 +11322,7 @@ function _edwOnModelChange() {
     _edwVehicle.model = model;
     _edwVehicle.year  = '';
     const yearSel = document.getElementById('edwYear');
-    if (yearSel) yearSel.innerHTML = `<option value="">Select year…</option>${_edwYearOptions(make, model, '')}`;
+    if (yearSel) yearSel.innerHTML = buildYearOptionsForModel(make, model, '');
 }
 
 function _edwSaveField(field, value) {
