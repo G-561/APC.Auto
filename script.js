@@ -11745,7 +11745,7 @@ async function _edwSendToWorkers() {
         status: 'stripping',
     }).select('id, job_token').single();
 
-    if (error || !job) { console.error('EDW job insert error:', error); showToast('Failed: ' + (error?.message || 'unknown error')); _renderEdwStep3(); return; }
+    if (error || !job) { showToast('Failed to create job'); _renderEdwStep3(); return; }
 
     const itemRows = items.map(([key, item]) => {
         const [zI, aI, pI] = key.split(':').map(Number);
