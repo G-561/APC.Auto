@@ -12461,18 +12461,24 @@ function _renderJobReviewView(job, items) {
         ? `<div class="jr-banner jr-done">Worker finished — ${done} of ${total} parts marked done. Review below and publish.</div>`
         : `<div class="jr-banner jr-pending">Stripping in progress — ${done} of ${total} parts done so far. You can publish any time.</div>`;
 
+    const condMap   = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
     const cards = items.map(item => {
         const photos = (item.worker_photos || []).map(p =>
             `<img src="${escapeHtml(p)}" class="edw-review-photo" alt="part photo">`
+        ).join('');
+        const grade = item.grade || 'B';
+        const autoDesc = `${gradeLabel[grade] || 'Good Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact seller for more details.`;
+        const descVal  = escapeHtml(item.notes || autoDesc);
+        const gradeOpts = ['A','B','C','D'].map(g =>
+            `<option value="${g}" ${grade === g ? 'selected' : ''}>${g} — ${gradeLabel[g]}</option>`
         ).join('');
         return `
         <div class="edw-review-card" id="jrcard-${item.id}">
             <div class="edw-review-card-top">
                 <div class="edw-review-part-name">${escapeHtml(item.part_name)}</div>
-                <span class="edw-review-grade grade-${item.grade || 'B'}">${item.grade || 'B'} — ${gradeLabel[item.grade] || ''}</span>
+                <select class="edw-grade-select grade-${grade}" onchange="_jrUpdateGrade(${item.id}, this.value, this)">${gradeOpts}</select>
             </div>
             <div class="edw-review-title">${escapeHtml(item.assembly)} › ${escapeHtml(item.zone)}</div>
-            ${item.notes ? `<div class="edw-review-notes">${escapeHtml(item.notes)}</div>` : ''}
             ${photos ? `<div class="edw-review-photos">${photos}</div>` : `<div class="edw-review-no-photo">No photos yet</div>`}
             <div class="edw-price-row">
                 <span class="edw-price-lbl">Price $</span>
@@ -12480,6 +12486,7 @@ function _renderJobReviewView(job, items) {
                     value="${item.price || ''}" oninput="_jrUpdatePrice(${item.id}, this.value)">
                 <button class="edw-remove-btn" onclick="_jrRemoveItem(${item.id}, this)">Remove</button>
             </div>
+            <textarea class="edw-review-desc" rows="2" oninput="_jrUpdateDesc(${item.id}, this.value)">${descVal}</textarea>
         </div>`;
     }).join('');
 
@@ -12504,6 +12511,18 @@ function _renderJobReviewView(job, items) {
 function _jrUpdatePrice(itemId, val) {
     const item = window._jrItems?.find(i => i.id === itemId);
     if (item) item.price = val ? Number(val) : null;
+}
+
+function _jrUpdateGrade(itemId, val, selectEl) {
+    const item = window._jrItems?.find(i => i.id === itemId);
+    if (!item) return;
+    item.grade = val;
+    if (selectEl) selectEl.className = `edw-grade-select grade-${val}`;
+}
+
+function _jrUpdateDesc(itemId, val) {
+    const item = window._jrItems?.find(i => i.id === itemId);
+    if (item) item.notes = val;
 }
 
 function _jrRemoveItem(itemId, btn) {
