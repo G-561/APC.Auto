@@ -6770,6 +6770,8 @@ header {
 .job-status-stripping { background: #fef9c3; color: #92400e; }
 .job-status-ready { background: #dcfce7; color: #15803d; }
 .dash-job-arrow { color: #ccc; font-size: 18px; flex-shrink: 0; }
+.dash-job-qr-btn { flex-shrink: 0; padding: 4px 10px; background: #f4f4f4; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; font-weight: 700; color: #555; cursor: pointer; }
+.dash-job-qr-btn:hover { background: #e8e8e8; }
 
 /* ─── Job Review — worker photos + banners ──────────────────────────────── */
 .edw-review-photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }

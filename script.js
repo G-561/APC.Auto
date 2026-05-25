@@ -12162,6 +12162,29 @@ function _edwCopyJobUrl(url) {
     navigator.clipboard?.writeText(url).then(() => showToast('Link copied')).catch(() => showToast('Copy failed'));
 }
 
+function showJobQr(jobToken) {
+    const url   = `${location.origin}${location.pathname}?job=${jobToken}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+    const existing = document.getElementById('jobQrOverlay');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.id = 'jobQrOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    el.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:24px 20px;max-width:300px;width:90%;text-align:center;">
+            <div style="font-weight:700;font-size:15px;margin-bottom:4px;">Worker Job Link</div>
+            <div style="color:#888;font-size:12px;margin-bottom:16px;">Scan or share to resume this job</div>
+            <img src="${qrUrl}" width="220" height="220" alt="Job QR code" style="display:block;margin:0 auto 16px;">
+            <div style="background:#f4f4f4;border-radius:8px;padding:10px;font-size:11px;word-break:break-all;color:#333;margin-bottom:16px;">${escapeHtml(url)}</div>
+            <div style="display:flex;gap:8px;">
+                <button onclick="_edwCopyJobUrl('${escapeHtml(url)}')" style="flex:1;padding:12px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;">Copy Link</button>
+                <button onclick="document.getElementById('jobQrOverlay').remove()" style="flex:1;padding:12px;background:#eee;color:#333;border:none;border-radius:8px;font-weight:700;font-size:14px;">Close</button>
+            </div>
+        </div>`;
+    el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+    document.body.appendChild(el);
+}
+
 // ─── WORKER VIEW ──────────────────────────────────────────────────────────
 
 let _wJob   = null;
@@ -12336,7 +12359,7 @@ async function renderDashJobs() {
     if (!card || !sb || !currentUserId) return;
 
     const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, make, model, year, series, stock_number, status, created_at')
+        .select('id, make, model, year, series, stock_number, status, created_at, job_token')
         .eq('user_id', currentUserId)
         .in('status', ['stripping', 'ready'])
         .order('created_at', { ascending: false })
@@ -12351,12 +12374,16 @@ async function renderDashJobs() {
     const rows = jobs.map(j => {
         const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
         const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        const qrBtn = j.job_token
+            ? `<button class="dash-job-qr-btn" onclick="event.stopPropagation();showJobQr('${escapeHtml(j.job_token)}')" title="Show QR code">QR</button>`
+            : '';
         return `
         <div class="dash-job-row" onclick="openJobReview(${j.id})">
             <div class="dash-job-info">
                 <div class="dash-job-title">${escapeHtml(title)}</div>
                 <div class="dash-job-meta">${j.stock_number ? escapeHtml(j.stock_number) + ' · ' : ''}${date}</div>
             </div>
+            ${qrBtn}
             <span class="dash-job-status ${statusCls[j.status] || ''}">${statusLabel[j.status] || j.status}</span>
             <span class="dash-job-arrow">›</span>
         </div>`;
