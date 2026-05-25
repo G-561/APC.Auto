@@ -11612,30 +11612,31 @@ function _buildPanelParts(zI, aI) {
         const checked = !!item;
         return `
         <div class="edw-panel-part${checked ? ' checked' : ''}">
-            <label class="edw-part-check">
-                <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${pI},this.checked)">
-                <span class="edw-part-name">${escapeHtml(part)}</span>
-            </label>
+            <div class="edw-pcell edw-pcell-name">
+                <label class="edw-part-check">
+                    <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${pI},this.checked)">
+                    <span class="edw-part-name">${escapeHtml(part)}</span>
+                </label>
+            </div>
             ${checked ? `
-            <div class="edw-part-detail">
-                <div class="edw-grade-row">
-                    ${['A','B','C','D'].map(g => `<button class="edw-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwSetGrade('${key}',${zI},'${g}')">${g}</button>`).join('')}
-                    <span class="edw-grade-hint">${item.grade === 'A' ? 'Like new' : item.grade === 'B' ? 'Good used' : item.grade === 'C' ? 'Average' : item.grade === 'D' ? 'Damaged' : ''}</span>
-                </div>
-                <div style="display:flex;gap:8px;margin-top:6px;">
-                    <div class="edw-price-wrap" style="flex-shrink:0;">
-                        <span class="edw-price-pre">$</span>
-                        <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0"
-                            value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)">
-                    </div>
-                    <input class="edw-tbl-notes-inp" type="text" placeholder="Notes" style="flex:1;"
-                        value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)">
-                    <label class="edw-tbl-photo-lbl">
-                        <input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)">
-                        <span class="edw-tbl-photo-ico">📷</span>
-                        <span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span>
-                    </label>
-                </div>
+            <div class="edw-pcell edw-pcell-grade">
+                ${['A','B','C','D'].map(g => `<button class="edw-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwSetGrade('${key}',${zI},'${g}')">${g}</button>`).join('')}
+            </div>
+            <div class="edw-pcell edw-pcell-price">
+                <span class="edw-price-pre">$</span>
+                <input class="edw-tbl-price-inp" style="width:64px;" type="number" min="0" step="1" placeholder="0"
+                    value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)">
+            </div>
+            <div class="edw-pcell edw-pcell-notes">
+                <input class="edw-tbl-notes-inp" type="text" placeholder="Notes"
+                    value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)">
+            </div>
+            <div class="edw-pcell edw-pcell-photo">
+                <label class="edw-tbl-photo-lbl">
+                    <input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)">
+                    <span>📷</span>
+                    ${item.photos?.length ? `<span class="edw-tbl-photo-count">(${item.photos.length})</span>` : ''}
+                </label>
             </div>` : ''}
         </div>`;
     }).join('');

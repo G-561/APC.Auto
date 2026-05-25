@@ -6720,33 +6720,45 @@ header {
     display: grid;
     grid-template-columns: 170px 160px 1fr;
     grid-template-rows: 38px 1fr;
-    flex: 1;
-    overflow: hidden;
+    flex: 1 1 0%;
     min-height: 0;
+    overflow: hidden;
+    border: 1px solid #d0d0d0;
+    border-top: none;
 }
 .edw-3ph {
     display: flex; align-items: center; padding: 0 12px;
-    font-size: 10px; font-weight: 700; color: #aaa;
+    font-size: 10px; font-weight: 700; color: #777;
     letter-spacing: 0.6px; text-transform: uppercase;
-    background: #f8f8f8; border-bottom: 1px solid #eee; border-right: 1px solid #eee;
+    background: #ebebeb; border-bottom: 2px solid #ccc; border-right: 1px solid #ccc;
 }
-.edw-3pcol { overflow-y: auto; border-right: 1px solid #eee; }
+.edw-3pcol { overflow-y: auto; border-right: 1px solid #d0d0d0; }
 .edw-panel-row {
     display: flex; align-items: center; justify-content: space-between;
     padding: 10px 12px; cursor: pointer;
-    border-bottom: 1px solid #f4f4f4;
+    border-bottom: 1px solid #ddd;
     font-size: 12px; color: #444; font-weight: 600;
     text-transform: uppercase; letter-spacing: 0.3px;
 }
-.edw-panel-row:hover { background: #f9f9f9; }
+.edw-panel-row:hover { background: #f4f4f4; }
 .edw-panel-row.active { background: #fff4ec; color: #f07020; font-weight: 700; border-right: 3px solid #f07020; }
 .edw-panel-badge {
     background: #f07020; color: #fff;
     font-size: 10px; font-weight: 700; padding: 1px 6px;
     border-radius: 99px; flex-shrink: 0;
 }
-.edw-panel-part { padding: 8px 15px; border-bottom: 1px solid #f4f4f4; }
+/* Part rows — spreadsheet-style inline cells */
+.edw-panel-part { display: flex; align-items: stretch; border-bottom: 1px solid #ddd; min-height: 36px; }
 .edw-panel-part.checked { background: #fffbf7; }
+.edw-pcell {
+    display: flex; align-items: center; padding: 5px 8px;
+    border-right: 1px solid #ddd; flex-shrink: 0;
+}
+.edw-pcell-name { min-width: 180px; flex: 0 0 auto; }
+.edw-pcell-grade { gap: 2px; }
+.edw-pcell-price { gap: 3px; }
+.edw-pcell-notes { flex: 1 1 auto; }
+.edw-pcell-notes .edw-tbl-notes-inp { width: 100%; }
 .edw-panel-empty { padding: 30px 15px; color: #aaa; font-size: 13px; text-align: center; }
 
 /* ─── EDW — Job Sent Screen ─────────────────────────────────────────────── */
