@@ -11356,13 +11356,15 @@ function _renderEdwStep1() {
             </div>
             <div class="edw-field">
                 <label class="edw-label">Year *</label>
-                <select id="edwYear" class="edw-input" onchange="_edwSaveField('year', this.value)">
+                <select id="edwYear" class="edw-input" onchange="_edwOnYearChange()">
                     ${buildYearOptionsForModel(v.make, v.model, v.year)}
                 </select>
             </div>
-            <div class="edw-field">
+            <div class="edw-field" id="edwSeriesGroup" style="display:none">
                 <label class="edw-label">Series / Variant</label>
-                <input id="edwSeries" class="edw-input" type="text" placeholder="e.g. N70, GX, Workmate" value="${escapeHtml(v.series || '')}" oninput="_edwSaveField('series', this.value)">
+                <select id="edwSeries" class="edw-input" onchange="_edwSaveField('series', this.value)">
+                    <option value="">Select series…</option>
+                </select>
             </div>
             <div class="edw-field">
                 <label class="edw-label">Body Type</label>
@@ -11407,6 +11409,7 @@ function _renderEdwStep1() {
     `;
 
     footer.innerHTML = `<button class="edw-btn-primary" onclick="_edwStep1Next()">Start Walk-around →</button>`;
+    _edwRefreshSeries();
 }
 
 function _buildVehiclePhotoSlots() {
@@ -11461,22 +11464,48 @@ function _fileToBase64(file) {
 
 function _edwOnMakeChange() {
     const make = document.getElementById('edwMake')?.value;
-    _edwVehicle.make  = make;
-    _edwVehicle.model = '';
-    _edwVehicle.year  = '';
+    _edwVehicle.make   = make;
+    _edwVehicle.model  = '';
+    _edwVehicle.year   = '';
+    _edwVehicle.series = '';
     const modelSel = document.getElementById('edwModel');
     if (modelSel) modelSel.innerHTML = buildModelOptions(make, '');
     const yearSel = document.getElementById('edwYear');
     if (yearSel) yearSel.innerHTML = buildYearOptions('');
+    const grp = document.getElementById('edwSeriesGroup');
+    if (grp) grp.style.display = 'none';
 }
 
 function _edwOnModelChange() {
     const make  = document.getElementById('edwMake')?.value;
     const model = document.getElementById('edwModel')?.value;
-    _edwVehicle.model = model;
-    _edwVehicle.year  = '';
+    _edwVehicle.model  = model;
+    _edwVehicle.year   = '';
+    _edwVehicle.series = '';
     const yearSel = document.getElementById('edwYear');
     if (yearSel) yearSel.innerHTML = buildYearOptionsForModel(make, model, '');
+    const grp = document.getElementById('edwSeriesGroup');
+    if (grp) grp.style.display = 'none';
+}
+
+function _edwOnYearChange() {
+    _edwVehicle.year   = document.getElementById('edwYear')?.value || '';
+    _edwVehicle.series = '';
+    _edwRefreshSeries();
+}
+
+function _edwRefreshSeries() {
+    const grp = document.getElementById('edwSeriesGroup');
+    const sel = document.getElementById('edwSeries');
+    if (!grp || !sel) return;
+    const html = buildSeriesOptions(_edwVehicle.make, _edwVehicle.model, _edwVehicle.year, _edwVehicle.series || '');
+    if (html) {
+        sel.innerHTML = html;
+        grp.style.display = '';
+    } else {
+        grp.style.display = 'none';
+        _edwVehicle.series = '';
+    }
 }
 
 function _edwSaveField(field, value) {
