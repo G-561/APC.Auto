@@ -1603,10 +1603,19 @@ header {
     margin: 0 0 4px 0;
 }
 
-.item-loc { 
-    font-size: 9px; 
-    color: #888; 
-    font-weight: 700; 
+.item-loc {
+    font-size: 9px;
+    color: #888;
+    font-weight: 700;
+}
+.item-fits {
+    font-size: 9px;
+    font-weight: 700;
+    color: #f07020;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
 }
 
 /* Mobile: hide account pill zone (profile goes to bottom nav circle) */

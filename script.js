@@ -3865,6 +3865,11 @@ function buildCardHTML(part, eager = false) {
         ? `<div class="card-pending-banner">PENDING</div>`
         : '';
 
+    const fit = part.fits?.[0];
+    const fitsLine = fit
+        ? `<div class="item-fits">${escapeHtml(fit.make)} ${escapeHtml(fit.model)}${part.year ? ' · ' + part.year : ''}</div>`
+        : '';
+
     return `
         <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
@@ -3875,6 +3880,7 @@ function buildCardHTML(part, eager = false) {
                     ${tradeBadge}${fittingLabel}
                 </div>
                 <div class="item-title">${escapeHtml(part.title)}</div>
+                ${fitsLine}
                 <div class="item-loc">${locationHTML}</div>
             </div>
             ${savedDot}
