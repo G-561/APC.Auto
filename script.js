@@ -11398,7 +11398,7 @@ function _renderEdwStep1() {
                 <input id="edwOdo" class="edw-input" type="number" placeholder="e.g. 187000" value="${v.odometer || ''}" oninput="_edwSaveField('odometer', this.value)">
             </div>
             <div class="edw-field">
-                <label class="edw-label">Build Date</label>
+                <label class="edw-label">Build Date (compliance plate)</label>
                 <input id="edwBuild" class="edw-input" type="text" placeholder="e.g. 08/2018" value="${escapeHtml(v.buildDate || '')}" oninput="_edwSaveField('buildDate', this.value)">
             </div>
         </div>
