@@ -12002,6 +12002,8 @@ async function _edwPublish() {
 
         const { data: listing } = await sb.from('listings').insert({
             seller_id: currentUserId,
+            seller_name: currentUserName || null,
+            apc_id: generateApcId(),
             title,
             price,
             category: zone.apcCategory,
@@ -12011,6 +12013,8 @@ async function _edwPublish() {
             fits_year: Number(v.year),
             chassis_vin: v.vin || null,
             stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
+            location: userSettings.location || null,
+            postcode: userSettings.postcode || null,
             is_pro_listing: true,
         }).select('id').single();
 
@@ -12468,11 +12472,16 @@ async function _jrPublish(jobId) {
         const category = zoneData?.apcCategory || 'general';
         const title    = `${item.part_name} to suit ${vehicleTitle}`;
         const { data: listing } = await sb.from('listings').insert({
-            seller_id: currentUserId, title, price: item.price || 0,
+            seller_id: currentUserId,
+            seller_name: currentUserName || null,
+            apc_id: generateApcId(),
+            title, price: item.price || 0,
             category, condition: condMap[item.grade] || 'good',
             status: 'active', description: item.notes || '',
             fits_year: Number(job.year), chassis_vin: job.vin || null,
             stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
+            location: userSettings.location || null,
+            postcode: userSettings.postcode || null,
         }).select('id').single();
 
         if (listing?.id) {
