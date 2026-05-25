@@ -1470,11 +1470,11 @@ const EDW_TAXONOMY = [
         zone: 'Doors',
         apcCategory: 'body',
         assemblies: [
-            { name: 'Left Front Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Mirror', 'Mirror Glass', 'Mirror Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)', 'Window Switch'] },
-            { name: 'Right Front Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Mirror', 'Mirror Glass', 'Mirror Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)', 'Window Switch'] },
-            { name: 'Left Rear Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)'] },
-            { name: 'Right Rear Door', parts: ['Complete Door Shell', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)'] },
-            { name: 'Sliding Door', parts: ['Complete Sliding Door Shell', 'Sliding Door Rail Kit', 'Window Glass', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal'] },
+            { name: 'Left Front Door', parts: ['Complete Door', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Mirror', 'Mirror Glass', 'Mirror Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)', 'Window Switch'] },
+            { name: 'Right Front Door', parts: ['Complete Door', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Mirror', 'Mirror Glass', 'Mirror Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)', 'Window Switch'] },
+            { name: 'Left Rear Door', parts: ['Complete Door', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)'] },
+            { name: 'Right Rear Door', parts: ['Complete Door', 'Door Skin', 'Window Glass', 'Window Regulator — Electric', 'Window Regulator — Manual', 'Window Motor', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Lock Actuator', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal', 'Door Hinge (Upper)', 'Door Hinge (Lower)'] },
+            { name: 'Sliding Door', parts: ['Complete Sliding Door', 'Sliding Door Rail Kit', 'Window Glass', 'Door Handle (Outer)', 'Door Handle (Inner)', 'Door Lock / Latch', 'Door Card / Trim Panel', 'Door Weatherstrip / Seal'] },
             { name: 'Tailgate Door', parts: ['Complete Tailgate', 'Window Glass (Rear)', 'Tailgate Lock / Latch', 'Tailgate Handle', 'Tailgate Struts', 'Tailgate Hinges'] },
         ]
     },
@@ -12023,7 +12023,7 @@ async function _edwPublish() {
             category: zone.apcCategory,
             condition: gradeToCondition[item.grade] || 'good',
             status: 'active',
-            description: item.notes || `${gradeLabel[item.grade] || 'Used'} condition ${part} removed from a ${vehicleTitle}. Contact seller for more details.`,
+            description: item.notes || `${gradeLabel[item.grade] || 'Used'} condition ${part} removed from a ${vehicleTitle}. Contact us for more details.`,
             fits_year: Number(v.year),
             chassis_vin: v.vin || null,
             stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
@@ -12467,7 +12467,7 @@ function _renderJobReviewView(job, items) {
             `<img src="${escapeHtml(p)}" class="edw-review-photo" alt="part photo">`
         ).join('');
         const grade = item.grade || 'B';
-        const autoDesc = `${gradeLabel[grade] || 'Good Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact seller for more details.`;
+        const autoDesc = `${gradeLabel[grade] || 'Good Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact us for more details.`;
         const descVal  = escapeHtml(item.notes || autoDesc);
         const gradeOpts = ['A','B','C','D'].map(g =>
             `<option value="${g}" ${grade === g ? 'selected' : ''}>${g} — ${gradeLabel[g]}</option>`
@@ -12554,7 +12554,7 @@ async function _jrPublish(jobId) {
             apc_id: generateApcId(),
             title, price: item.price || 0,
             category, condition: condMap[item.grade] || 'good',
-            status: 'active', description: item.notes || `${gradeLabelJR[item.grade] || 'Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact seller for more details.`,
+            status: 'active', description: item.notes || `${gradeLabelJR[item.grade] || 'Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact us for more details.`,
             fits_year: Number(job.year), chassis_vin: job.vin || null,
             stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
             location: userSettings.location || null,
