@@ -4437,11 +4437,19 @@ async function deleteListing(id) {
     showToast('Listing deleted');
     if (part.supabaseId) {
         try {
-            await sb.from('listing_images').delete().eq('listing_id', part.supabaseId);
-            await sb.from('listing_vehicles').delete().eq('listing_id', part.supabaseId);
-            await sb.from('dismantling_items').update({ listing_id: null }).eq('listing_id', part.supabaseId);
-            const { error } = await sb.from('listings').delete().eq('id', part.supabaseId);
-            if (error) console.warn('Supabase listings delete error:', error.message, error.details);
+            const sid = part.supabaseId;
+            await sb.from('listing_images').delete().eq('listing_id', sid);
+            await sb.from('listing_vehicles').delete().eq('listing_id', sid);
+            await sb.from('dismantling_items').update({ listing_id: null }).eq('listing_id', sid);
+            await sb.from('offers').delete().eq('listing_id', sid);
+            const { data: convRows } = await sb.from('conversations').select('id').eq('listing_id', sid);
+            if (convRows?.length) {
+                const convIds = convRows.map(c => c.id);
+                await sb.from('messages').delete().in('conversation_id', convIds);
+                await sb.from('conversations').delete().in('id', convIds);
+            }
+            const { error } = await sb.from('listings').delete().eq('id', sid);
+            if (error) console.warn('Supabase listings delete error:', error.message, error.details, error.hint);
         } catch (e) { console.warn('Supabase delete error:', e); }
     }
 }
