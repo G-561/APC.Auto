@@ -5116,8 +5116,8 @@ function openEditListing(listingId) {
     const uToggle = document.getElementById('sellUniversalToggle');
     if (uToggle) uToggle.checked = isUniversal;
     renderSellVehicleChip();
-    document.getElementById('sellPostcode').value = listing.postcode || '';
-    document.getElementById('sellLocation').value = listing.loc || '';
+    document.getElementById('sellPostcode').value = listing.postcode || userSettings.postcode || '';
+    document.getElementById('sellLocation').value = listing.loc     || userSettings.location || '';
     document.getElementById('sellPickup').checked = !!listing.pickup;
     document.getElementById('sellPostage').checked = !!listing.postage;
     document.getElementById('sellPrice').value = listing.price ?? '';
