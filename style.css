@@ -6437,8 +6437,17 @@ header {
 }
 
 /* Assembly & parts */
-.edw-assembly { padding: 10px 15px 4px; }
-.edw-assembly-name { font-size: 11px; font-weight: 700; color: #f07020; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+.edw-assembly { border-bottom: 1px solid #eee; }
+.edw-assembly-hdr { display: flex; align-items: center; justify-content: space-between; padding: 11px 15px; cursor: pointer; background: #fafafa; }
+.edw-assembly-hdr.active { background: #fff4ec; }
+.edw-assembly-hdr.active .edw-assembly-name { color: #f07020; }
+.edw-assembly-name { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.4px; }
+.edw-asm-hdr-right { display: flex; align-items: center; gap: 6px; }
+.edw-asm-badge { background: #f07020; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 99px; }
+.edw-asm-arrow { color: #aaa; font-size: 12px; }
+.edw-assembly-hdr.active .edw-asm-arrow { color: #f07020; }
+.edw-part-row { padding: 7px 15px; border-bottom: 1px solid #f4f4f4; }
+.edw-part-row:last-child { border-bottom: none; }
 .edw-part-row { padding: 7px 0; border-bottom: 1px solid #f4f4f4; }
 .edw-part-row:last-child { border-bottom: none; }
 .edw-part-row.checked { background: #fffaf7; border-radius: 6px; padding: 7px 8px; margin: 0 -8px; }

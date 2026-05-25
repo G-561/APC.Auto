@@ -11268,6 +11268,7 @@ let _edwVehicle       = {};
 let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, photos: [] }
 let _edwStep          = 1;
 let _edwSelectedZone  = 0;
+let _edwSelectedAsm   = 0;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
 let _edwActiveZone = null; // currently expanded zone index in step 2 grid
 let _edwActiveAsm  = null; // currently expanded assembly index within active zone
@@ -11723,43 +11724,59 @@ function _buildZoneNav() {
 
 function _edwSelectZone(zI) {
     _edwSelectedZone = zI;
+    _edwSelectedAsm  = 0;
     const nav = document.getElementById('edwZoneNav');
     if (nav) nav.innerHTML = _buildZoneNav();
     const detail = document.getElementById('edwZoneDetail');
     if (detail) { detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[zI], zI); detail.scrollTop = 0; }
 }
 
+function _edwSelectAsm(aI) {
+    _edwSelectedAsm = aI;
+    const detail = document.getElementById('edwZoneDetail');
+    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
+}
+
 function _buildAssemblies(zone, zI) {
-    return zone.assemblies.map((asm, aI) => `
-        <div class="edw-assembly">
-            <div class="edw-assembly-name">${escapeHtml(asm.name)}</div>
-            ${asm.parts.map((part, pI) => {
-                const key   = `${zI}:${aI}:${pI}`;
-                const item  = _edwItems[key];
-                const checked = !!item;
-                return `
-                    <div class="edw-part-row${checked ? ' checked' : ''}">
-                        <label class="edw-part-check">
-                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}', ${zI}, ${aI}, ${pI}, this.checked)">
-                            <span class="edw-part-name">${escapeHtml(part)}</span>
+    return zone.assemblies.map((asm, aI) => {
+        const isOpen   = _edwSelectedAsm === aI;
+        const asmCount = asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length;
+        const parts = isOpen ? asm.parts.map((part, pI) => {
+            const key     = `${zI}:${aI}:${pI}`;
+            const item    = _edwItems[key];
+            const checked = !!item;
+            return `
+                <div class="edw-part-row${checked ? ' checked' : ''}">
+                    <label class="edw-part-check">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}', ${zI}, ${aI}, ${pI}, this.checked)">
+                        <span class="edw-part-name">${escapeHtml(part)}</span>
+                    </label>
+                    ${checked ? `
+                    <div class="edw-part-detail">
+                        <div class="edw-grade-row">
+                            ${['A','B','C','D'].map(g => `<button class="edw-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwSetGrade('${key}',${zI},'${g}')">${g}</button>`).join('')}
+                            <span class="edw-grade-hint">${item.grade === 'A' ? 'Like new' : item.grade === 'B' ? 'Good used' : item.grade === 'C' ? 'Average' : item.grade === 'D' ? 'Damaged' : 'Select grade'}</span>
+                        </div>
+                        <input class="edw-notes-input" type="text" placeholder="Notes (optional)" value="${escapeHtml(item.notes || '')}" oninput="_edwSetNotes('${key}', this.value)">
+                        <label class="edw-part-photo-btn">
+                            <input type="file" accept="image/*" multiple style="display:none" onchange="_edwAddPartPhoto('${key}', this)">
+                            <span>+ Photos${item.photos?.length ? ` (${item.photos.length})` : ''}</span>
                         </label>
-                        ${checked ? `
-                        <div class="edw-part-detail">
-                            <div class="edw-grade-row">
-                                ${['A','B','C','D'].map(g => `<button class="edw-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwSetGrade('${key}',${zI},'${g}')">${g}</button>`).join('')}
-                                <span class="edw-grade-hint">${item.grade === 'A' ? 'Like new' : item.grade === 'B' ? 'Good used' : item.grade === 'C' ? 'Average' : item.grade === 'D' ? 'Damaged' : 'Select grade'}</span>
-                            </div>
-                            <input class="edw-notes-input" type="text" placeholder="Notes (optional)" value="${escapeHtml(item.notes || '')}" oninput="_edwSetNotes('${key}', this.value)">
-                            <label class="edw-part-photo-btn">
-                                <input type="file" accept="image/*" multiple style="display:none" onchange="_edwAddPartPhoto('${key}', this)">
-                                <span>+ Photos${item.photos?.length ? ` (${item.photos.length})` : ''}</span>
-                            </label>
-                        </div>` : ''}
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `).join('');
+                    </div>` : ''}
+                </div>`;
+        }).join('') : '';
+        return `
+        <div class="edw-assembly">
+            <div class="edw-assembly-hdr${isOpen ? ' active' : ''}" onclick="_edwSelectAsm(${aI})">
+                <span class="edw-assembly-name">${escapeHtml(asm.name)}</span>
+                <div class="edw-asm-hdr-right">
+                    ${asmCount ? `<span class="edw-asm-badge">${asmCount}</span>` : ''}
+                    <span class="edw-asm-arrow">${isOpen ? '▾' : '▸'}</span>
+                </div>
+            </div>
+            ${parts}
+        </div>`;
+    }).join('');
 }
 
 function _edwTogglePart(key, zI, aI, pI, checked) {
