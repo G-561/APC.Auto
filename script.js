@@ -12345,14 +12345,17 @@ async function _wSubmitForReview() {
     if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
 
     const { data: ok, error } = await sb.rpc('submit_job_for_review', { p_token: _wJob.job_token });
+    console.log('submit_job_for_review result:', { ok, error, token: _wJob.job_token });
     if (error || !ok) {
         if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review →'; }
         const app = document.getElementById('workerApp');
         if (app) {
             const errBanner = app.querySelector('.w-submit-error') || document.createElement('div');
             errBanner.className = 'w-submit-error';
-            errBanner.textContent = 'Submit failed — please try again or contact your manager.';
-            errBanner.style.cssText = 'color:#ef4444;font-size:13px;text-align:center;padding:10px;';
+            errBanner.textContent = error
+                ? `Submit failed: ${error.message || error.code || JSON.stringify(error)}`
+                : `Submit failed — job may already be submitted or token mismatch. Token: ${_wJob.job_token}`;
+            errBanner.style.cssText = 'color:#ef4444;font-size:12px;text-align:center;padding:10px;word-break:break-all;';
             btn?.parentNode?.appendChild(errBanner);
         }
         return;
