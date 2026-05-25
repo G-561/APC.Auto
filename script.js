@@ -3100,8 +3100,7 @@ function openItemPreview(part) {
         <div class="iip-title">${escapeHtml(part.title)}</div>
         <div class="iip-delivery">${deliveryBadges}${locHtml}</div>
         ${fitmentHtml}
-        <div class="iip-section-label">Description</div>
-        <div class="iip-description">${escapeHtml(part.description || 'Fully functional part. Tested and ready for installation.')}</div>
+        ${part.description ? `<div class="iip-section-label">Description</div><div class="iip-description">${escapeHtml(part.description)}</div>` : ''}
         ${part.apcId ? `<div class="iip-apc-id">Item ID: ${part.apcId}</div>` : ''}
     `;
 
@@ -5765,7 +5764,14 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     }
     safeText(document.getElementById('detailLoc'), part.loc);
     safeText(document.getElementById('chatPartnerName'), part.seller);
-    safeText(document.getElementById('detailDescription'), part.description || 'Fully functional part. Tested and ready for installation.');
+    const descSection = document.getElementById('detailDescriptionSection');
+    const descEl      = document.getElementById('detailDescription');
+    if (part.description) {
+        safeText(descEl, part.description);
+        if (descSection) descSection.style.display = '';
+    } else {
+        if (descSection) descSection.style.display = 'none';
+    }
     syncDetailSaveButton(part.supabaseId || part.id);
 
     // Show "Make an Offer" button only when the part has offers enabled and the viewer isn't the seller
