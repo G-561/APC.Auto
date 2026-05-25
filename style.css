@@ -6486,6 +6486,9 @@ header {
     font-size: 15px; font-weight: 700; color: #333; box-sizing: border-box;
 }
 .edw-price-input:focus { outline: none; border-color: #f07020; }
+.edw-price-input::-webkit-inner-spin-button,
+.edw-price-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.edw-price-input { -moz-appearance: textfield; }
 .edw-remove-btn {
     background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 600;
     cursor: pointer; white-space: nowrap; padding: 0;
