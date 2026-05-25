@@ -4438,7 +4438,10 @@ async function deleteListing(id) {
     if (part.supabaseId) {
         try {
             await sb.from('listing_images').delete().eq('listing_id', part.supabaseId);
-            await sb.from('listings').delete().eq('id', part.supabaseId);
+            await sb.from('listing_vehicles').delete().eq('listing_id', part.supabaseId);
+            await sb.from('dismantling_items').update({ listing_id: null }).eq('listing_id', part.supabaseId);
+            const { error } = await sb.from('listings').delete().eq('id', part.supabaseId);
+            if (error) console.warn('Supabase listings delete error:', error.message, error.details);
         } catch (e) { console.warn('Supabase delete error:', e); }
     }
 }
@@ -4653,6 +4656,8 @@ async function bulkDeleteMyListings() {
             for (const sid of supabaseIds) {
                 try {
                     await sb.from('listing_images').delete().eq('listing_id', sid);
+                    await sb.from('listing_vehicles').delete().eq('listing_id', sid);
+                    await sb.from('dismantling_items').update({ listing_id: null }).eq('listing_id', sid);
                     await sb.from('listings').delete().eq('id', sid);
                 } catch (e) { console.warn('Supabase delete error:', e); }
             }
