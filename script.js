@@ -4520,7 +4520,9 @@ function renderMyParts() {
             _myListingsTab === 'active'  ? (!p.status || p.status === 'active') :
             _myListingsTab === 'pending' ? p.status === 'pending' :
             _myListingsTab === 'sold'    ? p.status === 'sold' : true;
-        return matchTab && (!query || p.title.toLowerCase().includes(query));
+        return matchTab && (!query || p.title.toLowerCase().includes(query)
+            || (p.apcId       || '').toLowerCase().includes(query)
+            || (p.stockNumber || '').toLowerCase().includes(query));
     }).sort((a, b) => (b.date || 0) - (a.date || 0));
 
     myPartsList.innerHTML = '';
