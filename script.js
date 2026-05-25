@@ -5363,10 +5363,11 @@ async function submitSellListing() {
     const description = document.getElementById('sellDescription')?.value.trim();
 
     const missing = [];
-    if (!title)    missing.push('Title');
-    if (!category) missing.push('Category');
-    if (!price)    missing.push('Price');
-    if (!location) missing.push('Location');
+    if (!title)       missing.push('Title');
+    if (!category)    missing.push('Category');
+    if (!price)       missing.push('Price');
+    if (!location)    missing.push('Location');
+    if (!description) missing.push('Description');
     if (category && !VEHICLE_EXEMPT_CATEGORIES.includes(category) && !sellIsUniversal) {
         if (!sellVehicleSelection?.make) missing.push('Vehicle (make, model, year, series)');
     }
@@ -11981,6 +11982,7 @@ async function _edwPublish() {
     const v = _edwVehicle;
     const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
     const gradeToCondition = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
+    const gradeLabel      = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'Damaged' };
 
     // Save job record
     const { data: job } = await sb.from('dismantling_jobs').insert({
@@ -12013,7 +12015,7 @@ async function _edwPublish() {
             category: zone.apcCategory,
             condition: gradeToCondition[item.grade] || 'good',
             status: 'active',
-            description: item.notes || '',
+            description: item.notes || `${gradeLabel[item.grade] || 'Used'} condition ${part} removed from a ${vehicleTitle}. Contact seller for more details.`,
             fits_year: Number(v.year),
             chassis_vin: v.vin || null,
             stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
@@ -12468,7 +12470,8 @@ async function _jrPublish(jobId) {
     const job   = window._jrJob;
     const items = window._jrItems;
     const vehicleTitle = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}`.trim();
-    const condMap = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
+    const condMap      = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
+    const gradeLabelJR = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'Damaged' };
     let published = 0;
 
     for (const item of items) {
@@ -12481,7 +12484,7 @@ async function _jrPublish(jobId) {
             apc_id: generateApcId(),
             title, price: item.price || 0,
             category, condition: condMap[item.grade] || 'good',
-            status: 'active', description: item.notes || '',
+            status: 'active', description: item.notes || `${gradeLabelJR[item.grade] || 'Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact seller for more details.`,
             fits_year: Number(job.year), chassis_vin: job.vin || null,
             stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
             location: userSettings.location || null,
