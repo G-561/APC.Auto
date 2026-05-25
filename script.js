@@ -11548,9 +11548,9 @@ function _renderEdwStep2() {
 
 function _renderEdwStep2Table(body, footer) {
     body.style.padding       = '0';
-    body.style.overflow      = 'auto';
-    body.style.display       = '';
-    body.style.flexDirection = '';
+    body.style.overflow      = 'hidden';
+    body.style.display       = 'flex';
+    body.style.flexDirection = 'column';
 
     const v = _edwVehicle;
     const vehicleLabel = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
@@ -11561,7 +11561,14 @@ function _renderEdwStep2Table(body, footer) {
             <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
             ${v.vin ? `<div class="edw-vehicle-sub">VIN: ${escapeHtml(v.vin)}</div>` : ''}
         </div>
-        <div id="edwSgWrap">${_buildEdwGrid()}</div>
+        <div class="edw-3panel">
+            <div class="edw-3ph">Zone</div>
+            <div class="edw-3ph">Assembly</div>
+            <div class="edw-3ph">Part</div>
+            <div class="edw-3pcol" id="edwPanelZones">${_buildPanelZones()}</div>
+            <div class="edw-3pcol" id="edwPanelAsms">${_buildPanelAsms(_edwSelectedZone)}</div>
+            <div class="edw-3pcol" id="edwPanelParts">${_buildPanelParts(_edwSelectedZone, _edwSelectedAsm)}</div>
+        </div>
     `;
 
     footer.innerHTML = `
@@ -11571,111 +11578,89 @@ function _renderEdwStep2Table(body, footer) {
     `;
 }
 
-function _buildEdwGrid() {
-    let cells = '';
-    let row   = 2; // row 1 = sticky header
-
-    ['Zone', 'Assembly', 'Part', 'Grade', 'Price $', 'Notes', 'Photos', ''].forEach((h, i) => {
-        cells += `<div class="edw-sg-th" style="grid-row:1;grid-column:${i + 1}">${h}</div>`;
-    });
-
-    EDW_TAXONOMY.forEach((zone, zI) => {
-        const zoneActive = _edwActiveZone === zI;
-
-        const zoneCount = zone.assemblies.reduce((n, asm, aI) =>
-            n + asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length, 0);
-
-        if (!zoneActive) {
-            cells += `
-                <div class="edw-sg-zone edw-sg-zone-col" style="grid-row:${row};grid-column:1" onclick="_edwSelectZone(${zI})">
-                    <span class="edw-sg-zarrow">▶</span>
-                    <span>${escapeHtml(zone.zone)}</span>
-                    ${zoneCount ? `<span class="edw-sg-zone-badge">${zoneCount}</span>` : ''}
-                </div>
-                <div class="edw-sg-zone-spacer" style="grid-row:${row};grid-column:2/-1" onclick="_edwSelectZone(${zI})"></div>
-            `;
-            row++;
-        } else {
-            const zoneStart = row;
-            let zoneRows = 0;
-            zone.assemblies.forEach((asm, aI) => {
-                zoneRows += (_edwActiveAsm === aI) ? Math.max(asm.parts.length, 1) : 1;
-            });
-
-            cells += `
-                <div class="edw-sg-zone edw-sg-zone-expanded" style="grid-row:${zoneStart}/span ${zoneRows};grid-column:1" onclick="_edwSelectZone(${zI})">
-                    <span class="edw-sg-zarrow">▼</span>
-                    <span class="edw-sg-zone-tag">${escapeHtml(zone.zone)}</span>
-                    ${zoneCount ? `<span class="edw-sg-zone-badge">${zoneCount}</span>` : ''}
-                </div>
-            `;
-
-            zone.assemblies.forEach((asm, aI) => {
-                const asmActive = _edwActiveAsm === aI;
-
-                if (!asmActive) {
-                    const selCount = asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length;
-                    cells += `
-                        <div class="edw-sg-asm-col" style="grid-row:${row};grid-column:2" onclick="_edwSelectAsm(${aI})">
-                            <span class="edw-sg-aarrow">▶</span>
-                            <span>${escapeHtml(asm.name)}</span>
-                            ${selCount ? `<span class="edw-sg-asm-badge">${selCount}</span>` : ''}
-                        </div>
-                        <div class="edw-sg-spacer" style="grid-row:${row};grid-column:3/-1" onclick="_edwSelectAsm(${aI})"></div>
-                    `;
-                    row++;
-                } else {
-                    const partCount = asm.parts.length;
-                    cells += `
-                        <div class="edw-sg-asm-exp" style="grid-row:${row}/span ${partCount};grid-column:2" onclick="_edwSelectAsm(${aI})">
-                            <span class="edw-sg-aarrow">▼</span>
-                            <span class="edw-sg-aname">${escapeHtml(asm.name)}</span>
-                        </div>
-                    `;
-
-                    asm.parts.forEach((part, pI) => {
-                        const key  = `${zI}:${aI}:${pI}`;
-                        const item = _edwItems[key];
-                        const sel  = !!item;
-                        const sc   = sel ? ' sel' : '';
-
-                        cells += `
-                            <div class="edw-sg-part${sc}" style="grid-row:${row};grid-column:3">
-                                <label class="edw-sg-plabel">
-                                    <input type="checkbox" class="edw-sg-chk" ${sel ? 'checked' : ''} onchange="_edwGridToggle('${key}',${zI},${aI},${pI},this.checked)">
-                                    <span>${escapeHtml(part)}</span>
-                                </label>
-                            </div>
-                            <div class="edw-sg-cell edw-sg-grade-cell${sc}" id="edwgg-${key}" style="grid-row:${row};grid-column:4">
-                                ${['A','B','C','D'].map(g => `<button class="edw-tbl-grade-btn${sel && item.grade === g ? ' active' : ''}" ${sel ? `onclick="_edwGridGrade('${key}','${g}')"` : 'disabled'}>${g}</button>`).join('')}
-                            </div>
-                            <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:5">
-                                <div class="edw-price-wrap">
-                                    <span class="edw-price-pre">$</span>
-                                    <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0"
-                                        ${sel ? `value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)"` : 'disabled'}>
-                                </div>
-                            </div>
-                            <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:6">
-                                <input class="edw-tbl-notes-inp" type="text" placeholder="Notes"
-                                    ${sel ? `value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)"` : 'disabled'}>
-                            </div>
-                            <div class="edw-sg-cell${sc}" id="edwgph-${key}" style="grid-row:${row};grid-column:7">
-                                ${sel ? `<label class="edw-tbl-photo-lbl"><input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)"><span class="edw-tbl-photo-ico">📷</span><span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span></label>` : `<span class="edw-sg-photo-dis">📷</span>`}
-                            </div>
-                            <div class="edw-sg-cell${sc}" style="grid-row:${row};grid-column:8">
-                                ${sel ? `<button class="edw-sg-remove" onclick="_edwGridRemove('${key}',event)">×</button>` : ''}
-                            </div>
-                        `;
-                        row++;
-                    });
-                }
-            });
-        }
-    });
-
-    return `<div class="edw-sg">${cells}</div>`;
+function _buildPanelZones() {
+    return EDW_TAXONOMY.map((zone, zI) => {
+        const count  = Object.keys(_edwItems).filter(k => k.startsWith(zI + ':')).length;
+        const active = _edwSelectedZone === zI;
+        return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_edwSelectZonePanel(${zI})">
+            <span>${escapeHtml(zone.zone)}</span>
+            ${count ? `<span class="edw-panel-badge">${count}</span>` : ''}
+        </div>`;
+    }).join('');
 }
+
+function _buildPanelAsms(zI) {
+    const zone = EDW_TAXONOMY[zI];
+    if (!zone) return '';
+    return zone.assemblies.map((asm, aI) => {
+        const count  = asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length;
+        const active = _edwSelectedAsm === aI;
+        return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_edwSelectAsmPanel(${aI})">
+            <span>${escapeHtml(asm.name)}</span>
+            ${count ? `<span class="edw-panel-badge">${count}</span>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function _buildPanelParts(zI, aI) {
+    const zone = EDW_TAXONOMY[zI];
+    const asm  = zone?.assemblies[aI];
+    if (!asm) return `<div class="edw-panel-empty">Select an assembly</div>`;
+    return asm.parts.map((part, pI) => {
+        const key     = `${zI}:${aI}:${pI}`;
+        const item    = _edwItems[key];
+        const checked = !!item;
+        return `
+        <div class="edw-panel-part${checked ? ' checked' : ''}">
+            <label class="edw-part-check">
+                <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${pI},this.checked)">
+                <span class="edw-part-name">${escapeHtml(part)}</span>
+            </label>
+            ${checked ? `
+            <div class="edw-part-detail">
+                <div class="edw-grade-row">
+                    ${['A','B','C','D'].map(g => `<button class="edw-grade-btn${item.grade === g ? ' active' : ''}" onclick="_edwSetGrade('${key}',${zI},'${g}')">${g}</button>`).join('')}
+                    <span class="edw-grade-hint">${item.grade === 'A' ? 'Like new' : item.grade === 'B' ? 'Good used' : item.grade === 'C' ? 'Average' : item.grade === 'D' ? 'Damaged' : ''}</span>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:6px;">
+                    <div class="edw-price-wrap" style="flex-shrink:0;">
+                        <span class="edw-price-pre">$</span>
+                        <input class="edw-tbl-price-inp" type="number" min="0" step="1" placeholder="0"
+                            value="${item.price || ''}" oninput="_edwGridPrice('${key}',this.value)">
+                    </div>
+                    <input class="edw-tbl-notes-inp" type="text" placeholder="Notes" style="flex:1;"
+                        value="${escapeHtml(item.notes || '')}" oninput="_edwGridNotes('${key}',this.value)">
+                    <label class="edw-tbl-photo-lbl">
+                        <input type="file" accept="image/*" multiple style="display:none" onchange="_edwGridPhoto('${key}',this)">
+                        <span class="edw-tbl-photo-ico">📷</span>
+                        <span class="edw-tbl-photo-count">${item.photos?.length ? ` (${item.photos.length})` : ''}</span>
+                    </label>
+                </div>
+            </div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function _edwSelectZonePanel(zI) {
+    _edwSelectedZone = zI;
+    _edwSelectedAsm  = 0;
+    const z = document.getElementById('edwPanelZones');
+    const a = document.getElementById('edwPanelAsms');
+    const p = document.getElementById('edwPanelParts');
+    if (z) z.innerHTML = _buildPanelZones();
+    if (a) { a.innerHTML = _buildPanelAsms(zI); a.scrollTop = 0; }
+    if (p) { p.innerHTML = _buildPanelParts(zI, 0); p.scrollTop = 0; }
+    _updateEdwFooterCount();
+}
+
+function _edwSelectAsmPanel(aI) {
+    _edwSelectedAsm = aI;
+    const a = document.getElementById('edwPanelAsms');
+    const p = document.getElementById('edwPanelParts');
+    if (a) a.innerHTML = _buildPanelAsms(_edwSelectedZone);
+    if (p) { p.innerHTML = _buildPanelParts(_edwSelectedZone, aI); p.scrollTop = 0; }
+}
+
 
 function _renderEdwStep2MasterDetail(body, footer) {
     body.style.padding       = '0';
@@ -11785,18 +11770,13 @@ function _edwTogglePart(key, zI, aI, pI, checked) {
     } else {
         delete _edwItems[key];
     }
-    const detail = document.getElementById('edwZoneDetail');
-    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
-    const nav = document.getElementById('edwZoneNav');
-    if (nav) nav.innerHTML = _buildZoneNav();
-    _updateEdwFooterCount();
+    _edwRefreshView();
 }
 
 function _edwSetGrade(key, zI, grade) {
     if (!_edwItems[key]) return;
     _edwItems[key].grade = grade;
-    const detail = document.getElementById('edwZoneDetail');
-    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
+    _edwRefreshView();
 }
 
 function _edwSetNotes(key, value) {
@@ -11809,8 +11789,23 @@ function _edwAddPartPhoto(key, input) {
     Array.from(input.files).forEach(file => {
         _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) });
     });
+    _edwRefreshView();
+}
+
+function _edwRefreshView() {
+    // Desktop 3-panel
+    const z = document.getElementById('edwPanelZones');
+    const a = document.getElementById('edwPanelAsms');
+    const p = document.getElementById('edwPanelParts');
+    if (z) z.innerHTML = _buildPanelZones();
+    if (a) a.innerHTML = _buildPanelAsms(_edwSelectedZone);
+    if (p) p.innerHTML = _buildPanelParts(_edwSelectedZone, _edwSelectedAsm);
+    // Mobile 2-panel
     const detail = document.getElementById('edwZoneDetail');
     if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
+    const nav = document.getElementById('edwZoneNav');
+    if (nav) nav.innerHTML = _buildZoneNav();
+    _updateEdwFooterCount();
 }
 
 function _updateEdwFooterCount() {

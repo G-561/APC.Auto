@@ -6715,6 +6715,40 @@ header {
 .edw-sg-remove { background: none; border: none; color: #ccc; font-size: 20px; line-height: 1; cursor: pointer; padding: 0; }
 .edw-sg-remove:hover { color: #ef4444; }
 
+/* ─── EDW — 3-Panel Master-Detail (Step 2 desktop) ─────────────────────── */
+.edw-3panel {
+    display: grid;
+    grid-template-columns: 170px 160px 1fr;
+    grid-template-rows: 38px 1fr;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+.edw-3ph {
+    display: flex; align-items: center; padding: 0 12px;
+    font-size: 10px; font-weight: 700; color: #aaa;
+    letter-spacing: 0.6px; text-transform: uppercase;
+    background: #f8f8f8; border-bottom: 1px solid #eee; border-right: 1px solid #eee;
+}
+.edw-3pcol { overflow-y: auto; border-right: 1px solid #eee; }
+.edw-panel-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; cursor: pointer;
+    border-bottom: 1px solid #f4f4f4;
+    font-size: 12px; color: #444; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.3px;
+}
+.edw-panel-row:hover { background: #f9f9f9; }
+.edw-panel-row.active { background: #fff4ec; color: #f07020; font-weight: 700; border-right: 3px solid #f07020; }
+.edw-panel-badge {
+    background: #f07020; color: #fff;
+    font-size: 10px; font-weight: 700; padding: 1px 6px;
+    border-radius: 99px; flex-shrink: 0;
+}
+.edw-panel-part { padding: 8px 15px; border-bottom: 1px solid #f4f4f4; }
+.edw-panel-part.checked { background: #fffbf7; }
+.edw-panel-empty { padding: 30px 15px; color: #aaa; font-size: 13px; text-align: center; }
+
 /* ─── EDW — Job Sent Screen ─────────────────────────────────────────────── */
 .edw-sent-screen { text-align: center; padding: 32px 20px; }
 .edw-sent-qr { margin: 20px auto; display: inline-block; }
