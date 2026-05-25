@@ -1419,12 +1419,41 @@ const EDW_TAXONOMY = [
         apcCategory: 'engine',
         assemblies: [
             { name: 'Engine', parts: ['Complete Engine', 'Engine Block', 'Cylinder Head', 'Rocker Cover', 'Sump / Oil Pan', 'Timing Cover', 'Timing Chain Kit', 'Timing Belt Kit', 'Engine Mount (Left)', 'Engine Mount (Right)'] },
-            { name: 'Transmission', parts: ['Manual Gearbox', 'Automatic Gearbox', 'Transfer Case', 'Torque Converter', 'Gearbox Mount'] },
-            { name: 'Cooling', parts: ['Radiator', 'Intercooler', 'Radiator Fan (Electric)', 'Radiator Fan (Clutch)', 'Overflow / Header Tank', 'Thermostat Housing', 'Water Pump'] },
-            { name: 'Fuel System', parts: ['Fuel Tank', 'Fuel Pump (In-tank)', 'High Pressure Fuel Pump', 'Fuel Rail', 'Fuel Injectors (Set)', 'Fuel Filter (In-line)'] },
             { name: 'Air Intake', parts: ['Air Filter Box', 'Airflow Meter / MAF Sensor', 'Turbocharger', 'Supercharger', 'Intercooler Hose Kit', 'Throttle Body', 'Idle Control Valve', 'Intake Manifold'] },
             { name: 'Engine Electrics', parts: ['Alternator', 'Starter Motor', 'Engine ECU / PCM', 'Fuse Box (Engine Bay)', 'Engine Wiring Harness', 'Ignition Coil Pack', 'Distributor'] },
-            { name: 'Ancillaries', parts: ['Power Steering Pump', 'Power Steering Reservoir', 'AC Compressor', 'Brake Master Cylinder', 'Brake Booster', 'Vacuum Pump'] },
+            { name: 'Engine Ancillaries', parts: ['EGR Valve', 'EGR Cooler', 'Vacuum Pump', 'Oil Cooler', 'Oil Separator / Catch Can'] },
+        ]
+    },
+    {
+        zone: 'Transmission & Drivetrain',
+        apcCategory: 'transmission',
+        assemblies: [
+            { name: 'Gearbox', parts: ['Manual Gearbox', 'Automatic Gearbox', 'Transfer Case', 'Torque Converter', 'Gearbox Mount', 'Transmission Oil Cooler', 'Transmission Oil Pan / Sump'] },
+            { name: 'Driveshafts', parts: ['Front Driveshaft (Left)', 'Front Driveshaft (Right)', 'Rear Driveshaft (Left)', 'Rear Driveshaft (Right)', 'Propshaft (Front)', 'Propshaft (Rear)', 'Centre Bearing'] },
+            { name: 'Diff & Axles', parts: ['Diff (Front)', 'Diff (Rear)', 'Diff Centre', 'Rear Axle (Left)', 'Rear Axle (Right)', 'Front Axle (Left)', 'Front Axle (Right)'] },
+            { name: 'Clutch', parts: ['Clutch Kit (Plate, Pressure Plate, Bearing)', 'Flywheel', 'Dual Mass Flywheel', 'Clutch Master Cylinder', 'Clutch Slave Cylinder'] },
+        ]
+    },
+    {
+        zone: 'Fuel System',
+        apcCategory: 'fuel',
+        assemblies: [
+            { name: 'Fuel System', parts: ['Fuel Tank', 'Fuel Pump (In-tank)', 'High Pressure Fuel Pump', 'Fuel Rail', 'Fuel Injectors (Set)', 'Fuel Filter (In-line)', 'Fuel Pressure Regulator'] },
+        ]
+    },
+    {
+        zone: 'Cooling & Air Con',
+        apcCategory: 'cooling',
+        assemblies: [
+            { name: 'Engine Cooling', parts: ['Radiator', 'Intercooler', 'Radiator Fan (Electric)', 'Radiator Fan (Clutch)', 'Overflow / Header Tank', 'Thermostat Housing', 'Water Pump'] },
+            { name: 'Air Con & Heating', parts: ['AC Compressor', 'Condenser', 'Evaporator', 'Heater Core', 'Blower Motor', 'AC Receiver / Drier', 'Expansion Valve', 'Climate Control Module', 'Rear AC Unit'] },
+        ]
+    },
+    {
+        zone: 'Exhaust',
+        apcCategory: 'engine',
+        assemblies: [
+            { name: 'Exhaust System', parts: ['Exhaust Manifold', 'Front Pipe / Downpipe', 'Catalytic Converter', 'DPF (Diesel Particulate Filter)', 'Centre Pipe', 'Muffler / Centre Silencer', 'Rear Muffler', 'Exhaust Tips'] },
         ]
     },
     {
@@ -1492,7 +1521,7 @@ const EDW_TAXONOMY = [
         assemblies: [
             { name: 'Front Suspension', parts: ['Strut / Shock Absorber (Front Left)', 'Strut / Shock Absorber (Front Right)', 'Coil Spring (Front Left)', 'Coil Spring (Front Right)', 'Lower Control Arm (Left)', 'Lower Control Arm (Right)', 'Upper Control Arm (Left)', 'Upper Control Arm (Right)', 'Ball Joint (Front Left)', 'Ball Joint (Front Right)', 'Sway Bar (Front)', 'Sway Bar Link (Front Left)', 'Sway Bar Link (Front Right)', 'Hub / Wheel Bearing (Front Left)', 'Hub / Wheel Bearing (Front Right)'] },
             { name: 'Rear Suspension', parts: ['Shock Absorber (Rear Left)', 'Shock Absorber (Rear Right)', 'Coil Spring (Rear Left)', 'Coil Spring (Rear Right)', 'Leaf Spring (Rear Left)', 'Leaf Spring (Rear Right)', 'Trailing Arm (Left)', 'Trailing Arm (Right)', 'Panhard / Lateral Rod', 'Sway Bar (Rear)', 'Sway Bar Link (Rear Left)', 'Sway Bar Link (Rear Right)', 'Hub / Wheel Bearing (Rear Left)', 'Hub / Wheel Bearing (Rear Right)'] },
-            { name: 'Steering', parts: ['Steering Rack', 'Steering Box', 'Power Steering Rack', 'Tie Rod (Left)', 'Tie Rod (Right)', 'Drag Link', 'Steering Shaft / Intermediate Shaft', 'Steering Column'] },
+            { name: 'Steering', parts: ['Steering Rack', 'Steering Box', 'Power Steering Rack', 'Power Steering Pump', 'Power Steering Reservoir', 'Power Steering Cooler', 'Tie Rod (Left)', 'Tie Rod (Right)', 'Drag Link', 'Steering Shaft / Intermediate Shaft', 'Steering Column'] },
         ]
     },
     {
@@ -1502,29 +1531,6 @@ const EDW_TAXONOMY = [
             { name: 'Front Brakes', parts: ['Disc Rotor (Front Left)', 'Disc Rotor (Front Right)', 'Brake Caliper (Front Left)', 'Brake Caliper (Front Right)', 'Brake Pads (Front Set)'] },
             { name: 'Rear Brakes', parts: ['Disc Rotor (Rear Left)', 'Disc Rotor (Rear Right)', 'Brake Caliper (Rear Left)', 'Brake Caliper (Rear Right)', 'Brake Drum (Rear Left)', 'Brake Drum (Rear Right)', 'Brake Pads (Rear Set)', 'Brake Shoes (Rear Set)'] },
             { name: 'Brake System', parts: ['Brake Master Cylinder', 'Brake Booster', 'ABS Module / Pump', 'Handbrake / Park Brake Mechanism', 'Brake Lines (Set)'] },
-        ]
-    },
-    {
-        zone: 'Drivetrain',
-        apcCategory: 'transmission',
-        assemblies: [
-            { name: 'Driveshafts', parts: ['Front Driveshaft (Left)', 'Front Driveshaft (Right)', 'Rear Driveshaft (Left)', 'Rear Driveshaft (Right)', 'Propshaft (Front)', 'Propshaft (Rear)', 'Centre Bearing'] },
-            { name: 'Diff & Axles', parts: ['Diff (Front)', 'Diff (Rear)', 'Diff Centre', 'Rear Axle (Left)', 'Rear Axle (Right)', 'Front Axle (Left)', 'Front Axle (Right)'] },
-            { name: 'Clutch', parts: ['Clutch Kit (Plate, Pressure Plate, Bearing)', 'Flywheel', 'Dual Mass Flywheel', 'Clutch Master Cylinder', 'Clutch Slave Cylinder'] },
-        ]
-    },
-    {
-        zone: 'Exhaust',
-        apcCategory: 'engine',
-        assemblies: [
-            { name: 'Exhaust System', parts: ['Exhaust Manifold', 'Front Pipe / Downpipe', 'Catalytic Converter', 'DPF (Diesel Particulate Filter)', 'Centre Pipe', 'Muffler / Centre Silencer', 'Rear Muffler', 'Exhaust Tips'] },
-        ]
-    },
-    {
-        zone: 'Heating & AC',
-        apcCategory: 'cooling',
-        assemblies: [
-            { name: 'HVAC', parts: ['AC Compressor', 'Condenser', 'Evaporator', 'Heater Core', 'Blower Motor', 'AC Receiver / Drier', 'Expansion Valve', 'Climate Control Module', 'Rear AC Unit'] },
         ]
     },
     {
