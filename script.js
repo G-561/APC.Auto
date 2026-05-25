@@ -11419,6 +11419,7 @@ function _edwAddVehiclePhoto(index, input) {
     _edwVehiclePhotos[index].file = file;
     _edwVehiclePhotos[index].previewUrl = URL.createObjectURL(file);
     _edwVehiclePhotos[index].selected = true;
+    _fileToBase64(file).then(b64 => { _edwVehiclePhotos[index].base64 = b64; });
     const grid = document.getElementById('edwVpGrid');
     if (grid) grid.innerHTML = _buildVehiclePhotoSlots();
 }
@@ -11804,7 +11805,11 @@ function _edwGridNotes(key, value) {
 function _edwGridPhoto(key, input) {
     if (!_edwItems[key] || !input.files?.length) return;
     if (!_edwItems[key].photos) _edwItems[key].photos = [];
-    Array.from(input.files).forEach(file => _edwItems[key].photos.push({ file, previewUrl: URL.createObjectURL(file) }));
+    Array.from(input.files).forEach(file => {
+        const entry = { file, previewUrl: URL.createObjectURL(file) };
+        _edwItems[key].photos.push(entry);
+        _fileToBase64(file).then(b64 => { entry.base64 = b64; });
+    });
     const count = _edwItems[key].photos.length;
     const countSpan = document.getElementById(`edwgph-${key}`)?.querySelector('.edw-tbl-photo-count');
     if (countSpan) countSpan.textContent = ` (${count})`;
@@ -12012,13 +12017,13 @@ async function _edwPublish() {
             });
 
             // Photos: use part photos if present, otherwise selected vehicle photos
-            const partPhotos    = item.photos?.filter(p => p.file) || [];
+            const partPhotos    = item.photos?.filter(p => p.base64 || p.file) || [];
             const vehiclePhotos = partPhotos.length > 0
                 ? []
-                : _edwVehiclePhotos.filter(p => p.file && p.selected);
+                : _edwVehiclePhotos.filter(p => (p.base64 || p.file) && p.selected);
             const photosToUse = partPhotos.length > 0 ? partPhotos : vehiclePhotos;
             if (photosToUse.length) {
-                const base64s = await Promise.all(photosToUse.map(p => _fileToBase64(p.file)));
+                const base64s = await Promise.all(photosToUse.map(p => p.base64 || _fileToBase64(p.file)));
                 const urls = await uploadListingImagesToStorage(String(listing.id), base64s);
                 if (urls.length) {
                     await sb.from('listing_images').insert(
