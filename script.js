@@ -11360,7 +11360,7 @@ function _renderEdwStep1() {
                     ${buildYearOptionsForModel(v.make, v.model, v.year)}
                 </select>
             </div>
-            <div class="edw-field" id="edwSeriesGroup" style="display:none">
+            <div class="edw-field" id="edwSeriesGroup">
                 <label class="edw-label">Series / Variant</label>
                 <select id="edwSeries" class="edw-input" onchange="_edwSaveField('series', this.value)">
                     <option value="">Select series…</option>
@@ -11472,8 +11472,7 @@ function _edwOnMakeChange() {
     if (modelSel) modelSel.innerHTML = buildModelOptions(make, '');
     const yearSel = document.getElementById('edwYear');
     if (yearSel) yearSel.innerHTML = buildYearOptions('');
-    const grp = document.getElementById('edwSeriesGroup');
-    if (grp) grp.style.display = 'none';
+    _edwRefreshSeries();
 }
 
 function _edwOnModelChange() {
@@ -11484,8 +11483,7 @@ function _edwOnModelChange() {
     _edwVehicle.series = '';
     const yearSel = document.getElementById('edwYear');
     if (yearSel) yearSel.innerHTML = buildYearOptionsForModel(make, model, '');
-    const grp = document.getElementById('edwSeriesGroup');
-    if (grp) grp.style.display = 'none';
+    _edwRefreshSeries();
 }
 
 function _edwOnYearChange() {
@@ -11501,11 +11499,25 @@ function _edwRefreshSeries() {
     const html = buildSeriesOptions(_edwVehicle.make, _edwVehicle.model, _edwVehicle.year, _edwVehicle.series || '');
     if (html) {
         sel.innerHTML = html;
-        grp.style.display = '';
+        sel.style.display = '';
+        const txt = document.getElementById('edwSeriesText');
+        if (txt) txt.style.display = 'none';
     } else {
-        grp.style.display = 'none';
-        _edwVehicle.series = '';
+        sel.style.display = 'none';
+        let txt = document.getElementById('edwSeriesText');
+        if (!txt) {
+            txt = document.createElement('input');
+            txt.id = 'edwSeriesText';
+            txt.className = 'edw-input';
+            txt.type = 'text';
+            txt.placeholder = 'e.g. N70, GX, Workmate';
+            txt.addEventListener('input', () => { _edwVehicle.series = txt.value; });
+            sel.parentNode.insertBefore(txt, sel.nextSibling);
+        }
+        txt.value = _edwVehicle.series || '';
+        txt.style.display = '';
     }
+    grp.style.display = '';
 }
 
 function _edwSaveField(field, value) {
