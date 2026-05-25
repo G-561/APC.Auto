@@ -3375,15 +3375,13 @@ function contactWorkshop(workshopId) {
     showToast(`Contact request sent to ${workshop.name}`);
 }
 
-function getCurrentSellerName() {
-    return currentUserName || 'Guest Seller';
+// Business name takes precedence over display name for all tiers — one consistent name on all listings.
+function getPublicSellerName() {
+    return userSettings.businessName || currentUserName || 'Guest Seller';
 }
 
-// Returns the public-facing name for the signed-in user.
-// Pro users with a business name show that; standard users show their display name.
-function getPublicSellerName() {
-    if (currentUserTier === 'pro' && userSettings.businessName) return userSettings.businessName;
-    return currentUserName || 'Guest Seller';
+function getCurrentSellerName() {
+    return getPublicSellerName();
 }
 
 async function openStorefrontByUserId(userId) {
@@ -12002,7 +12000,7 @@ async function _edwPublish() {
 
         const { data: listing } = await sb.from('listings').insert({
             seller_id: currentUserId,
-            seller_name: currentUserName || null,
+            seller_name: getPublicSellerName(),
             apc_id: generateApcId(),
             title,
             price,
@@ -12473,7 +12471,7 @@ async function _jrPublish(jobId) {
         const title    = `${item.part_name} to suit ${vehicleTitle}`;
         const { data: listing } = await sb.from('listings').insert({
             seller_id: currentUserId,
-            seller_name: currentUserName || null,
+            seller_name: getPublicSellerName(),
             apc_id: generateApcId(),
             title, price: item.price || 0,
             category, condition: condMap[item.grade] || 'good',
