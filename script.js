@@ -12341,7 +12341,23 @@ async function _wMarkDone(itemId) {
 
 async function _wSubmitForReview() {
     if (!sb || !_wJob) return;
-    await sb.from('dismantling_jobs').update({ status: 'ready' }).eq('id', _wJob.id);
+    const btn = document.querySelector('.w-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+    const { data: ok, error } = await sb.rpc('submit_job_for_review', { p_token: _wJob.job_token });
+    if (error || !ok) {
+        if (btn) { btn.disabled = false; btn.textContent = 'Submit for Review →'; }
+        const app = document.getElementById('workerApp');
+        if (app) {
+            const errBanner = app.querySelector('.w-submit-error') || document.createElement('div');
+            errBanner.className = 'w-submit-error';
+            errBanner.textContent = 'Submit failed — please try again or contact your manager.';
+            errBanner.style.cssText = 'color:#ef4444;font-size:13px;text-align:center;padding:10px;';
+            btn?.parentNode?.appendChild(errBanner);
+        }
+        return;
+    }
+
     const app = document.getElementById('workerApp');
     if (app) app.innerHTML = `
         <div class="w-empty">
