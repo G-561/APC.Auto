@@ -11379,7 +11379,7 @@ function _renderEdwStep1() {
             </div>
             <div class="edw-field">
                 <label class="edw-label">VIN / Chassis</label>
-                <input id="edwVin" class="edw-input" type="text" placeholder="17-char VIN" value="${escapeHtml(v.vin || '')}" oninput="_edwSaveField('vin', this.value)">
+                <input id="edwVin" class="edw-input" type="text" placeholder="17-char VIN" maxlength="17" value="${escapeHtml(v.vin || '')}" oninput="_edwSaveField('vin', this.value.toUpperCase())" style="text-transform:uppercase">
             </div>
             <div class="edw-field">
                 <label class="edw-label">Paint Code</label>
