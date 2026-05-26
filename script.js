@@ -1519,8 +1519,8 @@ const EDW_TAXONOMY = [
         zone: 'Suspension & Steering',
         apcCategory: 'suspension',
         assemblies: [
-            { name: 'Front Suspension', parts: ['Strut / Shock Absorber (Front Left)', 'Strut / Shock Absorber (Front Right)', 'Coil Spring (Front Left)', 'Coil Spring (Front Right)', 'Lower Control Arm (Left)', 'Lower Control Arm (Right)', 'Upper Control Arm (Left)', 'Upper Control Arm (Right)', 'Ball Joint (Front Left)', 'Ball Joint (Front Right)', 'Sway Bar (Front)', 'Sway Bar Link (Front Left)', 'Sway Bar Link (Front Right)', 'Hub / Wheel Bearing (Front Left)', 'Hub / Wheel Bearing (Front Right)'] },
-            { name: 'Rear Suspension', parts: ['Shock Absorber (Rear Left)', 'Shock Absorber (Rear Right)', 'Coil Spring (Rear Left)', 'Coil Spring (Rear Right)', 'Leaf Spring (Rear Left)', 'Leaf Spring (Rear Right)', 'Trailing Arm (Left)', 'Trailing Arm (Right)', 'Panhard / Lateral Rod', 'Sway Bar (Rear)', 'Sway Bar Link (Rear Left)', 'Sway Bar Link (Rear Right)', 'Hub / Wheel Bearing (Rear Left)', 'Hub / Wheel Bearing (Rear Right)'] },
+            { name: 'Front Suspension', parts: ['Strut / Shock Absorber (Front Left)', 'Strut / Shock Absorber (Front Right)', 'Coil Spring (Front Left)', 'Coil Spring (Front Right)', 'Leaf Spring (Front Left)', 'Leaf Spring (Front Right)', 'Lower Control Arm (Left)', 'Lower Control Arm (Right)', 'Upper Control Arm (Left)', 'Upper Control Arm (Right)', 'Ball Joint (Front Left)', 'Ball Joint (Front Right)', 'Sway Bar (Front)', 'Sway Bar Link (Front Left)', 'Sway Bar Link (Front Right)', 'Hub / Wheel Bearing (Front Left)', 'Hub / Wheel Bearing (Front Right)'] },
+            { name: 'Rear Suspension', parts: ['Shock Absorber (Rear Left)', 'Shock Absorber (Rear Right)', 'Strut (Rear Left)', 'Strut (Rear Right)', 'Coil Spring (Rear Left)', 'Coil Spring (Rear Right)', 'Leaf Spring (Rear Left)', 'Leaf Spring (Rear Right)', 'Trailing Arm (Left)', 'Trailing Arm (Right)', 'Panhard / Lateral Rod', 'Sway Bar (Rear)', 'Sway Bar Link (Rear Left)', 'Sway Bar Link (Rear Right)', 'Hub / Wheel Bearing (Rear Left)', 'Hub / Wheel Bearing (Rear Right)'] },
             { name: 'Steering', parts: ['Steering Rack', 'Steering Box', 'Power Steering Rack', 'Power Steering Pump', 'Power Steering Reservoir', 'Power Steering Cooler', 'Tie Rod (Left)', 'Tie Rod (Right)', 'Drag Link', 'Steering Shaft / Intermediate Shaft', 'Steering Column'] },
         ]
     },
@@ -1538,7 +1538,7 @@ const EDW_TAXONOMY = [
         apcCategory: 'wheels',
         assemblies: [
             { name: 'Wheels', parts: ['Alloy Wheel (Each)', 'Steel Wheel (Each)', 'Full Set of Wheels x4', 'Spare Wheel', 'Centre Cap / Hubcap'] },
-            { name: 'Tyres', parts: ['Tyre (Each)', 'Full Set of Tyres x4', 'Spare Tyre'] },
+            { name: 'Tyres', parts: ['Tyre (Each)', 'Full Set of Tyres x4', 'Spare Tyre', 'Spare Tyre Carrier / Winch'] },
         ]
     },
     {
