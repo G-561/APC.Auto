@@ -12656,11 +12656,12 @@ async function _jrPublish(jobId) {
 
 // ─── Stock Lookup ─────────────────────────────────────────────────────────────
 
-let _slVehicle      = { make: '', model: '', year: '' };
-let _slSelectedZone = 0;
-let _slSelectedAsm  = 0;
-let _slTabs         = [];   // [{ partName, results:[], loading:false, error:null }]
-let _slActiveTab    = -1;
+let _slVehicle        = { make: '', model: '', year: '' };
+let _slSelectedZone   = 0;
+let _slSelectedAsm    = 0;
+let _slTabs           = [];   // [{ partName, results:[], loading:false, error:null }]
+let _slActiveTab      = -1;
+let _slStockDebounce  = null;
 
 function openStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
@@ -12716,11 +12717,10 @@ function _slRenderVehicleBar() {
                 ${yearOpts}
             </select>
         </div>
-        <div class="sl-veh-group">
+        <div class="sl-veh-group sl-stock-group">
             <span class="sl-veh-label">Stock No.</span>
             <input class="sl-stock-input" id="slStockInput" type="text" placeholder="e.g. VEH-001"
-                onkeydown="if(event.key==='Enter')_slSearchByStock()">
-            <button class="sl-stock-btn" onclick="_slSearchByStock()">Search</button>
+                oninput="_slStockDebounceSearch(this.value)">
         </div>`;
 }
 
@@ -12737,11 +12737,14 @@ function _slOnYearChange(val) {
     _slRenderVehicleBar();
 }
 
-async function _slSearchByStock() {
-    const input   = document.getElementById('slStockInput');
-    const stockNo = input?.value.trim();
-    if (!stockNo) { showToast('Enter a stock number'); return; }
-    if (!currentUserId || !sb) { showToast('Sign in to use Stock Lookup'); return; }
+function _slStockDebounceSearch(val) {
+    clearTimeout(_slStockDebounce);
+    if (!val.trim()) return;
+    _slStockDebounce = setTimeout(() => _slSearchByStock(val.trim()), 500);
+}
+
+async function _slSearchByStock(stockNo) {
+    if (!stockNo || !currentUserId || !sb) return;
 
     const tabName = `#${stockNo}`;
     const existing = _slTabs.findIndex(t => t.partName === tabName);
@@ -12853,24 +12856,53 @@ function _slSelectPart(partName) {
 async function _slSearch(partName, tabIdx) {
     if (!sb) return;
     const { make, model, year } = _slVehicle;
+
+    // Step 1: get listing IDs that match this make/model
+    const { data: vRows } = await sb
+        .from('listing_vehicles')
+        .select('listing_id')
+        .eq('make', make)
+        .eq('model', model);
+
+    const ids = (vRows || []).map(v => v.listing_id).filter(Boolean);
+    if (!ids.length) {
+        if (_slTabs[tabIdx]) { _slTabs[tabIdx].loading = false; _slTabs[tabIdx].results = []; }
+        if (_slActiveTab === tabIdx) _slRenderResults();
+        _slRenderTabs();
+        return;
+    }
+
+    // Step 2: fetch matching listings
     const { data, error } = await sb
         .from('listings')
         .select(`id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
-                 listing_images(storage_path, position),
-                 profiles!seller_id(display_name, is_pro),
-                 listing_vehicles!inner(make, model)`)
+                 listing_images(storage_path, position)`)
+        .in('id', ids)
         .eq('status', 'active')
         .eq('fits_year', Number(year))
         .ilike('title', `%${partName}%`)
-        .eq('listing_vehicles.make', make)
-        .eq('listing_vehicles.model', model)
         .order('created_at', { ascending: false })
         .limit(60);
+
+    // Step 3: batch-fetch seller profiles
+    let profileMap = {};
+    if (data?.length) {
+        const sellerIds = [...new Set(data.map(r => r.seller_id))].filter(Boolean);
+        if (sellerIds.length) {
+            const { data: profs } = await sb
+                .from('profiles')
+                .select('id, display_name, is_pro')
+                .in('id', sellerIds);
+            profileMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
+        }
+    }
+
+    const results = (data || []).map(r => ({ ...r, profiles: profileMap[r.seller_id] || null }));
 
     if (_slTabs[tabIdx]) {
         _slTabs[tabIdx].loading = false;
         _slTabs[tabIdx].error   = error ? error.message : null;
-        _slTabs[tabIdx].results = data || [];
+        _slTabs[tabIdx].results = results;
     }
     if (_slActiveTab === tabIdx) _slRenderResults();
     _slRenderTabs();
