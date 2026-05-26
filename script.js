@@ -8754,9 +8754,14 @@ function onOpenInbox() {
     switchInboxTab('chats');
     // Always refresh from Supabase when inbox opens — catches messages missed during realtime gaps
     if (currentUserId) loadConversationsFromSupabase(currentUserId);
-    // On desktop split-pane, auto-select the most recent conversation
+    // On desktop split-pane, auto-select the most recent conversation in the active role tab
     if (window.innerWidth >= 768 && conversations.length > 0) {
-        setTimeout(() => openInboxConv(conversations[0].id), 50);
+        const roleConvs = conversations.filter(c => {
+            if (_inboxRoleTab === 'buying')  return c.buyerId === currentUserId || (!c.buyerId && !c.sellerId);
+            if (_inboxRoleTab === 'selling') return c.sellerId === currentUserId;
+            return true;
+        });
+        if (roleConvs.length > 0) setTimeout(() => openInboxConv(roleConvs[0].id), 50);
     }
 }
 
