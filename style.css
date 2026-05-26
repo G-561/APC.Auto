@@ -6791,9 +6791,12 @@ header {
     min-width: 0;
 }
 .sl-veh-select:disabled { color: #aaa; }
+.sl-body { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; }
 .sl-selector {
-    flex-shrink: 0; height: 230px;
-    border-bottom: 2px solid #ddd;
+    flex: 0 0 550px;
+    height: 100%;
+    overflow: hidden;
+    border-right: 2px solid #ddd;
     display: flex; flex-direction: column;
 }
 /* selector reuses .edw-3panel / .edw-3ph / .edw-3pcol / .edw-panel-row classes */

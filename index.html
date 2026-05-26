@@ -13,7 +13,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=59">
+    <link rel="stylesheet" href="style.css?v=60">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -238,11 +238,13 @@
             <div class="sl-header-title">Stock Lookup</div>
         </div>
         <div class="sl-vehicle-bar" id="slVehicleBar"></div>
-        <div class="sl-selector" id="slSelector"></div>
-        <div class="sl-results-area" id="slResultsArea">
-            <div class="sl-results-empty" id="slResultsEmpty">Select a vehicle and part above to search</div>
-            <div id="slTabBar" style="display:none;"></div>
-            <div id="slResultsContent" style="display:none; overflow-y:auto; flex:1 1 0%;"></div>
+        <div class="sl-body">
+            <div class="sl-selector" id="slSelector"></div>
+            <div class="sl-results-area" id="slResultsArea">
+                <div class="sl-results-empty" id="slResultsEmpty">Select a vehicle and part to search</div>
+                <div id="slTabBar" style="display:none;"></div>
+                <div id="slResultsContent" style="display:none; overflow-y:auto; flex:1 1 0%;"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -2543,7 +2545,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=114"></script>
+<script src="script.js?v=115"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
