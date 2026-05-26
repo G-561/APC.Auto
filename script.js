@@ -12700,20 +12700,28 @@ function _slRenderVehicleBar() {
         : '<option value="">Select…</option>';
 
     bar.innerHTML = `
-        <span class="sl-veh-label">Make</span>
-        <select class="sl-veh-select" onchange="_slOnMakeChange(this.value)">
-            <option value="">Select…</option>
-            ${makes.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.make===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
-        </select>
-        <span class="sl-veh-label">Model</span>
-        <select class="sl-veh-select" onchange="_slOnModelChange(this.value)" ${models.length?'':'disabled'}>
-            <option value="">Select…</option>
-            ${models.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.model===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
-        </select>
-        <span class="sl-veh-label">Year</span>
-        <select class="sl-veh-select" onchange="_slOnYearChange(this.value)" ${(_slVehicle.make && _slVehicle.model)?'':'disabled'}>
-            ${yearOpts}
-        </select>`;
+        <div class="sl-veh-group">
+            <span class="sl-veh-label">Make</span>
+            <select class="sl-veh-select" onchange="_slOnMakeChange(this.value)">
+                <option value="">Select…</option>
+                ${makes.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.make===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
+            </select>
+            <span class="sl-veh-label">Model</span>
+            <select class="sl-veh-select" onchange="_slOnModelChange(this.value)" ${models.length?'':'disabled'}>
+                <option value="">Select…</option>
+                ${models.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.model===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
+            </select>
+            <span class="sl-veh-label">Year</span>
+            <select class="sl-veh-select" style="flex:0 0 90px;" onchange="_slOnYearChange(this.value)" ${(_slVehicle.make && _slVehicle.model)?'':'disabled'}>
+                ${yearOpts}
+            </select>
+        </div>
+        <div class="sl-veh-group">
+            <span class="sl-veh-label">Stock No.</span>
+            <input class="sl-stock-input" id="slStockInput" type="text" placeholder="e.g. VEH-001"
+                onkeydown="if(event.key==='Enter')_slSearchByStock()">
+            <button class="sl-stock-btn" onclick="_slSearchByStock()">Search</button>
+        </div>`;
 }
 
 function _slOnMakeChange(val) {
@@ -12728,6 +12736,38 @@ function _slOnYearChange(val) {
     _slVehicle.year = val;
     _slRenderVehicleBar();
 }
+
+async function _slSearchByStock() {
+    const input   = document.getElementById('slStockInput');
+    const stockNo = input?.value.trim();
+    if (!stockNo) { showToast('Enter a stock number'); return; }
+    if (!currentUserId || !sb) { showToast('Sign in to use Stock Lookup'); return; }
+
+    const tabName = `#${stockNo}`;
+    const existing = _slTabs.findIndex(t => t.partName === tabName);
+    if (existing >= 0) { _slSetActiveTab(existing); return; }
+
+    _slTabs.push({ partName: tabName, isStockSearch: true, stockNo, results: [], loading: true, error: null });
+    const idx = _slTabs.length - 1;
+    _slSetActiveTab(idx);
+
+    const { data, error } = await sb
+        .from('listings')
+        .select(`id, title, price, condition, status, stock_number, warehouse_bin, apc_id,
+                 listing_images(storage_path, position)`)
+        .eq('seller_id', currentUserId)
+        .ilike('stock_number', stockNo)
+        .order('title', { ascending: true });
+
+    if (_slTabs[idx]) {
+        _slTabs[idx].loading = false;
+        _slTabs[idx].error   = error ? error.message : null;
+        _slTabs[idx].results = data || [];
+    }
+    if (_slActiveTab === idx) _slRenderResults();
+    _slRenderTabs();
+}
+
 
 function _slRenderSelector() {
     const sel = document.getElementById('slSelector');
@@ -12905,6 +12945,35 @@ function _slRenderResults() {
     }
     if (tab.error) {
         content.innerHTML = `<div class="sl-no-results">Search error — please try again.</div>`;
+        return;
+    }
+
+    if (tab.isStockSearch) {
+        if (!tab.results.length) {
+            content.innerHTML = `<div class="sl-no-results">No listings found for stock number <strong>${escapeHtml(tab.stockNo)}</strong></div>`;
+            return;
+        }
+        const statusColour = { active: '#22c55e', pending: '#f59e0b', sold: '#888', draft: '#aaa' };
+        content.innerHTML =
+            `<div class="sl-section-hdr own"><span class="sl-section-own-pill">STOCK #${escapeHtml(tab.stockNo)}</span>${tab.results.length} part${tab.results.length!==1?'s':''} listed</div>` +
+            tab.results.map(r => {
+                const img   = (r.listing_images || []).sort((a,b) => a.position-b.position)[0]?.storage_path || '';
+                const grade = r.condition || '';
+                const gradeClass = grade ? `grade-${grade.charAt(0).toUpperCase()}` : '';
+                const bin   = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
+                const st    = r.status || '';
+                return `<div class="sl-row own">
+                    <div class="sl-cell sl-cell-thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}</div>
+                    <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
+                    <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
+                    <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
+                    <div class="sl-cell sl-cell-meta">
+                        ${bin ? `<span>${bin}</span>` : ''}
+                        ${st ? `<span style="color:${statusColour[st]||'#888'};font-weight:700;font-size:10px;text-transform:uppercase;">${escapeHtml(st)}</span>` : ''}
+                    </div>
+                    <div class="sl-cell sl-cell-btn"><button onclick="_slViewListing(${r.id})">View</button></div>
+                </div>`;
+            }).join('');
         return;
     }
 

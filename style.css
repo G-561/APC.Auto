@@ -6782,8 +6782,10 @@ header {
 .sl-vehicle-bar {
     flex-shrink: 0; background: #fff;
     border-bottom: 2px solid #ddd;
-    padding: 10px 12px; display: flex; gap: 8px; align-items: center;
+    padding: 10px 12px; display: flex; gap: 0; align-items: center;
 }
+.sl-veh-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.sl-veh-group + .sl-veh-group { padding-left: 14px; margin-left: 14px; border-left: 1px solid #ddd; }
 .sl-veh-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
 .sl-veh-select {
     flex: 1; border: 1px solid #ddd; border-radius: 6px;
@@ -6791,6 +6793,17 @@ header {
     min-width: 0;
 }
 .sl-veh-select:disabled { color: #aaa; }
+.sl-stock-input {
+    flex: 1; border: 1px solid #ddd; border-radius: 6px 0 0 6px;
+    padding: 7px 10px; font-size: 13px; color: #333; background: #f8f8f8;
+    min-width: 0; outline: none;
+}
+.sl-stock-btn {
+    flex-shrink: 0; border: none; background: #f07020; color: #fff;
+    padding: 7px 16px; border-radius: 0 6px 6px 0; font-size: 12px;
+    font-weight: 700; cursor: pointer; letter-spacing: 0.3px;
+}
+.sl-stock-btn:hover { background: #d95f10; }
 .sl-body { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; }
 .sl-selector {
     flex: 0 0 550px;
