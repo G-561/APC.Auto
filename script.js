@@ -3251,6 +3251,7 @@ function setInboxRoleTab(tab) {
             document.getElementById('inboxThreadContent').style.display = 'none';
             document.getElementById('inboxThreadEmpty').style.display = '';
             document.getElementById('inboxConvCol')?.classList.remove('slide-away');
+            refreshInboxContextPanel(null, null);
         }
     }
     renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
