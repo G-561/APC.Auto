@@ -12663,6 +12663,7 @@ let _slTabs         = [];   // [{ partName, results:[], loading:false, error:nul
 let _slActiveTab    = -1;
 
 function openStockLookup() {
+    if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
     _slVehicle = { make: '', model: '', year: '' };
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = 0;
