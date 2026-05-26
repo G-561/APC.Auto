@@ -12669,13 +12669,14 @@ function openStockLookup() {
     _slSelectedZone = 0; _slSelectedAsm = 0;
     const drawer = document.getElementById('stockLookupDrawer');
     if (!drawer) return;
-    const topBar    = document.getElementById('desktopTopBar');
-    const hdr       = document.getElementById('mainHeader');
-    const topOffset = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    const topBar     = document.getElementById('desktopTopBar');
+    const hdr        = document.getElementById('mainHeader');
+    const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
     drawer.style.top   = topOffset + 'px';
-    drawer.style.left  = '0';
-    drawer.style.right = '0';
-    drawer.style.width = '100%';
+    drawer.style.left  = sideOffset + 'px';
+    drawer.style.right = sideOffset + 'px';
+    drawer.style.width = 'auto';
     drawer.classList.add('active');
     document.body.style.overflow = 'hidden';
     _slRenderVehicleBar();
@@ -12692,10 +12693,11 @@ function closeStockLookup() {
 function _slRenderVehicleBar() {
     const bar = document.getElementById('slVehicleBar');
     if (!bar) return;
-    const makes = Object.keys(VEHICLE_DB).sort();
-    const models = _slVehicle.make ? Object.keys(VEHICLE_DB[_slVehicle.make] || {}).sort() : [];
-    const years  = (_slVehicle.make && _slVehicle.model)
-        ? _slGetYears(_slVehicle.make, _slVehicle.model) : [];
+    const makes    = Object.keys(VEHICLE_DB).sort();
+    const models   = _slVehicle.make ? getVehicleModels(_slVehicle.make) : [];
+    const yearOpts = (_slVehicle.make && _slVehicle.model)
+        ? buildYearOptionsForModel(_slVehicle.make, _slVehicle.model, _slVehicle.year)
+        : '<option value="">Select…</option>';
 
     bar.innerHTML = `
         <span class="sl-veh-label">Make</span>
@@ -12709,18 +12711,9 @@ function _slRenderVehicleBar() {
             ${models.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.model===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
         </select>
         <span class="sl-veh-label">Year</span>
-        <select class="sl-veh-select" onchange="_slOnYearChange(this.value)" ${years.length?'':'disabled'}>
-            <option value="">Select…</option>
-            ${years.map(y => `<option value="${y}"${_slVehicle.year==y?' selected':''}>${y}</option>`).join('')}
+        <select class="sl-veh-select" onchange="_slOnYearChange(this.value)" ${(_slVehicle.make && _slVehicle.model)?'':'disabled'}>
+            ${yearOpts}
         </select>`;
-}
-
-function _slGetYears(make, model) {
-    const ranges = (VEHICLE_YEAR_RANGES[make] || {})[model];
-    if (!ranges) return [];
-    const all = new Set();
-    ranges.forEach(([s, e]) => { for (let y = e; y >= s; y--) all.add(y); });
-    return [...all].sort((a, b) => b - a);
 }
 
 function _slOnMakeChange(val) {
