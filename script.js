@@ -12667,13 +12667,27 @@ function openStockLookup() {
     _slVehicle = { make: '', model: '', year: '' };
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = 0;
-    toggleDrawer('stockLookupDrawer', true);
+    const drawer = document.getElementById('stockLookupDrawer');
+    if (!drawer) return;
+    const topBar    = document.getElementById('desktopTopBar');
+    const hdr       = document.getElementById('mainHeader');
+    const topOffset = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    drawer.style.top   = topOffset + 'px';
+    drawer.style.left  = '0';
+    drawer.style.right = '0';
+    drawer.style.width = '100%';
+    drawer.classList.add('active');
+    document.body.style.overflow = 'hidden';
     _slRenderVehicleBar();
     _slRenderSelector();
     _slRenderResultsArea();
 }
 
-function closeStockLookup() { toggleDrawer('stockLookupDrawer', false); }
+function closeStockLookup() {
+    const drawer = document.getElementById('stockLookupDrawer');
+    if (drawer) drawer.classList.remove('active');
+    document.body.style.overflow = '';
+}
 
 function _slRenderVehicleBar() {
     const bar = document.getElementById('slVehicleBar');
