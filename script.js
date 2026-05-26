@@ -12654,6 +12654,291 @@ async function _jrPublish(jobId) {
     renderDashJobs();
 }
 
+// ─── Stock Lookup ─────────────────────────────────────────────────────────────
+
+let _slVehicle      = { make: '', model: '', year: '' };
+let _slSelectedZone = 0;
+let _slSelectedAsm  = 0;
+let _slTabs         = [];   // [{ partName, results:[], loading:false, error:null }]
+let _slActiveTab    = -1;
+
+function openStockLookup() {
+    _slVehicle = { make: '', model: '', year: '' };
+    _slTabs = []; _slActiveTab = -1;
+    _slSelectedZone = 0; _slSelectedAsm = 0;
+    toggleDrawer('stockLookupDrawer', true);
+    _slRenderVehicleBar();
+    _slRenderSelector();
+    _slRenderResultsArea();
+}
+
+function closeStockLookup() { toggleDrawer('stockLookupDrawer', false); }
+
+function _slRenderVehicleBar() {
+    const bar = document.getElementById('slVehicleBar');
+    if (!bar) return;
+    const makes = Object.keys(VEHICLE_DB).sort();
+    const models = _slVehicle.make ? Object.keys(VEHICLE_DB[_slVehicle.make] || {}).sort() : [];
+    const years  = (_slVehicle.make && _slVehicle.model)
+        ? _slGetYears(_slVehicle.make, _slVehicle.model) : [];
+
+    bar.innerHTML = `
+        <span class="sl-veh-label">Make</span>
+        <select class="sl-veh-select" onchange="_slOnMakeChange(this.value)">
+            <option value="">Select…</option>
+            ${makes.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.make===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
+        </select>
+        <span class="sl-veh-label">Model</span>
+        <select class="sl-veh-select" onchange="_slOnModelChange(this.value)" ${models.length?'':'disabled'}>
+            <option value="">Select…</option>
+            ${models.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.model===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
+        </select>
+        <span class="sl-veh-label">Year</span>
+        <select class="sl-veh-select" onchange="_slOnYearChange(this.value)" ${years.length?'':'disabled'}>
+            <option value="">Select…</option>
+            ${years.map(y => `<option value="${y}"${_slVehicle.year==y?' selected':''}>${y}</option>`).join('')}
+        </select>`;
+}
+
+function _slGetYears(make, model) {
+    const ranges = (VEHICLE_YEAR_RANGES[make] || {})[model];
+    if (!ranges) return [];
+    const all = new Set();
+    ranges.forEach(([s, e]) => { for (let y = e; y >= s; y--) all.add(y); });
+    return [...all].sort((a, b) => b - a);
+}
+
+function _slOnMakeChange(val) {
+    _slVehicle = { make: val, model: '', year: '' };
+    _slRenderVehicleBar();
+}
+function _slOnModelChange(val) {
+    _slVehicle.model = val; _slVehicle.year = '';
+    _slRenderVehicleBar();
+}
+function _slOnYearChange(val) {
+    _slVehicle.year = val;
+    _slRenderVehicleBar();
+}
+
+function _slRenderSelector() {
+    const sel = document.getElementById('slSelector');
+    if (!sel) return;
+    sel.innerHTML = `
+        <div class="edw-3panel" style="border-top:none;">
+            <div class="edw-3ph">Zone</div>
+            <div class="edw-3ph">Assembly</div>
+            <div class="edw-3ph">Part — click to search</div>
+            <div class="edw-3pcol" id="slPanelZones">${_buildSlZones()}</div>
+            <div class="edw-3pcol" id="slPanelAsms">${_buildSlAsms(_slSelectedZone)}</div>
+            <div class="edw-3pcol" id="slPanelParts">${_buildSlParts(_slSelectedZone, _slSelectedAsm)}</div>
+        </div>`;
+}
+
+function _buildSlZones() {
+    return EDW_TAXONOMY.map((zone, zI) => {
+        const active = _slSelectedZone === zI;
+        return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_slSelectZone(${zI})">
+            <span>${escapeHtml(zone.zone)}</span>
+            ${active ? '<span style="color:#f07020;font-size:10px;">▸</span>' : ''}
+        </div>`;
+    }).join('');
+}
+
+function _buildSlAsms(zI) {
+    const zone = EDW_TAXONOMY[zI];
+    if (!zone) return '';
+    return zone.assemblies.map((asm, aI) => {
+        const active = _slSelectedAsm === aI;
+        return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_slSelectAsm(${aI})">
+            <span>${escapeHtml(asm.name)}</span>
+        </div>`;
+    }).join('');
+}
+
+function _buildSlParts(zI, aI) {
+    const zone = EDW_TAXONOMY[zI];
+    const asm  = zone?.assemblies[aI];
+    if (!asm) return `<div class="edw-panel-empty">Select an assembly</div>`;
+    const searched = new Set(_slTabs.map(t => t.partName));
+    return asm.parts.map(part => {
+        const done = searched.has(part);
+        return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}" onclick="_slSelectPart('${escapeHtml(part).replace(/'/g,"\\'")}')">
+            <span>${escapeHtml(part)}</span>
+            ${done ? '<span class="edw-panel-badge">✓</span>' : '<span style="color:#ccc;font-size:11px;flex-shrink:0;">Search →</span>'}
+        </div>`;
+    }).join('');
+}
+
+function _slSelectZone(zI) {
+    _slSelectedZone = zI; _slSelectedAsm = 0;
+    const z = document.getElementById('slPanelZones');
+    const a = document.getElementById('slPanelAsms');
+    const p = document.getElementById('slPanelParts');
+    if (z) z.innerHTML = _buildSlZones();
+    if (a) { a.innerHTML = _buildSlAsms(zI); a.scrollTop = 0; }
+    if (p) { p.innerHTML = _buildSlParts(zI, 0); p.scrollTop = 0; }
+}
+
+function _slSelectAsm(aI) {
+    _slSelectedAsm = aI;
+    const a = document.getElementById('slPanelAsms');
+    const p = document.getElementById('slPanelParts');
+    if (a) a.innerHTML = _buildSlAsms(_slSelectedZone);
+    if (p) { p.innerHTML = _buildSlParts(_slSelectedZone, aI); p.scrollTop = 0; }
+}
+
+function _slSelectPart(partName) {
+    if (!_slVehicle.make || !_slVehicle.model || !_slVehicle.year) {
+        showToast('Select a vehicle first'); return;
+    }
+    const existing = _slTabs.findIndex(t => t.partName === partName);
+    if (existing >= 0) { _slSetActiveTab(existing); return; }
+    _slTabs.push({ partName, results: [], loading: true, error: null });
+    const idx = _slTabs.length - 1;
+    _slSetActiveTab(idx);
+    _slSearch(partName, idx);
+    const p = document.getElementById('slPanelParts');
+    if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
+}
+
+async function _slSearch(partName, tabIdx) {
+    if (!sb) return;
+    const { make, model, year } = _slVehicle;
+    const { data, error } = await sb
+        .from('listings')
+        .select(`id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
+                 listing_images(storage_path, position),
+                 profiles!seller_id(display_name, is_pro),
+                 listing_vehicles!inner(make, model)`)
+        .eq('status', 'active')
+        .eq('fits_year', Number(year))
+        .ilike('title', `%${partName}%`)
+        .eq('listing_vehicles.make', make)
+        .eq('listing_vehicles.model', model)
+        .order('created_at', { ascending: false })
+        .limit(60);
+
+    if (_slTabs[tabIdx]) {
+        _slTabs[tabIdx].loading = false;
+        _slTabs[tabIdx].error   = error ? error.message : null;
+        _slTabs[tabIdx].results = data || [];
+    }
+    if (_slActiveTab === tabIdx) _slRenderResults();
+    _slRenderTabs();
+}
+
+function _slRenderResultsArea() {
+    const empty   = document.getElementById('slResultsEmpty');
+    const tabBar  = document.getElementById('slTabBar');
+    const content = document.getElementById('slResultsContent');
+    if (!empty || !tabBar || !content) return;
+    if (_slTabs.length === 0) {
+        empty.style.display   = '';
+        tabBar.style.display  = 'none';
+        content.style.display = 'none';
+        return;
+    }
+    empty.style.display   = 'none';
+    tabBar.style.display  = '';
+    content.style.display = '';
+    _slRenderTabs();
+    _slRenderResults();
+}
+
+function _slRenderTabs() {
+    const tabBar = document.getElementById('slTabBar');
+    if (!tabBar) return;
+    tabBar.innerHTML = _slTabs.map((t, i) => {
+        const active  = i === _slActiveTab;
+        const loading = t.loading;
+        const count   = t.results.length;
+        return `<div class="sl-tab${active ? ' active' : ''}" onclick="_slSetActiveTab(${i})">
+            ${escapeHtml(t.partName)}
+            ${loading ? '<span style="font-size:10px;color:#aaa;">…</span>' : count ? `<span class="edw-panel-badge">${count}</span>` : ''}
+            <span class="sl-tab-close" onclick="event.stopPropagation();_slCloseTab(${i})">×</span>
+        </div>`;
+    }).join('');
+}
+
+function _slSetActiveTab(idx) {
+    _slActiveTab = idx;
+    const empty   = document.getElementById('slResultsEmpty');
+    const tabBar  = document.getElementById('slTabBar');
+    const content = document.getElementById('slResultsContent');
+    if (empty)  empty.style.display   = 'none';
+    if (tabBar) { tabBar.style.display = ''; _slRenderTabs(); }
+    if (content) content.style.display = '';
+    _slRenderResults();
+}
+
+function _slCloseTab(idx) {
+    _slTabs.splice(idx, 1);
+    if (_slTabs.length === 0) {
+        _slActiveTab = -1;
+        _slRenderResultsArea();
+    } else {
+        _slActiveTab = Math.min(_slActiveTab, _slTabs.length - 1);
+        _slRenderTabs();
+        _slRenderResults();
+    }
+    const p = document.getElementById('slPanelParts');
+    if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
+}
+
+function _slRenderResults() {
+    const content = document.getElementById('slResultsContent');
+    if (!content || _slActiveTab < 0 || !_slTabs[_slActiveTab]) return;
+    const tab = _slTabs[_slActiveTab];
+
+    if (tab.loading) {
+        content.innerHTML = `<div class="sl-loading">Searching…</div>`;
+        return;
+    }
+    if (tab.error) {
+        content.innerHTML = `<div class="sl-no-results">Search error — please try again.</div>`;
+        return;
+    }
+
+    const own   = tab.results.filter(r => r.seller_id === currentUserId);
+    const other = tab.results.filter(r => r.seller_id !== currentUserId && r.profiles?.is_pro);
+
+    if (!own.length && !other.length) {
+        content.innerHTML = `<div class="sl-no-results">No results found for <strong>${escapeHtml(tab.partName)}</strong> — ${escapeHtml(_slVehicle.year)} ${escapeHtml(_slVehicle.make)} ${escapeHtml(_slVehicle.model)}</div>`;
+        return;
+    }
+
+    const rowHTML = (r, isOwn) => {
+        const img    = (r.listing_images || []).sort((a,b) => a.position-b.position)[0]?.storage_path || '';
+        const grade  = r.condition || '';
+        const gradeClass = grade ? `grade-${grade.charAt(0).toUpperCase()}` : '';
+        const yard   = escapeHtml(r.profiles?.display_name || 'Wrecker');
+        const stock  = r.stock_number ? `Stock: ${escapeHtml(r.stock_number)}` : '';
+        const bin    = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
+        return `<div class="sl-row${isOwn ? ' own' : ''}">
+            <div class="sl-cell sl-cell-thumb">
+                ${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}
+            </div>
+            <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
+            ${!isOwn ? `<div class="sl-cell sl-cell-yard">${yard}</div>` : ''}
+            <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
+            <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
+            ${isOwn ? `<div class="sl-cell sl-cell-meta">${stock ? `<span>${stock}</span>` : ''}${bin ? `<span>${bin}</span>` : ''}</div>` : ''}
+            <div class="sl-cell sl-cell-btn"><button onclick="_slViewListing(${r.id})">View</button></div>
+        </div>`;
+    };
+
+    content.innerHTML =
+        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div>${own.map(r=>rowHTML(r,true)).join('')}` : '') +
+        (other.length ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length} result${other.length!==1?'s':''}</div>${other.map(r=>rowHTML(r,false)).join('')}` : '');
+}
+
+function _slViewListing(id) {
+    closeStockLookup();
+    const part = findPartAnywhere(id);
+    if (part) openDetail(part);
+}
+
 function refreshDashSavesFromSupabase() {
     if (!currentUserId || !sb || !userListings.length) return;
     const ids = userListings.map(l => l.supabaseId).filter(Boolean);
