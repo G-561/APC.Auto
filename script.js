@@ -12984,16 +12984,27 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     }
 
     // Step 2: fetch matching listings, filtering by part base name + optional qualifier
+    // Try series-specific range first (e.g. "Hilux N70 (KUN26/KUN36)"), fall back to base model
+    const _slSeries = _slVehicle.series;
+    const yearRange = year
+        ? (_slSeries && getVehicleYearRange(make, `${model} ${_slSeries}`, year))
+          || getVehicleYearRange(make, model, year)
+        : null;
+
     let query = sb
         .from('listings')
         .select(`id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
                  listing_images(storage_path, position)`)
         .in('id', ids)
         .eq('status', 'active')
-        .eq('fits_year', Number(year))
         .ilike('title', `%${partBase}%`)
         .order('created_at', { ascending: false })
         .limit(60);
+    if (yearRange) {
+        query = query.gte('fits_year', yearRange[0]).lte('fits_year', yearRange[1]);
+    } else if (year) {
+        query = query.eq('fits_year', Number(year));
+    }
     if (qualifier) query = query.ilike('title', `%${qualifier}%`);
     const { data, error } = await query;
 
