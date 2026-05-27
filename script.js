@@ -1428,7 +1428,7 @@ const EDW_TAXONOMY = [
         zone: 'Transmission & Drivetrain',
         apcCategory: 'transmission',
         assemblies: [
-            { name: 'Gearbox', parts: ['Manual Gearbox', 'Automatic Gearbox', 'Transfer Case', 'Torque Converter', 'Gearbox Mount', 'Transmission Oil Cooler', 'Transmission Oil Pan / Sump'] },
+            { name: 'Gearbox', parts: ['Gearbox (Manual)', 'Gearbox (Automatic)', 'Transfer Case', 'Torque Converter', 'Gearbox Mount', 'Transmission Oil Cooler', 'Transmission Oil Pan / Sump'] },
             { name: 'Driveshafts', parts: ['Front Driveshaft (Left)', 'Front Driveshaft (Right)', 'Rear Driveshaft (Left)', 'Rear Driveshaft (Right)', 'Propshaft (Front)', 'Propshaft (Rear)', 'Centre Bearing'] },
             { name: 'Diff & Axles', parts: ['Diff (Front)', 'Diff (Rear)', 'Diff Centre', 'Rear Axle (Left)', 'Rear Axle (Right)', 'Front Axle (Left)', 'Front Axle (Right)'] },
             { name: 'Clutch', parts: ['Clutch Kit (Plate, Pressure Plate, Bearing)', 'Flywheel', 'Dual Mass Flywheel', 'Clutch Master Cylinder', 'Clutch Slave Cylinder'] },
@@ -12681,6 +12681,7 @@ async function _jrPublish(jobId) {
 let _slVehicle        = { make: '', model: '', year: '', series: '' };
 let _slSelectedZone   = 0;
 let _slSelectedAsm    = 0;
+let _slSelectedPartBase = null; // { base, qualifiers[] } — selected part in col 3
 let _slTabs           = [];   // [{ partName, results:[], loading:false, error:null }]
 let _slActiveTab      = -1;
 let _slStockDebounce  = null;
@@ -12689,7 +12690,7 @@ function openStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
     _slVehicle = { make: '', model: '', year: '', series: '' };
     _slTabs = []; _slActiveTab = -1;
-    _slSelectedZone = 0; _slSelectedAsm = 0;
+    _slSelectedZone = 0; _slSelectedAsm = 0; _slSelectedPartBase = null;
     const drawer = document.getElementById('stockLookupDrawer');
     if (!drawer) return;
     const topBar     = document.getElementById('desktopTopBar');
@@ -12808,6 +12809,25 @@ async function _slSearchByStock(stockNo) {
 }
 
 
+// Splits "Lower Control Arm (Left)" → { base:"Lower Control Arm", qualifier:"Left" }
+function _slParsePartName(fullName) {
+    const m = fullName.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+    return m ? { base: m[1].trim(), qualifier: m[2].trim() } : { base: fullName, qualifier: null };
+}
+
+// Returns [{base, qualifiers[]}] for the given zone/assembly, merging parts that share a base name
+function _slGetPartGroups(zI, aI) {
+    const asm = EDW_TAXONOMY[zI]?.assemblies[aI];
+    if (!asm) return [];
+    const map = new Map();
+    asm.parts.forEach(p => {
+        const { base, qualifier } = _slParsePartName(p);
+        if (!map.has(base)) map.set(base, []);
+        if (qualifier) map.get(base).push(qualifier);
+    });
+    return [...map.entries()].map(([base, qualifiers]) => ({ base, qualifiers }));
+}
+
 function _slRenderSelector() {
     const sel = document.getElementById('slSelector');
     if (!sel) return;
@@ -12815,10 +12835,12 @@ function _slRenderSelector() {
         <div class="edw-3panel" style="border-top:none;">
             <div class="edw-3ph">Zone</div>
             <div class="edw-3ph">Assembly</div>
-            <div class="edw-3ph">Part — click to search</div>
+            <div class="edw-3ph">Part</div>
+            <div class="edw-3ph">Options</div>
             <div class="edw-3pcol" id="slPanelZones">${_buildSlZones()}</div>
             <div class="edw-3pcol" id="slPanelAsms">${_buildSlAsms(_slSelectedZone)}</div>
             <div class="edw-3pcol" id="slPanelParts">${_buildSlParts(_slSelectedZone, _slSelectedAsm)}</div>
+            <div class="edw-3pcol" id="slPanelQuals">${_buildSlQualifiers()}</div>
         </div>`;
 }
 
@@ -12844,52 +12866,105 @@ function _buildSlAsms(zI) {
 }
 
 function _buildSlParts(zI, aI) {
-    const zone = EDW_TAXONOMY[zI];
-    const asm  = zone?.assemblies[aI];
-    if (!asm) return `<div class="edw-panel-empty">Select an assembly</div>`;
+    const groups = _slGetPartGroups(zI, aI);
+    if (!groups.length) return `<div class="edw-panel-empty">Select an assembly</div>`;
     const searched = new Set(_slTabs.map(t => t.partName));
-    return asm.parts.map(part => {
-        const done = searched.has(part);
-        return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}" onclick="_slSelectPart('${escapeHtml(part).replace(/'/g,"\\'")}')">
-            <span>${escapeHtml(part)}</span>
-            ${done ? '<span class="edw-panel-badge">✓</span>' : '<span style="color:#ccc;font-size:11px;flex-shrink:0;">Search →</span>'}
+    return groups.map(({ base, qualifiers }, idx) => {
+        const hasQuals = qualifiers.length > 0;
+        const isSelected = _slSelectedPartBase?.base === base;
+        const done = searched.has(base) || qualifiers.some(q => searched.has(`${base} — ${q}`));
+        return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}${isSelected ? ' active' : ''}"
+                     onclick="_slSelectPartBase(${idx})">
+            <span>${escapeHtml(base)}</span>
+            ${done ? '<span class="edw-panel-badge">✓</span>' :
+              hasQuals ? '<span style="color:#bbb;font-size:13px;flex-shrink:0;">▸</span>' :
+              '<span style="color:#ccc;font-size:11px;flex-shrink:0;">↗</span>'}
         </div>`;
     }).join('');
 }
 
+function _buildSlQualifiers() {
+    if (!_slSelectedPartBase || !_slSelectedPartBase.qualifiers.length) {
+        return `<div class="edw-panel-empty" style="font-size:12px;padding:20px 10px;text-align:center;">← select<br>a part</div>`;
+    }
+    const { base, qualifiers } = _slSelectedPartBase;
+    const searched = new Set(_slTabs.map(t => t.partName));
+    const allDone = searched.has(base);
+    const rows = [
+        `<div class="edw-panel-row sl-part-row${allDone ? ' searched' : ''}"
+              onclick="_slSelectQualifier('${escapeHtml(base).replace(/'/g,"\\'")}','')">
+            <span style="font-style:italic;color:#999">All</span>
+            ${allDone ? '<span class="edw-panel-badge">✓</span>' : '<span style="color:#ccc;font-size:11px;flex-shrink:0;">↗</span>'}
+        </div>`,
+        ...qualifiers.map(q => {
+            const tabName = `${base} — ${q}`;
+            const done = searched.has(tabName);
+            return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}"
+                         onclick="_slSelectQualifier('${escapeHtml(base).replace(/'/g,"\\'")}','${escapeHtml(q).replace(/'/g,"\\'")}')">
+                <span>${escapeHtml(q)}</span>
+                ${done ? '<span class="edw-panel-badge">✓</span>' : '<span style="color:#ccc;font-size:11px;flex-shrink:0;">↗</span>'}
+            </div>`;
+        })
+    ];
+    return rows.join('');
+}
+
 function _slSelectZone(zI) {
-    _slSelectedZone = zI; _slSelectedAsm = 0;
+    _slSelectedZone = zI; _slSelectedAsm = 0; _slSelectedPartBase = null;
     const z = document.getElementById('slPanelZones');
     const a = document.getElementById('slPanelAsms');
     const p = document.getElementById('slPanelParts');
+    const q = document.getElementById('slPanelQuals');
     if (z) z.innerHTML = _buildSlZones();
     if (a) { a.innerHTML = _buildSlAsms(zI); a.scrollTop = 0; }
     if (p) { p.innerHTML = _buildSlParts(zI, 0); p.scrollTop = 0; }
+    if (q) { q.innerHTML = _buildSlQualifiers(); q.scrollTop = 0; }
 }
 
 function _slSelectAsm(aI) {
-    _slSelectedAsm = aI;
+    _slSelectedAsm = aI; _slSelectedPartBase = null;
     const a = document.getElementById('slPanelAsms');
     const p = document.getElementById('slPanelParts');
+    const q = document.getElementById('slPanelQuals');
     if (a) a.innerHTML = _buildSlAsms(_slSelectedZone);
     if (p) { p.innerHTML = _buildSlParts(_slSelectedZone, aI); p.scrollTop = 0; }
+    if (q) { q.innerHTML = _buildSlQualifiers(); q.scrollTop = 0; }
 }
 
-function _slSelectPart(partName) {
+function _slSelectPartBase(baseIdx) {
+    const groups = _slGetPartGroups(_slSelectedZone, _slSelectedAsm);
+    const group = groups[baseIdx];
+    if (!group) return;
+    if (!group.qualifiers.length) {
+        _slSelectedPartBase = null;
+        _slSelectQualifier(group.base, '');
+    } else {
+        _slSelectedPartBase = group;
+        const p = document.getElementById('slPanelParts');
+        const q = document.getElementById('slPanelQuals');
+        if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
+        if (q) q.innerHTML = _buildSlQualifiers();
+    }
+}
+
+function _slSelectQualifier(base, qualifier) {
     if (!_slVehicle.make || !_slVehicle.model || !_slVehicle.year) {
         showToast('Select a vehicle first'); return;
     }
-    const existing = _slTabs.findIndex(t => t.partName === partName);
+    const tabName = qualifier ? `${base} — ${qualifier}` : base;
+    const existing = _slTabs.findIndex(t => t.partName === tabName);
     if (existing >= 0) { _slSetActiveTab(existing); return; }
-    _slTabs.push({ partName, results: [], loading: true, error: null });
+    _slTabs.push({ partName: tabName, results: [], loading: true, error: null });
     const idx = _slTabs.length - 1;
     _slSetActiveTab(idx);
-    _slSearch(partName, idx);
+    _slSearch(base, qualifier || null, idx);
     const p = document.getElementById('slPanelParts');
+    const q = document.getElementById('slPanelQuals');
     if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
+    if (q) q.innerHTML = _buildSlQualifiers();
 }
 
-async function _slSearch(partName, tabIdx) {
+async function _slSearch(partBase, qualifier, tabIdx) {
     if (!sb) return;
     const { make, model, year } = _slVehicle;
 
@@ -12908,17 +12983,19 @@ async function _slSearch(partName, tabIdx) {
         return;
     }
 
-    // Step 2: fetch matching listings
-    const { data, error } = await sb
+    // Step 2: fetch matching listings, filtering by part base name + optional qualifier
+    let query = sb
         .from('listings')
         .select(`id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
                  listing_images(storage_path, position)`)
         .in('id', ids)
         .eq('status', 'active')
         .eq('fits_year', Number(year))
-        .ilike('title', `%${partName}%`)
+        .ilike('title', `%${partBase}%`)
         .order('created_at', { ascending: false })
         .limit(60);
+    if (qualifier) query = query.ilike('title', `%${qualifier}%`);
+    const { data, error } = await query;
 
     // Step 3: batch-fetch seller profiles
     let profileMap = {};
