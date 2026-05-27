@@ -1657,6 +1657,7 @@ async function syncListingToSupabase(localListing) {
             apc_id: localListing.apcId || null,
             fitting_available: !!localListing.fit,
             fits_year: localListing.year || null,
+            variant: localListing.variant || null,
             seller_name: localListing.seller || null,
         };
 
@@ -1768,6 +1769,7 @@ async function loadPublicListingsFromSupabase(append = false) {
                 stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
                 warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
                 fit: r.fitting_available, year: r.fits_year,
+                variant: r.variant || null,
                 seller: nameMap[r.seller_id] || r.seller_name || 'Seller',
                 status: r.status === 'active' ? undefined : r.status,
                 images: images.length ? images : [], fits,
@@ -1852,6 +1854,7 @@ async function loadUserListingsFromSupabase(userId) {
                     warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, apcId: r.apc_id,
                     fit: r.fitting_available, year: r.fits_year,
+                    variant: r.variant || null,
                     saves: r.saves_count || 0, sellerId: r.seller_id, fits,
                     seller: currentUserName || r.seller_name || '',
                     ...(images.length ? { images } : {}),
@@ -5404,6 +5407,7 @@ async function submitSellListing() {
     }
     hideSellError();
 
+    const engineVariant = document.getElementById('sellVariant')?.value.trim() || null;
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim(), ...(variant ? { variant } : {}) }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
     const stockNumber = document.getElementById('sellStockNumber')?.value.trim() || null;
@@ -5440,7 +5444,8 @@ async function submitSellListing() {
         quantity,
         stockNumber,
         odometer,
-        chassisVin
+        chassisVin,
+        variant: engineVariant
     };
 
     let message = 'Listing created';
@@ -5729,6 +5734,15 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             detailVehicleEl.style.display = 'block';
         } else {
             detailVehicleEl.style.display = 'none';
+        }
+    }
+    const detailVariantEl = document.getElementById('detailVariant');
+    if (detailVariantEl) {
+        if (part.variant) {
+            safeText(detailVariantEl, 'Engine / Variant: ' + part.variant);
+            detailVariantEl.style.display = 'block';
+        } else {
+            detailVariantEl.style.display = 'none';
         }
     }
     const detailGarageMatchEl = document.getElementById('detailGarageMatch');
@@ -11368,10 +11382,17 @@ function _renderEdwStep1() {
                 </select>
             </div>
             <div class="edw-field" id="edwSeriesGroup">
-                <label class="edw-label">Series / Variant</label>
+                <label class="edw-label">Series</label>
                 <select id="edwSeries" class="edw-input" onchange="_edwSaveField('series', this.value)">
                     <option value="">Select series…</option>
                 </select>
+            </div>
+            <div class="edw-field">
+                <label class="edw-label">Engine / Variant <span style="font-weight:400;color:#aaa;font-size:11px;">optional</span></label>
+                <input id="edwVariant" class="edw-input" type="text" maxlength="60"
+                    placeholder="e.g. Toyota 2ZZ-GE, Rover K-Series, V8 GTS"
+                    value="${escapeHtml(v.variant || '')}"
+                    oninput="_edwSaveField('variant', this.value)">
             </div>
             <div class="edw-field">
                 <label class="edw-label">Body Type</label>
@@ -11907,7 +11928,7 @@ function _renderEdwStep3() {
     if (!body || !footer) return;
 
     const v = _edwVehicle;
-    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}${v.variant ? ' — ' + v.variant : ''}`;
     const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
 
     const cards = Object.entries(_edwItems).map(([key, item]) => {
@@ -11958,7 +11979,7 @@ function _edwRemoveItem(key) {
 
 function _edwPrintStrippingList() {
     const v = _edwVehicle;
-    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}${v.variant ? ' — ' + v.variant : ''}`;
     const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
     const date = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -12048,7 +12069,7 @@ async function _edwPublish() {
     if (footer) footer.innerHTML = `<div class="edw-footer-meta">Publishing ${items.length} listings…</div>`;
 
     const v = _edwVehicle;
-    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
+    const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}${v.variant ? ' — ' + v.variant : ''}`;
     const gradeToCondition = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
     const gradeLabel      = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'Damaged' };
 
@@ -12085,6 +12106,7 @@ async function _edwPublish() {
             status: 'active',
             description: item.notes || `${gradeLabel[item.grade] || 'Used'} condition ${part} removed from a ${vehicleTitle}. Contact us for more details.`,
             fits_year: Number(v.year),
+            variant: v.variant || null,
             chassis_vin: v.vin || null,
             stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
             location: userSettings.location || null,

@@ -13,7 +13,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=66">
+    <link rel="stylesheet" href="style.css?v=67">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -376,6 +376,7 @@
             </div>
 
             <div id="detailVehicle" style="display:none; padding: 4px 15px 0 15px; font-size: 13px; font-weight: 700; color: #f07020;"></div>
+            <div id="detailVariant" style="display:none; padding: 2px 15px 0 15px; font-size: 12px; font-weight: 600; color: #888;"></div>
             <div id="detailGarageMatch" style="display:none; padding: 4px 15px 0 15px; font-size: 12px; font-weight: 700; color: #22c55e;"></div>
 
             <div id="detailDescriptionSection" class="detail-locked-group" style="padding: 15px 15px 20px 15px; border-top: 1px solid #f9f9f9; margin-top: 10px;">
@@ -1097,6 +1098,10 @@
                             <input type="checkbox" id="sellUniversalToggle" onchange="onSellUniversalToggle()">
                             <span class="settings-toggle-track"></span>
                         </label>
+                    </div>
+                    <div class="input-group" style="margin-top:10px;">
+                        <label>Engine / Variant <span style="font-weight:400; color:#aaa;">optional — e.g. Toyota 2ZZ-GE, Rover K-Series, V8 GTS</span></label>
+                        <input id="sellVariant" type="text" maxlength="60" placeholder="e.g. Toyota 2ZZ-GE">
                     </div>
                     <div id="sellStockNumberSection" class="input-group" style="margin-top: 10px; display:none;">
                         <label>Stock Number <span style="font-weight:400; color:#aaa;">optional · letters, numbers &amp; symbols</span></label>
@@ -2543,7 +2548,7 @@
 <script src="vehicles.js?v=3"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=120"></script>
+<script src="script.js?v=121"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
