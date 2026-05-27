@@ -6751,6 +6751,7 @@ header {
 /* Part rows — spreadsheet-style inline cells */
 .edw-panel-part { display: flex; align-items: stretch; border-bottom: 1px solid #ddd; min-height: 36px; }
 .edw-panel-part.checked { background: #fffbf7; }
+.edw-qual-row { background: #fafafa; border-left: 3px solid #f0c090; }
 .edw-pcell {
     display: flex; align-items: center; padding: 5px 8px;
     border-right: 1px solid #ddd; flex-shrink: 0;
