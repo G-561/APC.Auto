@@ -12685,6 +12685,7 @@ let _slSelectedPartBase = null; // { base, qualifiers[] } — selected part in c
 let _slTabs           = [];   // [{ partName, results:[], loading:false, error:null }]
 let _slActiveTab      = -1;
 let _slStockDebounce  = null;
+let _slColWidths      = null; // computed once from full taxonomy — never recalculated
 
 function openStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
@@ -12828,6 +12829,30 @@ function _slGetPartGroups(zI, aI) {
     return [...map.entries()].map(([base, qualifiers]) => ({ base, qualifiers }));
 }
 
+function _slComputeColWidths() {
+    if (_slColWidths) return _slColWidths;
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    const maxW = arr => arr.length ? Math.ceil(Math.max(...arr.map(t => ctx.measureText(t).width))) : 0;
+
+    const zW = Math.max(maxW(EDW_TAXONOMY.map(z => z.zone)) + 44, 130);
+    const aW = Math.max(maxW(EDW_TAXONOMY.flatMap(z => z.assemblies.map(a => a.name))) + 44, 120);
+
+    const allBases = [], allQuals = [];
+    EDW_TAXONOMY.forEach(z => z.assemblies.forEach(a => {
+        a.parts.forEach(p => {
+            const m = p.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+            if (m) { allBases.push(m[1].trim()); allQuals.push(m[2].trim()); }
+            else allBases.push(p);
+        });
+    }));
+    const pW = Math.max(maxW([...new Set(allBases)]) + 56, 130); // 56 = padding + ▸/↗ icon
+    const qW = allQuals.length ? Math.max(maxW([...new Set(allQuals)]) + 44, 100) : 100;
+
+    _slColWidths = [zW, aW, pW, qW];
+    return _slColWidths;
+}
+
 function _slRenderSelector() {
     const sel = document.getElementById('slSelector');
     if (!sel) return;
@@ -12842,6 +12867,9 @@ function _slRenderSelector() {
             <div class="edw-3pcol" id="slPanelParts">${_buildSlParts(_slSelectedZone, _slSelectedAsm)}</div>
             <div class="edw-3pcol" id="slPanelQuals">${_buildSlQualifiers()}</div>
         </div>`;
+    const [zW, aW, pW, qW] = _slComputeColWidths();
+    const panel = sel.querySelector('.edw-3panel');
+    if (panel) panel.style.gridTemplateColumns = `${zW}px ${aW}px ${pW}px ${qW}px`;
 }
 
 function _buildSlZones() {
