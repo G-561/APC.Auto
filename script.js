@@ -11901,7 +11901,7 @@ function _renderEdwStep3() {
         <div class="edw-vehicle-banner">
             <div class="edw-vehicle-title">${escapeHtml(vehicleTitle)}</div>
         </div>
-        <div class="edw-review-hint">Set a price for each part. Leave blank to publish at $0 (negotiable). You can edit listings individually after publishing.</div>
+        <div class="edw-review-hint">Set a price for each part. You can edit listings individually after publishing.</div>
         <div class="edw-review-list">${cards}</div>
     `;
 
