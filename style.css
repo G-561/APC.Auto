@@ -6798,14 +6798,14 @@ header {
     padding: 7px 10px; font-size: 13px; color: #333; background: #f8f8f8;
     outline: none;
 }
-.sl-body { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; }
 .sl-selector {
-    flex: 0 0 550px;
-    height: 100%;
+    flex-shrink: 0;
+    border-bottom: 2px solid #ddd;
     overflow: hidden;
-    border-right: 2px solid #ddd;
-    display: flex; flex-direction: column;
 }
+/* In the stacked layout the 3-panel sizes to its content (no bounded parent height) */
+.sl-selector .edw-3panel { flex: none; grid-template-rows: 38px auto; }
+.sl-selector .edw-3pcol  { overflow-y: visible; }
 /* selector reuses .edw-3panel / .edw-3ph / .edw-3pcol / .edw-panel-row classes */
 .sl-part-row { cursor: pointer; }
 .sl-part-row.searched { background: #fff4ec; color: #f07020; }
