@@ -12687,7 +12687,7 @@ let _slStockDebounce  = null;
 
 function openStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
-    _slVehicle = { make: '', model: '', year: '' };
+    _slVehicle = { make: '', model: '', year: '', series: '' };
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = 0;
     const drawer = document.getElementById('stockLookupDrawer');
@@ -12696,14 +12696,15 @@ function openStockLookup() {
     const hdr        = document.getElementById('mainHeader');
     const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
     const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
-    drawer.style.top   = topOffset + 'px';
-    drawer.style.left  = sideOffset + 'px';
-    drawer.style.right = sideOffset + 'px';
-    drawer.style.width = 'auto';
+    drawer.style.top    = topOffset + 'px';
+    drawer.style.left   = sideOffset + 'px';
+    drawer.style.right  = sideOffset + 'px';
+    drawer.style.bottom = '0';
+    drawer.style.width  = 'auto';
     drawer.classList.add('active');
     document.body.style.overflow = 'hidden';
-    _slRenderVehicleBar();
-    _slRenderSelector();
+    try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
+    try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
     _slRenderResultsArea();
 }
 
@@ -12749,7 +12750,7 @@ function _slRenderVehicleBar() {
                 ${seriesOpts}
             </select>` : ''}
         </div>
-        <div class="sl-veh-group sl-stock-group">
+        <div class="sl-stock-group">
             <span class="sl-veh-label">Stock No.</span>
             <input class="sl-stock-input" id="slStockInput" type="text" placeholder="e.g. VEH-001"
                 oninput="_slStockDebounceSearch(this.value)">

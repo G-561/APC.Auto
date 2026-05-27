@@ -6785,7 +6785,7 @@ header {
     padding: 10px 12px; display: flex; gap: 0; align-items: center;
 }
 .sl-veh-group { display: flex; align-items: center; gap: 6px; flex: 0 0 60%; min-width: 0; }
-.sl-stock-group { flex: 0 0 auto; margin-left: auto; padding-left: 20px; border-left: 1px solid #ddd; }
+.sl-stock-group { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; margin-left: auto; padding-left: 20px; border-left: 1px solid #ddd; }
 .sl-veh-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
 .sl-veh-select {
     flex: 1; border: 1px solid #ddd; border-radius: 6px;
