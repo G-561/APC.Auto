@@ -11164,6 +11164,7 @@ const EDW_BODY_FILTER = {
 
 function openEdw() {
     if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
+    if (window.innerWidth < 768) { showToast('EDW requires a tablet or larger screen'); return; }
     _edwVehicle       = {};
     _edwItems         = {};
     _edwStep          = 1;
@@ -11433,11 +11434,7 @@ function _renderEdwStep2() {
     const body   = document.getElementById('edwBody');
     const footer = document.getElementById('edwFooter');
     if (!body || !footer) return;
-    if (window.innerWidth >= 900) {
-        _renderEdwStep2Table(body, footer);
-    } else {
-        _renderEdwStep2MasterDetail(body, footer);
-    }
+    _renderEdwStep2Table(body, footer);
 }
 
 function _renderEdwStep2Table(body, footer) {
@@ -11455,15 +11452,21 @@ function _renderEdwStep2Table(body, footer) {
             <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
             ${v.vin ? `<div class="edw-vehicle-sub">VIN: ${escapeHtml(v.vin)}</div>` : ''}
         </div>
-        <div class="edw-3panel">
+        <div class="edw-3panel" id="edwPanel">
             <div class="edw-3ph">Zone</div>
             <div class="edw-3ph">Assembly</div>
             <div class="edw-3ph">Part</div>
+            <div class="edw-3ph">Options</div>
             <div class="edw-3pcol" id="edwPanelZones">${_buildPanelZones()}</div>
             <div class="edw-3pcol" id="edwPanelAsms">${_buildPanelAsms(_edwSelectedZone)}</div>
             <div class="edw-3pcol" id="edwPanelParts">${_buildPanelParts(_edwSelectedZone, _edwSelectedAsm)}</div>
+            <div class="edw-3pcol" id="edwPanelQuals">${_buildEdwPanelQuals()}</div>
         </div>
     `;
+
+    const [zW, aW, pW, qW] = _slComputeColWidths();
+    const panel = document.getElementById('edwPanel');
+    if (panel) panel.style.gridTemplateColumns = `${zW}px ${aW}px ${pW}px ${qW}px`;
 
     footer.innerHTML = `
         <div class="edw-footer-meta">${checkedCount} part${checkedCount !== 1 ? 's' : ''} selected</div>
@@ -11531,50 +11534,56 @@ function _buildPanelParts(zI, aI) {
     const groups = _edwGetPartGroups(zI, aI);
     if (!groups.length) return `<div class="edw-panel-empty">Select an assembly</div>`;
     return groups.map(({ base, quals, directPI }, gIdx) => {
-        const isExpanded = _edwSelectedPartBase === gIdx;
-
-        if (!quals.length) {
-            // Single direct part — checkbox row
-            const key     = `${zI}:${aI}:${directPI}`;
-            const checked = !!_edwItems[key];
-            return `
-            <div class="edw-panel-part${checked ? ' checked' : ''}">
-                <div class="edw-pcell edw-pcell-name">
-                    <label class="edw-part-check">
-                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${directPI},this.checked)">
-                        <span class="edw-part-name">${escapeHtml(base)}</span>
-                    </label>
-                </div>
-                ${_buildEdwPartControls(key, zI)}
-            </div>`;
-        }
-
-        // Grouped part with qualifiers — accordion
-        const checkedCount = quals.filter(q => !!_edwItems[`${zI}:${aI}:${q.pI}`]).length;
-        const qualRows = isExpanded ? quals.map(({ label, pI }) => {
-            const key     = `${zI}:${aI}:${pI}`;
-            const checked = !!_edwItems[key];
-            return `
-            <div class="edw-panel-part edw-qual-row${checked ? ' checked' : ''}">
-                <div class="edw-pcell edw-pcell-name" style="padding-left:22px;">
-                    <label class="edw-part-check">
-                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${pI},this.checked)">
-                        <span class="edw-part-name">${escapeHtml(label)}</span>
-                    </label>
-                </div>
-                ${_buildEdwPartControls(key, zI)}
-            </div>`;
-        }).join('') : '';
-
+        const isSelected   = _edwSelectedPartBase === gIdx;
+        const checkedCount = quals.length
+            ? quals.filter(q => !!_edwItems[`${zI}:${aI}:${q.pI}`]).length
+            : (directPI !== null && !!_edwItems[`${zI}:${aI}:${directPI}`] ? 1 : 0);
         return `
-        <div>
-            <div class="edw-panel-row${isExpanded ? ' active' : ''}" onclick="_edwSelectPartBase(${gIdx})" style="cursor:pointer;">
-                <span>${escapeHtml(base)}</span>
-                ${checkedCount
-                    ? `<span class="edw-panel-badge">${checkedCount}</span>`
-                    : `<span style="color:#f07020;font-size:12px;font-weight:700;flex-shrink:0;letter-spacing:1px;">${isExpanded ? '▾ L/R' : '▸ L/R'}</span>`}
+        <div class="edw-panel-row${isSelected ? ' active' : ''}" onclick="_edwSelectPartBase(${gIdx})" style="cursor:pointer;">
+            <span>${escapeHtml(base)}</span>
+            ${checkedCount
+                ? `<span class="edw-panel-badge">${checkedCount}</span>`
+                : quals.length ? `<span style="color:#bbb;font-size:11px;flex-shrink:0;">▸</span>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function _buildEdwPanelQuals() {
+    if (_edwSelectedPartBase === null) {
+        return `<div class="edw-panel-empty" style="font-size:12px;padding:20px 10px;text-align:center;">← select<br>a part</div>`;
+    }
+    const zI = _edwSelectedZone, aI = _edwSelectedAsm;
+    const groups = _edwGetPartGroups(zI, aI);
+    const group  = groups[_edwSelectedPartBase];
+    if (!group) return '';
+
+    if (!group.quals.length) {
+        const key     = `${zI}:${aI}:${group.directPI}`;
+        const checked = !!_edwItems[key];
+        return `
+        <div class="edw-panel-part${checked ? ' checked' : ''}">
+            <div class="edw-pcell edw-pcell-name">
+                <label class="edw-part-check">
+                    <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${group.directPI},this.checked)">
+                    <span class="edw-part-name" style="font-style:italic;color:#999;">Add</span>
+                </label>
             </div>
-            ${qualRows}
+            ${_buildEdwPartControls(key, zI)}
+        </div>`;
+    }
+
+    return group.quals.map(({ label, pI }) => {
+        const key     = `${zI}:${aI}:${pI}`;
+        const checked = !!_edwItems[key];
+        return `
+        <div class="edw-panel-part${checked ? ' checked' : ''}">
+            <div class="edw-pcell edw-pcell-name">
+                <label class="edw-part-check">
+                    <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${pI},this.checked)">
+                    <span class="edw-part-name">${escapeHtml(label)}</span>
+                </label>
+            </div>
+            ${_buildEdwPartControls(key, zI)}
         </div>`;
     }).join('');
 }
@@ -11584,9 +11593,11 @@ function _edwSelectZonePanel(zI) {
     const z = document.getElementById('edwPanelZones');
     const a = document.getElementById('edwPanelAsms');
     const p = document.getElementById('edwPanelParts');
+    const q = document.getElementById('edwPanelQuals');
     if (z) z.innerHTML = _buildPanelZones();
     if (a) { a.innerHTML = _buildPanelAsms(zI); a.scrollTop = 0; }
     if (p) { p.innerHTML = _buildPanelParts(zI, 0); p.scrollTop = 0; }
+    if (q) q.innerHTML = _buildEdwPanelQuals();
     _updateEdwFooterCount();
 }
 
@@ -11594,14 +11605,18 @@ function _edwSelectAsmPanel(aI) {
     _edwSelectedAsm = aI; _edwSelectedPartBase = null;
     const a = document.getElementById('edwPanelAsms');
     const p = document.getElementById('edwPanelParts');
+    const q = document.getElementById('edwPanelQuals');
     if (a) a.innerHTML = _buildPanelAsms(_edwSelectedZone);
     if (p) { p.innerHTML = _buildPanelParts(_edwSelectedZone, aI); p.scrollTop = 0; }
+    if (q) q.innerHTML = _buildEdwPanelQuals();
 }
 
 function _edwSelectPartBase(gIdx) {
     _edwSelectedPartBase = (_edwSelectedPartBase === gIdx) ? null : gIdx;
     const p = document.getElementById('edwPanelParts');
+    const q = document.getElementById('edwPanelQuals');
     if (p) p.innerHTML = _buildPanelParts(_edwSelectedZone, _edwSelectedAsm);
+    if (q) q.innerHTML = _buildEdwPanelQuals();
 }
 
 function _edwGetPartGroups(zI, aI) {
@@ -11752,18 +11767,14 @@ function _edwAddPartPhoto(key, input) {
 }
 
 function _edwRefreshView() {
-    // Desktop 3-panel
     const z = document.getElementById('edwPanelZones');
     const a = document.getElementById('edwPanelAsms');
     const p = document.getElementById('edwPanelParts');
+    const q = document.getElementById('edwPanelQuals');
     if (z) z.innerHTML = _buildPanelZones();
     if (a) a.innerHTML = _buildPanelAsms(_edwSelectedZone);
     if (p) p.innerHTML = _buildPanelParts(_edwSelectedZone, _edwSelectedAsm);
-    // Mobile 2-panel
-    const detail = document.getElementById('edwZoneDetail');
-    if (detail) detail.innerHTML = _buildAssemblies(EDW_TAXONOMY[_edwSelectedZone], _edwSelectedZone);
-    const nav = document.getElementById('edwZoneNav');
-    if (nav) nav.innerHTML = _buildZoneNav();
+    if (q) q.innerHTML = _buildEdwPanelQuals();
     _updateEdwFooterCount();
 }
 

@@ -4334,6 +4334,24 @@ header {
 .detail-sell-yours-block { display: none; }
 
 /* ============================================================
+   TABLET LAYOUT — 768px+
+   ============================================================ */
+@media (min-width: 768px) {
+    #detailColWrap { display: flex; flex: 0 0 auto; }
+    .desktop-detail-images {
+        display: flex !important;
+        flex-direction: column;
+        width: 50%;
+        flex-shrink: 0;
+        padding: 20px;
+        background: #f7f7f7;
+        border-right: 1px solid #eee;
+    }
+    .mobile-carousel { display: none !important; }
+    .detail-info-col { flex: 1; min-width: 0; padding-bottom: 24px; }
+}
+
+/* ============================================================
    DESKTOP LAYOUT — 900px+
    ============================================================ */
 @media (min-width: 900px) {
