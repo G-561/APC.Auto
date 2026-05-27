@@ -11572,7 +11572,7 @@ function _buildPanelParts(zI, aI) {
                 <span>${escapeHtml(base)}</span>
                 ${checkedCount
                     ? `<span class="edw-panel-badge">${checkedCount}</span>`
-                    : `<span style="color:#bbb;font-size:13px;flex-shrink:0;">${isExpanded ? '▾' : '▸'}</span>`}
+                    : `<span style="color:#f07020;font-size:12px;font-weight:700;flex-shrink:0;letter-spacing:1px;">${isExpanded ? '▾ L/R' : '▸ L/R'}</span>`}
             </div>
             ${qualRows}
         </div>`;
