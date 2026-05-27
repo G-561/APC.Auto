@@ -12053,7 +12053,6 @@ async function _edwPublish() {
             stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
             location: userSettings.location || null,
             postcode: userSettings.postcode || null,
-            is_pro_listing: true,
         }).select('id').single();
 
         if (listing?.id) {
