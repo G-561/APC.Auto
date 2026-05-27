@@ -1,3 +1,18 @@
+// ─── EDW BODY TYPE FILTER ──────────────────────────────────────────────────
+// Hides zones/assemblies that don't apply to a given body type.
+// Keys match the options in the edwBodyType select in step 1.
+const EDW_BODY_FILTER = {
+    'Sedan':        { hideZones: ['4WD / Off-road'], hideAsms: ['Sliding Door', 'Tailgate Door', 'Ute Accessories'] },
+    'Hatchback':    { hideZones: ['4WD / Off-road'], hideAsms: ['Sliding Door', 'Ute Accessories'] },
+    'Wagon':        { hideZones: ['4WD / Off-road'], hideAsms: ['Sliding Door', 'Ute Accessories'] },
+    'Coupe':        { hideZones: ['4WD / Off-road'], hideAsms: ['Left Rear Door', 'Right Rear Door', 'Sliding Door', 'Tailgate Door', 'Ute Accessories'] },
+    'Convertible':  { hideZones: ['4WD / Off-road'], hideAsms: ['Left Rear Door', 'Right Rear Door', 'Sliding Door', 'Tailgate Door', 'Ute Accessories'] },
+    'SUV / 4WD':    { hideAsms: ['Sliding Door', 'Ute Accessories'] },
+    'Ute / Pickup': { hideAsms: ['Sliding Door'] },
+    'Van':          { hideZones: ['4WD / Off-road'], hideAsms: ['Ute Accessories'] },
+    'People Mover': { hideZones: ['4WD / Off-road'], hideAsms: ['Ute Accessories'] },
+};
+
 // ─── EDW TAXONOMY — Zone → Assembly → Part ────────────────────────────────
 // Edit via taxonomy-editor.html — Copy JS → paste here to update both EDW and Stock Lookup.
 const EDW_TAXONOMY = [

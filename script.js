@@ -11461,7 +11461,10 @@ function _renderEdwStep2Table(body, footer) {
 }
 
 function _buildPanelZones() {
+    const f = EDW_BODY_FILTER[_edwVehicle.bodyType] || {};
+    const hiddenZones = new Set(f.hideZones || []);
     return EDW_TAXONOMY.map((zone, zI) => {
+        if (hiddenZones.has(zone.zone)) return '';
         const count  = Object.keys(_edwItems).filter(k => k.startsWith(zI + ':')).length;
         const active = _edwSelectedZone === zI;
         return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_edwSelectZonePanel(${zI})">
@@ -11474,7 +11477,10 @@ function _buildPanelZones() {
 function _buildPanelAsms(zI) {
     const zone = EDW_TAXONOMY[zI];
     if (!zone) return '';
+    const f = EDW_BODY_FILTER[_edwVehicle.bodyType] || {};
+    const hiddenAsms = new Set(f.hideAsms || []);
     return zone.assemblies.map((asm, aI) => {
+        if (hiddenAsms.has(asm.name)) return '';
         const count  = asm.parts.filter((_, pI) => !!_edwItems[`${zI}:${aI}:${pI}`]).length;
         const active = _edwSelectedAsm === aI;
         return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_edwSelectAsmPanel(${aI})">
