@@ -12656,7 +12656,7 @@ async function _jrPublish(jobId) {
 
 // ─── Stock Lookup ─────────────────────────────────────────────────────────────
 
-let _slVehicle        = { make: '', model: '', year: '' };
+let _slVehicle        = { make: '', model: '', year: '', series: '' };
 let _slSelectedZone   = 0;
 let _slSelectedAsm    = 0;
 let _slTabs           = [];   // [{ partName, results:[], loading:false, error:null }]
@@ -12700,6 +12700,10 @@ function _slRenderVehicleBar() {
         ? buildYearOptionsForModel(_slVehicle.make, _slVehicle.model, _slVehicle.year)
         : '<option value="">Select…</option>';
 
+    const seriesOpts = (_slVehicle.make && _slVehicle.model && _slVehicle.year)
+        ? buildSeriesOptions(_slVehicle.make, _slVehicle.model, _slVehicle.year, _slVehicle.series)
+        : '';
+
     bar.innerHTML = `
         <div class="sl-veh-group">
             <span class="sl-veh-label">Make</span>
@@ -12713,9 +12717,15 @@ function _slRenderVehicleBar() {
                 ${models.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.model===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
             </select>
             <span class="sl-veh-label">Year</span>
-            <select class="sl-veh-select" style="flex:0 0 90px;" onchange="_slOnYearChange(this.value)" ${(_slVehicle.make && _slVehicle.model)?'':'disabled'}>
+            <select class="sl-veh-select sl-veh-select-narrow" onchange="_slOnYearChange(this.value)" ${(_slVehicle.make && _slVehicle.model)?'':'disabled'}>
                 ${yearOpts}
             </select>
+            ${seriesOpts ? `
+            <span class="sl-veh-label">Series</span>
+            <select class="sl-veh-select sl-veh-select-narrow" onchange="_slOnSeriesChange(this.value)">
+                <option value="">All</option>
+                ${seriesOpts}
+            </select>` : ''}
         </div>
         <div class="sl-veh-group sl-stock-group">
             <span class="sl-veh-label">Stock No.</span>
@@ -12725,16 +12735,19 @@ function _slRenderVehicleBar() {
 }
 
 function _slOnMakeChange(val) {
-    _slVehicle = { make: val, model: '', year: '' };
+    _slVehicle = { make: val, model: '', year: '', series: '' };
     _slRenderVehicleBar();
 }
 function _slOnModelChange(val) {
-    _slVehicle.model = val; _slVehicle.year = '';
+    _slVehicle.model = val; _slVehicle.year = ''; _slVehicle.series = '';
     _slRenderVehicleBar();
 }
 function _slOnYearChange(val) {
-    _slVehicle.year = val;
+    _slVehicle.year = val; _slVehicle.series = '';
     _slRenderVehicleBar();
+}
+function _slOnSeriesChange(val) {
+    _slVehicle.series = val;
 }
 
 function _slStockDebounceSearch(val) {
