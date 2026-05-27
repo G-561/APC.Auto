@@ -10136,6 +10136,13 @@ function submitWorkshopProfile() {
         if (wsSub) userSettings.location = wsSub + (wsPc ? ' ' + wsPc : '');
     }
     saveUserSettings();
+    if (currentUserId && sb) {
+        sb.from('profiles').update({
+            business_name: userSettings.businessName || null,
+            abn:           userSettings.abn           || null,
+            about:         userSettings.about         || null,
+        }).eq('id', currentUserId).then(() => {});
+    }
     const getChk = id => document.getElementById(id)?.checked || false;
     workshopProfile = {
         vehicles: workshopProfile.vehicles || [],
