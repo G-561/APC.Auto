@@ -11150,6 +11150,18 @@ let _edwSelectedPartBase = null; // index into _edwGetPartGroups() result for th
 
 const EDW_VEHICLE_ANGLES = ['Front Left', 'Front Right', 'Rear Left', 'Rear Right', 'Instrument Cluster', 'Compliance Plate'];
 
+const EDW_BODY_FILTER = {
+    'Sedan':        { hideZones: ['4WD / Off-road'], hideAsms: ['Sliding Door', 'Tailgate Door', 'Ute Accessories'] },
+    'Hatchback':    { hideZones: ['4WD / Off-road'], hideAsms: ['Sliding Door', 'Ute Accessories'] },
+    'Wagon':        { hideZones: ['4WD / Off-road'], hideAsms: ['Sliding Door', 'Ute Accessories'] },
+    'Coupe':        { hideZones: ['4WD / Off-road'], hideAsms: ['Rear Door', 'Sliding Door', 'Tailgate Door', 'Ute Accessories'] },
+    'Convertible':  { hideZones: ['4WD / Off-road'], hideAsms: ['Rear Door', 'Sliding Door', 'Tailgate Door', 'Ute Accessories'] },
+    'SUV / 4WD':    { hideAsms: ['Sliding Door', 'Ute Accessories'] },
+    'Ute / Pickup': { hideAsms: ['Sliding Door'] },
+    'Van':          { hideZones: ['4WD / Off-road'], hideAsms: ['Ute Accessories'] },
+    'People Mover': { hideZones: ['4WD / Off-road'], hideAsms: ['Ute Accessories'] },
+};
+
 function openEdw() {
     if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
     _edwVehicle       = {};
