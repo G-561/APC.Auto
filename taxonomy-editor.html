@@ -11,17 +11,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header { background: #1a1a2e; color: white; padding: 13px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .header h1 { font-size: 15px; font-weight: 700; flex: 1; }
 .dev-tag { background: #f07020; color: white; font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 4px; letter-spacing: 0.8px; text-transform: uppercase; }
-.header-note { font-size: 11px; color: #888; }
+.header-note { font-size: 11px; color: #666; }
 
-.main { display: grid; grid-template-columns: 230px 230px 1fr; gap: 1px; background: #e0e0e0; flex: 1; overflow: hidden; }
+.main { display: grid; grid-template-columns: 200px 200px 190px 160px; gap: 1px; background: #e0e0e0; flex: 1; overflow: hidden; }
 
 .col { background: white; display: flex; flex-direction: column; min-height: 0; }
 .col-header { padding: 11px 14px; border-bottom: 2px solid #f4f4f4; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .col-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #888; flex: 1; }
 .col-count { font-size: 11px; color: #ccc; }
-
 .col-list { flex: 1; overflow-y: auto; min-height: 0; }
-
 .col-footer { padding: 8px 10px; border-top: 1px solid #f4f4f4; flex-shrink: 0; }
 
 .item { padding: 9px 14px; cursor: pointer; border-bottom: 1px solid #f8f8f8; display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.3; transition: background 0.1s; }
@@ -29,20 +27,27 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .item.active { background: #fff4ed; border-left: 3px solid #f07020; padding-left: 11px; color: #c45a00; font-weight: 600; }
 .item-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-badge { font-size: 10px; color: #bbb; background: #f4f4f4; padding: 2px 5px; border-radius: 3px; flex-shrink: 0; font-weight: 600; }
-.item-qual { font-size: 10px; color: #22c55e; flex-shrink: 0; font-weight: 700; }
-.btn-icon { opacity: 0; font-size: 14px; color: #ccc; cursor: pointer; flex-shrink: 0; padding: 2px 4px; border-radius: 3px; line-height: 1; transition: opacity 0.1s, color 0.1s, background 0.1s; border: none; background: none; }
+.item-arrow { font-size: 11px; color: #bbb; flex-shrink: 0; }
+.btn-icon { opacity: 0; font-size: 14px; color: #ccc; cursor: pointer; flex-shrink: 0; padding: 2px 4px; border-radius: 3px; line-height: 1; transition: opacity 0.1s, color 0.1s, background 0.1s; border: none; background: none; font-family: inherit; }
 .item:hover .btn-icon { opacity: 1; }
 .btn-icon.del:hover { color: #ef4444; background: #fee2e2; }
 .btn-icon.edit:hover { color: #f07020; background: #fff4ed; }
 
-.empty-state { padding: 40px 16px; text-align: center; color: #ccc; font-size: 13px; }
-.empty-state strong { display: block; font-size: 15px; margin-bottom: 6px; color: #ddd; }
+.empty-state { padding: 36px 14px; text-align: center; color: #ccc; font-size: 12px; line-height: 1.6; }
+.empty-state strong { display: block; font-size: 14px; margin-bottom: 4px; color: #ddd; }
 
-.add-btn { width: 100%; padding: 8px; border: 1px dashed #ddd; background: white; color: #bbb; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+.add-btn { width: 100%; padding: 8px; border: 1px dashed #ddd; background: white; color: #bbb; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
 .add-btn:hover { border-color: #f07020; color: #f07020; background: #fff4ed; }
 
 .cat-select { font-size: 10px; color: #aaa; background: #f8f8f8; border: 1px solid #eee; border-radius: 3px; padding: 2px 4px; cursor: pointer; flex-shrink: 0; font-family: inherit; }
 .cat-select:focus { outline: 1px solid #f07020; }
+
+/* Options column — slightly different tint */
+.col.options-col { background: #fdfcfb; }
+.col.options-col .col-header { border-bottom-color: #f5ede6; }
+.col.options-col .item { border-bottom-color: #f7f3f0; }
+.col.options-col .item:hover { background: #fdf6f1; }
+.col.options-col .item.active { background: #fff4ed; }
 
 .bottom-bar { background: #1a1a2e; padding: 11px 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .copy-btn { background: #f07020; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.1s; font-family: inherit; }
@@ -50,12 +55,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .copy-btn:active { transform: scale(0.97); }
 .copy-ok { color: #22c55e; font-size: 13px; font-weight: 700; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
 .copy-ok.show { opacity: 1; }
-.bottom-note { color: #555; font-size: 12px; margin-left: auto; line-height: 1.4; text-align: right; }
+.bottom-note { color: #555; font-size: 12px; margin-left: auto; line-height: 1.5; text-align: right; }
 .bottom-note code { color: #f07020; background: #0d0d1f; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
-
-/* Parts-column hint bar */
-.parts-hint { padding: 7px 14px; background: #f9f9f9; border-bottom: 1px solid #f0f0f0; font-size: 11px; color: #aaa; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.parts-hint .dot { color: #22c55e; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -63,58 +64,55 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 <div class="header">
   <h1>APC — Taxonomy Editor</h1>
   <span class="dev-tag">Dev Tool</span>
-  <span class="header-note">Changes are in-browser only — use Copy JS to export</span>
+  <span class="header-note">Mirrors the 4-column Stock Lookup layout — changes are in-browser only</span>
 </div>
 
 <div class="main">
 
-  <!-- ZONES -->
   <div class="col">
     <div class="col-header">
       <span class="col-title">Zones</span>
       <span class="col-count" id="zone-count"></span>
     </div>
     <div class="col-list" id="zone-list"></div>
-    <div class="col-footer">
-      <button class="add-btn" onclick="addZone()">+ Add Zone</button>
-    </div>
+    <div class="col-footer"><button class="add-btn" onclick="addZone()">+ Add Zone</button></div>
   </div>
 
-  <!-- ASSEMBLIES -->
   <div class="col">
     <div class="col-header">
       <span class="col-title">Assemblies</span>
       <span class="col-count" id="asm-count"></span>
     </div>
     <div class="col-list" id="asm-list"></div>
-    <div class="col-footer">
-      <button class="add-btn" onclick="addAssembly()">+ Add Assembly</button>
-    </div>
+    <div class="col-footer"><button class="add-btn" onclick="addAssembly()">+ Add Assembly</button></div>
   </div>
 
-  <!-- PARTS -->
   <div class="col">
     <div class="col-header">
       <span class="col-title">Parts</span>
       <span class="col-count" id="parts-count"></span>
     </div>
-    <div class="parts-hint">
-      <span class="dot">●</span> green dot = has qualifier → auto-populates col 4 in Stock Lookup &nbsp;·&nbsp; e.g. <em>Shock Absorber (Front Left)</em>
-    </div>
     <div class="col-list" id="parts-list"></div>
-    <div class="col-footer">
-      <button class="add-btn" onclick="addPart()">+ Add Part</button>
+    <div class="col-footer"><button class="add-btn" onclick="addPart()">+ Add Part</button></div>
+  </div>
+
+  <div class="col options-col">
+    <div class="col-header">
+      <span class="col-title">Options</span>
+      <span class="col-count" id="opts-count"></span>
     </div>
+    <div class="col-list" id="opts-list"></div>
+    <div class="col-footer"><button class="add-btn" onclick="addOption()">+ Add Option</button></div>
   </div>
 
 </div>
 
 <div class="bottom-bar">
   <button class="copy-btn" onclick="copyJS()">Copy JS</button>
-  <span class="copy-ok" id="copy-ok">✓ Copied to clipboard!</span>
+  <span class="copy-ok" id="copy-ok">✓ Copied!</span>
   <span class="bottom-note">
     Paste into script.js, replacing <code>const EDW_TAXONOMY = [...];</code><br>
-    Search for <code>const EDW_TAXONOMY</code> to find the right spot.
+    Search <code>const EDW_TAXONOMY</code> to find the right spot.
   </span>
 </div>
 
@@ -272,18 +270,29 @@ const TAXONOMY_DATA = [
 let taxonomy = JSON.parse(JSON.stringify(TAXONOMY_DATA));
 let selZone = 0;
 let selAsm  = 0;
+let selPart = 0; // index into getGroups() result
+
+// ── Part grouping (mirrors _slGetPartGroups in script.js) ────────────
+function getGroups(zI, aI) {
+    const parts = taxonomy[zI]?.assemblies[aI]?.parts || [];
+    const map = new Map();
+    parts.forEach(p => {
+        const m = p.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+        const base = m ? m[1].trim() : p;
+        const qual = m ? m[2].trim() : null;
+        if (!map.has(base)) map.set(base, []);
+        if (qual) map.get(base).push(qual);
+    });
+    return [...map.entries()].map(([base, quals]) => ({ base, quals }));
+}
 
 // ── Utils ────────────────────────────────────────────────────────────
 function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function qualifier(name) {
-    const m = name.match(/^.*?\(([^)]+)\)\s*$/);
-    return m ? m[1] : null;
-}
 
 // ── Render ───────────────────────────────────────────────────────────
-function render() { renderZones(); renderAsms(); renderParts(); }
+function render() { renderZones(); renderAsms(); renderParts(); renderOpts(); }
 
 function renderZones() {
     document.getElementById('zone-count').textContent = taxonomy.length;
@@ -291,11 +300,11 @@ function renderZones() {
         ? taxonomy.map((z, i) => `
             <div class="item${i===selZone?' active':''}" onclick="selectZone(${i})">
                 <div class="item-text" title="${esc(z.zone)}">${esc(z.zone)}</div>
-                <select class="cat-select" onchange="changeCat(${i},this.value)" onclick="event.stopPropagation()" title="APC category">
+                <select class="cat-select" onchange="changeCat(${i},this.value)" onclick="event.stopPropagation()">
                     ${APC_CATS.map(c=>`<option value="${c}"${c===z.apcCategory?' selected':''}>${c}</option>`).join('')}
                 </select>
-                <button class="btn-icon edit" title="Rename" onclick="event.stopPropagation();renameZone(${i})">✎</button>
-                <button class="btn-icon del" title="Delete" onclick="event.stopPropagation();delZone(${i})">×</button>
+                <button class="btn-icon edit" onclick="event.stopPropagation();renameZone(${i})">✎</button>
+                <button class="btn-icon del"  onclick="event.stopPropagation();delZone(${i})">×</button>
             </div>`)
           .join('')
         : '<div class="empty-state"><strong>No zones</strong>Add one below</div>';
@@ -305,71 +314,107 @@ function renderAsms() {
     const zone = taxonomy[selZone];
     document.getElementById('asm-count').textContent = zone ? zone.assemblies.length : '';
     document.getElementById('asm-list').innerHTML = !zone
-        ? '<div class="empty-state"><strong>—</strong>Select a zone first</div>'
+        ? '<div class="empty-state"><strong>—</strong>Select a zone</div>'
         : !zone.assemblies.length
         ? '<div class="empty-state"><strong>No assemblies</strong>Add one below</div>'
         : zone.assemblies.map((a, i) => `
             <div class="item${i===selAsm?' active':''}" onclick="selectAsm(${i})">
                 <div class="item-text" title="${esc(a.name)}">${esc(a.name)}</div>
                 <span class="item-badge">${a.parts.length}</span>
-                <button class="btn-icon edit" title="Rename" onclick="event.stopPropagation();renameAsm(${i})">✎</button>
-                <button class="btn-icon del" title="Delete" onclick="event.stopPropagation();delAsm(${i})">×</button>
+                <button class="btn-icon edit" onclick="event.stopPropagation();renameAsm(${i})">✎</button>
+                <button class="btn-icon del"  onclick="event.stopPropagation();delAsm(${i})">×</button>
             </div>`)
           .join('');
 }
 
 function renderParts() {
-    const asm = taxonomy[selZone]?.assemblies[selAsm];
-    document.getElementById('parts-count').textContent = asm ? asm.parts.length : '';
-    document.getElementById('parts-list').innerHTML = !asm
-        ? '<div class="empty-state"><strong>—</strong>Select an assembly first</div>'
-        : !asm.parts.length
+    const groups = getGroups(selZone, selAsm);
+    document.getElementById('parts-count').textContent = groups.length || '';
+    document.getElementById('parts-list').innerHTML = !taxonomy[selZone]?.assemblies[selAsm]
+        ? '<div class="empty-state"><strong>—</strong>Select an assembly</div>'
+        : !groups.length
         ? '<div class="empty-state"><strong>No parts</strong>Add one below</div>'
-        : asm.parts.map((p, i) => {
-            const q = qualifier(p);
-            return `<div class="item" style="cursor:default">
-                <div class="item-text" title="${esc(p)}">${esc(p)}</div>
-                ${q ? `<span class="item-qual" title="Qualifier col 4: ${esc(q)}">● ${esc(q)}</span>` : ''}
-                <button class="btn-icon edit" title="Rename" onclick="renamePart(${i})">✎</button>
-                <button class="btn-icon del"  title="Delete"  onclick="delPart(${i})">×</button>
-            </div>`;
-          }).join('');
+        : groups.map((g, i) => `
+            <div class="item${i===selPart?' active':''}" onclick="selectPart(${i})">
+                <div class="item-text" title="${esc(g.base)}">${esc(g.base)}</div>
+                ${g.quals.length ? `<span class="item-arrow">▸</span><span class="item-badge">${g.quals.length}</span>` : ''}
+                <button class="btn-icon edit" onclick="event.stopPropagation();renamePart(${i})">✎</button>
+                <button class="btn-icon del"  onclick="event.stopPropagation();delPart(${i})">×</button>
+            </div>`)
+          .join('');
+}
+
+function renderOpts() {
+    const groups = getGroups(selZone, selAsm);
+    const group  = groups[selPart];
+    document.getElementById('opts-count').textContent = group?.quals.length || '';
+    if (!group) {
+        document.getElementById('opts-list').innerHTML = '<div class="empty-state"><strong>—</strong>Select a part</div>';
+        return;
+    }
+    if (!group.quals.length) {
+        document.getElementById('opts-list').innerHTML =
+            '<div class="empty-state">No options<br><span style="font-size:11px;color:#ccc">Add one below to split<br>this part into variants</span></div>';
+        return;
+    }
+    document.getElementById('opts-list').innerHTML = group.quals.map((q, i) => `
+        <div class="item">
+            <div class="item-text">${esc(q)}</div>
+            <button class="btn-icon edit" onclick="renameOpt(${i})">✎</button>
+            <button class="btn-icon del"  onclick="delOpt(${i})">×</button>
+        </div>`).join('');
 }
 
 // ── Select ───────────────────────────────────────────────────────────
-function selectZone(i) { selZone=i; selAsm=0; render(); }
-function selectAsm(i)  { selAsm=i; renderAsms(); renderParts(); }
+function selectZone(i) { selZone=i; selAsm=0; selPart=0; render(); }
+function selectAsm(i)  { selAsm=i;  selPart=0; renderAsms(); renderParts(); renderOpts(); }
+function selectPart(i) { selPart=i; renderParts(); renderOpts(); }
 
 // ── Add ──────────────────────────────────────────────────────────────
 function addZone() {
     const n = prompt('Zone name:');
     if (!n?.trim()) return;
     taxonomy.push({ zone: n.trim(), apcCategory: 'other', assemblies: [] });
-    selZone = taxonomy.length-1; selAsm = 0;
+    selZone = taxonomy.length-1; selAsm=0; selPart=0;
     render();
 }
+
 function addAssembly() {
     if (!taxonomy[selZone]) return alert('Select a zone first.');
     const n = prompt('Assembly name:');
     if (!n?.trim()) return;
     taxonomy[selZone].assemblies.push({ name: n.trim(), parts: [] });
-    selAsm = taxonomy[selZone].assemblies.length-1;
+    selAsm = taxonomy[selZone].assemblies.length-1; selPart=0;
     render();
 }
+
 function addPart() {
     const asm = taxonomy[selZone]?.assemblies[selAsm];
     if (!asm) return alert('Select an assembly first.');
-    const n = prompt(
-        'Part name:\n\n' +
-        'Tip: end with (qualifier) to populate col 4 in Stock Lookup.\n' +
-        'Examples:\n' +
-        '  Shock Absorber (Front Left)\n' +
-        '  Gearbox (Manual)\n' +
-        '  Coil Spring (Rear Right)'
-    );
+    const n = prompt('Part name:\n\nTip: leave options for the Options column — just enter the base name here, e.g. "Shock Absorber" not "Shock Absorber (Front Left)"');
     if (!n?.trim()) return;
-    asm.parts.push(n.trim());
-    renderParts();
+    // Strip any trailing qualifier from the base name entered here
+    const base = n.trim().replace(/\s*\([^)]+\)\s*$/, '').trim();
+    asm.parts.push(base);
+    selPart = getGroups(selZone, selAsm).length - 1;
+    renderParts(); renderOpts();
+}
+
+function addOption() {
+    const asm = taxonomy[selZone]?.assemblies[selAsm];
+    if (!asm) return alert('Select an assembly first.');
+    const groups = getGroups(selZone, selAsm);
+    const group  = groups[selPart];
+    if (!group) return alert('Select a part first.');
+    const q = prompt(`Add option for "${group.base}":\n\nExamples: Left, Right, Front Left, Manual, Automatic`);
+    if (!q?.trim()) return;
+    asm.parts.push(`${group.base} (${q.trim()})`);
+    // Remove bare base-name entry if we just added the first qualifier
+    if (!group.quals.length) {
+        const idx = asm.parts.indexOf(group.base);
+        if (idx !== -1) asm.parts.splice(idx, 1);
+    }
+    renderParts(); renderOpts();
 }
 
 // ── Rename ───────────────────────────────────────────────────────────
@@ -378,39 +423,87 @@ function renameZone(i) {
     if (!n?.trim() || n.trim()===taxonomy[i].zone) return;
     taxonomy[i].zone = n.trim(); renderZones();
 }
+
 function renameAsm(i) {
     const cur = taxonomy[selZone].assemblies[i].name;
     const n = prompt('Rename assembly:', cur);
     if (!n?.trim() || n.trim()===cur) return;
     taxonomy[selZone].assemblies[i].name = n.trim(); renderAsms();
 }
+
 function renamePart(i) {
-    const asm = taxonomy[selZone]?.assemblies[selAsm];
-    if (!asm) return;
-    const n = prompt('Rename part:', asm.parts[i]);
-    if (!n?.trim() || n.trim()===asm.parts[i]) return;
-    asm.parts[i] = n.trim(); renderParts();
+    const groups = getGroups(selZone, selAsm);
+    const group  = groups[i];
+    if (!group) return;
+    const n = prompt('Rename part base name:', group.base);
+    if (!n?.trim() || n.trim()===group.base) return;
+    const newBase = n.trim();
+    const asm = taxonomy[selZone].assemblies[selAsm];
+    asm.parts = asm.parts.map(p => {
+        if (p === group.base) return newBase;
+        if (p.startsWith(group.base + ' (')) return newBase + p.slice(group.base.length);
+        return p;
+    });
+    renderParts(); renderOpts();
+}
+
+function renameOpt(i) {
+    const groups = getGroups(selZone, selAsm);
+    const group  = groups[selPart];
+    if (!group || !group.quals[i]) return;
+    const oldQ = group.quals[i];
+    const n = prompt('Rename option:', oldQ);
+    if (!n?.trim() || n.trim()===oldQ) return;
+    const asm = taxonomy[selZone].assemblies[selAsm];
+    const oldFull = `${group.base} (${oldQ})`;
+    const newFull = `${group.base} (${n.trim()})`;
+    const idx = asm.parts.indexOf(oldFull);
+    if (idx !== -1) asm.parts[idx] = newFull;
+    renderParts(); renderOpts();
 }
 
 // ── Delete ───────────────────────────────────────────────────────────
 function delZone(i) {
-    if (!confirm(`Delete zone "${taxonomy[i].zone}" and ALL its assemblies and parts?`)) return;
+    if (!confirm(`Delete zone "${taxonomy[i].zone}" and ALL its contents?`)) return;
     taxonomy.splice(i,1);
     selZone = Math.min(selZone, Math.max(0, taxonomy.length-1));
-    selAsm = 0;
+    selAsm=0; selPart=0;
     render();
 }
+
 function delAsm(i) {
     const a = taxonomy[selZone]?.assemblies[i];
     if (!a || !confirm(`Delete assembly "${a.name}" and all its parts?`)) return;
     taxonomy[selZone].assemblies.splice(i,1);
     selAsm = Math.min(selAsm, Math.max(0, taxonomy[selZone].assemblies.length-1));
+    selPart=0;
     render();
 }
+
 function delPart(i) {
-    const asm = taxonomy[selZone]?.assemblies[selAsm];
-    if (!asm || !confirm(`Delete part "${asm.parts[i]}"?`)) return;
-    asm.parts.splice(i,1); renderParts();
+    const groups = getGroups(selZone, selAsm);
+    const group  = groups[i];
+    if (!group) return;
+    const label = group.quals.length ? `"${group.base}" and all its ${group.quals.length} options` : `"${group.base}"`;
+    if (!confirm(`Delete ${label}?`)) return;
+    const asm = taxonomy[selZone].assemblies[selAsm];
+    asm.parts = asm.parts.filter(p => p !== group.base && !p.startsWith(group.base + ' ('));
+    selPart = Math.min(selPart, Math.max(0, getGroups(selZone, selAsm).length-1));
+    renderParts(); renderOpts();
+}
+
+function delOpt(i) {
+    const groups = getGroups(selZone, selAsm);
+    const group  = groups[selPart];
+    if (!group || !group.quals[i]) return;
+    const full = `${group.base} (${group.quals[i]})`;
+    if (!confirm(`Delete option "${group.quals[i]}" from "${group.base}"?`)) return;
+    const asm = taxonomy[selZone].assemblies[selAsm];
+    asm.parts = asm.parts.filter(p => p !== full);
+    // If last option removed, restore the bare base name
+    const remaining = getGroups(selZone, selAsm).find(g => g.base === group.base);
+    if (!remaining) asm.parts.push(group.base);
+    renderParts(); renderOpts();
 }
 
 // ── Category ─────────────────────────────────────────────────────────
@@ -436,10 +529,9 @@ function copyJS() {
         const el = document.getElementById('copy-ok');
         el.classList.add('show');
         setTimeout(() => el.classList.remove('show'), 2500);
-    }).catch(() => alert('Clipboard blocked — try in a different browser or via HTTP.'));
+    }).catch(() => alert('Clipboard blocked — try in Chrome/Edge or serve via HTTP.'));
 }
 
-// ── Boot ─────────────────────────────────────────────────────────────
 render();
 </script>
 </body>
