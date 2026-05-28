@@ -3255,8 +3255,14 @@ function getRecommendedWorkshops(part) {
 
     return workshopDatabase
         .map(ws => {
+            const allMakes = ws.vehicleTypes.includes('All Makes');
             let score = 0;
-            if (targetMake  && ws.vehicleTypes.some(v => v.toLowerCase() === targetMake.toLowerCase()))  score += 3;
+
+            if (targetMake) {
+                const makeMatch = allMakes || ws.vehicleTypes.some(v => v.toLowerCase() === targetMake.toLowerCase());
+                if (!makeMatch) return { ws, score: 0 };   // hard exclude — doesn't work on this make
+                score += allMakes ? 2 : 3;                 // specialist outranks generalist
+            }
             if (targetModel && ws.vehicleTypes.some(v => v.toLowerCase() === targetModel.toLowerCase())) score += 2;
             if (mappedKeys.length && mappedKeys.some(k => ws.serviceKeys.includes(k))) score += 2;
             if (buyerPostcode && ws.postcode && buyerPostcode.slice(0, 3) === ws.postcode.slice(0, 3)) score += 1;
