@@ -13015,7 +13015,11 @@ function _slTogglePartCheck(base, qualifier, checked) {
 
 async function _slSearch(partBase, qualifier, tabIdx) {
     if (!sb) return;
+    // Capture demand: include vehicle context so the report shows "Toyota HiAce Taillight Left"
     const { make, model, year } = _slVehicle;
+    const vehiclePrefix = [make, model].filter(Boolean).join(' ');
+    const demandTerm = [vehiclePrefix, partBase, qualifier].filter(Boolean).join(' ');
+    recordSearch(demandTerm);
     const _slSeries = _slVehicle.series;
     const yearRange = (year && make && model)
         ? (_slSeries && getVehicleYearRange(make, `${model} ${_slSeries}`, year))
