@@ -1652,6 +1652,7 @@ header {
     display: none;
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background: var(--white); z-index: 3100; flex-direction: column;
+    overflow-x: hidden;
 }
 /* Detail overlay always stacks on top of any other open drawer */
 #detailOverlay { z-index: 3150; }
@@ -1801,7 +1802,7 @@ header {
     transition: background 0.15s;
 }
 .back-btn:hover { background: rgba(255, 138, 51, 0.1); }
-.drawer-content { padding: 15px; flex: 1; overflow-y: auto; background: white; padding-bottom: 100px; }
+.drawer-content { padding: 15px; flex: 1; overflow-y: auto; overflow-x: hidden; background: white; padding-bottom: 100px; }
 
 .detail-workshop-section {
     padding: 15px 0 0 0;
