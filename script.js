@@ -13017,61 +13017,71 @@ function _slTogglePartCheck(base, qualifier, checked) {
 async function _slSearch(partBase, qualifier, tabIdx) {
     if (!sb) return;
     const { make, model, year } = _slVehicle;
-
-    // Step 1: get listing IDs that match this make/model
-    const { data: vRows } = await sb
-        .from('listing_vehicles')
-        .select('listing_id')
-        .eq('make', make)
-        .eq('model', model);
-
-    const ids = (vRows || []).map(v => v.listing_id).filter(Boolean);
-    if (!ids.length) {
-        if (_slTabs[tabIdx]) { _slTabs[tabIdx].loading = false; _slTabs[tabIdx].results = []; }
-        if (_slActiveTab === tabIdx) _slRenderResults();
-        _slRenderTabs();
-        return;
-    }
-
-    // Step 2: fetch matching listings, filtering by part base name + optional qualifier
-    // Try series-specific range first (e.g. "Hilux N70 (KUN26/KUN36)"), fall back to base model
     const _slSeries = _slVehicle.series;
-    const yearRange = year
+    const yearRange = (year && make && model)
         ? (_slSeries && getVehicleYearRange(make, `${model} ${_slSeries}`, year))
           || getVehicleYearRange(make, model, year)
         : null;
 
-    let query = sb
-        .from('listings')
-        .select(`id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
-                 listing_images(storage_path, position)`)
-        .in('id', ids)
-        .eq('status', 'active')
-        .ilike('title', `%${partBase}%`)
-        .order('created_at', { ascending: false })
-        .limit(60);
-    if (yearRange) {
-        query = query.gte('fits_year', yearRange[0]).lte('fits_year', yearRange[1]);
-    } else if (year) {
-        query = query.eq('fits_year', Number(year));
-    }
-    if (qualifier) query = query.ilike('title', `%${qualifier}%`);
-    const { data, error } = await query;
+    // Year filter: always include null fits_year (universal parts fit any vehicle)
+    // Uses two chained .or() calls which AND together to give:
+    //   fits_year IS NULL  OR  (fits_year >= lo AND fits_year <= hi)
+    const applyYearFilter = q => {
+        if (yearRange) {
+            return q
+                .or(`fits_year.is.null,fits_year.gte.${yearRange[0]}`)
+                .or(`fits_year.is.null,fits_year.lte.${yearRange[1]}`);
+        }
+        if (year) return q.or(`fits_year.is.null,fits_year.eq.${Number(year)}`);
+        return q;
+    };
 
-    // Step 3: batch-fetch seller profiles
+    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
+                  listing_images(storage_path, position)`;
+
+    // Search A: own listings — direct, no listing_vehicles dependency
+    // Catches older listings that predate vehicle-linking or were listed without vehicle info
+    let ownQ = sb.from('listings').select(cols)
+        .eq('seller_id', currentUserId).eq('status', 'active')
+        .ilike('title', `%${partBase}%`).order('created_at', { ascending: false }).limit(60);
+    if (qualifier) ownQ = ownQ.ilike('title', `%${qualifier}%`);
+    ownQ = applyYearFilter(ownQ);
+
+    // Search B: other yards — via listing_vehicles to ensure vehicle compatibility
+    const { data: vRows } = await sb
+        .from('listing_vehicles').select('listing_id').eq('make', make).eq('model', model);
+    const vehicleIds = (vRows || []).map(v => v.listing_id).filter(Boolean);
+
+    const promises = [ownQ];
+    if (vehicleIds.length) {
+        let otherQ = sb.from('listings').select(cols)
+            .in('id', vehicleIds).neq('seller_id', currentUserId)
+            .eq('status', 'active').ilike('title', `%${partBase}%`)
+            .order('created_at', { ascending: false }).limit(60);
+        if (qualifier) otherQ = otherQ.ilike('title', `%${qualifier}%`);
+        otherQ = applyYearFilter(otherQ);
+        promises.push(otherQ);
+    }
+
+    const responses = await Promise.all(promises);
+    const ownResults   = responses[0]?.data || [];
+    const otherResults = (responses[1]?.data || []).filter(r => !ownResults.some(o => o.id === r.id));
+    const error        = responses[0]?.error;
+
+    // Fetch profiles for other yards
     let profileMap = {};
-    if (data?.length) {
-        const sellerIds = [...new Set(data.map(r => r.seller_id))].filter(Boolean);
+    if (otherResults.length) {
+        const sellerIds = [...new Set(otherResults.map(r => r.seller_id))].filter(Boolean);
         if (sellerIds.length) {
-            const { data: profs } = await sb
-                .from('profiles')
-                .select('id, display_name, is_pro')
-                .in('id', sellerIds);
+            const { data: profs } = await sb.from('profiles').select('id, display_name, is_pro').in('id', sellerIds);
             profileMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
         }
     }
 
-    const results = (data || []).map(r => ({ ...r, profiles: profileMap[r.seller_id] || null }));
+    const results = [
+        ...ownResults.map(r => ({ ...r, profiles: null })),
+        ...otherResults.map(r => ({ ...r, profiles: profileMap[r.seller_id] || null })),
+    ];
     results.forEach(r => _slResultsMap.set(r.id, r));
 
     if (_slTabs[tabIdx]) {
