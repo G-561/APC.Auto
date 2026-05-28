@@ -11572,7 +11572,7 @@ function _buildEdwPanelQuals() {
             <div class="edw-pcell edw-pcell-name">
                 <label class="edw-part-check">
                     <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${group.directPI},this.checked)">
-                    <span class="edw-part-name" style="font-style:italic;color:#999;">Add</span>
+                    <span class="edw-part-name" style="font-style:italic;color:#999;">Select</span>
                 </label>
             </div>
             ${_buildEdwPartControls(key, zI)}
@@ -12901,13 +12901,11 @@ function _buildSlParts(zI, aI) {
         const checkedAll = searched.has(base);
         const checkedAny = hasQuals && qualifiers.some(q => searched.has(`${base} — ${q}`));
         const checked    = checkedAll || checkedAny;
-        const count      = hasQuals ? qualifiers.filter(q => searched.has(`${base} — ${q}`)).length + (checkedAll ? 1 : 0) : 0;
-        const safeBase   = escapeHtml(base).replace(/'/g, "\\'");
+        const count      = hasQuals
+            ? qualifiers.filter(q => searched.has(`${base} — ${q}`)).length + (checkedAll ? 1 : 0)
+            : (checkedAll ? 1 : 0);
         return `<div class="edw-panel-row sl-part-row${checked ? ' searched' : ''}${isSelected ? ' active' : ''}"
                      onclick="_slSelectPartBase(${idx})">
-            ${!hasQuals
-                ? `<label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${checkedAll ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)"></label>`
-                : `<span style="width:20px;flex-shrink:0;"></span>`}
             <span>${escapeHtml(base)}</span>
             ${count  ? `<span class="sl-count-badge">${count}</span>` : ''}
             ${hasQuals ? '<span style="color:#bbb;font-size:13px;flex-shrink:0;margin-left:auto;">▸</span>' : ''}
@@ -12916,22 +12914,34 @@ function _buildSlParts(zI, aI) {
 }
 
 function _buildSlQualifiers() {
-    if (!_slSelectedPartBase || !_slSelectedPartBase.qualifiers.length) {
+    if (!_slSelectedPartBase) {
         return `<div class="edw-panel-empty" style="font-size:12px;padding:20px 10px;text-align:center;">← select<br>a part</div>`;
     }
     const { base, qualifiers } = _slSelectedPartBase;
     const searched  = new Set(_slTabs.map(t => t.partName));
     const safeBase  = escapeHtml(base).replace(/'/g, "\\'");
-    const allDone   = searched.has(base);
+
+    // No qualifiers — show single "Select" checkbox (matches EDW pattern)
+    if (!qualifiers.length) {
+        const checked = searched.has(base);
+        return `<div class="edw-panel-row sl-part-row${checked ? ' searched' : ''}">
+            <label class="sl-part-check" onclick="event.stopPropagation()">
+                <input type="checkbox"${checked ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)">
+            </label>
+            <span style="color:#999;font-style:italic;">Select</span>
+        </div>`;
+    }
+
+    // Has qualifiers — show each as a checkbox row
+    const allDone = searched.has(base);
     const rows = [
         `<div class="edw-panel-row sl-part-row${allDone ? ' searched' : ''}">
             <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${allDone ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)"></label>
             <span style="font-style:italic;color:#999">All</span>
         </div>`,
         ...qualifiers.map(q => {
-            const tabName  = `${base} — ${q}`;
-            const done     = searched.has(tabName);
-            const safeQ    = escapeHtml(q).replace(/'/g, "\\'");
+            const done  = searched.has(`${base} — ${q}`);
+            const safeQ = escapeHtml(q).replace(/'/g, "\\'");
             return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
                 <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${done ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','${safeQ}',this.checked)"></label>
                 <span>${escapeHtml(q)}</span>
@@ -12967,16 +12977,12 @@ function _slSelectPartBase(baseIdx) {
     const groups = _slGetPartGroups(_slSelectedZone, _slSelectedAsm);
     const group = groups[baseIdx];
     if (!group) return;
-    if (!group.qualifiers.length) {
-        _slSelectedPartBase = null;
-        _slSelectQualifier(group.base, '');
-    } else {
-        _slSelectedPartBase = group;
-        const p = document.getElementById('slPanelParts');
-        const q = document.getElementById('slPanelQuals');
-        if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
-        if (q) q.innerHTML = _buildSlQualifiers();
-    }
+    // Always set selected part — col 4 shows "Select" (no quals) or L/R checkboxes
+    _slSelectedPartBase = group;
+    const p = document.getElementById('slPanelParts');
+    const q = document.getElementById('slPanelQuals');
+    if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
+    if (q) q.innerHTML = _buildSlQualifiers();
 }
 
 function _slSelectQualifier(base, qualifier) {
