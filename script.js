@@ -142,6 +142,23 @@ const SERVICE_LABELS = {
     autoGlass: 'Auto Glass',
     trimming: 'Motor Trimming & Upholstery',
 };
+// Maps listing category → relevant workshop service keys for "Need this Fitted?" matching
+const CATEGORY_SERVICE_MAP = {
+    engine:       ['generalService', 'engineDiag', 'engineRebuild', 'timingBelt', 'exhaust'],
+    transmission: ['transmission'],
+    brakes:       ['brakes'],
+    suspension:   ['suspension', 'wheelAlign'],
+    wheels:       ['tyreSupply', 'wheelAlign', 'suspension'],
+    electrical:   ['autoElectrical', 'battery', 'autoSecurity'],
+    cooling:      ['cooling'],
+    body:         ['collision', 'sprayPaint', 'pdr', 'trimming'],
+    glass:        ['autoGlass'],
+    audio:        ['audioAccessories'],
+    '4x4':        ['suspension', 'wheelAlign'],
+    performance:  ['engineDiag', 'engineRebuild', 'exhaust'],
+    interior:     ['trimming', 'audioAccessories'],
+};
+
 const CAT_LABELS = {
     body: 'Body & Exterior', lighting: 'Lighting & Electrical',
     engine: 'Engine & Drivetrain', wheels: 'Wheels & Suspension',
@@ -2173,6 +2190,39 @@ async function loadPublicWantedFromSupabase() {
     } catch (e) { console.warn('loadPublicWantedFromSupabase:', e); }
 }
 
+async function loadWorkshopDatabase() {
+    if (!sb) return;
+    try {
+        const { data, error } = await sb.from('profiles')
+            .select('id, display_name, business_name, location, postcode, avatar_url, workshop_data, workshop_address')
+            .or('tier.in.(trade,pro),is_pro.eq.true')
+            .not('workshop_data', 'is', null)
+            .neq('is_public', false);
+        if (error) { console.warn('loadWorkshopDatabase:', error.message); return; }
+        workshopDatabase.splice(0);
+        (data || []).forEach(p => {
+            const wd = p.workshop_data || {};
+            const activeKeys = Object.entries(wd.services || {}).filter(([, v]) => v).map(([k]) => k);
+            if (!activeKeys.length && !wd.vehicles?.length) return;
+            const topLabels = activeKeys.slice(0, 3).map(k => SERVICE_LABELS[k] || k);
+            workshopDatabase.push({
+                id:           p.id,
+                userId:       p.id,
+                name:         p.business_name || p.display_name || 'Workshop',
+                logo:         p.avatar_url || '',
+                location:     p.location || '',
+                postcode:     p.postcode || '',
+                address:      p.workshop_address || '',
+                serviceKeys:  activeKeys,
+                vehicleTypes: wd.vehicles || [],
+                specialty:    topLabels.join(' · ') || 'Workshop Services',
+                distance:     p.location || '',
+                rating:       null,
+            });
+        });
+    } catch (e) { console.warn('loadWorkshopDatabase:', e); }
+}
+
 async function loadSavedListingsFromSupabase(userId) {
     try {
         const { data: rows, error } = await sb
@@ -3198,44 +3248,64 @@ function getDetailVehicleLabel(part) {
 }
 
 function getRecommendedWorkshops(part) {
-    const targetMake = part.fits && part.fits.length ? part.fits[0].make : null;
-    const targetModel = part.fits && part.fits.length ? part.fits[0].model : null;
+    const targetMake    = part.fits?.[0]?.make  || null;
+    const targetModel   = part.fits?.[0]?.model || null;
+    const buyerPostcode = userSettings.postcode || '';
+    const mappedKeys    = CATEGORY_SERVICE_MAP[part.category] || [];
+
     return workshopDatabase
-        .map(workshop => ({
-            workshop,
-            score: [
-                targetMake && workshop.vehicleTypes.includes(targetMake) ? 2 : 0,
-                targetModel && workshop.vehicleTypes.includes(targetModel) ? 2 : 0,
-                workshop.services.some(s => part.category && s.toLowerCase().includes(part.category.toLowerCase())) ? 1 : 0
-            ].reduce((sum, value) => sum + value, 0)
-        }))
-        .filter(entry => entry.score > 0)
-        .sort((a, b) => b.score - a.score || a.workshop.distance.localeCompare(b.workshop.distance))
-        .map(entry => entry.workshop);
+        .map(ws => {
+            let score = 0;
+            if (targetMake  && ws.vehicleTypes.some(v => v.toLowerCase() === targetMake.toLowerCase()))  score += 3;
+            if (targetModel && ws.vehicleTypes.some(v => v.toLowerCase() === targetModel.toLowerCase())) score += 2;
+            if (mappedKeys.length && mappedKeys.some(k => ws.serviceKeys.includes(k))) score += 2;
+            if (buyerPostcode && ws.postcode && buyerPostcode.slice(0, 3) === ws.postcode.slice(0, 3)) score += 1;
+            return { ws, score };
+        })
+        .filter(e => e.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(e => e.ws);
 }
 
-function buildWorkshopCardHTML(workshop) {
-    const stars = workshop.rating ? `<span class="workshop-rating">★ ${workshop.rating}</span>` : '';
+function buildWorkshopCardHTML(ws) {
+    const logoHtml = ws.logo
+        ? `<img class="ws-card-logo" src="${escapeHtml(ws.logo)}" alt="">`
+        : `<div class="ws-card-initials">${escapeHtml((ws.name || '??').slice(0, 2).toUpperCase())}</div>`;
+    const loc   = ws.location || ws.address || '';
+    const makes = ws.vehicleTypes.slice(0, 3).join(', ');
     return `
         <div class="workshop-card">
             <div class="workshop-card-header">
-                <div class="workshop-card-name">${workshop.name}</div>
-                <div class="workshop-card-distance">${workshop.distance}</div>
+                ${logoHtml}
+                <div style="flex:1;min-width:0;">
+                    <div class="workshop-card-name">${escapeHtml(ws.name)}</div>
+                    ${loc ? `<div class="workshop-card-distance">${escapeHtml(loc)}</div>` : ''}
+                </div>
             </div>
-            <div class="workshop-card-specialty">${workshop.specialty}</div>
-            <div class="workshop-card-meta">Expert in ${workshop.vehicleTypes.join(', ')}</div>
+            <div class="workshop-card-specialty">${escapeHtml(ws.specialty)}</div>
+            ${makes ? `<div class="workshop-card-meta">Specialist: ${escapeHtml(makes)}</div>` : ''}
             <div class="workshop-card-footer">
-                ${stars}
-                <button class="workshop-card-button" onclick="contactWorkshop(${workshop.id})">Contact</button>
+                <button class="workshop-card-button" onclick="contactWorkshop('${escapeHtml(ws.id)}','${escapeHtml(ws.name)}')">Enquire</button>
             </div>
         </div>
     `;
 }
 
-function contactWorkshop(workshopId) {
-    const workshop = workshopDatabase.find(w => w.id === workshopId);
-    if (!workshop) return;
-    showToast(`Contact request sent to ${workshop.name}`);
+function contactWorkshop(workshopId, workshopName) {
+    if (!userIsSignedIn) { showToast('Sign in to contact this workshop'); return; }
+    if (workshopId === currentUserId) return;
+    pendingGeneralEnquiry = { seller: workshopName, isPro: true, sellerId: workshopId };
+    currentOpenPartId = null;
+    const titleEl = document.getElementById('contactCardTitle');
+    const msgEl   = document.getElementById('contactCardMsg');
+    const compose = document.getElementById('contactCardCompose');
+    const confirm = document.getElementById('contactCardConfirm');
+    if (titleEl) titleEl.textContent = `Enquiry — ${workshopName}`;
+    if (msgEl)   msgEl.value = 'Hi, I have an enquiry about your fitting services.';
+    if (compose) compose.style.display = '';
+    if (confirm) confirm.style.display = 'none';
+    const bd = document.getElementById('contactSellerBackdrop');
+    if (bd) bd.style.display = '';
 }
 
 // Business name takes precedence over display name for all tiers — one consistent name on all listings.
@@ -7163,6 +7233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadWantedFromSupabase(session.user.id);
             loadSavedListingsFromSupabase(session.user.id);
             loadPublicWantedFromSupabase();
+            loadWorkshopDatabase();
             loadNotificationsFromSupabase();
             loadRecentlyViewedFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
