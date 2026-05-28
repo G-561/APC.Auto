@@ -6324,7 +6324,7 @@ header {
 .report-reason-row { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f9f9f9; border-radius:8px; font-size:14px; color:#333; cursor:pointer; }
 .report-reason-row input[type="radio"] { accent-color: var(--apc-orange); width:16px; height:16px; flex-shrink:0; }
 @media (min-width: 900px) {
-    #reportSheet { left: max(0px, calc(50vw - 280px)); right: max(0px, calc(50vw - 280px)); border-radius: 16px; bottom: auto; top: 50%; transform: translateY(-50%); }
+    #reportSheet { left: max(0px, calc(50vw - 700px)); right: max(0px, calc(50vw - 700px)); border-radius: 16px; bottom: auto; top: 50%; transform: translateY(-50%); }
 }
 
 /* ─── EDW — Electronic Dismantling Workflow ─────────────────────────────── */
