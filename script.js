@@ -11549,6 +11549,24 @@ async function _renderEdwStep0() {
 function _edwRenderStock() {
     const body = document.getElementById('edwBody');
     if (!body) return;
+    // Only build the toolbar once — subsequent filter changes only update the list
+    if (!document.getElementById('edwStockList')) {
+        body.innerHTML = `
+            <div class="edw-stock-toolbar">
+                <input class="edw-input edw-stock-search" id="edwStockSearch" placeholder="Search stock no., make, model, VIN…"
+                    value="${escapeHtml(_edwStockFilter)}"
+                    oninput="_edwStockFilter=this.value;_edwUpdateStockList()">
+                <button class="edw-btn-primary edw-stock-add-btn" onclick="_edwNewVehicle()">+ Add Vehicle</button>
+            </div>
+            <div id="edwStockList"></div>
+        `;
+    }
+    _edwUpdateStockList();
+}
+
+function _edwUpdateStockList() {
+    const list = document.getElementById('edwStockList');
+    if (!list) return;
     const q = _edwStockFilter.toLowerCase();
     const filtered = q
         ? _edwStock.filter(j =>
@@ -11557,21 +11575,13 @@ function _edwRenderStock() {
             (j.model || '').toLowerCase().includes(q) ||
             (j.vin || '').toLowerCase().includes(q))
         : _edwStock;
-    body.innerHTML = `
-        <div class="edw-stock-toolbar">
-            <input class="edw-input edw-stock-search" placeholder="Search stock no., make, model, VIN…"
-                value="${escapeHtml(_edwStockFilter)}"
-                oninput="_edwStockFilter=this.value;_edwRenderStock()">
-            <button class="edw-btn-primary edw-stock-add-btn" onclick="_edwNewVehicle()">+ Add Vehicle</button>
+    list.innerHTML = filtered.length === 0 ? `
+        <div class="edw-stock-empty">
+            ${_edwStock.length === 0
+                ? 'No vehicles in stock yet. Tap <strong>+ Add Vehicle</strong> to get started.'
+                : 'No results match your search.'}
         </div>
-        ${filtered.length === 0 ? `
-            <div class="edw-stock-empty">
-                ${_edwStock.length === 0
-                    ? 'No vehicles in stock yet. Tap <strong>+ Add Vehicle</strong> to get started.'
-                    : 'No results match your search.'}
-            </div>
-        ` : `<div class="edw-stock-list">${filtered.map(j => _edwStockCardHtml(j)).join('')}</div>`}
-    `;
+    ` : `<div class="edw-stock-list">${filtered.map(j => _edwStockCardHtml(j)).join('')}</div>`;
 }
 
 function _edwStockCardHtml(j) {
