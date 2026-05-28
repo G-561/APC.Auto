@@ -13045,9 +13045,9 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     if (qualifier) ownQ = ownQ.ilike('title', `%${qualifier}%`);
     ownQ = applyYearFilter(ownQ);
 
-    // Search B: other yards — via listing_vehicles to ensure vehicle compatibility
+    // Search B: other yards — via listing_vehicles (case-insensitive make/model match)
     const { data: vRows } = await sb
-        .from('listing_vehicles').select('listing_id').eq('make', make).eq('model', model);
+        .from('listing_vehicles').select('listing_id').ilike('make', make).ilike('model', model);
     const vehicleIds = (vRows || []).map(v => v.listing_id).filter(Boolean);
 
     const promises = [ownQ];
@@ -13195,7 +13195,7 @@ function _slRenderResults() {
     }
 
     const own   = tab.results.filter(r => r.seller_id === currentUserId);
-    const other = tab.results.filter(r => r.seller_id !== currentUserId && r.profiles?.is_pro);
+    const other = tab.results.filter(r => r.seller_id !== currentUserId);
 
     if (!own.length && !other.length) {
         content.innerHTML = `<div class="sl-no-results">No results found for <strong>${escapeHtml(tab.partName)}</strong> — ${escapeHtml(_slVehicle.year)} ${escapeHtml(_slVehicle.make)} ${escapeHtml(_slVehicle.model)}</div>`;
