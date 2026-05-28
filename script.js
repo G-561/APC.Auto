@@ -7109,6 +7109,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.postcode            = profile.postcode        || userSettings.postcode       || '';
                         userSettings.privacyPublicProfile = profile.is_public !== false;
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderBannerPreview();
+                        // Restore workshop/repairer profile from Supabase (authoritative for Trade/Pro)
+                        if (profile.workshop_data) {
+                            const wd = profile.workshop_data;
+                            if (wd.biz_type)        userSettings.businessType       = wd.biz_type;
+                            workshopProfile.address         = profile.workshop_address   || workshopProfile.address         || '';
+                            workshopProfile.services        = wd.services                || workshopProfile.services        || {};
+                            workshopProfile.vehicles        = wd.vehicles                || workshopProfile.vehicles        || [];
+                            workshopProfile.partsCategories = wd.parts_categories        || workshopProfile.partsCategories || [];
+                            workshopProfile.partsType       = wd.parts_type              || workshopProfile.partsType       || 'new';
+                            workshopProfile.wrecking        = wd.wrecking                ?? workshopProfile.wrecking        ?? false;
+                            workshopProfile.wreckingMakes   = wd.wrecking_makes          || workshopProfile.wreckingMakes   || [];
+                            saveWorkshopProfile();
+                        }
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
                         try {
