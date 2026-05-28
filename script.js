@@ -12694,12 +12694,12 @@ function _slRenderVehicleBar() {
     bar.innerHTML = `
         <div class="sl-veh-group">
             <span class="sl-veh-label">Make</span>
-            <select class="sl-veh-select" onchange="_slOnMakeChange(this.value)">
+            <select class="sl-veh-select sl-veh-select-make" onchange="_slOnMakeChange(this.value)">
                 <option value="">Select…</option>
                 ${makes.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.make===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
             </select>
             <span class="sl-veh-label">Model</span>
-            <select class="sl-veh-select" onchange="_slOnModelChange(this.value)" ${models.length?'':'disabled'}>
+            <select class="sl-veh-select sl-veh-select-model" onchange="_slOnModelChange(this.value)" ${models.length?'':'disabled'}>
                 <option value="">Select…</option>
                 ${models.map(m => `<option value="${escapeHtml(m)}"${_slVehicle.model===m?' selected':''}>${escapeHtml(m)}</option>`).join('')}
             </select>
@@ -12713,6 +12713,7 @@ function _slRenderVehicleBar() {
                 <option value="">All</option>
                 ${seriesOpts}
             </select>` : ''}
+            ${_slVehicle.make ? `<button class="sl-veh-clear-btn" onclick="_slClearSearch()">Clear</button>` : ''}
         </div>
         <div class="sl-stock-group">
             <span class="sl-veh-label">Stock No.</span>
@@ -12735,6 +12736,23 @@ function _slOnYearChange(val) {
 }
 function _slOnSeriesChange(val) {
     _slVehicle.series = val;
+}
+
+function _slClearSearch() {
+    _slVehicle        = { make: '', model: '', year: '', series: '' };
+    _slTabs           = [];
+    _slActiveTab      = -1;
+    _slSelected       = new Map();
+    _slResultsMap     = new Map();
+    _slReverseMap     = null;
+    _slSelectedZone   = 0;
+    _slSelectedAsm    = 0;
+    _slSelectedPartBase = null;
+    _slRenderVehicleBar();
+    _slRenderResultsArea();
+    _slRenderSelector();
+    const stockInput = document.getElementById('slStockInput');
+    if (stockInput) stockInput.value = '';
 }
 
 function _slStockDebounceSearch(val) {

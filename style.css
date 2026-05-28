@@ -6803,16 +6803,24 @@ header {
     border-bottom: 2px solid #ddd;
     padding: 10px 12px; display: flex; gap: 0; align-items: center;
 }
-.sl-veh-group { display: flex; align-items: center; gap: 6px; flex: 0 0 60%; min-width: 0; }
-.sl-stock-group { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; margin-left: auto; padding-left: 20px; border-left: 1px solid #ddd; }
+.sl-veh-group { display: flex; align-items: center; gap: 6px; flex: 1 1 0%; min-width: 0; }
+.sl-stock-group { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; margin-left: 16px; padding-left: 16px; border-left: 1px solid #ddd; }
 .sl-veh-label { font-size: 10px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0; }
 .sl-veh-select {
-    flex: 1; border: 1px solid #ddd; border-radius: 6px;
-    padding: 7px 10px; font-size: 13px; color: #333; background: #f8f8f8;
+    flex: 0 0 auto; border: 1px solid #ddd; border-radius: 6px;
+    padding: 7px 8px; font-size: 13px; color: #333; background: #f8f8f8;
     min-width: 0;
 }
 .sl-veh-select:disabled { color: #aaa; }
-.sl-veh-select-narrow { flex: 0 0 88px; }
+.sl-veh-select-make   { width: 125px; }
+.sl-veh-select-model  { width: 150px; }
+.sl-veh-select-narrow { width: 88px; }
+.sl-veh-clear-btn {
+    flex-shrink: 0; padding: 5px 10px; border: 1px solid #ddd; border-radius: 6px;
+    background: #f8f8f8; font-size: 11px; font-weight: 700; color: #888;
+    cursor: pointer; white-space: nowrap;
+}
+.sl-veh-clear-btn:hover { border-color: #ef4444; color: #ef4444; background: #fff5f5; }
 .sl-stock-input {
     width: 160px; border: 1px solid #ddd; border-radius: 6px;
     padding: 7px 10px; font-size: 13px; color: #333; background: #f8f8f8;
