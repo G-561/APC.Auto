@@ -11631,6 +11631,10 @@ async function _edwOpenStockCard(jobId) {
                 <span class="sl-qm-title">${escapeHtml(label)}</span>
                 <button class="sl-qm-close" onclick="document.getElementById('edwStockCardOverlay')?.remove()">✕</button>
             </div>
+            ${job.vehicle_photos?.length ? `
+            <div class="edw-stock-photos">
+                ${job.vehicle_photos.map(url => `<img class="edw-stock-photo" src="${escapeHtml(url)}" alt="Vehicle photo" loading="lazy">`).join('')}
+            </div>` : ''}
             <div class="edw-stock-detail-body">
                 ${rows.map(([k, v]) => `
                     <div class="edw-stock-detail-row">
@@ -11667,6 +11671,28 @@ function _edwStartWalkaround(jobId) {
     document.getElementById('edwBody')?.scrollTo(0, 0);
 }
 
+async function _edwUploadVehiclePhotos(jobId) {
+    const toUpload = _edwVehiclePhotos.filter(p => (p.base64 || p.file) && p.selected);
+    if (!toUpload.length) return [];
+    const urls = [];
+    for (let i = 0; i < toUpload.length; i++) {
+        const vp = toUpload[i];
+        try {
+            const b64 = vp.base64 || await _fileToBase64(vp.file);
+            if (!b64?.startsWith('data:')) continue;
+            const compressed = await compressBase64(b64, 1600, 0.88);
+            const blob = await (await fetch(compressed)).blob();
+            const path = `vehicle-photos/${jobId}/${Date.now()}_${i}.jpg`;
+            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (!error) {
+                const { data } = sb.storage.from('listing-images').getPublicUrl(path);
+                urls.push(data.publicUrl);
+            }
+        } catch (_) {}
+    }
+    return urls;
+}
+
 async function _edwSaveToStock() {
     if (!_edwVehicle.make || !_edwVehicle.model || !_edwVehicle.year) {
         showToast('Please select Make, Model and Year');
@@ -11689,6 +11715,11 @@ async function _edwSaveToStock() {
     }).select('id').single();
     if (error || !job) { showToast('Failed to save vehicle'); _renderEdwStep1(); return; }
     _edwJobId = job.id;
+    if (footer) footer.innerHTML = `<div class="edw-footer-meta">Uploading photos…</div>`;
+    const photoUrls = await _edwUploadVehiclePhotos(job.id);
+    if (photoUrls.length) {
+        await sb.from('dismantling_jobs').update({ vehicle_photos: photoUrls }).eq('id', job.id);
+    }
     showToast('Vehicle saved to stock');
     _edwStep = 0;
     await _renderEdwStep0();
