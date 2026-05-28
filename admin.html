@@ -92,6 +92,12 @@
         .ga-banner-left strong { color: #1a1a2e; }
         .ga-link { display: inline-block; padding: 8px 18px; background: #4285F4; color: white; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
         .ga-link:hover { background: #2b6fd4; }
+
+        /* ── Reports ── */
+        .card-red { border-top-color: #ef4444; }
+        .dismiss-btn { background: none; border: 1px solid #ddd; color: #888; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; }
+        .dismiss-btn:hover { border-color: #ef4444; color: #ef4444; }
+        .reason-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #fff3f3; color: #c0392b; }
     </style>
 </head>
 <body>
@@ -194,6 +200,25 @@
             <div class="panel">
                 <h3>Top Makes Listed</h3>
                 <div id="makesChart"><div class="no-data">Loading…</div></div>
+            </div>
+        </div>
+
+        <!-- REPORTS -->
+        <div class="section-title">Reports</div>
+        <div class="cards-grid" style="margin-bottom:14px;">
+            <div class="card card-red">
+                <div class="card-label">Flagged Listings</div>
+                <div class="card-value" id="metricReports"><span class="shimmer"></span></div>
+                <div class="card-sub">Awaiting review</div>
+            </div>
+        </div>
+        <div class="panel">
+            <h3>All Reports</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Listing</th><th>Reason</th><th>Note</th><th>Date</th><th></th></tr></thead>
+                    <tbody id="reportsBody"><tr><td colspan="5" class="td-muted">Loading…</td></tr></tbody>
+                </table>
             </div>
         </div>
 
@@ -415,6 +440,56 @@ async function loadAllMetrics() {
     }
 
     setVal('lastUpdated', `Updated ${new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`);
+    loadReports();
+}
+
+const REASON_LABELS = {
+    wrong_category:  'Wrong category',
+    misleading:      'Misleading description',
+    already_sold:    'Already sold',
+    suspected_fraud: 'Suspected fraud',
+    other:           'Other',
+};
+
+async function loadReports() {
+    const reports = await safeSelect('reports', 'id, reason, note, created_at, listing_id, reporter_id',
+        q => q.order('created_at', { ascending: false }).limit(100));
+
+    setVal('metricReports', fmt(reports.length));
+
+    const tbody = document.getElementById('reportsBody');
+    if (!tbody) return;
+    if (!reports.length) { tbody.innerHTML = '<tr><td colspan="5" class="td-muted">No reports — all clear</td></tr>'; return; }
+
+    // Fetch listing titles for the referenced listing IDs
+    const ids = [...new Set(reports.filter(r => r.listing_id).map(r => r.listing_id))];
+    let titleMap = {};
+    if (ids.length) {
+        const { data: listings } = await sb.from('listings').select('id, title').in('id', ids);
+        (listings || []).forEach(l => { titleMap[l.id] = l.title; });
+    }
+
+    tbody.innerHTML = reports.map(r => {
+        const title  = titleMap[r.listing_id] ? esc(titleMap[r.listing_id]) : `<span class="td-muted">Listing #${r.listing_id || '—'}</span>`;
+        const reason = REASON_LABELS[r.reason] || esc(r.reason || '—');
+        return `<tr id="report-row-${r.id}">
+            <td class="td-title" title="${esc(titleMap[r.listing_id] || '')}">${title}</td>
+            <td><span class="reason-badge">${reason}</span></td>
+            <td class="td-muted">${esc(r.note || '—')}</td>
+            <td class="td-muted">${fmtDate(r.created_at)}</td>
+            <td><button class="dismiss-btn" onclick="dismissReport(${r.id})">Dismiss</button></td>
+        </tr>`;
+    }).join('');
+}
+
+async function dismissReport(id) {
+    await sb.from('reports').delete().eq('id', id);
+    const row = document.getElementById(`report-row-${id}`);
+    if (row) row.remove();
+    const tbody = document.getElementById('reportsBody');
+    const remaining = tbody?.querySelectorAll('tr[id^="report-row-"]').length ?? 0;
+    setVal('metricReports', fmt(remaining));
+    if (!remaining) tbody.innerHTML = '<tr><td colspan="5" class="td-muted">No reports — all clear</td></tr>';
 }
 
 function renderBarChart(containerId, counts, color) {
