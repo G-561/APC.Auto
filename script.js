@@ -13608,7 +13608,7 @@ function _slRenderQuoteDetail() {
             <div class="sl-qm-header">
                 <div style="display:flex;align-items:center;gap:8px;">
                     <span class="sl-qm-title">${escapeHtml(quote.quote_number)}</span>
-                    <span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>
+                    ${st !== 'draft' ? `<span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>` : ''}
                 </div>
                 <button class="sl-qm-close" onclick="_slCloseQuoteDetail()">✕</button>
             </div>
@@ -13757,6 +13757,7 @@ async function _slSaveQuoteChanges(quoteId) {
         _slRenderQuotesList();
     }
     showToast('Quote saved');
+    _slCloseQuoteDetail();
 }
 
 async function _slDeleteQuote(quoteId) {
