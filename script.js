@@ -12933,22 +12933,14 @@ function _buildSlQualifiers() {
     }
 
     // Has qualifiers — show each as a checkbox row
-    const allDone = searched.has(base);
-    const rows = [
-        `<div class="edw-panel-row sl-part-row${allDone ? ' searched' : ''}">
-            <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${allDone ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)"></label>
-            <span style="font-style:italic;color:#999">All</span>
-        </div>`,
-        ...qualifiers.map(q => {
-            const done  = searched.has(`${base} — ${q}`);
-            const safeQ = escapeHtml(q).replace(/'/g, "\\'");
-            return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
-                <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${done ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','${safeQ}',this.checked)"></label>
-                <span>${escapeHtml(q)}</span>
-            </div>`;
-        })
-    ];
-    return rows.join('');
+    return qualifiers.map(q => {
+        const done  = searched.has(`${base} — ${q}`);
+        const safeQ = escapeHtml(q).replace(/'/g, "\\'");
+        return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
+            <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${done ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','${safeQ}',this.checked)"></label>
+            <span>${escapeHtml(q)}</span>
+        </div>`;
+    }).join('');
 }
 
 function _slSelectZone(zI) {
