@@ -13,11 +13,12 @@
     --white: #ffffff; 
 }
 
-body { 
-    margin: 0; 
-    font-family: 'Segoe UI', sans-serif; 
-    background: var(--bg); 
-    padding-bottom: 90px; 
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg);
+    padding-bottom: 90px;
+    overflow-x: hidden;
 }
 
 .sidebar-open { overflow: hidden; }
@@ -1851,7 +1852,8 @@ header {
     font-size: 11px;
     color: #888;
     white-space: nowrap;
-    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .workshop-card-specialty {
     font-size: 12px;
