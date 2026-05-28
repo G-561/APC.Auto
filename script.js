@@ -11647,7 +11647,7 @@ async function _edwOpenStockCard(jobId) {
             </div>
         </div>
     `;
-    document.getElementById('edwDrawer')?.appendChild(overlay);
+    document.body.appendChild(overlay);
 }
 
 function _edwStartWalkaround(jobId) {
