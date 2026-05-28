@@ -13659,11 +13659,18 @@ function _slRenderQuoteDetail() {
                 </div>
             </div>
             <div class="sl-qd-actions">
-                ${st === 'draft'    ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Mark Sent</button>` : ''}
-                ${st === 'sent'     ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
-                ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Process Sale</button>` : ''}
-                ${st === 'invoiced' ? `<span style="font-size:11px;color:#22c55e;font-weight:700;padding:0 4px;">✓ Sold</span>` : ''}
-                <button class="sl-qd-btn sl-qd-btn-ghost" onclick="window.print()">Print</button>
+                <div class="sl-qd-actions-row sl-qd-actions-row-primary">
+                    <button class="sl-qd-btn sl-qd-btn-save" onclick="_slSaveQuoteChanges(${quote.id})">Save Quote</button>
+                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slEmailQuote(${quote.id})">Email Quote</button>
+                    <button class="sl-qd-btn sl-qd-btn-danger" onclick="_slDeleteQuote(${quote.id})" title="Delete quote">🗑 Delete</button>
+                </div>
+                <div class="sl-qd-actions-row">
+                    ${st === 'draft'    ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Process Invoice</button>` : ''}
+                    ${st === 'sent'     ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
+                    ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Process Sale</button>` : ''}
+                    ${st === 'invoiced' ? `<span style="font-size:11px;color:#22c55e;font-weight:700;padding:0 4px;">✓ Sold</span>` : ''}
+                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="window.print()">Print</button>
+                </div>
             </div>
         </div>`;
     document.body.appendChild(overlay);
@@ -13725,6 +13732,58 @@ async function _slAdvanceQuoteStatus(quoteId, newStatus) {
     if (_slActiveQuote?.quote?.id === quoteId) { _slActiveQuote.quote.status = newStatus; _slRenderQuoteDetail(); }
     const idx = _slQuotes.findIndex(q => q.id === quoteId);
     if (idx >= 0) { _slQuotes[idx].status = newStatus; _slRenderQuotesList(); }
+}
+
+async function _slSaveQuoteChanges(quoteId) {
+    if (!sb) return;
+    const overlay = document.getElementById('slQuoteDetailOverlay');
+    if (!overlay) return;
+    const inputs = overlay.querySelectorAll('.sl-qm-input, textarea.sl-qm-input');
+    const fields = {};
+    inputs.forEach(el => {
+        const onblurAttr = el.getAttribute('onblur') || '';
+        const fieldMatch = onblurAttr.match(/_slSaveQuoteField\(\d+,'([^']+)'/);
+        if (fieldMatch) {
+            const field = fieldMatch[1];
+            fields[field] = field === 'freight_cost' ? (parseFloat(el.value) || 0) : (el.value.trim() || null);
+        }
+    });
+    fields.updated_at = new Date().toISOString();
+    await sb.from('quotes').update(fields).eq('id', quoteId);
+    if (_slActiveQuote?.quote?.id === quoteId) {
+        Object.assign(_slActiveQuote.quote, fields);
+        const idx = _slQuotes.findIndex(q => q.id === quoteId);
+        if (idx >= 0) Object.assign(_slQuotes[idx], fields);
+        _slRenderQuotesList();
+    }
+    showToast('Quote saved');
+}
+
+async function _slDeleteQuote(quoteId) {
+    if (!confirm('Delete this quote? This cannot be undone.')) return;
+    if (!sb) return;
+    await sb.from('quote_lines').delete().eq('quote_id', quoteId);
+    await sb.from('quotes').delete().eq('id', quoteId);
+    _slQuotes = _slQuotes.filter(q => q.id !== quoteId);
+    _slCloseQuoteDetail();
+    _slRenderQuotesList();
+    showToast('Quote deleted');
+}
+
+function _slEmailQuote(quoteId) {
+    const q = _slActiveQuote?.quote;
+    const lines = _slActiveQuote?.lines || [];
+    if (!q) return;
+    const to = q.customer_email || '';
+    const subject = encodeURIComponent(`Quote ${q.quote_number} — Auto Parts Connection`);
+    const freight = parseFloat(q.freight_cost) || 0;
+    const subtotal = lines.reduce((s, l) => s + ((l.price || 0) * (l.qty || 1)), 0);
+    const total = subtotal + freight;
+    const partLines = lines.map(l => `  - ${l.title}${l.stock_number ? ` (${l.stock_number})` : ''}: $${(l.price || 0).toFixed(2)}`).join('\n');
+    const body = encodeURIComponent(
+        `Hi ${q.customer_name || 'there'},\n\nPlease find your quote below.\n\nQuote #: ${q.quote_number}\n\nParts:\n${partLines || '  (none)'}\n\nFreight: $${freight.toFixed(2)}\nTotal: $${total.toFixed(2)}\n${q.notes ? `\nNotes: ${q.notes}\n` : ''}\nThanks,\nAuto Parts Connection`
+    );
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
 }
 
 // ── Quote number search ───────────────────────────────────────────────────

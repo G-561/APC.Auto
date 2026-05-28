@@ -6957,12 +6957,17 @@ header {
 .sl-qd-line-price-input { width: 68px; flex-shrink: 0; border: 1px solid #eee; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 700; color: #f07020; text-align: right; background: #fff; }
 .sl-qd-line-price-input:focus { outline: none; border-color: #f07020; }
 .sl-qd-total { display: flex; justify-content: space-between; padding: 8px 0 0; font-size: 13px; font-weight: 700; color: #333; border-top: 2px solid #eee; margin-top: 4px; }
-.sl-qd-actions { flex-shrink: 0; padding: 10px 12px; border-top: 2px solid #eee; display: flex; gap: 8px; }
+.sl-qd-actions { flex-shrink: 0; padding: 10px 12px; border-top: 2px solid #eee; display: flex; flex-direction: column; gap: 6px; }
+.sl-qd-actions-row { display: flex; gap: 6px; }
 .sl-qd-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
 .sl-qd-btn-primary { background: #f07020; color: #fff; }
 .sl-qd-btn-primary:hover { background: #d95f10; }
+.sl-qd-btn-save { background: #f07020; color: #fff; }
+.sl-qd-btn-save:hover { background: #d95f10; }
 .sl-qd-btn-ghost { background: #f4f4f4; color: #666; }
 .sl-qd-btn-ghost:hover { background: #e8e8e8; }
+.sl-qd-btn-danger { background: #fff0f0; color: #ef4444; border: 1px solid #fca5a5; flex: 0 0 auto; padding: 8px 10px; }
+.sl-qd-btn-danger:hover { background: #fee2e2; }
 
 /* Add-to-quote modal */
 .sl-quote-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3200; display: flex; align-items: center; justify-content: center; }
