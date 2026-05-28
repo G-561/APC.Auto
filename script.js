@@ -12670,12 +12670,16 @@ async function _wAddPhotos(itemId, input) {
     if (!files.length) return;
     showToast('Uploading…');
     const results = await Promise.all(files.map(async file => {
-        const ext  = file.name.split('.').pop() || 'jpg';
-        const path = `${_wJob.job_token}/${itemId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await sb.storage.from('edw-photos').upload(path, file, { contentType: file.type });
-        if (error) return null;
-        const { data: pub } = sb.storage.from('edw-photos').getPublicUrl(path);
-        return pub.publicUrl;
+        try {
+            const b64 = await _fileToBase64(file);
+            const compressed = await compressBase64(b64, 1400, 0.82);
+            const blob = await (await fetch(compressed)).blob();
+            const path = `${_wJob.job_token}/${itemId}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+            const { error } = await sb.storage.from('edw-photos').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (error) return null;
+            const { data: pub } = sb.storage.from('edw-photos').getPublicUrl(path);
+            return pub.publicUrl;
+        } catch (_) { return null; }
     }));
     const uploaded = results.filter(Boolean);
     if (!uploaded.length) { showToast('Upload failed'); return; }
