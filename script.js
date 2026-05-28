@@ -3250,30 +3250,52 @@ function getCurrentSellerName() {
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
     const { data: profile } = await sb.from('profiles')
-        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public')
+        .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public, workshop_data, workshop_address')
         .eq('id', userId).single();
     if (!profile) return;
     if (profile.is_public === false && currentUserId && userId !== currentUserId) {
         showToast('This seller is currently unavailable');
         return;
     }
-    if (profile.avatar_url)  _sellerPicCache[userId] = profile.avatar_url;
+    if (profile.avatar_url) _sellerPicCache[userId] = profile.avatar_url;
     const sellerName = profile.display_name || 'Seller';
+    const isOwn = userId === currentUserId;
     const grid = document.getElementById('sellerPartsGrid');
     if (grid) { grid.dataset.seller = sellerName; grid.dataset.userId = userId; }
-    renderStorefront(
-        sellerName,
-        profile.tier === 'pro' || profile.is_pro || false,
-        profile.avatar_url || '',
-        profile.business_name || '',
-        profile.abn || '',
-        profile.about || '',
-        profile.location || '',
-        '',
-        profile.banner_color || null,
-        userId
-    );
-    const isOwn = userId === currentUserId || sellerName === getCurrentSellerName();
+
+    const isTradeOrProProfile = profile.tier === 'trade' || profile.tier === 'pro' || profile.is_pro;
+    // Use own live workshopProfile for own store (most up-to-date), Supabase data for others
+    const wd = isOwn ? {
+        biz_type: userSettings.businessType || 'service',
+        services: workshopProfile.services || {}, vehicles: workshopProfile.vehicles || [],
+        parts_categories: workshopProfile.partsCategories || [], parts_type: workshopProfile.partsType || 'new',
+        wrecking: workshopProfile.wrecking || false, wrecking_makes: workshopProfile.wreckingMakes || [],
+    } : (profile.workshop_data || null);
+
+    if (isTradeOrProProfile && wd) {
+        renderWorkshopStorefront({
+            user_id: userId, sellerName,
+            logo_url: isOwn ? (userSettings.profilePic || userSettings.businessLogo || '') : (profile.avatar_url || ''),
+            business_name: isOwn ? (userSettings.businessName || '') : (profile.business_name || ''),
+            abn: isOwn ? (userSettings.abn || '') : (profile.abn || ''),
+            about: isOwn ? (userSettings.about || '') : (profile.about || ''),
+            location: isOwn ? (userSettings.location || '') : (profile.location || ''),
+            banner_color: isOwn ? (userSettings.bannerColor || null) : (profile.banner_color || null),
+            address: isOwn ? (workshopProfile.address || '') : (profile.workshop_address || ''),
+            biz_type: wd.biz_type || 'service', services: wd.services || {},
+            vehicles: wd.vehicles || [], parts_categories: wd.parts_categories || [],
+            parts_type: wd.parts_type || 'new', wrecking: wd.wrecking || false,
+            wrecking_makes: wd.wrecking_makes || [],
+        });
+    } else {
+        renderStorefront(
+            sellerName, isTradeOrProProfile,
+            profile.avatar_url || '', profile.business_name || '',
+            profile.abn || '', profile.about || '',
+            profile.location || '', '', profile.banner_color || null, userId
+        );
+    }
+
     const sfMsgBtn = document.getElementById('sfMsgBtn');
     if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
     const sfEl    = document.getElementById('storefrontDrawer');
@@ -6445,41 +6467,82 @@ function openStorefront(partId) {
     }
 
     if (isOwn) {
-        _showStorefront(
-            userSettings.profilePic || userSettings.businessLogo || '',
-            part.isPro ? (userSettings.businessName   || '') : '',
-            part.isPro ? (userSettings.abn            || '') : '',
-            part.isPro ? (userSettings.about          || '') : '',
-            userSettings.location || '',
-            part.isPro ? (userSettings.businessBanner || '') : '',
-            userSettings.bannerColor || null
-        );
+        if (isTradeOrPro()) {
+            const grid = document.getElementById('sellerPartsGrid');
+            if (grid) { grid.dataset.seller = part.seller; grid.dataset.userId = currentUserId; }
+            renderWorkshopStorefront({
+                user_id: currentUserId, sellerName: part.seller,
+                logo_url: userSettings.profilePic || userSettings.businessLogo || '',
+                business_name: userSettings.businessName || '', abn: userSettings.abn || '',
+                about: userSettings.about || '', location: userSettings.location || '',
+                banner_url: userSettings.businessBanner || '', banner_color: userSettings.bannerColor || null,
+                address: workshopProfile.address || '',
+                biz_type: userSettings.businessType || 'service',
+                services: workshopProfile.services || {}, vehicles: workshopProfile.vehicles || [],
+                parts_categories: workshopProfile.partsCategories || [],
+                parts_type: workshopProfile.partsType || 'new',
+                wrecking: workshopProfile.wrecking || false, wrecking_makes: workshopProfile.wreckingMakes || [],
+            });
+            const sfMsgBtn = document.getElementById('sfMsgBtn');
+            if (sfMsgBtn) sfMsgBtn.style.display = 'none';
+            const sfEl = document.getElementById('storefrontDrawer');
+            const backBar = document.getElementById('storefrontBackBar');
+            if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
+            if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
+            openDrawer('storefrontDrawer');
+        } else {
+            _showStorefront(
+                userSettings.profilePic || '', '', '', '',
+                userSettings.location || '', '', userSettings.bannerColor || null
+            );
+        }
         return;
     }
 
-    // Other seller — fetch full profile so pic + bio show correctly
+    // Other seller — fetch full profile so pic + bio + workshop data show correctly
     const cached = _sellerPicCache[part.sellerId];
-    if (cached || !part.sellerId || !sb) {
-        // Use whatever we have in cache (may be empty string → shows initial)
+    if (cached !== undefined || !part.sellerId || !sb) {
         _showStorefront(cached || '', '', '', '', '', '');
         return;
     }
     sb.from('profiles')
-        .select('display_name, is_pro, tier, avatar_url, business_name, abn, about, location, banner_color')
+        .select('display_name, is_pro, tier, avatar_url, business_name, abn, about, location, banner_color, workshop_data, workshop_address')
         .eq('id', part.sellerId).single()
         .then(({ data: profile }) => {
             const pic = profile?.avatar_url || '';
             if (pic) _sellerPicCache[part.sellerId] = pic;
             const isTradeOrProProfile = profile?.tier === 'trade' || profile?.tier === 'pro' || profile?.is_pro;
-            _showStorefront(
-                pic,
-                (isTradeOrProProfile && profile?.business_name) ? profile.business_name : '',
-                (isTradeOrProProfile && profile?.abn)           ? profile.abn           : '',
-                (isTradeOrProProfile && profile?.about)         ? profile.about         : '',
-                profile?.location || '',
-                '',
-                profile?.banner_color || null
-            );
+            if (isTradeOrProProfile && profile?.workshop_data) {
+                const grid = document.getElementById('sellerPartsGrid');
+                if (grid) { grid.dataset.seller = part.seller; grid.dataset.userId = part.sellerId; }
+                const wd = profile.workshop_data;
+                renderWorkshopStorefront({
+                    user_id: part.sellerId, sellerName: part.seller,
+                    logo_url: pic, business_name: profile.business_name || '',
+                    abn: profile.abn || '', about: profile.about || '',
+                    location: profile.location || '', banner_color: profile.banner_color || null,
+                    address: profile.workshop_address || '',
+                    biz_type: wd.biz_type || 'service', services: wd.services || {},
+                    vehicles: wd.vehicles || [], parts_categories: wd.parts_categories || [],
+                    parts_type: wd.parts_type || 'new', wrecking: wd.wrecking || false,
+                    wrecking_makes: wd.wrecking_makes || [],
+                });
+                const sfMsgBtn = document.getElementById('sfMsgBtn');
+                if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
+                const sfEl = document.getElementById('storefrontDrawer');
+                const backBar = document.getElementById('storefrontBackBar');
+                if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
+                if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
+                openDrawer('storefrontDrawer');
+            } else {
+                _showStorefront(
+                    pic,
+                    (isTradeOrProProfile && profile?.business_name) ? profile.business_name : '',
+                    (isTradeOrProProfile && profile?.abn)           ? profile.abn           : '',
+                    (isTradeOrProProfile && profile?.about)         ? profile.about         : '',
+                    profile?.location || '', '', profile?.banner_color || null
+                );
+            }
         });
 }
 
@@ -6585,26 +6648,21 @@ async function handleStoreDeepLink(userId) {
     openStorefrontByUserId(userId);
 }
 
-// Sync workshop profile to Supabase after saving (Pro users)
+// Sync workshop profile to Supabase after saving (Trade or Pro users)
 async function syncWorkshopProfileToSupabase() {
-    if (!userIsSignedIn || !currentUserId || !sb || currentUserTier !== 'pro') return;
-    await sb.from('workshop_profiles').upsert({
-        user_id:          currentUserId,
-        business_name:    userSettings.businessName || '',
-        about:            userSettings.about        || '',
-        address:          workshopProfile.address   || '',
-        abn:              userSettings.abn          || '',
-        biz_type:         userSettings.businessType || 'supplier',
-        services:         workshopProfile.services  || {},
-        vehicles:         workshopProfile.vehicles  || [],
-        parts_categories: workshopProfile.partsCategories || [],
-        parts_type:       workshopProfile.partsType || 'new',
-        wrecking:         workshopProfile.wrecking  || false,
-        wrecking_makes:   workshopProfile.wreckingMakes || [],
-        logo_url:         userSettings.businessLogo || userSettings.profilePic || '',
-        banner_url:       userSettings.businessBanner || '',
-        published:        true,
-    }, { onConflict: 'user_id' });
+    if (!userIsSignedIn || !currentUserId || !sb || !isTradeOrPro()) return;
+    await sb.from('profiles').update({
+        workshop_address: workshopProfile.address || null,
+        workshop_data: {
+            biz_type:         userSettings.businessType    || 'service',
+            services:         workshopProfile.services     || {},
+            vehicles:         workshopProfile.vehicles     || [],
+            parts_categories: workshopProfile.partsCategories || [],
+            parts_type:       workshopProfile.partsType    || 'new',
+            wrecking:         workshopProfile.wrecking     || false,
+            wrecking_makes:   workshopProfile.wreckingMakes || [],
+        },
+    }).eq('id', currentUserId);
 }
 
 // --- APC BADGE GENERATOR ---
