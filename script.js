@@ -11230,6 +11230,17 @@ const EDW_BODY_FILTER = {
     'People Mover': { hideZones: ['4WD / Off-road'], hideAsms: ['Ute Accessories'] },
 };
 
+// Returns the disambiguated part name — prepends the assembly's positional qualifier
+// (Front/Rear/etc.) when it isn't already present in the part name, so that
+// "Complete Door (Left)" from "Front Door" vs "Rear Door" produce distinct titles.
+function _edwFullPartName(asmName, partName) {
+    const POSITIONAL = new Set(['front','rear','upper','lower','inner','outer']);
+    const first = (asmName || '').split(/[\s\/&]+/)[0] || '';
+    if (!POSITIONAL.has(first.toLowerCase())) return partName;
+    if (partName.toLowerCase().includes(first.toLowerCase())) return partName;
+    return `${first} ${partName}`;
+}
+
 function openEdw() {
     if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
     if (window.innerWidth < 768) { showToast('EDW requires a tablet or larger screen'); return; }
@@ -12202,7 +12213,7 @@ function _renderEdwStep3() {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone  = EDW_TAXONOMY[zI];
         const asm   = zone?.assemblies[aI];
-        const part  = asm?.parts[pI] || '';
+        const part  = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
         const listingTitle = `${part} to suit ${vehicleTitle}`;
         return `
             <div class="edw-review-card">
@@ -12373,7 +12384,7 @@ async function _edwPublish() {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone  = EDW_TAXONOMY[zI];
         const asm   = zone?.assemblies[aI];
-        const part  = asm?.parts[pI] || '';
+        const part  = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
         const title = `${part} to suit ${vehicleTitle}`;
         const price = item.price ? Number(item.price) : 0;
 
@@ -12491,7 +12502,7 @@ async function _edwSendToWorkers() {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone = EDW_TAXONOMY[zI];
         const asm  = zone?.assemblies[aI];
-        const part = asm?.parts[pI] || '';
+        const part = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
         return {
             job_id: job.id, user_id: currentUserId,
             zone: zone?.zone || '', assembly: asm?.name || '', part_name: part,
