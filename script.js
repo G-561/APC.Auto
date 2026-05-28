@@ -12034,6 +12034,14 @@ async function _edwPublish() {
         stock_number: v.stockNumber || null,
     }).select('id').single();
 
+    // Pre-resolve vehicle photo base64s once — avoids re-reading the same File
+    // object via FileReader for every part in the loop (some browsers fail on repeat reads)
+    const vehicleBase64s = await Promise.all(
+        _edwVehiclePhotos
+            .filter(p => (p.base64 || p.file) && p.selected)
+            .map(p => p.base64 ? Promise.resolve(p.base64) : _fileToBase64(p.file))
+    );
+
     let published = 0;
     let partSeq = 1;
     for (const [key, item] of items) {
@@ -12070,14 +12078,12 @@ async function _edwPublish() {
                 series: v.series || null,
             });
 
-            // Photos: use part photos if present, otherwise selected vehicle photos
-            const partPhotos    = item.photos?.filter(p => p.base64 || p.file) || [];
-            const vehiclePhotos = partPhotos.length > 0
-                ? []
-                : _edwVehiclePhotos.filter(p => (p.base64 || p.file) && p.selected);
-            const photosToUse = partPhotos.length > 0 ? partPhotos : vehiclePhotos;
-            if (photosToUse.length) {
-                const base64s = await Promise.all(photosToUse.map(p => p.base64 || _fileToBase64(p.file)));
+            // Photos: use part photos if present, otherwise pre-resolved vehicle base64s
+            const partPhotos = item.photos?.filter(p => p.base64 || p.file) || [];
+            const base64s = partPhotos.length > 0
+                ? await Promise.all(partPhotos.map(p => p.base64 || _fileToBase64(p.file)))
+                : vehicleBase64s;
+            if (base64s.length) {
                 const urls = await uploadListingImagesToStorage(String(listing.id), base64s);
                 if (urls.length) {
                     await sb.from('listing_images').insert(
