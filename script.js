@@ -12189,6 +12189,11 @@ function _renderEdwStep3() {
     const footer = document.getElementById('edwFooter');
     if (!body || !footer) return;
 
+    body.style.padding       = '0';
+    body.style.overflow      = 'auto';
+    body.style.display       = '';
+    body.style.flexDirection = '';
+
     const v = _edwVehicle;
     const vehicleTitle = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}${v.variant ? ' — ' + v.variant : ''}`;
     const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
