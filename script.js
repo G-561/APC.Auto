@@ -11538,7 +11538,7 @@ async function _renderEdwStep0() {
     body.innerHTML = `<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0;">Loading stock…</div>`;
     if (!sb || !currentUserId) { body.innerHTML = `<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0;">Sign in required</div>`; return; }
     const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, stock_number, make, model, year, series, status, created_at, odometer, vin')
+        .select('id, stock_number, make, model, year, series, status, created_at, odometer, vin, vehicle_photos, colour, body_type')
         .eq('user_id', currentUserId)
         .in('status', ['in_stock', 'stripping'])
         .order('created_at', { ascending: false });
@@ -11664,6 +11664,7 @@ function _edwStartWalkaround(jobId) {
         transType: job.transmission_type || '', odometer: job.odometer || '',
         buildDate: job.build_date || '', colour: job.colour || '',
         stockNumber: job.stock_number || '', variant: job.variant || '',
+        vehiclePhotos: job.vehicle_photos || [],
     };
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: false }));
     _edwStep = 2;
@@ -11742,10 +11743,24 @@ function _renderEdwStep2Table(body, footer) {
     const vehicleLabel = `${v.year} ${v.make} ${v.model}${v.series ? ' ' + v.series : ''}`;
     const checkedCount = Object.keys(_edwItems).length;
 
+    const metaParts = [
+        v.stockNumber ? `#${escapeHtml(v.stockNumber)}` : null,
+        v.vin         ? `VIN: ${escapeHtml(v.vin)}` : null,
+        v.odometer    ? `${Number(v.odometer).toLocaleString()} km` : null,
+        v.colour      ? escapeHtml(v.colour) : null,
+        v.transType   ? escapeHtml(v.transType) : null,
+    ].filter(Boolean).join(' &nbsp;·&nbsp; ');
+    const thumbs = (v.vehiclePhotos || []).slice(0, 4)
+        .map(url => `<img class="edw-vb-thumb" src="${escapeHtml(url)}" alt="">`)
+        .join('');
+
     body.innerHTML = `
         <div class="edw-vehicle-banner" style="flex-shrink:0;">
-            <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
-            ${v.vin ? `<div class="edw-vehicle-sub">VIN: ${escapeHtml(v.vin)}</div>` : ''}
+            <div class="edw-vb-left">
+                <div class="edw-vehicle-title">${escapeHtml(vehicleLabel)}</div>
+                ${metaParts ? `<div class="edw-vehicle-sub">${metaParts}</div>` : ''}
+            </div>
+            ${thumbs ? `<div class="edw-vb-photos">${thumbs}</div>` : ''}
         </div>
         <div class="edw-3panel" id="edwPanel">
             <div class="edw-3ph">Zone</div>
@@ -11759,9 +11774,9 @@ function _renderEdwStep2Table(body, footer) {
         </div>
     `;
 
-    const [zW, aW, pW, qW] = _slComputeColWidths();
+    const [zW, aW, pW] = _slComputeColWidths();
     const panel = document.getElementById('edwPanel');
-    if (panel) panel.style.gridTemplateColumns = `${zW}px ${aW}px ${pW}px ${qW}px`;
+    if (panel) panel.style.gridTemplateColumns = `${zW}px ${aW}px ${pW}px 1fr`;
 
     footer.innerHTML = `
         <div class="edw-footer-meta">${checkedCount} part${checkedCount !== 1 ? 's' : ''} selected</div>

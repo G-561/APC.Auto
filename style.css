@@ -6404,11 +6404,15 @@ header {
 
 /* Step 2 — Checklist */
 .edw-vehicle-banner {
-    background: #1a1a2e; color: #fff; border-radius: 10px;
-    padding: 12px 15px; margin-bottom: 14px;
+    background: #1a1a2e; color: #fff;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 16px; justify-content: space-between;
 }
+.edw-vb-left { flex: 1; min-width: 0; }
 .edw-vehicle-title { font-size: 15px; font-weight: 800; }
-.edw-vehicle-sub { font-size: 12px; color: rgba(255,255,255,0.6); margin-top: 3px; }
+.edw-vehicle-sub { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 4px; }
+.edw-vb-photos { display: flex; gap: 6px; flex-shrink: 0; }
+.edw-vb-thumb { width: 72px; height: 48px; object-fit: cover; border-radius: 6px; opacity: 0.88; }
 /* Zone master-detail split */
 .edw-split {
     flex: 1; display: flex; overflow: hidden; min-height: 0;
