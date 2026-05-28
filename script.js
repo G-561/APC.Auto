@@ -11205,7 +11205,10 @@ async function renderDemandWidget() {
 
 let _edwVehicle       = {};
 let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, photos: [] }
-let _edwStep          = 1;
+let _edwStep          = 0;
+let _edwJobId         = null; // dismantling_jobs.id for the current stock card
+let _edwStock         = [];   // loaded list of in_stock/stripping jobs
+let _edwStockFilter   = '';
 let _edwSelectedZone  = 0;
 let _edwSelectedAsm   = 0;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
@@ -11232,7 +11235,10 @@ function openEdw() {
     if (window.innerWidth < 768) { showToast('EDW requires a tablet or larger screen'); return; }
     _edwVehicle       = {};
     _edwItems         = {};
-    _edwStep          = 1;
+    _edwStep          = 0;
+    _edwJobId         = null;
+    _edwStock         = [];
+    _edwStockFilter   = '';
     _edwSelectedZone  = 0;
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
     const drawer = document.getElementById('edwDrawer');
@@ -11263,7 +11269,8 @@ function closeEdw() {
 
 function _renderEdw() {
     _renderEdwHeader();
-    if (_edwStep === 1) _renderEdwStep1();
+    if (_edwStep === 0)      _renderEdwStep0();
+    else if (_edwStep === 1) _renderEdwStep1();
     else if (_edwStep === 2) _renderEdwStep2();
     else if (_edwStep === 3) _renderEdwStep3();
 }
@@ -11271,7 +11278,11 @@ function _renderEdw() {
 function _renderEdwHeader() {
     const ind = document.getElementById('edwStepIndicator');
     if (!ind) return;
-    const steps = ['Vehicle Details', 'Walk-around', 'Review & Price'];
+    if (_edwStep === 0) {
+        ind.innerHTML = `<span style="font-size:13px;font-weight:700;color:#333;letter-spacing:0.3px;">Stock</span>`;
+        return;
+    }
+    const steps = ['Enter Vehicle into Stock', 'Select Parts', 'Review & Price'];
     ind.innerHTML = steps.map((s, i) => `
         <div class="edw-step-dot ${i + 1 === _edwStep ? 'active' : i + 1 < _edwStep ? 'done' : ''}">
             <div class="edw-step-num">${i + 1 < _edwStep ? '✓' : i + 1}</div>
@@ -11289,7 +11300,7 @@ function _renderEdwStep1() {
     const v = _edwVehicle;
 
     body.innerHTML = `
-        <div class="edw-section-title">Vehicle to Dismantle</div>
+        <div class="edw-section-title">Enter Vehicle into Stock</div>
         <div class="edw-form-grid">
             <div class="edw-field">
                 <label class="edw-label">Stock Number</label>
@@ -11376,7 +11387,10 @@ function _renderEdwStep1() {
         <div class="edw-vp-grid" id="edwVpGrid">${_buildVehiclePhotoSlots()}</div>
     `;
 
-    footer.innerHTML = `<button class="edw-btn-primary" onclick="_edwStep1Next()">Start Walk-around →</button>`;
+    footer.innerHTML = `
+        <button class="edw-btn-secondary" onclick="_edwStep = 0; _renderEdw();">← Back to Stock</button>
+        <button class="edw-btn-primary" onclick="_edwSaveToStock()">Save to Stock →</button>
+    `;
     _edwRefreshSeries();
 }
 
@@ -11500,6 +11514,184 @@ function _edwStep1Next() {
     _edwStep = 2;
     _renderEdw();
     document.getElementById('edwBody')?.scrollTo(0, 0);
+}
+
+function _edwNewVehicle() {
+    _edwVehicle = {};
+    _edwItems = {};
+    _edwJobId = null;
+    _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
+    _edwStep = 1;
+    _renderEdw();
+    document.getElementById('edwBody')?.scrollTo(0, 0);
+}
+
+async function _renderEdwStep0() {
+    const body = document.getElementById('edwBody');
+    const footer = document.getElementById('edwFooter');
+    if (!body || !footer) return;
+    body.style.padding = '20px';
+    body.style.overflow = 'auto';
+    body.style.display = '';
+    body.style.flexDirection = '';
+    footer.innerHTML = '';
+    body.innerHTML = `<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0;">Loading stock…</div>`;
+    if (!sb || !currentUserId) { body.innerHTML = `<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0;">Sign in required</div>`; return; }
+    const { data: jobs } = await sb.from('dismantling_jobs')
+        .select('id, stock_number, make, model, year, series, status, created_at, odometer, vin')
+        .eq('user_id', currentUserId)
+        .in('status', ['in_stock', 'stripping'])
+        .order('created_at', { ascending: false });
+    _edwStock = jobs || [];
+    _edwRenderStock();
+}
+
+function _edwRenderStock() {
+    const body = document.getElementById('edwBody');
+    if (!body) return;
+    const q = _edwStockFilter.toLowerCase();
+    const filtered = q
+        ? _edwStock.filter(j =>
+            (j.stock_number || '').toLowerCase().includes(q) ||
+            (j.make || '').toLowerCase().includes(q) ||
+            (j.model || '').toLowerCase().includes(q) ||
+            (j.vin || '').toLowerCase().includes(q))
+        : _edwStock;
+    body.innerHTML = `
+        <div class="edw-stock-toolbar">
+            <input class="edw-input edw-stock-search" placeholder="Search stock no., make, model, VIN…"
+                value="${escapeHtml(_edwStockFilter)}"
+                oninput="_edwStockFilter=this.value;_edwRenderStock()">
+            <button class="edw-btn-primary edw-stock-add-btn" onclick="_edwNewVehicle()">+ Add Vehicle</button>
+        </div>
+        ${filtered.length === 0 ? `
+            <div class="edw-stock-empty">
+                ${_edwStock.length === 0
+                    ? 'No vehicles in stock yet. Tap <strong>+ Add Vehicle</strong> to get started.'
+                    : 'No results match your search.'}
+            </div>
+        ` : `<div class="edw-stock-list">${filtered.map(j => _edwStockCardHtml(j)).join('')}</div>`}
+    `;
+}
+
+function _edwStockCardHtml(j) {
+    const label = `${j.year} ${j.make} ${j.model}${j.series ? ' ' + j.series : ''}`;
+    const badge = j.status === 'stripping'
+        ? `<span class="edw-stock-badge edw-stock-badge-stripping">Dismantling</span>`
+        : `<span class="edw-stock-badge edw-stock-badge-stock">In Stock</span>`;
+    const date = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const meta = [
+        j.stock_number ? `#${escapeHtml(j.stock_number)}` : null,
+        j.vin          ? `VIN: ${escapeHtml(j.vin)}` : null,
+        j.odometer     ? `${Number(j.odometer).toLocaleString()} km` : null,
+        date,
+    ].filter(Boolean).join(' · ');
+    return `
+        <div class="edw-stock-card" onclick="_edwOpenStockCard(${j.id})">
+            <div class="edw-stock-card-body">
+                <div class="edw-stock-vehicle">${escapeHtml(label)}</div>
+                <div class="edw-stock-meta">${meta}</div>
+            </div>
+            <div class="edw-stock-card-right">${badge}<span class="edw-stock-arrow">›</span></div>
+        </div>
+    `;
+}
+
+async function _edwOpenStockCard(jobId) {
+    const stub = _edwStock.find(j => j.id === jobId);
+    if (!stub) return;
+    const { data: job } = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
+    if (!job) { showToast('Could not load vehicle'); return; }
+
+    const existing = document.getElementById('edwStockCardOverlay');
+    if (existing) existing.remove();
+
+    const label = `${job.year} ${job.make} ${job.model}${job.series ? ' ' + job.series : ''}`;
+    const rows = [
+        ['Stock #',       job.stock_number],
+        ['VIN',           job.vin],
+        ['Colour',        job.colour],
+        ['Odometer',      job.odometer ? `${Number(job.odometer).toLocaleString()} km` : null],
+        ['Body Type',     job.body_type],
+        ['Engine Code',   job.engine_code],
+        ['Engine / Variant', job.variant],
+        ['Transmission',  job.transmission_type],
+        ['Trans Code',    job.transmission_code],
+        ['Paint Code',    job.paint_code],
+        ['Build Date',    job.build_date],
+    ].filter(r => r[1]);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'edw-stock-overlay';
+    overlay.id = 'edwStockCardOverlay';
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+    overlay.innerHTML = `
+        <div class="edw-stock-detail">
+            <div class="sl-qm-header">
+                <span class="sl-qm-title">${escapeHtml(label)}</span>
+                <button class="sl-qm-close" onclick="document.getElementById('edwStockCardOverlay')?.remove()">✕</button>
+            </div>
+            <div class="edw-stock-detail-body">
+                ${rows.map(([k, v]) => `
+                    <div class="edw-stock-detail-row">
+                        <span class="edw-stock-detail-key">${k}</span>
+                        <span class="edw-stock-detail-val">${escapeHtml(String(v))}</span>
+                    </div>`).join('')}
+            </div>
+            <div class="edw-stock-detail-footer">
+                <button class="edw-btn-primary" style="width:100%;" onclick="_edwStartWalkaround(${jobId})">Select Parts to Dismantle →</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('edwDrawer')?.appendChild(overlay);
+}
+
+function _edwStartWalkaround(jobId) {
+    const job = _edwStock.find(j => j.id === jobId);
+    if (!job) return;
+    document.getElementById('edwStockCardOverlay')?.remove();
+    _edwJobId = jobId;
+    _edwItems = {};
+    _edwVehicle = {
+        make: job.make, model: job.model, year: String(job.year),
+        series: job.series || '', bodyType: job.body_type || '',
+        vin: job.vin || '', paintCode: job.paint_code || '',
+        engineCode: job.engine_code || '', transCode: job.transmission_code || '',
+        transType: job.transmission_type || '', odometer: job.odometer || '',
+        buildDate: job.build_date || '', colour: job.colour || '',
+        stockNumber: job.stock_number || '', variant: job.variant || '',
+    };
+    _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: false }));
+    _edwStep = 2;
+    _renderEdw();
+    document.getElementById('edwBody')?.scrollTo(0, 0);
+}
+
+async function _edwSaveToStock() {
+    if (!_edwVehicle.make || !_edwVehicle.model || !_edwVehicle.year) {
+        showToast('Please select Make, Model and Year');
+        return;
+    }
+    if (!sb || !currentUserId) { showToast('Sign in required'); return; }
+    const footer = document.getElementById('edwFooter');
+    if (footer) footer.innerHTML = `<div class="edw-footer-meta">Saving to stock…</div>`;
+    const v = _edwVehicle;
+    const { data: job, error } = await sb.from('dismantling_jobs').insert({
+        user_id: currentUserId, status: 'in_stock',
+        make: v.make, model: v.model, year: Number(v.year),
+        series: v.series || null, body_type: v.bodyType || null,
+        vin: v.vin || null, paint_code: v.paintCode || null,
+        engine_code: v.engineCode || null, transmission_code: v.transCode || null,
+        transmission_type: v.transType || null,
+        odometer: v.odometer ? Number(v.odometer) : null,
+        build_date: v.buildDate || null, colour: v.colour || null,
+        stock_number: v.stockNumber || null, variant: v.variant || null,
+    }).select('id').single();
+    if (error || !job) { showToast('Failed to save vehicle'); _renderEdwStep1(); return; }
+    _edwJobId = job.id;
+    showToast('Vehicle saved to stock');
+    _edwStep = 0;
+    await _renderEdwStep0();
 }
 
 function _renderEdwStep2() {
@@ -12087,17 +12279,24 @@ async function _edwPublish() {
     const gradeToCondition = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
     const gradeLabel      = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'Damaged' };
 
-    // Save job record
-    const { data: job } = await sb.from('dismantling_jobs').insert({
-        user_id: currentUserId,
-        make: v.make, model: v.model, year: Number(v.year),
-        series: v.series || null, body_type: v.bodyType || null,
-        vin: v.vin || null, paint_code: v.paintCode || null,
-        engine_code: v.engineCode || null, transmission_code: v.transCode || null, transmission_type: v.transType || null,
-        odometer: v.odometer ? Number(v.odometer) : null,
-        build_date: v.buildDate || null, colour: v.colour || null,
-        stock_number: v.stockNumber || null,
-    }).select('id').single();
+    // Use existing stock card job, or create one if EDW was entered mid-session
+    let jobId = _edwJobId;
+    if (jobId) {
+        await sb.from('dismantling_jobs').update({ status: 'stripping' }).eq('id', jobId);
+    } else {
+        const { data: newJob } = await sb.from('dismantling_jobs').insert({
+            user_id: currentUserId, status: 'stripping',
+            make: v.make, model: v.model, year: Number(v.year),
+            series: v.series || null, body_type: v.bodyType || null,
+            vin: v.vin || null, paint_code: v.paintCode || null,
+            engine_code: v.engineCode || null, transmission_code: v.transCode || null, transmission_type: v.transType || null,
+            odometer: v.odometer ? Number(v.odometer) : null,
+            build_date: v.buildDate || null, colour: v.colour || null,
+            stock_number: v.stockNumber || null,
+        }).select('id').single();
+        jobId = newJob?.id;
+    }
+    const job = { id: jobId };
 
     // Pre-resolve vehicle photo base64s once — avoids re-reading the same File
     // object via FileReader for every part in the loop (some browsers fail on repeat reads)
@@ -12182,6 +12381,7 @@ async function _edwPublish() {
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
             <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
+            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;
     if (footer) footer.innerHTML = `
@@ -12202,19 +12402,29 @@ async function _edwSendToWorkers() {
     if (footer) footer.innerHTML = `<div class="edw-footer-meta">Creating job…</div>`;
 
     const v = _edwVehicle;
-    const { data: job, error } = await sb.from('dismantling_jobs').insert({
-        user_id: currentUserId,
-        make: v.make, model: v.model, year: Number(v.year),
-        series: v.series || null, body_type: v.bodyType || null,
-        vin: v.vin || null, paint_code: v.paintCode || null,
-        engine_code: v.engineCode || null, transmission_code: v.transCode || null, transmission_type: v.transType || null,
-        odometer: v.odometer ? Number(v.odometer) : null,
-        build_date: v.buildDate || null, colour: v.colour || null,
-        stock_number: v.stockNumber || null,
-        status: 'stripping',
-    }).select('id, job_token').single();
-
-    if (error || !job) { showToast('Failed to create job'); _renderEdwStep3(); return; }
+    let jobId = _edwJobId;
+    let jobToken = null;
+    if (jobId) {
+        const { data: updated } = await sb.from('dismantling_jobs')
+            .update({ status: 'stripping' }).eq('id', jobId)
+            .select('job_token').single();
+        jobToken = updated?.job_token || null;
+    } else {
+        const { data: newJob, error } = await sb.from('dismantling_jobs').insert({
+            user_id: currentUserId,
+            make: v.make, model: v.model, year: Number(v.year),
+            series: v.series || null, body_type: v.bodyType || null,
+            vin: v.vin || null, paint_code: v.paintCode || null,
+            engine_code: v.engineCode || null, transmission_code: v.transCode || null, transmission_type: v.transType || null,
+            odometer: v.odometer ? Number(v.odometer) : null,
+            build_date: v.buildDate || null, colour: v.colour || null,
+            stock_number: v.stockNumber || null, status: 'stripping',
+        }).select('id, job_token').single();
+        if (error || !newJob) { showToast('Failed to create job'); _renderEdwStep3(); return; }
+        jobId = newJob.id;
+        jobToken = newJob.job_token;
+    }
+    const job = { id: jobId, job_token: jobToken };
 
     const itemRows = items.map(([key, item]) => {
         const [zI, aI, pI] = key.split(':').map(Number);
@@ -12688,6 +12898,7 @@ async function _jrPublish(jobId) {
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
             <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
+            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;
     if (footer) footer.innerHTML = `<button class="edw-btn-secondary" onclick="closeEdw()">Close</button>`;
