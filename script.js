@@ -12834,12 +12834,46 @@ function _slRenderSelector() {
     if (panel) panel.style.gridTemplateColumns = `${zW}px ${aW}px ${pW}px ${qW}px`;
 }
 
+// Cached reverse map: partName/base → { zI, aI } — built once from taxonomy
+let _slReverseMap = null;
+function _slGetReverseMap() {
+    if (_slReverseMap) return _slReverseMap;
+    _slReverseMap = new Map();
+    EDW_TAXONOMY.forEach((zone, zI) => {
+        zone.assemblies.forEach((asm, aI) => {
+            asm.parts.forEach(p => {
+                const { base, qualifier } = _slParsePartName(p);
+                if (!_slReverseMap.has(base)) _slReverseMap.set(base, { zI, aI });
+                if (qualifier) _slReverseMap.set(`${base} — ${qualifier}`, { zI, aI });
+            });
+        });
+    });
+    return _slReverseMap;
+}
+
+// Count how many open tabs belong to the given zone/assembly
+function _slTabCountForZone(zI) {
+    const m = _slGetReverseMap();
+    return _slTabs.filter(t => {
+        const loc = m.get(t.partName) || m.get(t.partName.split(' — ')[0]);
+        return loc?.zI === zI;
+    }).length;
+}
+function _slTabCountForAsm(zI, aI) {
+    const m = _slGetReverseMap();
+    return _slTabs.filter(t => {
+        const loc = m.get(t.partName) || m.get(t.partName.split(' — ')[0]);
+        return loc?.zI === zI && loc?.aI === aI;
+    }).length;
+}
+
 function _buildSlZones() {
     return EDW_TAXONOMY.map((zone, zI) => {
         const active = _slSelectedZone === zI;
+        const count  = _slTabCountForZone(zI);
         return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_slSelectZone(${zI})">
             <span>${escapeHtml(zone.zone)}</span>
-            ${active ? '<span style="color:#f07020;font-size:10px;">▸</span>' : ''}
+            ${count ? `<span class="sl-count-badge">${count}</span>` : (active ? '<span style="color:#f07020;font-size:10px;margin-left:auto;">▸</span>' : '')}
         </div>`;
     }).join('');
 }
@@ -12849,8 +12883,10 @@ function _buildSlAsms(zI) {
     if (!zone) return '';
     return zone.assemblies.map((asm, aI) => {
         const active = _slSelectedAsm === aI;
+        const count  = _slTabCountForAsm(zI, aI);
         return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_slSelectAsm(${aI})">
             <span>${escapeHtml(asm.name)}</span>
+            ${count ? `<span class="sl-count-badge">${count}</span>` : ''}
         </div>`;
     }).join('');
 }
@@ -12860,15 +12896,21 @@ function _buildSlParts(zI, aI) {
     if (!groups.length) return `<div class="edw-panel-empty">Select an assembly</div>`;
     const searched = new Set(_slTabs.map(t => t.partName));
     return groups.map(({ base, qualifiers }, idx) => {
-        const hasQuals = qualifiers.length > 0;
+        const hasQuals   = qualifiers.length > 0;
         const isSelected = _slSelectedPartBase?.base === base;
-        const done = searched.has(base) || qualifiers.some(q => searched.has(`${base} — ${q}`));
-        return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}${isSelected ? ' active' : ''}"
+        const checkedAll = searched.has(base);
+        const checkedAny = hasQuals && qualifiers.some(q => searched.has(`${base} — ${q}`));
+        const checked    = checkedAll || checkedAny;
+        const count      = hasQuals ? qualifiers.filter(q => searched.has(`${base} — ${q}`)).length + (checkedAll ? 1 : 0) : 0;
+        const safeBase   = escapeHtml(base).replace(/'/g, "\\'");
+        return `<div class="edw-panel-row sl-part-row${checked ? ' searched' : ''}${isSelected ? ' active' : ''}"
                      onclick="_slSelectPartBase(${idx})">
+            ${!hasQuals
+                ? `<label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${checkedAll ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)"></label>`
+                : `<span style="width:20px;flex-shrink:0;"></span>`}
             <span>${escapeHtml(base)}</span>
-            ${done ? '<span class="edw-panel-badge">✓</span>' :
-              hasQuals ? '<span style="color:#bbb;font-size:13px;flex-shrink:0;">▸</span>' :
-              '<span style="color:#ccc;font-size:11px;flex-shrink:0;">↗</span>'}
+            ${count  ? `<span class="sl-count-badge">${count}</span>` : ''}
+            ${hasQuals ? '<span style="color:#bbb;font-size:13px;flex-shrink:0;margin-left:auto;">▸</span>' : ''}
         </div>`;
     }).join('');
 }
@@ -12878,21 +12920,21 @@ function _buildSlQualifiers() {
         return `<div class="edw-panel-empty" style="font-size:12px;padding:20px 10px;text-align:center;">← select<br>a part</div>`;
     }
     const { base, qualifiers } = _slSelectedPartBase;
-    const searched = new Set(_slTabs.map(t => t.partName));
-    const allDone = searched.has(base);
+    const searched  = new Set(_slTabs.map(t => t.partName));
+    const safeBase  = escapeHtml(base).replace(/'/g, "\\'");
+    const allDone   = searched.has(base);
     const rows = [
-        `<div class="edw-panel-row sl-part-row${allDone ? ' searched' : ''}"
-              onclick="_slSelectQualifier('${escapeHtml(base).replace(/'/g,"\\'")}','')">
+        `<div class="edw-panel-row sl-part-row${allDone ? ' searched' : ''}">
+            <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${allDone ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)"></label>
             <span style="font-style:italic;color:#999">All</span>
-            ${allDone ? '<span class="edw-panel-badge">✓</span>' : '<span style="color:#ccc;font-size:11px;flex-shrink:0;">↗</span>'}
         </div>`,
         ...qualifiers.map(q => {
-            const tabName = `${base} — ${q}`;
-            const done = searched.has(tabName);
-            return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}"
-                         onclick="_slSelectQualifier('${escapeHtml(base).replace(/'/g,"\\'")}','${escapeHtml(q).replace(/'/g,"\\'")}')">
+            const tabName  = `${base} — ${q}`;
+            const done     = searched.has(tabName);
+            const safeQ    = escapeHtml(q).replace(/'/g, "\\'");
+            return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
+                <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${done ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','${safeQ}',this.checked)"></label>
                 <span>${escapeHtml(q)}</span>
-                ${done ? '<span class="edw-panel-badge">✓</span>' : '<span style="color:#ccc;font-size:11px;flex-shrink:0;">↗</span>'}
             </div>`;
         })
     ];
@@ -12948,10 +12990,28 @@ function _slSelectQualifier(base, qualifier) {
     const idx = _slTabs.length - 1;
     _slSetActiveTab(idx);
     _slSearch(base, qualifier || null, idx);
+    _slRefreshSelectorBadges();
+}
+
+function _slRefreshSelectorBadges() {
+    const z = document.getElementById('slPanelZones');
+    const a = document.getElementById('slPanelAsms');
     const p = document.getElementById('slPanelParts');
     const q = document.getElementById('slPanelQuals');
+    if (z) z.innerHTML = _buildSlZones();
+    if (a) a.innerHTML = _buildSlAsms(_slSelectedZone);
     if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
     if (q) q.innerHTML = _buildSlQualifiers();
+}
+
+function _slTogglePartCheck(base, qualifier, checked) {
+    if (checked) {
+        _slSelectQualifier(base, qualifier);
+    } else {
+        const tabName = qualifier ? `${base} — ${qualifier}` : base;
+        const idx = _slTabs.findIndex(t => t.partName === tabName);
+        if (idx >= 0) _slCloseTab(idx);
+    }
 }
 
 async function _slSearch(partBase, qualifier, tabIdx) {
@@ -13078,8 +13138,7 @@ function _slCloseTab(idx) {
         _slRenderTabs();
         _slRenderResults();
     }
-    const p = document.getElementById('slPanelParts');
-    if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
+    _slRefreshSelectorBadges();
 }
 
 function _slRenderResults() {

@@ -6884,7 +6884,13 @@ header {
 .sl-left-col { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
 .sl-selector { flex-shrink: 0; border-bottom: 2px solid #ddd; overflow-x: auto; overflow-y: hidden; }
 
-/* Checkbox cell on rows */
+/* Selector checkboxes (col 3 + col 4) */
+.sl-part-check { display: inline-flex; align-items: center; flex-shrink: 0; margin-right: 6px; cursor: pointer; }
+.sl-part-check input[type="checkbox"] { width: 15px; height: 15px; accent-color: #f07020; cursor: pointer; margin: 0; }
+/* Count badge on zone/assembly/part rows */
+.sl-count-badge { display: inline-flex; align-items: center; justify-content: center; background: #f07020; color: #fff; font-size: 9px; font-weight: 800; min-width: 16px; height: 16px; border-radius: 99px; padding: 0 3px; flex-shrink: 0; margin-left: auto; }
+
+/* Checkbox cell on result rows */
 .sl-cell-check { width: 36px; justify-content: center; padding: 6px 8px; flex-shrink: 0; }
 .sl-cell-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f07020; cursor: pointer; }
 .sl-row.selected { background: #fff8f2; }
