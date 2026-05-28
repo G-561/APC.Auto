@@ -12645,6 +12645,7 @@ let _slResultsMap     = new Map(); // listingId -> result row data (populated wh
 let _slQuotes         = [];        // quotes loaded from Supabase
 let _slActiveQuote    = null;      // { quote, lines } currently shown in detail panel
 let _slQuoteDebounce  = null;
+let _slProOnly        = false;     // when true, OTHER YARDS section filters to pro sellers only
 
 function openStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
@@ -13178,7 +13179,7 @@ function _slRenderResults() {
                 const bin   = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
                 const st    = r.status || '';
                 const chk   = _slSelected.has(r.id) ? ' checked' : '';
-                return `<div class="sl-row own${_slSelected.has(r.id) ? ' selected' : ''}">
+                return `<div class="sl-row own${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
                     <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
                     <div class="sl-cell sl-cell-thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}</div>
                     <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
@@ -13188,16 +13189,16 @@ function _slRenderResults() {
                         ${bin ? `<span>${bin}</span>` : ''}
                         ${st ? `<span style="color:${statusColour[st]||'#888'};font-weight:700;font-size:10px;text-transform:uppercase;">${escapeHtml(st)}</span>` : ''}
                     </div>
-                    <div class="sl-cell sl-cell-btn"><button onclick="_slViewListing(${r.id})">View</button></div>
                 </div>`;
             }).join('');
         _slRenderActionBar(); return;
     }
 
     const own   = tab.results.filter(r => r.seller_id === currentUserId);
-    const other = tab.results.filter(r => r.seller_id !== currentUserId);
+    const allOther = tab.results.filter(r => r.seller_id !== currentUserId);
+    const other = _slProOnly ? allOther.filter(r => r.profiles?.is_pro) : allOther;
 
-    if (!own.length && !other.length) {
+    if (!own.length && !allOther.length) {
         content.innerHTML = `<div class="sl-no-results">No results found for <strong>${escapeHtml(tab.partName)}</strong> — ${escapeHtml(_slVehicle.year)} ${escapeHtml(_slVehicle.make)} ${escapeHtml(_slVehicle.model)}</div>`;
         _slRenderActionBar(); return;
     }
@@ -13210,7 +13211,7 @@ function _slRenderResults() {
         const stock  = r.stock_number ? `Stock: ${escapeHtml(r.stock_number)}` : '';
         const bin    = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
         const chk    = _slSelected.has(r.id) ? ' checked' : '';
-        return `<div class="sl-row${isOwn ? ' own' : ''}${_slSelected.has(r.id) ? ' selected' : ''}">
+        return `<div class="sl-row${isOwn ? ' own' : ''}${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
             <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
             <div class="sl-cell sl-cell-thumb">
                 ${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}
@@ -13220,20 +13221,74 @@ function _slRenderResults() {
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
             ${isOwn ? `<div class="sl-cell sl-cell-meta">${stock ? `<span>${stock}</span>` : ''}${bin ? `<span>${bin}</span>` : ''}</div>` : ''}
-            <div class="sl-cell sl-cell-btn"><button onclick="_slViewListing(${r.id})">View</button></div>
         </div>`;
     };
 
+    const proToggle = `<button class="sl-pro-filter-btn${_slProOnly ? ' active' : ''}" onclick="_slToggleProOnly()">${_slProOnly ? '★ Pro only' : '☆ Pro only'}</button>`;
+    const otherHdr = allOther.length
+        ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length}${_slProOnly && other.length < allOther.length ? ` of ${allOther.length}` : ''} result${other.length!==1?'s':''}${proToggle}</div>`
+        : '';
+    const otherBody = other.length ? other.map(r=>rowHTML(r,false)).join('') :
+        (allOther.length ? `<div class="sl-no-results" style="padding:10px 15px;font-size:12px;">No pro sellers in these results</div>` : '');
+
     content.innerHTML =
         (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div>${own.map(r=>rowHTML(r,true)).join('')}` : '') +
-        (other.length ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length} result${other.length!==1?'s':''}</div>${other.map(r=>rowHTML(r,false)).join('')}` : '');
+        otherHdr + otherBody;
     _slRenderActionBar();
 }
 
-function _slViewListing(id) {
-    closeStockLookup();
-    const part = findPartAnywhere(id);
-    if (part) openDetail(part);
+function _slToggleProOnly() {
+    _slProOnly = !_slProOnly;
+    _slRenderResults();
+}
+
+async function _slOpenResultDetail(id) {
+    if (!sb) return;
+    // Own listings are already in userListings — just open directly
+    const existing = findPartAnywhere(id);
+    if (existing) { openItemDetail(id); return; }
+
+    // Fetch full listing from Supabase and push into partDatabase so openItemDetail can find it
+    const { data: rows, error } = await sb
+        .from('listings')
+        .select('*, listing_images(storage_path, position), listing_vehicles(make, model, series)')
+        .eq('id', id)
+        .limit(1);
+    if (error || !rows?.length) { showToast('Could not load listing'); return; }
+    const r = rows[0];
+
+    let sellerName = 'Seller';
+    if (r.seller_id) {
+        const { data: prof } = await sb.from('profiles').select('display_name, avatar_url').eq('id', r.seller_id).single();
+        if (prof?.display_name) sellerName = prof.display_name;
+        if (prof?.avatar_url) _sellerPicCache[r.seller_id] = prof.avatar_url;
+    }
+
+    const images = (r.listing_images || [])
+        .sort((a, b) => a.position - b.position)
+        .map(img => img.storage_path).filter(Boolean);
+    const fits = (r.listing_vehicles || []).map(v => ({
+        make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}),
+    }));
+
+    partDatabase.push({
+        id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
+        saves: r.saves_count || 0,
+        date: new Date(r.created_at).getTime(),
+        apcId: r.apc_id, title: r.title, category: r.category,
+        price: r.price, condition: r.condition,
+        description: r.description, loc: r.location,
+        postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+        openToOffers: r.open_to_offers, isPro: r.is_pro,
+        stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
+        warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
+        fit: r.fitting_available, year: r.fits_year,
+        variant: r.variant || null, seller: sellerName,
+        status: r.status === 'active' ? undefined : r.status,
+        images, fits,
+    });
+
+    openItemDetail(id);
 }
 
 // ── Quote selection / action bar ──────────────────────────────────────────

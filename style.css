@@ -6851,11 +6851,14 @@ header {
 }
 .sl-section-hdr.own { color: #f07020; background: #fff8f2; border-color: #ffe5cc; }
 .sl-section-own-pill { background: #f07020; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 99px; }
+.sl-pro-filter-btn { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; border: 1.5px solid #bbb; background: #fff; color: #888; cursor: pointer; letter-spacing: 0.3px; }
+.sl-pro-filter-btn.active { border-color: #f07020; background: #fff8f2; color: #f07020; }
 .sl-row {
     display: flex; align-items: center; gap: 0;
     border-bottom: 1px solid #eee; background: #fff;
-    min-height: 44px;
+    min-height: 44px; cursor: pointer;
 }
+.sl-row:hover { background: #fafafa; }
 .sl-row.own { background: #fffbf7; }
 .sl-row:hover { background: #f9f9f9; }
 .sl-row.own:hover { background: #fff4ec; }
