@@ -238,11 +238,27 @@
             <div class="sl-header-title">Stock Lookup</div>
         </div>
         <div class="sl-vehicle-bar" id="slVehicleBar"></div>
-        <div class="sl-selector" id="slSelector"></div>
-        <div class="sl-results-area" id="slResultsArea">
-            <div class="sl-results-empty" id="slResultsEmpty">Select a vehicle and part to search</div>
-            <div id="slTabBar" class="sl-tab-bar" style="display:none;"></div>
-            <div id="slResultsContent" style="display:none; overflow-y:auto; flex:1 1 0%;"></div>
+        <div class="sl-main-area">
+            <div class="sl-left-col">
+                <div class="sl-selector" id="slSelector"></div>
+                <div class="sl-results-area" id="slResultsArea">
+                    <div class="sl-results-empty" id="slResultsEmpty">Select a vehicle and part to search</div>
+                    <div id="slTabBar" class="sl-tab-bar" style="display:none;"></div>
+                    <div id="slResultsContent" style="display:none; overflow-y:auto; flex:1 1 0%;"></div>
+                    <div id="slActionBar" class="sl-action-bar" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="sl-quotes-panel" id="slQuotesPanel">
+                <div class="sl-qp-header">
+                    <span class="sl-qp-title">Today's Quotes</span>
+                    <button class="sl-qp-new-btn" onclick="_slNewQuote()">+ New</button>
+                </div>
+                <div class="sl-qp-search">
+                    <input type="text" id="slQuoteSearchInput" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
+                </div>
+                <div id="slQuotesList" class="sl-quotes-list"></div>
+                <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
+            </div>
         </div>
     </div>
 </div>

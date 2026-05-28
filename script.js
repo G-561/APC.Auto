@@ -12640,12 +12640,18 @@ let _slTabs           = [];   // [{ partName, results:[], loading:false, error:n
 let _slActiveTab      = -1;
 let _slStockDebounce  = null;
 let _slColWidths      = null; // computed once from full taxonomy — never recalculated
+let _slSelected       = new Map(); // listingId -> { title, price, stock_number }
+let _slResultsMap     = new Map(); // listingId -> result row data (populated when results load)
+let _slQuotes         = [];        // quotes loaded from Supabase
+let _slActiveQuote    = null;      // { quote, lines } currently shown in detail panel
+let _slQuoteDebounce  = null;
 
 function openStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
     _slVehicle = { make: '', model: '', year: '', series: '' };
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = 0; _slSelectedPartBase = null;
+    _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
     const drawer = document.getElementById('stockLookupDrawer');
     if (!drawer) return;
     const topBar     = document.getElementById('desktopTopBar');
@@ -12662,6 +12668,7 @@ function openStockLookup() {
     try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
     try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
     _slRenderResultsArea();
+    _slLoadTodaysQuotes();
 }
 
 function closeStockLookup() {
@@ -12758,6 +12765,7 @@ async function _slSearchByStock(stockNo) {
         _slTabs[idx].loading = false;
         _slTabs[idx].error   = error ? error.message : null;
         _slTabs[idx].results = data || [];
+        (data || []).forEach(r => _slResultsMap.set(r.id, r));
     }
     if (_slActiveTab === idx) _slRenderResults();
     _slRenderTabs();
@@ -13004,6 +13012,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     }
 
     const results = (data || []).map(r => ({ ...r, profiles: profileMap[r.seller_id] || null }));
+    results.forEach(r => _slResultsMap.set(r.id, r));
 
     if (_slTabs[tabIdx]) {
         _slTabs[tabIdx].loading = false;
@@ -13023,6 +13032,7 @@ function _slRenderResultsArea() {
         empty.style.display   = '';
         tabBar.style.display  = 'none';
         content.style.display = 'none';
+        _slRenderActionBar();
         return;
     }
     empty.style.display   = 'none';
@@ -13089,7 +13099,7 @@ function _slRenderResults() {
     if (tab.isStockSearch) {
         if (!tab.results.length) {
             content.innerHTML = `<div class="sl-no-results">No listings found for stock number <strong>${escapeHtml(tab.stockNo)}</strong></div>`;
-            return;
+            _slRenderActionBar(); return;
         }
         const statusColour = { active: '#22c55e', pending: '#f59e0b', sold: '#888', draft: '#aaa' };
         content.innerHTML =
@@ -13100,7 +13110,9 @@ function _slRenderResults() {
                 const gradeClass = grade ? `grade-${grade.charAt(0).toUpperCase()}` : '';
                 const bin   = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
                 const st    = r.status || '';
-                return `<div class="sl-row own">
+                const chk   = _slSelected.has(r.id) ? ' checked' : '';
+                return `<div class="sl-row own${_slSelected.has(r.id) ? ' selected' : ''}">
+                    <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
                     <div class="sl-cell sl-cell-thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}</div>
                     <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
                     <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
@@ -13112,7 +13124,7 @@ function _slRenderResults() {
                     <div class="sl-cell sl-cell-btn"><button onclick="_slViewListing(${r.id})">View</button></div>
                 </div>`;
             }).join('');
-        return;
+        _slRenderActionBar(); return;
     }
 
     const own   = tab.results.filter(r => r.seller_id === currentUserId);
@@ -13120,7 +13132,7 @@ function _slRenderResults() {
 
     if (!own.length && !other.length) {
         content.innerHTML = `<div class="sl-no-results">No results found for <strong>${escapeHtml(tab.partName)}</strong> — ${escapeHtml(_slVehicle.year)} ${escapeHtml(_slVehicle.make)} ${escapeHtml(_slVehicle.model)}</div>`;
-        return;
+        _slRenderActionBar(); return;
     }
 
     const rowHTML = (r, isOwn) => {
@@ -13130,7 +13142,9 @@ function _slRenderResults() {
         const yard   = escapeHtml(r.profiles?.display_name || 'Wrecker');
         const stock  = r.stock_number ? `Stock: ${escapeHtml(r.stock_number)}` : '';
         const bin    = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
-        return `<div class="sl-row${isOwn ? ' own' : ''}">
+        const chk    = _slSelected.has(r.id) ? ' checked' : '';
+        return `<div class="sl-row${isOwn ? ' own' : ''}${_slSelected.has(r.id) ? ' selected' : ''}">
+            <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
             <div class="sl-cell sl-cell-thumb">
                 ${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}
             </div>
@@ -13146,12 +13160,328 @@ function _slRenderResults() {
     content.innerHTML =
         (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div>${own.map(r=>rowHTML(r,true)).join('')}` : '') +
         (other.length ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length} result${other.length!==1?'s':''}</div>${other.map(r=>rowHTML(r,false)).join('')}` : '');
+    _slRenderActionBar();
 }
 
 function _slViewListing(id) {
     closeStockLookup();
     const part = findPartAnywhere(id);
     if (part) openDetail(part);
+}
+
+// ── Quote selection / action bar ──────────────────────────────────────────
+
+function _slToggleSelect(id, checked) {
+    if (checked) {
+        const r = _slResultsMap.get(id);
+        if (r) _slSelected.set(id, { title: r.title, price: r.price, stock_number: r.stock_number });
+    } else {
+        _slSelected.delete(id);
+    }
+    _slRenderActionBar();
+}
+
+function _slClearSelection() {
+    _slSelected.clear();
+    _slRenderActionBar();
+    _slRenderResults();
+}
+
+function _slRenderActionBar() {
+    const bar = document.getElementById('slActionBar');
+    if (!bar) return;
+    if (_slSelected.size === 0 || _slTabs.length === 0) { bar.style.display = 'none'; return; }
+    bar.style.display = '';
+    const n = _slSelected.size;
+    bar.innerHTML = `
+        <span class="sl-action-count">${n} part${n !== 1 ? 's' : ''} selected</span>
+        <button class="sl-action-btn sl-action-btn-ghost" onclick="_slClearSelection()">Clear</button>
+        <button class="sl-action-btn sl-action-btn-primary" onclick="_slOpenAddToQuote()">Add to Quote →</button>`;
+}
+
+// ── Quote loading / panel rendering ──────────────────────────────────────
+
+async function _slLoadTodaysQuotes() {
+    if (!currentUserId || !sb) return;
+    const { data } = await sb.from('quotes')
+        .select('id, quote_number, status, customer_name, freight_cost, created_at')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+    _slQuotes = data || [];
+    _slRenderQuotesList();
+}
+
+function _slRenderQuotesList() {
+    const list = document.getElementById('slQuotesList');
+    if (!list) return;
+    if (!_slQuotes.length) {
+        list.innerHTML = '<div class="sl-quotes-empty">No quotes yet</div>';
+        return;
+    }
+    const statusLabel = { draft: 'Draft', sent: 'Sent', approved: 'Approved', invoiced: 'Invoiced' };
+    list.innerHTML = _slQuotes.map(q => {
+        const isActive = _slActiveQuote?.quote?.id === q.id;
+        const date = new Date(q.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        const st = q.status || 'draft';
+        return `<div class="sl-quote-card${isActive ? ' active' : ''}" onclick="_slOpenQuoteDetail(${q.id})">
+            <div>
+                <span class="sl-quote-num">${escapeHtml(q.quote_number)}</span>
+                <span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>
+            </div>
+            ${q.customer_name ? `<div class="sl-quote-meta">${escapeHtml(q.customer_name)}</div>` : ''}
+            <div class="sl-quote-meta">${date}</div>
+        </div>`;
+    }).join('');
+}
+
+// ── Quote creation ────────────────────────────────────────────────────────
+
+async function _slGenerateQuoteNumber() {
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const prefix = `Q-${today}-`;
+    const { data } = await sb.from('quotes')
+        .select('quote_number')
+        .eq('user_id', currentUserId)
+        .ilike('quote_number', `${prefix}%`)
+        .order('quote_number', { ascending: false })
+        .limit(1);
+    const seq = data?.[0]?.quote_number ? parseInt(data[0].quote_number.slice(-3)) + 1 : 1;
+    return `${prefix}${String(seq).padStart(3, '0')}`;
+}
+
+async function _slNewQuote() {
+    if (!currentUserId || !sb) return;
+    const qn = await _slGenerateQuoteNumber();
+    const { data, error } = await sb.from('quotes').insert({
+        quote_number: qn, user_id: currentUserId, status: 'draft', freight_cost: 0,
+    }).select().single();
+    if (error || !data) { showToast('Could not create quote'); return; }
+    _slQuotes.unshift(data);
+    _slRenderQuotesList();
+    _slOpenQuoteDetail(data.id);
+}
+
+// ── Add-to-quote modal ────────────────────────────────────────────────────
+
+function _slOpenAddToQuote() {
+    if (!_slSelected.size) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'sl-quote-modal-overlay';
+    overlay.id = 'slQuoteModalOverlay';
+    overlay.onclick = e => { if (e.target === overlay) _slCloseQuoteModal(); };
+    const drafts = _slQuotes.filter(q => q.status === 'draft' || q.status === 'approved');
+    overlay.innerHTML = `
+        <div class="sl-quote-modal">
+            <div class="sl-qm-header">
+                <span class="sl-qm-title">Add to Quote</span>
+                <button class="sl-qm-close" onclick="_slCloseQuoteModal()">✕</button>
+            </div>
+            <div class="sl-qm-body">
+                <div class="sl-qm-selected">${_slSelected.size} part${_slSelected.size !== 1 ? 's' : ''} selected</div>
+                ${drafts.length ? `
+                    <div class="sl-qm-subtitle">Add to existing quote</div>
+                    ${drafts.map(q => `
+                        <div class="sl-qm-quote-row" onclick="_slAddToQuote(${q.id})">
+                            <span class="sl-qm-qnum">${escapeHtml(q.quote_number)}</span>
+                            ${q.customer_name ? `<span class="sl-qm-qmeta">${escapeHtml(q.customer_name)}</span>` : ''}
+                        </div>`).join('')}
+                    <div style="margin:12px 0 8px;border-top:1px solid #eee;padding-top:12px;">
+                        <div class="sl-qm-subtitle">Or create new</div>
+                    </div>` : ''}
+                <button class="sl-qm-create-btn" onclick="_slCreateQuoteWithLines()">+ Create New Quote</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function _slCloseQuoteModal() {
+    const overlay = document.getElementById('slQuoteModalOverlay');
+    if (overlay) overlay.remove();
+}
+
+async function _slAddToQuote(quoteId) {
+    _slCloseQuoteModal();
+    if (!sb || !_slSelected.size) return;
+    const lines = [..._slSelected.entries()].map(([listing_id, d]) => ({
+        quote_id: quoteId, listing_id, title: d.title,
+        stock_number: d.stock_number || null, price: d.price || null, qty: 1,
+    }));
+    const { error } = await sb.from('quote_lines').insert(lines);
+    if (error) { showToast('Could not add parts to quote'); return; }
+    showToast(`${lines.length} part${lines.length !== 1 ? 's' : ''} added`);
+    _slClearSelection();
+    _slOpenQuoteDetail(quoteId);
+}
+
+async function _slCreateQuoteWithLines() {
+    _slCloseQuoteModal();
+    if (!currentUserId || !sb || !_slSelected.size) return;
+    const qn = await _slGenerateQuoteNumber();
+    const { data: quote, error } = await sb.from('quotes').insert({
+        quote_number: qn, user_id: currentUserId, status: 'draft', freight_cost: 0,
+    }).select().single();
+    if (error || !quote) { showToast('Could not create quote'); return; }
+    _slQuotes.unshift(quote);
+    const lines = [..._slSelected.entries()].map(([listing_id, d]) => ({
+        quote_id: quote.id, listing_id, title: d.title,
+        stock_number: d.stock_number || null, price: d.price || null, qty: 1,
+    }));
+    const { error: lErr } = await sb.from('quote_lines').insert(lines);
+    if (lErr) showToast('Quote created — could not add parts');
+    else showToast(`Quote ${qn} created with ${lines.length} part${lines.length !== 1 ? 's' : ''}`);
+    _slClearSelection();
+    _slRenderQuotesList();
+    _slOpenQuoteDetail(quote.id);
+}
+
+// ── Quote detail panel ────────────────────────────────────────────────────
+
+async function _slOpenQuoteDetail(quoteId) {
+    if (!sb) return;
+    const [{ data: quote }, { data: lines }] = await Promise.all([
+        sb.from('quotes').select('*').eq('id', quoteId).single(),
+        sb.from('quote_lines').select('*').eq('quote_id', quoteId).order('created_at', { ascending: true }),
+    ]);
+    if (!quote) return;
+    _slActiveQuote = { quote, lines: lines || [] };
+    _slRenderQuoteDetail();
+    _slRenderQuotesList();
+}
+
+function _slRenderQuoteDetail() {
+    const list   = document.getElementById('slQuotesList');
+    const detail = document.getElementById('slQuoteDetail');
+    if (!detail || !_slActiveQuote) return;
+    if (list) list.style.display = 'none';
+    detail.style.display = '';
+
+    const { quote, lines } = _slActiveQuote;
+    const subtotal = lines.reduce((s, l) => s + ((l.price || 0) * (l.qty || 1)), 0);
+    const freight  = parseFloat(quote.freight_cost) || 0;
+    const total    = subtotal + freight;
+    const statusLabel = { draft: 'Draft', sent: 'Sent', approved: 'Approved', invoiced: 'Invoiced' };
+    const st = quote.status || 'draft';
+
+    detail.innerHTML = `
+        <div class="sl-qd-back"><button onclick="_slCloseQuoteDetail()">← All Quotes</button></div>
+        <div class="sl-qd-body">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <span style="font-size:13px;font-weight:800;color:#333;">${escapeHtml(quote.quote_number)}</span>
+                <span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>
+            </div>
+            <div class="sl-qd-section">
+                <div class="sl-qd-label">Customer</div>
+                <input class="sl-qd-input" style="margin-bottom:6px;" placeholder="Name"
+                    value="${escapeHtml(quote.customer_name || '')}"
+                    onblur="_slSaveQuoteField(${quote.id},'customer_name',this.value)">
+                <input class="sl-qd-input" style="margin-bottom:6px;" placeholder="Email"
+                    value="${escapeHtml(quote.customer_email || '')}"
+                    onblur="_slSaveQuoteField(${quote.id},'customer_email',this.value)">
+                <input class="sl-qd-input" placeholder="Phone"
+                    value="${escapeHtml(quote.customer_phone || '')}"
+                    onblur="_slSaveQuoteField(${quote.id},'customer_phone',this.value)">
+            </div>
+            <div class="sl-qd-section">
+                <div class="sl-qd-label">Parts (${lines.length})</div>
+                ${lines.length ? lines.map(l => `
+                    <div class="sl-qd-line">
+                        <span class="sl-qd-line-title" title="${escapeHtml(l.title)}">${escapeHtml(l.title)}</span>
+                        ${l.stock_number ? `<span style="font-size:10px;color:#aaa;flex-shrink:0;">${escapeHtml(l.stock_number)}</span>` : ''}
+                        <span class="sl-qd-line-price">${l.price != null ? '$'+Number(l.price).toFixed(2) : '—'}</span>
+                        <button class="sl-qd-line-del" onclick="_slDeleteQuoteLine(${l.id},${quote.id})" title="Remove">×</button>
+                    </div>`).join('') :
+                    '<div style="color:#bbb;font-size:12px;padding:8px 0;">Select parts and click Add to Quote →</div>'}
+            </div>
+            <div class="sl-qd-section">
+                <div class="sl-qd-label">Freight</div>
+                <input class="sl-qd-input" type="number" min="0" step="0.01" placeholder="0.00"
+                    value="${freight > 0 ? freight : ''}"
+                    onblur="_slSaveQuoteField(${quote.id},'freight_cost',this.value)">
+            </div>
+            <div class="sl-qd-total">
+                <span>Total</span>
+                <span class="sl-qd-total-amount">$${total.toFixed(2)}</span>
+            </div>
+            <div style="margin-top:14px;">
+                <div class="sl-qd-label">Notes</div>
+                <textarea class="sl-qd-input" style="height:56px;resize:none;" placeholder="Internal notes…"
+                    onblur="_slSaveQuoteField(${quote.id},'notes',this.value)">${escapeHtml(quote.notes || '')}</textarea>
+            </div>
+        </div>
+        <div class="sl-qd-actions">
+            ${st === 'draft' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Mark Sent</button>` : ''}
+            ${st === 'sent'  ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
+            ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Mark Invoiced</button>` : ''}
+            <button class="sl-qd-btn sl-qd-btn-ghost" onclick="window.print()">Print</button>
+        </div>`;
+}
+
+function _slCloseQuoteDetail() {
+    _slActiveQuote = null;
+    const list   = document.getElementById('slQuotesList');
+    const detail = document.getElementById('slQuoteDetail');
+    if (list)   { list.style.display = ''; _slRenderQuotesList(); }
+    if (detail) detail.style.display = 'none';
+}
+
+async function _slSaveQuoteField(quoteId, field, value) {
+    if (!sb) return;
+    const parsed = field === 'freight_cost' ? (parseFloat(value) || 0) : (value || null);
+    await sb.from('quotes').update({ [field]: parsed, updated_at: new Date().toISOString() }).eq('id', quoteId);
+    if (_slActiveQuote?.quote?.id === quoteId) {
+        _slActiveQuote.quote[field] = parsed;
+        if (field === 'freight_cost') {
+            const el = document.querySelector('.sl-qd-total-amount');
+            if (el) {
+                const sub = _slActiveQuote.lines.reduce((s, l) => s + ((l.price||0)*(l.qty||1)), 0);
+                el.textContent = '$' + (sub + parsed).toFixed(2);
+            }
+        }
+    }
+    const idx = _slQuotes.findIndex(q => q.id === quoteId);
+    if (idx >= 0) {
+        _slQuotes[idx][field] = parsed;
+        if (field === 'customer_name') _slRenderQuotesList();
+    }
+}
+
+async function _slDeleteQuoteLine(lineId, quoteId) {
+    if (!sb) return;
+    await sb.from('quote_lines').delete().eq('id', lineId);
+    if (_slActiveQuote?.quote?.id === quoteId) {
+        _slActiveQuote.lines = _slActiveQuote.lines.filter(l => l.id !== lineId);
+        _slRenderQuoteDetail();
+    }
+}
+
+async function _slAdvanceQuoteStatus(quoteId, newStatus) {
+    if (!sb) return;
+    await sb.from('quotes').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', quoteId);
+    if (_slActiveQuote?.quote?.id === quoteId) { _slActiveQuote.quote.status = newStatus; _slRenderQuoteDetail(); }
+    const idx = _slQuotes.findIndex(q => q.id === quoteId);
+    if (idx >= 0) { _slQuotes[idx].status = newStatus; _slRenderQuotesList(); }
+}
+
+// ── Quote number search ───────────────────────────────────────────────────
+
+function _slQuoteDebounceSearch(val) {
+    clearTimeout(_slQuoteDebounce);
+    if (!val.trim()) return;
+    _slQuoteDebounce = setTimeout(() => _slSearchByQuoteNumber(val.trim()), 600);
+}
+
+async function _slSearchByQuoteNumber(qn) {
+    if (!sb || !currentUserId) return;
+    const { data } = await sb.from('quotes')
+        .select('id')
+        .eq('user_id', currentUserId)
+        .ilike('quote_number', `%${qn}%`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    if (!data?.length) { showToast('Quote not found'); return; }
+    if (!_slQuotes.find(q => q.id === data[0].id)) await _slLoadTodaysQuotes();
+    _slOpenQuoteDetail(data[0].id);
 }
 
 function refreshDashSavesFromSupabase() {
