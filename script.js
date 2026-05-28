@@ -11355,6 +11355,13 @@ function _renderEdwStep1() {
                 <input id="edwTransCode" class="edw-input" type="text" placeholder="e.g. A750E, R154" value="${escapeHtml(v.transCode || '')}" oninput="_edwSaveField('transCode', this.value)">
             </div>
             <div class="edw-field">
+                <label class="edw-label">Transmission Type</label>
+                <select id="edwTransType" class="edw-input" onchange="_edwSaveField('transType', this.value)">
+                    <option value="">Select…</option>
+                    ${['Manual 4-speed','Manual 5-speed','Manual 6-speed','Auto 4-speed','Auto 6-speed','Auto 8-speed','Auto 9-speed','Auto 10-speed','CVT','DCT (Dual-Clutch)','Sequential','Other'].map(t => `<option value="${t}"${v.transType === t ? ' selected' : ''}>${t}</option>`).join('')}
+                </select>
+            </div>
+            <div class="edw-field">
                 <label class="edw-label">Odometer (km)</label>
                 <input id="edwOdo" class="edw-input" type="number" placeholder="e.g. 187000" value="${v.odometer || ''}" oninput="_edwSaveField('odometer', this.value)">
             </div>
@@ -12086,7 +12093,7 @@ async function _edwPublish() {
         make: v.make, model: v.model, year: Number(v.year),
         series: v.series || null, body_type: v.bodyType || null,
         vin: v.vin || null, paint_code: v.paintCode || null,
-        engine_code: v.engineCode || null, transmission_code: v.transCode || null,
+        engine_code: v.engineCode || null, transmission_code: v.transCode || null, transmission_type: v.transType || null,
         odometer: v.odometer ? Number(v.odometer) : null,
         build_date: v.buildDate || null, colour: v.colour || null,
         stock_number: v.stockNumber || null,
@@ -12200,7 +12207,7 @@ async function _edwSendToWorkers() {
         make: v.make, model: v.model, year: Number(v.year),
         series: v.series || null, body_type: v.bodyType || null,
         vin: v.vin || null, paint_code: v.paintCode || null,
-        engine_code: v.engineCode || null, transmission_code: v.transCode || null,
+        engine_code: v.engineCode || null, transmission_code: v.transCode || null, transmission_type: v.transType || null,
         odometer: v.odometer ? Number(v.odometer) : null,
         build_date: v.buildDate || null, colour: v.colour || null,
         stock_number: v.stockNumber || null,
