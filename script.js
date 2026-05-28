@@ -13388,30 +13388,57 @@ async function _slNewQuote() {
 
 function _slOpenAddToQuote() {
     if (!_slSelected.size) return;
+    const partsHtml = [..._slSelected.entries()].map(([, d]) =>
+        `<div class="sl-qm-parts-row">
+            <span class="sl-qm-parts-title">${escapeHtml(d.title)}</span>
+            ${d.stock_number ? `<span class="sl-qm-parts-stock">${escapeHtml(d.stock_number)}</span>` : ''}
+            <span class="sl-qm-parts-price">${d.price != null ? '$'+Number(d.price).toFixed(2) : '—'}</span>
+        </div>`).join('');
+
+    const drafts = _slQuotes.filter(q => q.status === 'draft' || q.status === 'sent');
+    const existingHtml = drafts.length ? `
+        <div class="sl-qm-subtitle" style="margin-bottom:6px;">Add to existing quote</div>
+        ${drafts.map(q => `<div class="sl-qm-quote-row" onclick="_slAddToExistingQuote(${q.id})">
+            <span class="sl-qm-qnum">${escapeHtml(q.quote_number)}</span>
+            ${q.customer_name ? `<span class="sl-qm-qmeta">${escapeHtml(q.customer_name)}</span>` : ''}
+        </div>`).join('')}
+        <div style="margin:12px 0 8px;border-top:1px solid #eee;padding-top:12px;">
+            <div class="sl-qm-subtitle">Create new quote</div>
+        </div>` : '';
+
     const overlay = document.createElement('div');
     overlay.className = 'sl-quote-modal-overlay';
     overlay.id = 'slQuoteModalOverlay';
     overlay.onclick = e => { if (e.target === overlay) _slCloseQuoteModal(); };
-    const drafts = _slQuotes.filter(q => q.status === 'draft' || q.status === 'approved');
     overlay.innerHTML = `
         <div class="sl-quote-modal">
             <div class="sl-qm-header">
-                <span class="sl-qm-title">Add to Quote</span>
+                <span class="sl-qm-title">New Quote</span>
                 <button class="sl-qm-close" onclick="_slCloseQuoteModal()">✕</button>
             </div>
             <div class="sl-qm-body">
-                <div class="sl-qm-selected">${_slSelected.size} part${_slSelected.size !== 1 ? 's' : ''} selected</div>
-                ${drafts.length ? `
-                    <div class="sl-qm-subtitle">Add to existing quote</div>
-                    ${drafts.map(q => `
-                        <div class="sl-qm-quote-row" onclick="_slAddToQuote(${q.id})">
-                            <span class="sl-qm-qnum">${escapeHtml(q.quote_number)}</span>
-                            ${q.customer_name ? `<span class="sl-qm-qmeta">${escapeHtml(q.customer_name)}</span>` : ''}
-                        </div>`).join('')}
-                    <div style="margin:12px 0 8px;border-top:1px solid #eee;padding-top:12px;">
-                        <div class="sl-qm-subtitle">Or create new</div>
-                    </div>` : ''}
-                <button class="sl-qm-create-btn" onclick="_slCreateQuoteWithLines()">+ Create New Quote</button>
+                ${existingHtml}
+                <div class="sl-qm-section">
+                    <div class="sl-qm-label">Customer / Crash Shop</div>
+                    <input id="slQmName"  class="sl-qm-input" placeholder="Name" autocomplete="off">
+                    <input id="slQmPhone" class="sl-qm-input" placeholder="Phone" type="tel">
+                    <input id="slQmEmail" class="sl-qm-input" placeholder="Email (optional)" type="email">
+                </div>
+                <div class="sl-qm-section">
+                    <div class="sl-qm-label">Parts (${_slSelected.size})</div>
+                    <div class="sl-qm-parts-list">${partsHtml}</div>
+                </div>
+                <div class="sl-qm-section sl-qm-inline-fields">
+                    <div>
+                        <div class="sl-qm-label">Freight</div>
+                        <input id="slQmFreight" class="sl-qm-input" type="number" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="sl-qm-section">
+                    <div class="sl-qm-label">Notes</div>
+                    <textarea id="slQmNotes" class="sl-qm-input" style="height:52px;resize:none;" placeholder="Internal notes…"></textarea>
+                </div>
+                <button class="sl-qm-create-btn" onclick="_slSaveNewQuote()">Save Quote</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);
@@ -13422,7 +13449,7 @@ function _slCloseQuoteModal() {
     if (overlay) overlay.remove();
 }
 
-async function _slAddToQuote(quoteId) {
+async function _slAddToExistingQuote(quoteId) {
     _slCloseQuoteModal();
     if (!sb || !_slSelected.size) return;
     const lines = [..._slSelected.entries()].map(([listing_id, d]) => ({
@@ -13436,25 +13463,33 @@ async function _slAddToQuote(quoteId) {
     _slOpenQuoteDetail(quoteId);
 }
 
-async function _slCreateQuoteWithLines() {
-    _slCloseQuoteModal();
+async function _slSaveNewQuote() {
     if (!currentUserId || !sb || !_slSelected.size) return;
+    const name    = document.getElementById('slQmName')?.value.trim() || null;
+    const phone   = document.getElementById('slQmPhone')?.value.trim() || null;
+    const email   = document.getElementById('slQmEmail')?.value.trim() || null;
+    const freight = parseFloat(document.getElementById('slQmFreight')?.value) || 0;
+    const notes   = document.getElementById('slQmNotes')?.value.trim() || null;
+
     const qn = await _slGenerateQuoteNumber();
     const { data: quote, error } = await sb.from('quotes').insert({
-        quote_number: qn, user_id: currentUserId, status: 'draft', freight_cost: 0,
+        quote_number: qn, user_id: currentUserId, status: 'draft',
+        customer_name: name, customer_phone: phone, customer_email: email,
+        freight_cost: freight, notes,
     }).select().single();
     if (error || !quote) { showToast('Could not create quote'); return; }
-    _slQuotes.unshift(quote);
+
     const lines = [..._slSelected.entries()].map(([listing_id, d]) => ({
         quote_id: quote.id, listing_id, title: d.title,
         stock_number: d.stock_number || null, price: d.price || null, qty: 1,
     }));
-    const { error: lErr } = await sb.from('quote_lines').insert(lines);
-    if (lErr) showToast('Quote created — could not add parts');
-    else showToast(`Quote ${qn} created with ${lines.length} part${lines.length !== 1 ? 's' : ''}`);
+    await sb.from('quote_lines').insert(lines);
+
+    _slQuotes.unshift(quote);
     _slClearSelection();
+    _slCloseQuoteModal();
     _slRenderQuotesList();
-    _slOpenQuoteDetail(quote.id);
+    showToast(`Quote ${qn} saved`);
 }
 
 // ── Quote detail panel ────────────────────────────────────────────────────
