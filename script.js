@@ -12388,18 +12388,18 @@ async function _edwPublish() {
                 series: v.series || null,
             });
 
-            // Photos: use part photos if present, otherwise pre-resolved vehicle base64s
+            // Photos: part photos → new vehicle session photos → stored stock card URLs
             const partPhotos = item.photos?.filter(p => p.base64 || p.file) || [];
-            const base64s = partPhotos.length > 0
-                ? await Promise.all(partPhotos.map(p => p.base64 || _fileToBase64(p.file)))
-                : vehicleBase64s;
-            if (base64s.length) {
+            if (partPhotos.length > 0) {
+                const base64s = await Promise.all(partPhotos.map(p => p.base64 || _fileToBase64(p.file)));
                 const urls = await uploadListingImagesToStorage(String(listing.id), base64s);
-                if (urls.length) {
-                    await sb.from('listing_images').insert(
-                        urls.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i }))
-                    );
-                }
+                if (urls.length) await sb.from('listing_images').insert(urls.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i })));
+            } else if (vehicleBase64s.length) {
+                const urls = await uploadListingImagesToStorage(String(listing.id), vehicleBase64s);
+                if (urls.length) await sb.from('listing_images').insert(urls.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i })));
+            } else if (v.vehiclePhotos?.length) {
+                // Already uploaded at stock-entry time — insert URLs directly, no re-upload needed
+                await sb.from('listing_images').insert(v.vehiclePhotos.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i })));
             }
 
             // Save dismantling item record
