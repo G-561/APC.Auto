@@ -13529,11 +13529,9 @@ async function _slOpenQuoteDetail(quoteId) {
 }
 
 function _slRenderQuoteDetail() {
-    const list   = document.getElementById('slQuotesList');
-    const detail = document.getElementById('slQuoteDetail');
-    if (!detail || !_slActiveQuote) return;
-    if (list) list.style.display = 'none';
-    detail.style.display = '';
+    if (!_slActiveQuote) return;
+    const existing = document.getElementById('slQuoteDetailOverlay');
+    if (existing) existing.remove();
 
     const { quote, lines } = _slActiveQuote;
     const subtotal = lines.reduce((s, l) => s + ((l.price || 0) * (l.qty || 1)), 0);
@@ -13542,66 +13540,81 @@ function _slRenderQuoteDetail() {
     const statusLabel = { draft: 'Draft', sent: 'Sent', approved: 'Approved', invoiced: 'Invoiced' };
     const st = quote.status || 'draft';
 
-    detail.innerHTML = `
-        <div class="sl-qd-back"><button onclick="_slCloseQuoteDetail()">← All Quotes</button></div>
-        <div class="sl-qd-body">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-                <span style="font-size:13px;font-weight:800;color:#333;">${escapeHtml(quote.quote_number)}</span>
-                <span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>
+    const overlay = document.createElement('div');
+    overlay.className = 'sl-quote-modal-overlay';
+    overlay.id = 'slQuoteDetailOverlay';
+    overlay.onclick = e => { if (e.target === overlay) _slCloseQuoteDetail(); };
+
+    overlay.innerHTML = `
+        <div class="sl-quote-modal" style="width:460px;">
+            <div class="sl-qm-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="sl-qm-title">${escapeHtml(quote.quote_number)}</span>
+                    <span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>
+                </div>
+                <button class="sl-qm-close" onclick="_slCloseQuoteDetail()">✕</button>
             </div>
-            <div class="sl-qd-section">
-                <div class="sl-qd-label">Customer</div>
-                <input class="sl-qd-input" style="margin-bottom:6px;" placeholder="Name"
-                    value="${escapeHtml(quote.customer_name || '')}"
-                    onblur="_slSaveQuoteField(${quote.id},'customer_name',this.value)">
-                <input class="sl-qd-input" style="margin-bottom:6px;" placeholder="Email"
-                    value="${escapeHtml(quote.customer_email || '')}"
-                    onblur="_slSaveQuoteField(${quote.id},'customer_email',this.value)">
-                <input class="sl-qd-input" placeholder="Phone"
-                    value="${escapeHtml(quote.customer_phone || '')}"
-                    onblur="_slSaveQuoteField(${quote.id},'customer_phone',this.value)">
+            <div class="sl-qm-body">
+                <div class="sl-qm-section">
+                    <div class="sl-qm-label">Customer / Crash Shop</div>
+                    <input class="sl-qm-input" placeholder="Name"
+                        value="${escapeHtml(quote.customer_name || '')}"
+                        onblur="_slSaveQuoteField(${quote.id},'customer_name',this.value)">
+                    <input class="sl-qm-input" placeholder="Phone"
+                        value="${escapeHtml(quote.customer_phone || '')}"
+                        onblur="_slSaveQuoteField(${quote.id},'customer_phone',this.value)">
+                    <input class="sl-qm-input" placeholder="Email"
+                        value="${escapeHtml(quote.customer_email || '')}"
+                        onblur="_slSaveQuoteField(${quote.id},'customer_email',this.value)">
+                </div>
+                <div class="sl-qm-section">
+                    <div class="sl-qm-label">Parts (${lines.length})</div>
+                    <div class="sl-qm-parts-list">
+                        ${lines.length ? lines.map(l => `
+                            <div class="sl-qd-line">
+                                <span class="sl-qd-line-title" title="${escapeHtml(l.title)}">${escapeHtml(l.title)}</span>
+                                ${l.stock_number ? `<span style="font-size:10px;color:#aaa;flex-shrink:0;">${escapeHtml(l.stock_number)}</span>` : ''}
+                                <input class="sl-qd-line-price-input" type="number" min="0" step="0.01"
+                                    value="${l.price != null ? l.price : ''}" placeholder="—"
+                                    onblur="_slSaveLinePrice(${l.id},${quote.id},this.value)">
+                                <button class="sl-qd-line-del" onclick="_slDeleteQuoteLine(${l.id},${quote.id})" title="Remove">×</button>
+                            </div>`).join('') :
+                            '<div style="color:#bbb;font-size:12px;padding:8px 0;">No parts on this quote</div>'}
+                    </div>
+                </div>
+                <div class="sl-qm-section sl-qm-inline-fields">
+                    <div>
+                        <div class="sl-qm-label">Freight</div>
+                        <input class="sl-qm-input" type="number" min="0" step="0.01" placeholder="0.00"
+                            value="${freight > 0 ? freight : ''}"
+                            onblur="_slSaveQuoteField(${quote.id},'freight_cost',this.value)">
+                    </div>
+                    <div>
+                        <div class="sl-qm-label">Total</div>
+                        <div class="sl-qd-total-amount" style="font-size:16px;font-weight:800;color:#f07020;padding-top:6px;">$${total.toFixed(2)}</div>
+                    </div>
+                </div>
+                <div class="sl-qm-section">
+                    <div class="sl-qm-label">Notes</div>
+                    <textarea class="sl-qm-input" style="height:52px;resize:none;" placeholder="Internal notes…"
+                        onblur="_slSaveQuoteField(${quote.id},'notes',this.value)">${escapeHtml(quote.notes || '')}</textarea>
+                </div>
             </div>
-            <div class="sl-qd-section">
-                <div class="sl-qd-label">Parts (${lines.length})</div>
-                ${lines.length ? lines.map(l => `
-                    <div class="sl-qd-line">
-                        <span class="sl-qd-line-title" title="${escapeHtml(l.title)}">${escapeHtml(l.title)}</span>
-                        ${l.stock_number ? `<span style="font-size:10px;color:#aaa;flex-shrink:0;">${escapeHtml(l.stock_number)}</span>` : ''}
-                        <span class="sl-qd-line-price">${l.price != null ? '$'+Number(l.price).toFixed(2) : '—'}</span>
-                        <button class="sl-qd-line-del" onclick="_slDeleteQuoteLine(${l.id},${quote.id})" title="Remove">×</button>
-                    </div>`).join('') :
-                    '<div style="color:#bbb;font-size:12px;padding:8px 0;">Select parts and click Add to Quote →</div>'}
+            <div class="sl-qd-actions">
+                ${st === 'draft'    ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Mark Sent</button>` : ''}
+                ${st === 'sent'     ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
+                ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Process Sale</button>` : ''}
+                ${st === 'invoiced' ? `<span style="font-size:11px;color:#22c55e;font-weight:700;padding:0 4px;">✓ Sold</span>` : ''}
+                <button class="sl-qd-btn sl-qd-btn-ghost" onclick="window.print()">Print</button>
             </div>
-            <div class="sl-qd-section">
-                <div class="sl-qd-label">Freight</div>
-                <input class="sl-qd-input" type="number" min="0" step="0.01" placeholder="0.00"
-                    value="${freight > 0 ? freight : ''}"
-                    onblur="_slSaveQuoteField(${quote.id},'freight_cost',this.value)">
-            </div>
-            <div class="sl-qd-total">
-                <span>Total</span>
-                <span class="sl-qd-total-amount">$${total.toFixed(2)}</span>
-            </div>
-            <div style="margin-top:14px;">
-                <div class="sl-qd-label">Notes</div>
-                <textarea class="sl-qd-input" style="height:56px;resize:none;" placeholder="Internal notes…"
-                    onblur="_slSaveQuoteField(${quote.id},'notes',this.value)">${escapeHtml(quote.notes || '')}</textarea>
-            </div>
-        </div>
-        <div class="sl-qd-actions">
-            ${st === 'draft' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Mark Sent</button>` : ''}
-            ${st === 'sent'  ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
-            ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Mark Invoiced</button>` : ''}
-            <button class="sl-qd-btn sl-qd-btn-ghost" onclick="window.print()">Print</button>
         </div>`;
+    document.body.appendChild(overlay);
 }
 
 function _slCloseQuoteDetail() {
     _slActiveQuote = null;
-    const list   = document.getElementById('slQuotesList');
-    const detail = document.getElementById('slQuoteDetail');
-    if (list)   { list.style.display = ''; _slRenderQuotesList(); }
-    if (detail) detail.style.display = 'none';
+    const overlay = document.getElementById('slQuoteDetailOverlay');
+    if (overlay) overlay.remove();
 }
 
 async function _slSaveQuoteField(quoteId, field, value) {
@@ -13611,7 +13624,7 @@ async function _slSaveQuoteField(quoteId, field, value) {
     if (_slActiveQuote?.quote?.id === quoteId) {
         _slActiveQuote.quote[field] = parsed;
         if (field === 'freight_cost') {
-            const el = document.querySelector('.sl-qd-total-amount');
+            const el = document.querySelector('#slQuoteDetailOverlay .sl-qd-total-amount');
             if (el) {
                 const sub = _slActiveQuote.lines.reduce((s, l) => s + ((l.price||0)*(l.qty||1)), 0);
                 el.textContent = '$' + (sub + parsed).toFixed(2);
@@ -13622,6 +13635,20 @@ async function _slSaveQuoteField(quoteId, field, value) {
     if (idx >= 0) {
         _slQuotes[idx][field] = parsed;
         if (field === 'customer_name') _slRenderQuotesList();
+    }
+}
+
+async function _slSaveLinePrice(lineId, quoteId, value) {
+    if (!sb) return;
+    const price = parseFloat(value) || null;
+    await sb.from('quote_lines').update({ price }).eq('id', lineId);
+    if (_slActiveQuote?.quote?.id === quoteId) {
+        const line = _slActiveQuote.lines.find(l => l.id === lineId);
+        if (line) line.price = price;
+        const freight  = parseFloat(_slActiveQuote.quote.freight_cost) || 0;
+        const subtotal = _slActiveQuote.lines.reduce((s, l) => s + ((l.price||0)*(l.qty||1)), 0);
+        const el = document.querySelector('#slQuoteDetailOverlay .sl-qd-total-amount');
+        if (el) el.textContent = '$' + (subtotal + freight).toFixed(2);
     }
 }
 

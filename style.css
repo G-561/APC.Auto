@@ -6954,6 +6954,8 @@ header {
 .sl-qd-line-price { color: #f07020; font-weight: 700; flex-shrink: 0; font-size: 12px; }
 .sl-qd-line-del { background: none; border: none; color: #ccc; font-size: 15px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; }
 .sl-qd-line-del:hover { color: #ef4444; }
+.sl-qd-line-price-input { width: 68px; flex-shrink: 0; border: 1px solid #eee; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 700; color: #f07020; text-align: right; background: #fff; }
+.sl-qd-line-price-input:focus { outline: none; border-color: #f07020; }
 .sl-qd-total { display: flex; justify-content: space-between; padding: 8px 0 0; font-size: 13px; font-weight: 700; color: #333; border-top: 2px solid #eee; margin-top: 4px; }
 .sl-qd-actions { flex-shrink: 0; padding: 10px 12px; border-top: 2px solid #eee; display: flex; gap: 8px; }
 .sl-qd-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; }
