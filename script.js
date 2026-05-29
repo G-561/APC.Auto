@@ -2996,7 +2996,7 @@ function openItemPreview(part) {
     const _fitsUniversal = (!part.fits || part.fits.length === 0) && part.category && !VEHICLE_EXEMPT_CATEGORIES.includes(part.category);
     const fitmentHtml = part.fits && part.fits.length
         ? `<div class="iip-section-label">Vehicle Fitment</div>
-           <div class="iip-fitment">${part.fits.map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ')}</div>`
+           <div class="iip-fitment">${part.fits.map(f => [f.make, f.model, f.variant].filter(Boolean).join(' ')).join(', ')}</div>`
         : _fitsUniversal
             ? `<div class="iip-section-label">Vehicle Fitment</div>
                <div class="iip-fitment">Universal — fits all vehicles</div>`
@@ -3775,10 +3775,12 @@ function getFilteredParts() {
         if (search) {
             const isPro = userIsSignedIn && currentUserTier === 'pro';
             const tokens = search.split(/\s+/).filter(Boolean);
+            const vehicleText = (part.fits || []).map(f => [f.make, f.model, f.variant].filter(Boolean).join(' ')).join(' ').toLowerCase();
             const haystack = [
                 part.title.toLowerCase(),
                 (part.description || '').toLowerCase(),
-                part.loc.toLowerCase()
+                part.loc.toLowerCase(),
+                vehicleText
             ].join(' ');
             const textMatch = tokens.every(t => haystack.includes(t));
             const apcIdMatch = isPro && part.apcId && part.apcId.toLowerCase().includes(search);
@@ -3901,7 +3903,7 @@ function buildCardHTML(part, eager = false) {
 
     const fit = part.fits?.[0];
     const fitsLine = fit
-        ? `<div class="item-fits">${escapeHtml(fit.make)} ${escapeHtml(fit.model)}${part.year ? ' · ' + part.year : ''}</div>`
+        ? `<div class="item-fits">${escapeHtml(fit.make)} ${escapeHtml(fit.model)}${fit.variant ? ' ' + escapeHtml(fit.variant) : ''}${part.year ? ' · ' + part.year : ''}</div>`
         : '';
 
     return `
