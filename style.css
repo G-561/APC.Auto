@@ -1823,7 +1823,6 @@ header {
     box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     cursor: pointer;
     min-width: 0;
-    overflow: hidden;
 }
 .workshop-card:active { background: #fafafa; }
 .workshop-card-header {
