@@ -4808,7 +4808,7 @@ header {
         pointer-events: none;
     }
     #detailWorkshopSection { padding-bottom: 20px !important; }
-    #detailWorkshopCards { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    #detailWorkshopCards { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
     #dynamicDetailFooter {
         flex: 0 0 auto;
         border-top: 1px solid #e8e8e8;
