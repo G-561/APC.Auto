@@ -3342,9 +3342,12 @@ function openWorkshopOverlay(wsId) {
 }
 
 function closeWorkshopOverlay() {
-    toggleDrawer('workshopDetailOverlay', false);
+    const overlay = document.getElementById('workshopDetailOverlay');
+    if (overlay) overlay.classList.remove('active');
     const bd = document.getElementById('wsOverlayBackdrop');
     if (bd) bd.classList.remove('active');
+    const anyOpen = document.querySelectorAll('.drawer.active').length > 0;
+    document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
 }
 
 function contactWorkshop(workshopId, workshopName) {
