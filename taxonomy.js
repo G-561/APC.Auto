@@ -13,9 +13,9 @@ const EDW_TAXONOMY = [
         zone: "Transmission & Drivetrain",
         apcCategory: "transmission",
         assemblies: [
-            { name: "Gearbox / Transmission", parts: ["Torque Converter", "Gearbox Mount", "Transmission Oil Cooler", "Transmission Oil Pan / Sump", "Auto Transmission", "Transfer Case (Automatic)", "Transfer Case (Manual)", "Manual Gearbox", "CVT Transmission"] },
-            { name: "Driveshafts", parts: ["Front Driveshaft (Left)", "Front Driveshaft (Right)", "Rear Driveshaft (Left)", "Rear Driveshaft (Right)", "Propshaft (Front)", "Propshaft (Rear)", "Centre Bearing"] },
-            { name: "Diff & Axles", parts: ["Diff (Front)", "Diff (Rear)", "Diff Centre", "Rear Axle (Left)", "Rear Axle (Right)", "Front Axle (Left)", "Front Axle (Right)"] },
+            { name: "Gearbox / Transmission", parts: ["Torque Converter", "Gearbox Mount", "Transmission Oil Cooler", "Transmission Oil Pan / Sump", "Auto Transmission", "Transfer Case (Automatic)", "Transfer Case (Manual)", "CVT Transmission", "Manual Gearbox (3 Speed)", "Manual Gearbox (4 Speed)", "Manual Gearbox (5 Speed)", "Manual Gearbox (6 Speed)"] },
+            { name: "Driveshafts", parts: ["Front Driveshaft (Left - Manual)", "Front Driveshaft (Right - Manual)", "Rear Driveshaft (Left)", "Rear Driveshaft (Right)", "Propshaft (Front)", "Propshaft (Rear)", "Centre Bearing", "Front Driveshaft (Left - Auto)", "Front Driveshaft (Right - Auto)", "Intermediate Shaft"] },
+            { name: "Diff & Axles", parts: ["Complete Diff (Front)", "Complete Diff (Rear)", "Rear Axle (Left)", "Rear Axle (Right)", "Front Axle (Left)", "Front Axle (Right)", "Diff Centre (Front)", "Diff Centre (Rear)"] },
             { name: "Clutch", parts: ["Clutch Kit (Plate, Pressure Plate, Bearing)", "Flywheel", "Dual Mass Flywheel", "Clutch Master Cylinder", "Clutch Slave Cylinder"] },
         ]
     },
@@ -49,7 +49,7 @@ const EDW_TAXONOMY = [
             { name: "Front Guards", parts: ["Front Guard (Left)", "Front Guard (Right)", "Guard Liner (Left)", "Guard Liner (Right)"] },
             { name: "Rear End", parts: ["Boot Lid", "Tailgate", "Tray (Ute)", "Rear Bumper Bar", "Rear Bumper Reinforcement", "Rear Quarter Panel (Left)", "Rear Quarter Panel (Right)", "Rear Guard Liner (Left)", "Rear Guard Liner (Right)"] },
             { name: "Roof & Pillars", parts: ["Roof Panel", "Sunroof Assembly", "A Pillar (Left)", "A Pillar (Right)", "B Pillar (Left)", "B Pillar (Right)", "C Pillar (Left)", "C Pillar (Right)", "Roof Rail (Left)", "Roof Rail (Right)"] },
-            { name: "Mouldings / Trim", parts: ["Front Door Moulding (Left)", "Rear Door Moulding (Left)", "Side Skirt - Sill Panel Mould (Left)", "Front Door Moulding (Right)", "Rear Door Moulding (Right)", "Side Skirt - Sill Panel Mould (Right)", "Front Bumper Lower Moulding", "Rear Bumper Lower Moulding", "Front Wheel Arch Trim (Left)", "Front Wheel Arch Trim (Right)", "Rear Wheel Arch Trim (Left)", "Rear Wheel Arch Trim (Right)"] },
+            { name: "Mouldings / Trim", parts: ["Front Door Moulding (Left)", "Rear Door Moulding (Left)", "Side Skirt - Sill Panel Moulding (Left)", "Front Door Moulding (Right)", "Rear Door Moulding (Right)", "Side Skirt - Sill Panel Moulding (Right)", "Front Bumper Lower Moulding", "Rear Bumper Lower Moulding", "Front Wheel Arch Trim (Left)", "Front Wheel Arch Trim (Right)", "Rear Wheel Arch Trim (Left)", "Rear Wheel Arch Trim (Right)"] },
         ]
     },
     {
@@ -82,11 +82,12 @@ const EDW_TAXONOMY = [
         zone: "Interior",
         apcCategory: "interior",
         assemblies: [
-            { name: "Dashboard", parts: ["Dashboard Assembly", "Instrument Cluster", "Steering Wheel", "Airbag — Driver", "Airbag — Passenger", "Glove Box", "Centre Console", "Dash Trim Panels", "Heater / AC Controls", "Head Unit / Infotainment", "Navigation Screen", "Rear View Mirror (Interior)"] },
+            { name: "Dashboard", parts: ["Dashboard Assembly", "Instrument Cluster", "Steering Wheel", "Glove Box", "Centre Console", "Dash Trim Panels", "Heater / AC Controls", "Head Unit / Infotainment", "Navigation Screen", "Rear View Mirror (Interior)"] },
             { name: "Seats", parts: ["Front Seat — Driver (Complete)", "Front Seat — Passenger (Complete)", "Rear Seat (Full)", "Rear Seat (Left)", "Rear Seat (Right)", "Rear Seat (Centre)", "3rd Row Seat"] },
-            { name: "Seat Belts", parts: ["Seat Belt — Driver", "Seat Belt — Passenger", "Seat Belt — Rear Left", "Seat Belt — Rear Right", "Seat Belt — Rear Centre"] },
+            { name: "Seat Belts", parts: ["Seat Belt — Rear Left", "Seat Belt — Rear Right", "Seat Belt — Rear Centre", "Seat Belt — Driver (Standard)", "Seat Belt — Driver (Pre-Tensioner / Air Bag)", "Seat Belt — Passenger (Standard)", "Seat Belt — Passenger (Pre-Tensioner / Air Bag)"] },
             { name: "Trim & Carpet", parts: ["Floor Carpet (Full Set)", "Boot / Cargo Carpet", "Headliner / Roof Lining", "Sun Visor (Left)", "Sun Visor (Right)", "Door Sill Trim (Left)", "Door Sill Trim (Right)", "Parcel Shelf"] },
-            { name: "Controls", parts: ["Steering Column", "Indicator / Wiper Stalk", "Brake Pedal", "Clutch Pedal", "Accelerator Pedal"] },
+            { name: "Controls", parts: ["Steering Column", "Indicator / Wiper Stalk", "Brake Pedal", "Clutch Pedal", "Accelerator Pedal (Standard)", "Accelerator Pedal (Electronic - Drive by Wire)"] },
+            { name: "SRS — AirBag", parts: ["AirBag — Driver", "AirBag — Passenger", "AirBag — Curtain", "AirBag — Knee", "AirBag — Complete Kit", "Airbag ECU / SRS Module", "Clock Spring", "AirBag — Sensor"] },
         ]
     },
     {
@@ -96,7 +97,7 @@ const EDW_TAXONOMY = [
             { name: "Modules & ECUs", parts: ["Body Control Module (BCM)", "ABS Module / Pump", "Airbag ECU / SRS Module", "Transmission ECU", "Central Locking Module", "Immobiliser / Transponder", "Keyless Entry Module", "Park Assist Module"] },
             { name: "Sensors", parts: ["ABS Sensor (Front Left)", "ABS Sensor (Front Right)", "ABS Sensor (Rear Left)", "ABS Sensor (Rear Right)", "O2 Sensor (Front / Upstream)", "O2 Sensor (Rear / Downstream)", "MAP Sensor", "Camshaft Position Sensor", "Crankshaft Position Sensor", "Coolant Temp Sensor", "Knock Sensor", "Throttle Position Sensor"] },
             { name: "Wiring & Fuses", parts: ["Engine Wiring Harness", "Body Wiring Harness", "Door Wiring Loom (Front Left)", "Door Wiring Loom (Front Right)", "Fuse Box (Cabin / Interior)", "Trailer Wiring Harness"] },
-            { name: "Battery & Charging", parts: ["Battery", "Battery Tray / Holder", "Alternator"] },
+            { name: "Battery & Charging", parts: ["Battery", "Battery Tray / Holder", "Alternator", "Voltage Regulator"] },
         ]
     },
     {
@@ -105,15 +106,15 @@ const EDW_TAXONOMY = [
         assemblies: [
             { name: "Front Suspension", parts: ["Strut / Shock Absorber (Front Left)", "Strut / Shock Absorber (Front Right)", "Coil Spring (Front Left)", "Coil Spring (Front Right)", "Leaf Spring (Front Left)", "Leaf Spring (Front Right)", "Lower Control Arm (Left)", "Lower Control Arm (Right)", "Upper Control Arm (Left)", "Upper Control Arm (Right)", "Ball Joint (Front Left)", "Ball Joint (Front Right)", "Sway Bar (Front)", "Sway Bar Link (Front Left)", "Sway Bar Link (Front Right)", "Hub / Wheel Bearing (Front Left)", "Hub / Wheel Bearing (Front Right)"] },
             { name: "Rear Suspension", parts: ["Shock Absorber (Rear Left)", "Shock Absorber (Rear Right)", "Strut (Rear Left)", "Strut (Rear Right)", "Coil Spring (Rear Left)", "Coil Spring (Rear Right)", "Leaf Spring (Rear Left)", "Leaf Spring (Rear Right)", "Trailing Arm (Left)", "Trailing Arm (Right)", "Panhard / Lateral Rod", "Sway Bar (Rear)", "Sway Bar Link (Rear Left)", "Sway Bar Link (Rear Right)", "Hub / Wheel Bearing (Rear Left)", "Hub / Wheel Bearing (Rear Right)"] },
-            { name: "Steering", parts: ["Steering Rack", "Steering Box", "Power Steering Rack", "Power Steering Pump", "Power Steering Reservoir", "Power Steering Cooler", "Tie Rod (Left)", "Tie Rod (Right)", "Drag Link", "Steering Shaft / Intermediate Shaft", "Steering Column"] },
+            { name: "Steering", parts: ["Steering Rack", "Steering Box", "Power Steering Rack", "Power Steering Pump", "Power Steering Reservoir", "Power Steering Cooler", "Tie Rod (Left)", "Tie Rod (Right)", "Drag Link", "Steering Shaft / Intermediate Shaft", "Steering Column (Standard)", "Steering Column (Electric Power Steering)"] },
         ]
     },
     {
         zone: "Brakes",
         apcCategory: "brakes",
         assemblies: [
-            { name: "Front Brakes", parts: ["Disc Rotor (Left)", "Disc Rotor (Right)", "Brake Caliper (Left)", "Brake Caliper (Right)", "Brake Pads (Front Set)"] },
-            { name: "Rear Brakes", parts: ["Disc Rotor (Left)", "Disc Rotor (Right)", "Brake Caliper (Left)", "Brake Caliper (Right)", "Brake Drum (Left)", "Brake Drum (Right)", "Brake Pads (Rear Set)", "Brake Shoes (Rear Set)"] },
+            { name: "Front Brakes", parts: ["Disc Rotor (Left)", "Disc Rotor (Right)", "Brake Caliper (Left)", "Brake Caliper (Right)", "Brake Pads (Front Set)", "ABS Sensor — Wheel Speed Sensor (Left)", "ABS Sensor — Wheel Speed Sensor (Right)"] },
+            { name: "Rear Brakes", parts: ["Disc Rotor (Left)", "Disc Rotor (Right)", "Brake Caliper (Left)", "Brake Caliper (Right)", "Brake Drum (Left)", "Brake Drum (Right)", "Brake Pads (Rear Set)", "Brake Shoes (Rear Set)", "ABS Sensor — Wheel Speed Sensor (Left)", "ABS Sensor — Wheel Speed Sensor (Right)"] },
             { name: "Brake System", parts: ["Brake Master Cylinder", "Brake Booster", "ABS Module / Pump", "Handbrake / Park Brake Mechanism", "Brake Lines (Set)"] },
         ]
     },
@@ -121,7 +122,7 @@ const EDW_TAXONOMY = [
         zone: "Wheels & Tyres",
         apcCategory: "wheels",
         assemblies: [
-            { name: "Wheels", parts: ["Alloy Wheel (Each)", "Steel Wheel (Each)", "Full Set of Wheels x4", "Spare Wheel", "Centre Cap / Hubcap"] },
+            { name: "Wheels", parts: ["Alloy Wheel (Each)", "Steel Wheel (Each)", "Full Set of Wheels x4", "Centre Cap / Hubcap", "Spare Wheel (Standard)", "Spare Wheel (Space Saver — Temporary Spare)"] },
             { name: "Tyres", parts: ["Tyre (Each)", "Full Set of Tyres x4", "Spare Tyre", "Spare Tyre Carrier / Winch"] },
         ]
     },
