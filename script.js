@@ -1818,9 +1818,10 @@ async function ensureSupabaseConversation(conv) {
 
         console.log('ensureConv general enquiry — buyerId:', buyerId, 'sellerId:', sellerId);
 
-        const { data: existing } = await sb.from('conversations')
-            .select('id').is('listing_id', null)
-            .eq('buyer_id', buyerId).eq('seller_id', sellerId).maybeSingle();
+        const _refId = conv.refListingId || null;
+        let existingQ = sb.from('conversations').select('id').eq('buyer_id', buyerId).eq('seller_id', sellerId);
+        existingQ = _refId ? existingQ.eq('listing_id', _refId) : existingQ.is('listing_id', null);
+        const { data: existing } = await existingQ.maybeSingle();
         if (existing) {
             conv.supabaseConvId = existing.id;
             conv.buyerId = buyerId;
@@ -1829,12 +1830,12 @@ async function ensureSupabaseConversation(conv) {
         }
 
         const { data, error } = await sb.from('conversations').insert({
-            listing_id: null,
+            listing_id: _refId,
             buyer_id: buyerId,
             seller_id: sellerId,
             buyer_name: currentUserName,
             seller_name: conv.with || null,
-            listing_title: 'General Enquiry',
+            listing_title: conv.refListingTitle || 'General Enquiry',
             unread_buyer: false,
             unread_seller: true,
         }).select('id').single();
@@ -3364,7 +3365,14 @@ function closeWorkshopOverlay() {
 function contactWorkshop(workshopId, workshopName, prefillMsg) {
     if (!userIsSignedIn) { showToast('Sign in to contact this workshop'); return; }
     if (workshopId === currentUserId) return;
-    pendingGeneralEnquiry = { seller: workshopName, isPro: true, sellerId: workshopId };
+    const _refPart = _currentOpenPart;
+    pendingGeneralEnquiry = {
+        seller:         workshopName,
+        isPro:          true,
+        sellerId:       workshopId,
+        refListingId:   _refPart?.supabaseId || null,
+        refListingTitle: _refPart?.title     || null,
+    };
     currentOpenPartId = null;
     const titleEl = document.getElementById('contactCardTitle');
     const msgEl   = document.getElementById('contactCardMsg');
@@ -7142,12 +7150,14 @@ function sendContactMessage() {
     const text  = msgEl ? msgEl.value.trim() : '';
     if (!text) return;
 
-    let seller, isPro, partId, partTitle, _generalSellerId;
+    let seller, isPro, partId, partTitle, _generalSellerId, _refListingId, _refListingTitle;
     if (pendingGeneralEnquiry) {
         ({ seller, isPro } = pendingGeneralEnquiry);
-        _generalSellerId = pendingGeneralEnquiry.sellerId || null;
+        _generalSellerId  = pendingGeneralEnquiry.sellerId       || null;
+        _refListingId     = pendingGeneralEnquiry.refListingId   || null;
+        _refListingTitle  = pendingGeneralEnquiry.refListingTitle || null;
         partId = 'general';
-        partTitle = 'General Enquiry';
+        partTitle = _refListingTitle || 'General Enquiry';
         pendingGeneralEnquiry = null;
     } else {
         const part = _pendingContactPart || getPartById(currentOpenPartId);
@@ -7164,6 +7174,7 @@ function sendContactMessage() {
     conv.msgs.push({ id: 1, sent: true, text, time: 'Today', clock: nowClock() });
     if (currentUserId) conv.buyerId = currentUserId;
     if (_generalSellerId) conv.sellerId = _generalSellerId;
+    if (_refListingId)    { conv.refListingId = _refListingId; conv.refListingTitle = _refListingTitle; }
     conversations.unshift(conv);
     saveConversations();
     updateInboxBadge();
