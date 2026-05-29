@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>APC Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="vehicles.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
@@ -93,6 +94,60 @@
         .ga-link { display: inline-block; padding: 8px 18px; background: #4285F4; color: white; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
         .ga-link:hover { background: #2b6fd4; }
 
+        /* ── Vehicle DB Editor ── */
+        #vdbOverlay { display:none; position:fixed; inset:0; z-index:200; flex-direction:column; overflow:hidden; background:#f0f2f5; }
+        .vdb-topbar { background:#1a1a2e; color:#fff; padding:0 20px; height:52px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; gap:12px; }
+        .vdb-topbar-left { display:flex; align-items:center; gap:14px; }
+        .vdb-topbar-title { font-size:15px; font-weight:800; letter-spacing:-0.3px; }
+        .vdb-topbar-right { display:flex; align-items:center; gap:10px; }
+        .vdb-btn { padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; border:none; white-space:nowrap; }
+        .vdb-btn-ghost { background:rgba(255,255,255,0.12); color:#fff; }
+        .vdb-btn-ghost:hover { background:rgba(255,255,255,0.22); }
+        .vdb-btn-primary { background:#F7941D; color:#fff; }
+        .vdb-btn-primary:hover { background:#e08010; }
+        .vdb-unsaved { font-size:11px; color:#F7941D; font-weight:700; }
+        .vdb-body { display:flex; flex:1; overflow:hidden; }
+        .vdb-makes-panel { width:230px; flex-shrink:0; background:#fff; border-right:1px solid #e5e5e5; display:flex; flex-direction:column; overflow:hidden; }
+        .vdb-panel-hdr { padding:11px 14px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+        .vdb-panel-hdr-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#888; }
+        .vdb-panel-hdr-count { font-size:11px; color:#bbb; }
+        .vdb-search { width:100%; padding:9px 14px; border:none; border-bottom:1px solid #eee; font-size:13px; outline:none; font-family:inherit; flex-shrink:0; background:#fafafa; }
+        .vdb-makes-list { flex:1; overflow-y:auto; }
+        .vdb-make-row { padding:9px 14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#333; border-bottom:1px solid #f8f8f8; }
+        .vdb-make-row:hover { background:#fff8f2; }
+        .vdb-make-row.active { background:#fff3e8; color:#F7941D; font-weight:700; padding-left:11px; border-left:3px solid #F7941D; }
+        .vdb-make-count { font-size:11px; color:#ccc; }
+        .vdb-add-row { padding:10px 14px; border-top:2px solid #f0f0f0; flex-shrink:0; }
+        .vdb-add-btn { width:100%; font-size:12px; font-weight:700; color:#F7941D; background:none; border:1.5px dashed rgba(247,148,29,0.5); border-radius:7px; padding:7px; cursor:pointer; font-family:inherit; }
+        .vdb-add-btn:hover { background:#fff3e8; border-color:#F7941D; }
+        #vdbModelsPanel { flex:1; display:flex; flex-direction:column; overflow:hidden; background:#f8f8f8; }
+        .vdb-models-hdr { padding:12px 18px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:#fff; gap:12px; }
+        .vdb-models-title { font-size:17px; font-weight:800; color:#1a1a2e; }
+        .vdb-models-actions { display:flex; gap:8px; align-items:center; flex-shrink:0; }
+        .vdb-models-count { font-size:12px; color:#bbb; }
+        #vdbModelSearch { padding:9px 16px; border:none; border-bottom:1px solid #eee; font-size:13px; outline:none; font-family:inherit; width:100%; flex-shrink:0; background:#fafafa; }
+        #vdbModelList { flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; gap:4px; }
+        .vdb-model-row { border:1px solid #eee; border-radius:9px; overflow:hidden; background:#fff; }
+        .vdb-model-hdr { display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:pointer; user-select:none; }
+        .vdb-model-hdr:hover { background:#f9f9f9; }
+        .vdb-model-name { flex:1; font-size:13px; font-weight:600; color:#333; }
+        .vdb-range-badge { font-size:10px; color:#888; padding:2px 7px; background:#f0f0f0; border-radius:20px; flex-shrink:0; white-space:nowrap; }
+        .vdb-range-badge.none { color:#ccc; }
+        .vdb-expand-arrow { font-size:14px; color:#ccc; flex-shrink:0; transition:transform 0.15s; display:inline-block; }
+        .vdb-expand-arrow.open { transform:rotate(90deg); }
+        .vdb-del-btn { font-size:17px; color:#e0e0e0; flex-shrink:0; background:none; border:none; cursor:pointer; padding:0 2px; line-height:1; }
+        .vdb-del-btn:hover { color:#ef4444; }
+        .vdb-ranges-body { padding:10px 12px 14px 30px; border-top:1px solid #f4f4f4; background:#fafafa; }
+        .vdb-range-row { display:flex; align-items:center; gap:7px; margin-bottom:7px; }
+        .vdb-year-input { width:66px; padding:5px 8px; border:1.5px solid #ddd; border-radius:6px; font-size:13px; text-align:center; font-family:inherit; outline:none; }
+        .vdb-year-input:focus { border-color:#F7941D; }
+        .vdb-range-sep { font-size:13px; color:#bbb; }
+        .vdb-range-del { background:none; border:none; font-size:16px; color:#ddd; cursor:pointer; padding:0 3px; line-height:1; }
+        .vdb-range-del:hover { color:#ef4444; }
+        .vdb-range-add-btn { font-size:12px; color:#F7941D; font-weight:700; background:none; border:1.5px dashed rgba(247,148,29,0.5); border-radius:6px; padding:4px 10px; cursor:pointer; font-family:inherit; margin-top:2px; }
+        .vdb-range-add-btn:hover { background:#fff3e8; border-color:#F7941D; }
+        .vdb-empty-panel { flex:1; display:flex; align-items:center; justify-content:center; color:#ccc; font-size:15px; }
+
         /* ── Reports ── */
         .card-red { border-top-color: #ef4444; }
         .dismiss-btn { background: none; border: 1px solid #ddd; color: #888; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; }
@@ -123,6 +178,7 @@
         <div class="top-bar-right">
             <span class="last-updated" id="lastUpdated"></span>
             <a href="/taxonomy-editor.html" target="_blank" class="refresh-btn" style="text-decoration:none;">🗂 Taxonomy</a>
+            <button class="refresh-btn" onclick="vdbOpen()">🚗 Vehicle DB</button>
             <button class="refresh-btn" onclick="loadAllMetrics()">↻ Refresh</button>
             <button class="sign-out-btn" onclick="adminSignOut()">Sign Out</button>
         </div>
@@ -247,6 +303,37 @@
 
     </div><!-- /main -->
 </div><!-- /dashboard -->
+
+<!-- VEHICLE DB EDITOR OVERLAY -->
+<div id="vdbOverlay">
+    <div class="vdb-topbar">
+        <div class="vdb-topbar-left">
+            <button class="vdb-btn vdb-btn-ghost" onclick="vdbClose()">← Dashboard</button>
+            <span class="vdb-topbar-title">Vehicle Database Editor</span>
+        </div>
+        <div class="vdb-topbar-right">
+            <span id="vdbUnsaved" class="vdb-unsaved" style="display:none;">● Unsaved changes</span>
+            <button class="vdb-btn vdb-btn-ghost" onclick="vdbResetToBase()">Reset to Base</button>
+            <button class="vdb-btn vdb-btn-primary" onclick="vdbExport()">↓ Export vehicles.js</button>
+        </div>
+    </div>
+    <div class="vdb-body">
+        <div class="vdb-makes-panel">
+            <div class="vdb-panel-hdr">
+                <span class="vdb-panel-hdr-title">Makes</span>
+                <span class="vdb-panel-hdr-count" id="vdbMakesCount"></span>
+            </div>
+            <input class="vdb-search" id="vdbMakeSearch" placeholder="Search makes…" oninput="vdbRenderMakes()">
+            <div id="vdbMakesList" class="vdb-makes-list"></div>
+            <div class="vdb-add-row">
+                <button class="vdb-add-btn" onclick="vdbAddMake()">+ Add Make</button>
+            </div>
+        </div>
+        <div id="vdbModelsPanel">
+            <div class="vdb-empty-panel">← Select a make to browse models</div>
+        </div>
+    </div>
+</div>
 
 <script>
 const SUPABASE_URL  = 'https://ufpsnjtnvchazqswntch.supabase.co';
@@ -508,6 +595,270 @@ function renderBarChart(containerId, counts, color) {
 
 function esc(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── VEHICLE DB EDITOR ─────────────────────────────────────────────────────────
+
+let _vdb          = null;   // working copy { makes, ranges }
+let _vdbMake      = null;   // selected make
+let _vdbExpanded  = null;   // model with open range editor
+let _vdbModels    = [];     // current filtered model list (for index-based onclick)
+let _vdbFuncsTail = '';     // functions section from original vehicles.js
+
+function _vdbLoad() {
+    if (_vdb) return _vdb;
+    const saved = localStorage.getItem('apc_vdb_v1');
+    if (saved) { try { _vdb = JSON.parse(saved); return _vdb; } catch {} }
+    _vdb = {
+        makes:  JSON.parse(JSON.stringify(typeof VEHICLE_DB        !== 'undefined' ? VEHICLE_DB        : {})),
+        ranges: JSON.parse(JSON.stringify(typeof VEHICLE_YEAR_RANGES !== 'undefined' ? VEHICLE_YEAR_RANGES : {}))
+    };
+    return _vdb;
+}
+
+function _vdbSave() {
+    localStorage.setItem('apc_vdb_v1', JSON.stringify(_vdb));
+    document.getElementById('vdbUnsaved').style.display = '';
+}
+
+async function vdbOpen() {
+    document.getElementById('vdbOverlay').style.display = 'flex';
+    _vdbLoad();
+    if (!_vdbFuncsTail) {
+        try {
+            const txt = await fetch('vehicles.js?_=' + Date.now()).then(r => r.text());
+            const marker = 'const VEHICLE_MAKES';
+            const idx = txt.indexOf(marker);
+            if (idx > -1) _vdbFuncsTail = '\n' + txt.slice(idx);
+        } catch(e) { console.warn('Could not fetch vehicles.js tail:', e); }
+    }
+    _vdbMake = null; _vdbExpanded = null;
+    vdbRenderMakes();
+    document.getElementById('vdbModelsPanel').innerHTML = '<div class="vdb-empty-panel">← Select a make to browse models</div>';
+}
+
+function vdbClose() {
+    document.getElementById('vdbOverlay').style.display = 'none';
+}
+
+function vdbRenderMakes() {
+    const state = _vdbLoad();
+    const q = (document.getElementById('vdbMakeSearch')?.value || '').toLowerCase();
+    const all = Object.keys(state.makes).sort((a, b) => a.localeCompare(b));
+    const filtered = q ? all.filter(m => m.toLowerCase().includes(q)) : all;
+    document.getElementById('vdbMakesCount').textContent = filtered.length;
+    document.getElementById('vdbMakesList').innerHTML = filtered.map(make => {
+        const count = (state.makes[make] || []).length;
+        return `<div class="vdb-make-row${make === _vdbMake ? ' active' : ''}" onclick="vdbSelectMake(this)" data-make="${esc(make)}">
+            <span>${esc(make)}</span><span class="vdb-make-count">${count}</span>
+        </div>`;
+    }).join('');
+}
+
+function vdbSelectMake(el) {
+    _vdbMake = el.dataset.make;
+    _vdbExpanded = null;
+    document.getElementById('vdbMakeSearch').value && (document.getElementById('vdbMakeSearch').value = '');
+    vdbRenderMakes();
+    vdbRenderModels();
+}
+
+function vdbRenderModels() {
+    if (!_vdbMake) return;
+    const state = _vdbLoad();
+    const allModels = state.makes[_vdbMake] || [];
+    const q = (document.getElementById('vdbModelSearch')?.value || '').toLowerCase();
+    _vdbModels = q ? allModels.filter(m => m.toLowerCase().includes(q)) : allModels;
+
+    document.getElementById('vdbModelsPanel').innerHTML = `
+        <div class="vdb-models-hdr">
+            <span class="vdb-models-title">${esc(_vdbMake)}</span>
+            <div class="vdb-models-actions">
+                <span class="vdb-models-count">${allModels.length} models</span>
+                <button class="vdb-btn vdb-btn-primary" style="font-size:12px;padding:5px 12px;" onclick="vdbAddModel()">+ Add Model</button>
+                <button class="vdb-btn" style="background:#fff0f0;color:#c00;border:1px solid #fcc;font-size:12px;padding:5px 12px;border-radius:8px;" onclick="vdbDeleteMake()">Delete Make</button>
+            </div>
+        </div>
+        <input id="vdbModelSearch" placeholder="Search models…" value="${esc(q)}" oninput="vdbRenderModels()" style="padding:9px 16px;border:none;border-bottom:1px solid #eee;font-size:13px;outline:none;font-family:inherit;width:100%;flex-shrink:0;background:#fafafa;">
+        <div id="vdbModelList" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:4px;">
+            ${_vdbModels.length
+                ? _vdbModels.map((model, i) => _vdbModelRowHtml(model, i)).join('')
+                : `<div style="text-align:center;color:#ccc;padding:40px 0;font-size:13px;">${q ? 'No models match your search.' : 'No models yet — add one above.'}</div>`
+            }
+        </div>`;
+}
+
+function _vdbModelRowHtml(model, i) {
+    const state = _vdbLoad();
+    const ranges = state.ranges[_vdbMake]?.[model] || [];
+    const isOpen = _vdbExpanded === model;
+    const badge = ranges.length
+        ? `<span class="vdb-range-badge">${ranges.length} range${ranges.length !== 1 ? 's' : ''}</span>`
+        : `<span class="vdb-range-badge none">no ranges</span>`;
+
+    const rangesBody = isOpen ? `
+        <div class="vdb-ranges-body">
+            ${ranges.map((r, ri) => `
+                <div class="vdb-range-row">
+                    <input class="vdb-year-input" type="number" min="1900" max="2035" value="${r[0]}"
+                           onchange="_vdbUpdateRange(${i},${ri},0,this.value)">
+                    <span class="vdb-range-sep">→</span>
+                    <input class="vdb-year-input" type="number" min="1900" max="2035" value="${r[1]}"
+                           onchange="_vdbUpdateRange(${i},${ri},1,this.value)">
+                    <button class="vdb-range-del" onclick="_vdbDeleteRange(${i},${ri})">×</button>
+                </div>`).join('')}
+            <button class="vdb-range-add-btn" onclick="_vdbAddRange(${i})">+ Add Range</button>
+        </div>` : '';
+
+    return `<div class="vdb-model-row">
+        <div class="vdb-model-hdr" onclick="_vdbToggle(${i})">
+            <span class="vdb-model-name">${esc(model)}</span>
+            ${badge}
+            <span class="vdb-expand-arrow${isOpen ? ' open' : ''}">›</span>
+            <button class="vdb-del-btn" onclick="event.stopPropagation();_vdbDeleteModel(${i})">×</button>
+        </div>
+        ${rangesBody}
+    </div>`;
+}
+
+function _vdbToggle(i) {
+    const model = _vdbModels[i];
+    _vdbExpanded = _vdbExpanded === model ? null : model;
+    vdbRenderModels();
+    if (_vdbExpanded) {
+        setTimeout(() => {
+            const rows = document.getElementById('vdbModelList')?.querySelectorAll('.vdb-model-row');
+            if (rows?.[i]) rows[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 30);
+    }
+}
+
+function _vdbUpdateRange(mi, ri, field, val) {
+    const model = _vdbModels[mi];
+    const yr = parseInt(val);
+    if (isNaN(yr) || yr < 1900 || yr > 2035) return;
+    if (!_vdb.ranges[_vdbMake]) _vdb.ranges[_vdbMake] = {};
+    if (!_vdb.ranges[_vdbMake][model]) _vdb.ranges[_vdbMake][model] = [];
+    _vdb.ranges[_vdbMake][model][ri][field] = yr;
+    _vdbSave();
+}
+
+function _vdbAddRange(mi) {
+    const model = _vdbModels[mi];
+    if (!_vdb.ranges[_vdbMake]) _vdb.ranges[_vdbMake] = {};
+    if (!_vdb.ranges[_vdbMake][model]) _vdb.ranges[_vdbMake][model] = [];
+    const ex = _vdb.ranges[_vdbMake][model];
+    const base = ex.length ? ex[ex.length - 1][1] : 2000;
+    ex.push([base, base + 5]);
+    _vdbExpanded = model;
+    _vdbSave();
+    vdbRenderModels();
+}
+
+function _vdbDeleteRange(mi, ri) {
+    const model = _vdbModels[mi];
+    _vdb.ranges[_vdbMake]?.[model]?.splice(ri, 1);
+    _vdbSave();
+    vdbRenderModels();
+}
+
+function _vdbDeleteModel(mi) {
+    const model = _vdbModels[mi];
+    if (!confirm(`Delete "${model}" from ${_vdbMake}?\nThis also removes its year ranges.`)) return;
+    _vdb.makes[_vdbMake] = _vdb.makes[_vdbMake].filter(m => m !== model);
+    if (_vdb.ranges[_vdbMake]) delete _vdb.ranges[_vdbMake][model];
+    if (_vdbExpanded === model) _vdbExpanded = null;
+    _vdbSave();
+    vdbRenderMakes();
+    vdbRenderModels();
+}
+
+function vdbAddModel() {
+    const name = prompt(`Add model to ${_vdbMake}:`);
+    if (!name?.trim()) return;
+    const n = name.trim();
+    if (!_vdb.makes[_vdbMake].includes(n)) _vdb.makes[_vdbMake].push(n);
+    _vdbExpanded = n;
+    _vdbSave();
+    vdbRenderMakes();
+    vdbRenderModels();
+}
+
+function vdbDeleteMake() {
+    if (!confirm(`Delete "${_vdbMake}" and ALL its models and year ranges?`)) return;
+    delete _vdb.makes[_vdbMake];
+    delete _vdb.ranges[_vdbMake];
+    _vdbMake = null; _vdbExpanded = null;
+    _vdbSave();
+    vdbRenderMakes();
+    document.getElementById('vdbModelsPanel').innerHTML = '<div class="vdb-empty-panel">← Select a make to browse models</div>';
+}
+
+function vdbAddMake() {
+    const name = prompt('New make name:');
+    if (!name?.trim()) return;
+    const n = name.trim();
+    if (!_vdb.makes[n]) _vdb.makes[n] = [];
+    _vdbSave();
+    _vdbMake = n;
+    vdbRenderMakes();
+    vdbRenderModels();
+}
+
+function vdbResetToBase() {
+    if (!confirm('Reset ALL changes and restore the original vehicles.js data?')) return;
+    localStorage.removeItem('apc_vdb_v1');
+    _vdb = null;
+    document.getElementById('vdbUnsaved').style.display = 'none';
+    _vdbLoad();
+    _vdbMake = null; _vdbExpanded = null;
+    vdbRenderMakes();
+    document.getElementById('vdbModelsPanel').innerHTML = '<div class="vdb-empty-panel">← Select a make to browse models</div>';
+}
+
+function vdbExport() {
+    const state = _vdbLoad();
+    const makes = Object.keys(state.makes).sort((a, b) => a.localeCompare(b));
+
+    let out = 'const VEHICLE_DB = {\n';
+    for (const make of makes) {
+        const models = state.makes[make] || [];
+        const modStr = models.map(m => `"${m.replace(/\\/g,'\\\\').replace(/"/g,'\\"')}"`).join(',');
+        const pad = ' '.repeat(Math.max(1, 14 - make.length));
+        out += `  "${make}":${pad}[${modStr}],\n`;
+    }
+    out += '};\n';
+
+    out += '\n// ── VEHICLE YEAR RANGES ───────────────────────────────────────────────────────\n';
+    out += '// Each model maps to an array of [fromYear, toYear] generation ranges.\n';
+    out += '// Used to expand year searches — a search for "1988 Charade" returns all\n';
+    out += '// listings within the same generation (e.g. 1987–1996 G100).\n';
+    out += '// Covers top Australian makes. Falls back to exact-year matching if no data.\n';
+    out += 'const VEHICLE_YEAR_RANGES = {\n';
+    for (const make of makes) {
+        const mr = state.ranges[make];
+        if (!mr || !Object.keys(mr).length) continue;
+        out += `  "${make}": {\n`;
+        for (const model of Object.keys(mr)) {
+            const ranges = mr[model];
+            if (!ranges?.length) continue;
+            const pad = ' '.repeat(Math.max(1, 22 - model.length));
+            out += `    "${model}":${pad}[${ranges.map(([f,t]) => `[${f},${t}]`).join(',')}],\n`;
+        }
+        out += '  },\n';
+    }
+    out += '};\n';
+
+    if (_vdbFuncsTail) out += _vdbFuncsTail;
+
+    const blob = new Blob([out], { type: 'text/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'vehicles.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
 }
 </script>
 </body>
