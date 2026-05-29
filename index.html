@@ -451,6 +451,21 @@
     </div>
 </div>
 
+<!-- WORKSHOP DETAIL OVERLAY -->
+<div id="workshopDetailOverlay" class="drawer">
+    <div class="drawer-header">
+        <button class="back-btn" onclick="closeWorkshopOverlay()">← Back</button>
+        <span>Workshop Details</span>
+        <div style="width:60px;"></div>
+    </div>
+    <div class="drawer-content">
+        <div id="wsOverlayContent"></div>
+        <div style="padding: 8px 0 20px;">
+            <button id="wsOverlayMsgBtn" style="width:100%; padding:16px; background:var(--apc-orange); color:#fff; border:none; border-radius:8px; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:1px; cursor:pointer; box-shadow:0 4px 12px rgba(255,152,0,0.2);">Message Workshop</button>
+        </div>
+    </div>
+</div>
+
 <!-- REPORT LISTING SHEET -->
 <div id="reportBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:4100;" onclick="closeReportSheet()"></div>
 <div id="reportSheet" style="display:none; position:fixed; left:0; right:0; bottom:0; background:#fff; border-radius:16px 16px 0 0; z-index:4101; padding:20px 20px 36px; box-shadow:0 -4px 24px rgba(0,0,0,0.15);">

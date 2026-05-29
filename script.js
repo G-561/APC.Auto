@@ -2194,7 +2194,7 @@ async function loadWorkshopDatabase() {
     if (!sb) return;
     try {
         const { data, error } = await sb.from('profiles')
-            .select('id, display_name, business_name, location, postcode, avatar_url, workshop_data, workshop_address')
+            .select('id, display_name, business_name, location, postcode, avatar_url, about, workshop_data, workshop_address')
             .or('tier.in.(trade,pro),is_pro.eq.true')
             .not('workshop_data', 'is', null)
             .neq('is_public', false);
@@ -2213,6 +2213,7 @@ async function loadWorkshopDatabase() {
                 location:     p.location || '',
                 postcode:     p.postcode || '',
                 address:      p.workshop_address || '',
+                about:        p.about || '',
                 serviceKeys:  activeKeys,
                 vehicleTypes: wd.vehicles || [],
                 specialty:    topLabels.join(' · ') || 'Workshop Services',
@@ -3277,24 +3278,69 @@ function buildWorkshopCardHTML(ws) {
     const logoHtml = ws.logo
         ? `<img class="ws-card-logo" src="${escapeHtml(ws.logo)}" alt="">`
         : `<div class="ws-card-initials">${escapeHtml((ws.name || '??').slice(0, 2).toUpperCase())}</div>`;
-    const loc   = ws.location || ws.address || '';
-    const makes = ws.vehicleTypes.slice(0, 3).join(', ');
+    const loc = ws.location || ws.address || '';
     return `
-        <div class="workshop-card">
+        <div class="workshop-card" onclick="openWorkshopOverlay('${escapeHtml(ws.id)}')">
             <div class="workshop-card-header">
                 ${logoHtml}
                 <div style="flex:1;min-width:0;">
                     <div class="workshop-card-name">${escapeHtml(ws.name)}</div>
                     ${loc ? `<div class="workshop-card-distance">${escapeHtml(loc)}</div>` : ''}
                 </div>
+                <div class="ws-card-see-more">See more</div>
             </div>
             <div class="workshop-card-specialty">${escapeHtml(ws.specialty)}</div>
-            ${makes ? `<div class="workshop-card-meta">Specialist: ${escapeHtml(makes)}</div>` : ''}
-            <div class="workshop-card-footer">
-                <button class="workshop-card-button" onclick="contactWorkshop('${escapeHtml(ws.id)}','${escapeHtml(ws.name)}')">Enquire</button>
-            </div>
         </div>
     `;
+}
+
+function openWorkshopOverlay(wsId) {
+    const ws = workshopDatabase.find(w => w.id === wsId);
+    if (!ws) return;
+
+    const overlay = document.getElementById('workshopDetailOverlay');
+    const content = document.getElementById('wsOverlayContent');
+    const msgBtn  = document.getElementById('wsOverlayMsgBtn');
+    if (!overlay || !content || !msgBtn) return;
+
+    const logoHtml = ws.logo
+        ? `<img class="ws-overlay-logo" src="${escapeHtml(ws.logo)}" alt="">`
+        : `<div class="ws-overlay-initials">${escapeHtml((ws.name || '??').slice(0, 2).toUpperCase())}</div>`;
+
+    const servicesHTML = ws.serviceKeys
+        .map(k => `<span class="sf-chip">${escapeHtml(SERVICE_LABELS[k] || k)}</span>`)
+        .join('');
+
+    const makesHTML = (ws.vehicleTypes.includes('All Makes') ? ['All Makes'] : ws.vehicleTypes)
+        .map(v => `<span class="sf-chip">${escapeHtml(v)}</span>`)
+        .join('');
+
+    content.innerHTML = `
+        <div class="ws-overlay-header-row">
+            ${logoHtml}
+            <div style="flex:1;min-width:0;">
+                <div class="ws-overlay-name">${escapeHtml(ws.name)}</div>
+                ${ws.location ? `<div class="ws-overlay-loc">${escapeHtml(ws.location)}</div>` : ''}
+                ${ws.address  ? `<div class="ws-overlay-addr">${escapeHtml(ws.address)}</div>` : ''}
+            </div>
+        </div>
+        ${ws.about ? `<p class="ws-overlay-about">${escapeHtml(ws.about)}</p>` : ''}
+        ${servicesHTML ? `
+            <div class="ws-overlay-section-label">Services Offered</div>
+            <div class="ws-overlay-chips">${servicesHTML}</div>
+        ` : ''}
+        ${makesHTML ? `
+            <div class="ws-overlay-section-label">Vehicle Specialists</div>
+            <div class="ws-overlay-chips">${makesHTML}</div>
+        ` : ''}
+    `;
+
+    msgBtn.onclick = () => { closeWorkshopOverlay(); contactWorkshop(ws.id, ws.name); };
+    toggleDrawer('workshopDetailOverlay', true);
+}
+
+function closeWorkshopOverlay() {
+    toggleDrawer('workshopDetailOverlay', false);
 }
 
 function contactWorkshop(workshopId, workshopName) {
