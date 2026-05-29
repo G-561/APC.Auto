@@ -1818,10 +1818,12 @@ async function ensureSupabaseConversation(conv) {
 
         console.log('ensureConv general enquiry — buyerId:', buyerId, 'sellerId:', sellerId);
 
-        const _refId = conv.refListingId || null;
-        let existingQ = sb.from('conversations').select('id').eq('buyer_id', buyerId).eq('seller_id', sellerId);
-        existingQ = _refId ? existingQ.eq('listing_id', _refId) : existingQ.is('listing_id', null);
-        const { data: existing } = await existingQ.maybeSingle();
+        // Keep listing_id null for workshop/general enquiries — RLS INSERT policy checks
+        // seller_id matches the listing's seller, which breaks when the workshop isn't the listing seller.
+        // The listing reference is kept locally in conv.refListingId for buyer-side View Listing.
+        const { data: existing } = await sb.from('conversations')
+            .select('id').is('listing_id', null)
+            .eq('buyer_id', buyerId).eq('seller_id', sellerId).maybeSingle();
         if (existing) {
             conv.supabaseConvId = existing.id;
             conv.buyerId = buyerId;
@@ -1830,7 +1832,7 @@ async function ensureSupabaseConversation(conv) {
         }
 
         const { data, error } = await sb.from('conversations').insert({
-            listing_id: _refId,
+            listing_id: null,
             buyer_id: buyerId,
             seller_id: sellerId,
             buyer_name: currentUserName,
