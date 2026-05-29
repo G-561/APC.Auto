@@ -1818,9 +1818,8 @@ async function ensureSupabaseConversation(conv) {
 
         console.log('ensureConv general enquiry — buyerId:', buyerId, 'sellerId:', sellerId);
 
-        // Keep listing_id null for workshop/general enquiries — RLS INSERT policy checks
-        // seller_id matches the listing's seller, which breaks when the workshop isn't the listing seller.
-        // The listing reference is kept locally in conv.refListingId for buyer-side View Listing.
+        // listing_id stays null — RLS ties it to the listing's seller.
+        // ref_listing_id carries the optional listing reference without ownership constraints.
         const { data: existing } = await sb.from('conversations')
             .select('id').is('listing_id', null)
             .eq('buyer_id', buyerId).eq('seller_id', sellerId).maybeSingle();
@@ -1833,6 +1832,7 @@ async function ensureSupabaseConversation(conv) {
 
         const { data, error } = await sb.from('conversations').insert({
             listing_id: null,
+            ref_listing_id: conv.refListingId || null,
             buyer_id: buyerId,
             seller_id: sellerId,
             buyer_name: currentUserName,
@@ -2032,7 +2032,8 @@ async function loadConversationsFromSupabase(userId) {
                 existing.msgs = msgs;
                 existing.with = otherName;
                 existing.unread = isUnread;
-                if (r.listing_id) existing.partId = r.listing_id; // correct any stale numeric partId
+                if (r.listing_id) existing.partId = r.listing_id;
+                if (r.ref_listing_id) existing.refListingId = r.ref_listing_id;
             } else {
                 const part = [...partDatabase, ...userListings].find(p => p.supabaseId === r.listing_id);
                 conversations.unshift({
@@ -2045,6 +2046,7 @@ async function loadConversationsFromSupabase(userId) {
                     unread: isUnread,
                     partId: r.listing_id || part?.id,
                     partTitle: r.listing_title || 'Part',
+                    refListingId: r.ref_listing_id || null,
                     msgs,
                 });
             }
