@@ -2815,16 +2815,15 @@ function deleteInboxMsg(convId, msgIdx) {
 
 function viewConvListing() {
     const conv = conversations.find(c => c.id === activeConvId);
-    if (!conv || !conv.partId || conv.partId === 'general') { showToast('No listing linked to this conversation'); return; }
-    // Also try matching by supabaseConvId's listing_id directly
-    let part = findPartAnywhere(conv.partId);
+    if (!conv) { showToast('No listing linked to this conversation'); return; }
+    // For workshop/general enquiries use refListingId; otherwise use partId
+    const lookupId = conv.partId === 'general' ? (conv.refListingId || null) : conv.partId;
+    if (!lookupId) { showToast('No listing linked to this conversation'); return; }
+    let part = findPartAnywhere(lookupId);
     if (!part && conv.supabaseConvId) {
-        // partId may be stale — re-fetch from supabase conversation record
         sb.from('conversations').select('listing_id').eq('id', conv.supabaseConvId).single()
             .then(({ data }) => {
                 if (data?.listing_id) {
-                    conv.partId = data.listing_id;
-                    saveConversations();
                     const p = findPartAnywhere(data.listing_id);
                     if (p) openItemDetail(p.supabaseId || p.id, false, true);
                     else showToast('Listing no longer available');
@@ -3364,7 +3363,7 @@ function closeWorkshopOverlay() {
 
 function contactWorkshop(workshopId, workshopName, prefillMsg) {
     if (!userIsSignedIn) { showToast('Sign in to contact this workshop'); return; }
-    if (workshopId === currentUserId) return;
+    if (workshopId === currentUserId) { showToast("That's your own workshop"); return; }
     const _refPart = _currentOpenPart;
     pendingGeneralEnquiry = {
         seller:         workshopName,
