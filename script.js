@@ -3374,8 +3374,8 @@ function contactWorkshop(workshopId, workshopName, prefillMsg) {
     if (msgEl)   msgEl.value = prefillMsg || 'Hi, I have an enquiry about your fitting services.';
     if (compose) compose.style.display = '';
     if (confirm) confirm.style.display = 'none';
-    const bd = document.getElementById('contactSellerBackdrop');
-    if (bd) bd.style.display = '';
+    document.getElementById('contactSellerBackdrop').style.display = '';
+    document.getElementById('contactSellerCard').style.display     = '';
 }
 
 // Business name takes precedence over display name for all tiers — one consistent name on all listings.
