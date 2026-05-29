@@ -3335,7 +3335,18 @@ function openWorkshopOverlay(wsId) {
         ` : ''}
     `;
 
-    msgBtn.onclick = () => { closeWorkshopOverlay(); contactWorkshop(ws.id, ws.name); };
+    // Build context-aware prefill from the item the user was looking at
+    const part = _currentOpenPart;
+    let prefillMsg;
+    if (part) {
+        const make    = part.fits?.[0]?.make  || '';
+        const model   = part.fits?.[0]?.model || '';
+        const vehicle = [make, model].filter(Boolean).join(' ');
+        prefillMsg = vehicle
+            ? `Hi, I'm looking to have a "${part.title}" fitted for my ${vehicle}. Are you able to help?`
+            : `Hi, I'm looking to have a "${part.title}" fitted. Are you able to help?`;
+    }
+    msgBtn.onclick = () => { closeWorkshopOverlay(); contactWorkshop(ws.id, ws.name, prefillMsg); };
     toggleDrawer('workshopDetailOverlay', true);
     const bd = document.getElementById('wsOverlayBackdrop');
     if (bd) bd.classList.add('active');
@@ -3350,7 +3361,7 @@ function closeWorkshopOverlay() {
     document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
 }
 
-function contactWorkshop(workshopId, workshopName) {
+function contactWorkshop(workshopId, workshopName, prefillMsg) {
     if (!userIsSignedIn) { showToast('Sign in to contact this workshop'); return; }
     if (workshopId === currentUserId) return;
     pendingGeneralEnquiry = { seller: workshopName, isPro: true, sellerId: workshopId };
@@ -3360,7 +3371,7 @@ function contactWorkshop(workshopId, workshopName) {
     const compose = document.getElementById('contactCardCompose');
     const confirm = document.getElementById('contactCardConfirm');
     if (titleEl) titleEl.textContent = `Enquiry — ${workshopName}`;
-    if (msgEl)   msgEl.value = 'Hi, I have an enquiry about your fitting services.';
+    if (msgEl)   msgEl.value = prefillMsg || 'Hi, I have an enquiry about your fitting services.';
     if (compose) compose.style.display = '';
     if (confirm) confirm.style.display = 'none';
     const bd = document.getElementById('contactSellerBackdrop');
