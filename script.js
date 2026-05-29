@@ -3337,10 +3337,14 @@ function openWorkshopOverlay(wsId) {
 
     msgBtn.onclick = () => { closeWorkshopOverlay(); contactWorkshop(ws.id, ws.name); };
     toggleDrawer('workshopDetailOverlay', true);
+    const bd = document.getElementById('wsOverlayBackdrop');
+    if (bd) bd.classList.add('active');
 }
 
 function closeWorkshopOverlay() {
     toggleDrawer('workshopDetailOverlay', false);
+    const bd = document.getElementById('wsOverlayBackdrop');
+    if (bd) bd.classList.remove('active');
 }
 
 function contactWorkshop(workshopId, workshopName) {
