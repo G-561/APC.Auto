@@ -6248,6 +6248,7 @@ header {
     border-radius: 2px;
 }
 #detailOverlay.chat-card .detail-drag-handle-bar { display: none; }
+.ws-drag-handle-bar { background: #fff; border-bottom: 1px solid #f0f0f0; }
 @media (min-width: 900px) {
     .detail-drag-handle-bar { display: none; }
 }

@@ -453,12 +453,13 @@
 
 <!-- WORKSHOP DETAIL OVERLAY -->
 <div id="workshopDetailOverlay" class="drawer">
+    <div class="detail-drag-handle-bar ws-drag-handle-bar" id="wsOverlayHandleBar"><div class="detail-drag-handle"></div></div>
     <div class="drawer-header">
         <button class="back-btn" onclick="closeWorkshopOverlay()">← Back</button>
         <span>Workshop Details</span>
         <div style="width:60px;"></div>
     </div>
-    <div class="drawer-content">
+    <div class="drawer-content" id="wsOverlayScrollArea">
         <div id="wsOverlayContent"></div>
         <div style="padding: 8px 0 20px;">
             <button id="wsOverlayMsgBtn" style="width:100%; padding:16px; background:var(--apc-orange); color:#fff; border:none; border-radius:8px; font-weight:800; font-size:14px; text-transform:uppercase; letter-spacing:1px; cursor:pointer; box-shadow:0 4px 12px rgba(255,152,0,0.2);">Message Workshop</button>

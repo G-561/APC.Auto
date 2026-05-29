@@ -6163,6 +6163,81 @@ function initDetailSwipeDismiss() {
     }
 }
 
+function initWorkshopSwipeDismiss() {
+    const overlay    = document.getElementById('workshopDetailOverlay');
+    const handleBar  = document.getElementById('wsOverlayHandleBar');
+    const header     = overlay?.querySelector('.drawer-header');
+    const scrollArea = document.getElementById('wsOverlayScrollArea');
+    if (!overlay || !header) return;
+
+    let startY = 0, startX = 0, startScrollTop = 0, startTime = 0;
+    let currentY = 0, dragging = false;
+
+    function canActivate() {
+        return overlay.classList.contains('active') && window.innerWidth < 900;
+    }
+    function onStart(e) {
+        if (!canActivate()) return;
+        const t = e.touches[0];
+        startY = t.clientY; startX = t.clientX;
+        startTime = Date.now();
+        startScrollTop = scrollArea ? scrollArea.scrollTop : 0;
+        currentY = 0; dragging = false;
+    }
+    function onMove(e) {
+        if (!canActivate()) return;
+        const dy = e.touches[0].clientY - startY;
+        const dx = e.touches[0].clientX - startX;
+        if (!dragging) {
+            if (Math.abs(dy) < 8) return;
+            if (Math.abs(dx) > Math.abs(dy)) return;
+            if (dy < 0) return;
+            if (startScrollTop > 0) return;
+            dragging = true;
+        }
+        currentY = Math.max(0, dy);
+        overlay.style.transition = 'none';
+        overlay.style.transform  = `translateY(${currentY}px)`;
+        overlay.style.opacity    = String(Math.max(0.5, 1 - currentY / 400));
+        e.preventDefault();
+    }
+    function onEnd() {
+        if (!dragging) return;
+        dragging = false;
+        const velocity = currentY / (Date.now() - startTime);
+        if (currentY > 110 || velocity > 0.45) {
+            overlay.style.transition = 'transform 0.26s ease-in, opacity 0.26s ease-in';
+            overlay.style.transform  = 'translateY(105%)';
+            overlay.style.opacity    = '0';
+            setTimeout(() => {
+                closeWorkshopOverlay();
+                overlay.style.transform = '';
+                overlay.style.transition = '';
+                overlay.style.opacity = '';
+            }, 260);
+        } else {
+            overlay.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            overlay.style.transform  = 'translateY(0)';
+            overlay.style.opacity    = '1';
+            setTimeout(() => { overlay.style.transform = ''; overlay.style.transition = ''; overlay.style.opacity = ''; }, 400);
+        }
+    }
+
+    const opts = { passive: false };
+    const passOpts = { passive: true };
+    [handleBar, header].forEach(el => {
+        if (!el) return;
+        el.addEventListener('touchstart', onStart, passOpts);
+        el.addEventListener('touchmove',  onMove,  opts);
+        el.addEventListener('touchend',   onEnd,   passOpts);
+    });
+    if (scrollArea) {
+        scrollArea.addEventListener('touchstart', onStart, passOpts);
+        scrollArea.addEventListener('touchmove',  onMove,  opts);
+        scrollArea.addEventListener('touchend',   onEnd,   passOpts);
+    }
+}
+
 let _lightboxImages = [];
 let _lightboxIdx    = 0;
 
@@ -10050,6 +10125,12 @@ function handleSponsoredCardClick(cardId, userId, url) {
         sb.from('sponsored_clicks')
             .insert({ card_id: cardId, user_id: currentUserId || null })
             .then(() => {});
+    }
+    // If the card owner has a workshop profile, open the workshop overlay
+    const ws = userId && workshopDatabase.find(w => w.id === userId);
+    if (ws) {
+        openWorkshopOverlay(userId);
+        return;
     }
     if (url && url !== '#') {
         window.open(url, '_blank');
@@ -14660,6 +14741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTrashBadge();
 
     initDetailSwipeDismiss();
+    initWorkshopSwipeDismiss();
 
     // Prepare the sell form preview boxes
     renderSellImagePreviews();
