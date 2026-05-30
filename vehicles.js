@@ -28,7 +28,11 @@ const VEHICLE_DB = {
                   "Stelvio",
                   "SZ","RZ",
                   "Tonale"],
-  "Alpine":      ["A110","A110 GT","A110 S","A310","A610","GTA"],
+  "Alpine":      ["A106","A108",
+                  "A110","A110 GT","A110 S",
+                  "A290","A310","A390","A610",
+                  "GTA","GTA V6",
+                  "Mini Alpine"],
   "Audi":        ["A1","A2","A3","A4","A4 B5","A4 B6","A4 B7","A4 B8","A4 B9","A5","A6","A7","A8","E-Tron","Q2","Q3","Q4 E-Tron","Q5","Q6 E-Tron","Q7","Q8","R8","RS3","RS4","RS5","RS6","RS7","S3","S4","S5","S6","S7","S8","SQ5","SQ7","SQ8","TT"],
   "Austin":      ["1100","A30","A35","A40","A50","A55","A60","Allegro","Healey","Lancer","Maxi","Mini","Sheerline"],
   "BMW":         ["1 Series","2 Series","3 Series","3 Series E30","3 Series E36","3 Series E46","3 Series E90","3 Series F30","3 Series G20","4 Series","5 Series","5 Series E28","5 Series E34","5 Series E39","5 Series E60","5 Series F10","5 Series G30","6 Series","7 Series","7 Series E23","7 Series E32","7 Series E38","7 Series E65","7 Series F01","8 Series","i3","i4","i7","iX","iX3","M2","M3","M3 E30","M3 E36","M3 E46","M3 E90","M3 F80","M3 G80","M4","M5","M5 E28","M5 E34","M5 E39","M5 E60","M5 F10","M5 F90","M8","X1","X2","X3","X4","X5","X5 E53","X5 E70","X5 F15","X5 G05","X6","X7","Z3","Z4"],
@@ -124,6 +128,20 @@ const VEHICLE_DB = {
 // listings within the same generation (e.g. 1987–1996 G100).
 // Covers top Australian makes. Falls back to exact-year matching if no data.
 const VEHICLE_YEAR_RANGES = {
+  "Alpine": {
+    "A106":        [[1955,1964]],
+    "A108":        [[1955,1964]],
+    "A110":        [[1962,1978],[2018,2026]],
+    "A110 GT":     [[2018,2026]],
+    "A110 S":      [[2019,2026]],
+    "A290":        [[2024,2026]],
+    "A310":        [[1971,1985]],
+    "A390":        [[2026,2027]],
+    "A610":        [[1991,1995]],
+    "GTA":         [[1985,1995]],
+    "GTA V6":      [[1985,1991]],
+    "Mini Alpine": [[1970,1970]],
+  },
   "Alfa Romeo": {
     "145":                [[1994,2001]],
     "146":                [[1994,2001]],
