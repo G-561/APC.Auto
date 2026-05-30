@@ -1456,6 +1456,11 @@ function buildModelOptions(make, selectedModel) {
     return html;
 }
 
+const _MY_MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function _fmtMY(month, year) {
+    return (month && month > 0 && month <= 12) ? `${_MY_MONTHS[month]} ${year}` : `${year}`;
+}
+
 // Returns series options for models that have named generations (e.g. Commodore VB, Falcon XA, 3 Series E30).
 // Returns '' if no series data exists for this make/model combination.
 function buildSeriesOptions(make, model, year, selected) {
@@ -1478,9 +1483,9 @@ function buildSeriesOptions(make, model, year, selected) {
         const ranges = VEHICLE_YEAR_RANGES[make]?.[model + ' ' + s];
         let label = s;
         if (ranges?.length) {
-            const minY = Math.min(...ranges.map(([f]) => f));
-            const maxY = Math.max(...ranges.map(([, t]) => t));
-            label = `${s} (${minY}–${maxY})`;
+            const sorted = [...ranges].sort((a, b) => a[0] - b[0]);
+            const first = sorted[0], last = sorted[sorted.length - 1];
+            label = `${s} (${_fmtMY(first[2], first[0])} – ${_fmtMY(last[3], last[1])})`;
         }
         html += `<option value="${s}"${s === selected ? ' selected' : ''}>${label}</option>`;
     });
