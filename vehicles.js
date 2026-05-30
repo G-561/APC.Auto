@@ -268,6 +268,7 @@ const VEHICLE_DB = {
                   "X300","X305","X306","X308",
                   "X350"],
   "Datsun":      ["120Y","1200","1600","180B","200B","240Z","260Z","280Z","280ZX","Bluebird","Cherry","Fairlady","Laurel","Patrol","Stanza","Sunny","Ute"],
+  "DeLorean":    ["DMC-12"],
   "Dodge":       ["Caliber","Challenger","Charger","Durango","Journey","Nitro","Ram","Viper"],
   "Ferrari":     ["296","458","488","812","California","F8","GTC4 Lusso","Portofino","Roma","SF90"],
   "Fiat":        ["124 Spider","500","500L","500X","Bravo","Doblo","Ducato","Fiorino","Panda","Punto","Scudo","Tipo"],
@@ -1949,6 +1950,9 @@ const VEHICLE_YEAR_RANGES = {
     "Veritas":          [[2008,2011]],
     "Winstorm":         [[2006,2010]],
     "Winstorm MaXX":    [[2008,2011]],
+  },
+  "DeLorean": {
+    "DMC-12": [[1981,1982]],
   },
   "Dodge": {
     "Challenger":    [[1970,1974],[2008,2024]],
