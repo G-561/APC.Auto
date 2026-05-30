@@ -269,6 +269,7 @@ const VEHICLE_DB = {
                   "X350"],
   "Datsun":      ["120Y","1200","1600","180B","200B","240Z","260Z","280Z","280ZX","Bluebird","Cherry","Fairlady","Laurel","Patrol","Stanza","Sunny","Ute"],
   "DeLorean":    ["DMC-12"],
+  "De Tomaso":   ["Bigua","Deauville","Guara","Longchamp","Mangusta","Pantera","Vallelunga"],
   "Dodge":       ["Caliber","Challenger","Charger","Durango","Journey","Nitro","Ram","Viper"],
   "Ferrari":     ["296","458","488","812","California","F8","GTC4 Lusso","Portofino","Roma","SF90"],
   "Fiat":        ["124 Spider","500","500L","500X","Bravo","Doblo","Ducato","Fiorino","Panda","Punto","Scudo","Tipo"],
@@ -1953,6 +1954,15 @@ const VEHICLE_YEAR_RANGES = {
   },
   "DeLorean": {
     "DMC-12": [[1981,1982]],
+  },
+  "De Tomaso": {
+    "Bigua":       [[1996,1997]],
+    "Deauville":   [[1970,1985]],
+    "Guara":       [[1993,2004]],
+    "Longchamp":   [[1972,1989]],
+    "Mangusta":    [[1967,1971]],
+    "Pantera":     [[1970,1991]],
+    "Vallelunga":  [[1965,1967]],
   },
   "Dodge": {
     "Challenger":    [[1970,1974],[2008,2024]],
