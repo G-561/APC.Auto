@@ -5025,7 +5025,8 @@ header {
 /* ============================================================
    PRO DASHBOARD
    ============================================================ */
-.dtb-dashboard { color: var(--apc-orange) !important; font-weight: 800 !important; }
+.dtb-dashboard { color: var(--apc-blue) !important; font-weight: 800 !important; }
+.dtb-dashboard:hover { color: var(--apc-blue) !important; background: #e8f0fe !important; }
 
 .dash-inner {
     max-width: 1400px;
