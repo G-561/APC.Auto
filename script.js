@@ -1746,7 +1746,8 @@ async function loadUserListingsFromSupabase(userId) {
                     odometer: r.odometer, chassisVin: r.chassis_vin || null,
                     warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, fit: r.fitting_available,
-                    year: r.fits_year, seller: r.seller_name || currentUserName || '',
+                    year: r.fits_year, variant: r.variant || null,
+                    seller: r.seller_name || currentUserName || '',
                     images: images.length ? images : [], fits,
                 });
             }
@@ -4911,12 +4912,14 @@ function confirmSellVehicle() {
     if (seriesHtml && !series) { showToast('Please select a series.'); return; }
     sellVehicleSelection = { make, model, year, series };
     renderSellVehicleChip();
+    _refreshSellVariant(make, model, '');
     closeSellVehiclePicker();
 }
 
 function clearSellVehicle() {
     sellVehicleSelection = null;
     renderSellVehicleChip();
+    _refreshSellVariant('', '', '');
 }
 
 function initSellVehicleDropdowns(make, model, year, variant) {
@@ -4926,7 +4929,7 @@ function initSellVehicleDropdowns(make, model, year, variant) {
         sellVehicleSelection = null;
     }
     renderSellVehicleChip();
-    _refreshSellVariant(make, model, variant);
+    _refreshSellVariant(make, model, '');
 }
 
 function _refreshSellVariant(make, model, currentVal) {
@@ -5174,6 +5177,7 @@ function openEditListing(listingId) {
     document.getElementById('sellTitle').value = listing.title || '';
     document.getElementById('sellCategory').value = listing.category || '';
     initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '', listing.fits?.[0]?.variant || '');
+    _refreshSellVariant(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.variant || '');
     const isUniversal = !listing.fits?.length && !VEHICLE_EXEMPT_CATEGORIES.includes(listing.category || '');
     sellIsUniversal = isUniversal;
     const uToggle = document.getElementById('sellUniversalToggle');
@@ -11634,7 +11638,7 @@ function _renderEdwStep1() {
             </div>
             <div class="edw-field">
                 <label class="edw-label">Engine Code</label>
-                <input id="edwEngineCode" class="edw-input" type="text" placeholder="e.g. 1GR-FE, RB26" value="${escapeHtml(v.engineCode || '')}" oninput="_edwSaveField('engineCode', this.value)">
+                <div id="edwEngineCodeWrap">${_buildEngineCodeField('edw', v.make, v.model, v.engineCode)}</div>
             </div>
             <div class="edw-field">
                 <label class="edw-label">Transmission Code</label>
