@@ -4926,6 +4926,21 @@ function initSellVehicleDropdowns(make, model, year, variant) {
         sellVehicleSelection = null;
     }
     renderSellVehicleChip();
+    _refreshSellVariant(make, model, variant);
+}
+
+function _refreshSellVariant(make, model, currentVal) {
+    const wrap = document.getElementById('sellVariantWrap');
+    if (!wrap) return;
+    const engines = (typeof VEHICLE_ENGINES !== 'undefined' && VEHICLE_ENGINES[make]?.[model]) || [];
+    if (engines.length) {
+        const opts = ['<option value="">Select engine code…</option>',
+            ...engines.map(e => `<option value="${escapeHtml(e)}"${e === currentVal ? ' selected' : ''}>${escapeHtml(e)}</option>`)
+        ].join('');
+        wrap.innerHTML = `<select id="sellVariant" class="sell-select">${opts}</select>`;
+    } else {
+        wrap.innerHTML = `<input id="sellVariant" type="text" maxlength="60" placeholder="e.g. 1GR-FE, RB26DETT" value="${escapeHtml(currentVal || '')}">`;
+    }
 }
 
 const VEHICLE_EXEMPT_CATEGORIES = ['tools', 'other'];
@@ -4943,6 +4958,7 @@ function onSellMakeChange() {
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
     if (yearEl)  yearEl.innerHTML  = buildYearOptions('');
     _refreshSellSeries(make, '', '', '');
+    _refreshSellVariant(make, '');
 }
 
 function onSellModelChange() {
@@ -4950,7 +4966,8 @@ function onSellModelChange() {
     const model = document.getElementById('sellModel')?.value || '';
     const yearEl = document.getElementById('sellYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
-    _refreshSellSeries('', '', '', ''); // hide series — wait for year selection
+    _refreshSellSeries('', '', '', '');
+    _refreshSellVariant(make, model);
 }
 
 function onSellYearChange() {
