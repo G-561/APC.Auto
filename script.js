@@ -11597,13 +11597,6 @@ function _renderEdwStep1() {
                 </select>
             </div>
             <div class="edw-field">
-                <label class="edw-label">Engine / Variant <span style="font-weight:400;color:#aaa;font-size:11px;">optional</span></label>
-                <input id="edwVariant" class="edw-input" type="text" maxlength="60"
-                    placeholder="e.g. Toyota 2ZZ-GE, Rover K-Series, V8 GTS"
-                    value="${escapeHtml(v.variant || '')}"
-                    oninput="_edwSaveField('variant', this.value)">
-            </div>
-            <div class="edw-field">
                 <label class="edw-label">Body Type</label>
                 <select id="edwBodyType" class="edw-input" onchange="_edwSaveField('bodyType', this.value)">
                     <option value="">Select…</option>
