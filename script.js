@@ -10642,7 +10642,7 @@ function buildSponsoredWorkshopCardHTML(workshop) {
             <div class="workshop-card-specialty">${workshop.specialty}</div>
             <div class="workshop-card-footer">
                 ${stars}
-                <button class="workshop-card-button" onclick="openWorkshopStorefront(workshopDatabase.find(w=>w.id===${workshop.id}), true)">View →</button>
+                <button class="workshop-card-button" onclick="openWorkshopDetail(${JSON.stringify(workshop.id)})">View →</button>
             </div>
         </div>
     `;
@@ -10654,30 +10654,26 @@ function openWorkshopDetail(workshopId) {
     const content = document.getElementById('workshopDetailContent');
     if (!content) return;
     const stars = w.rating ? `★ ${w.rating}` : '';
-    const serviceChips = w.services.map(s => `<span class="wsd-chip">${s}</span>`).join('');
-    const vehicleChips = w.vehicleTypes.map(v => `<span class="wsd-chip">${v}</span>`).join('');
+    const serviceChips = w.services
+        .map(s => `<span class="wsd-chip">${escapeHtml(SERVICE_LABELS[s] || s)}</span>`).join('');
+    const vehicleChips = w.vehicleTypes.map(v => `<span class="wsd-chip">${escapeHtml(v)}</span>`).join('');
+    const wId   = JSON.stringify(w.id);
+    const wName = JSON.stringify(w.name || '');
     content.innerHTML = `
         <div class="wsd-hero">
-            <div class="wsd-name">${w.name}</div>
-            <div class="wsd-loc">📍 ${w.loc}</div>
+            <div class="wsd-name">${escapeHtml(w.name || '')}</div>
+            <div class="wsd-loc">📍 ${escapeHtml(w.loc || '')}</div>
             <div class="wsd-meta-row">
                 <span class="wsd-rating">${stars}</span>
-                <span class="wsd-distance">${w.distance} away</span>
+                ${w.distance ? `<span class="wsd-distance">${escapeHtml(w.distance)} away</span>` : ''}
             </div>
         </div>
-        <div class="wsd-section">
-            <h4>Speciality</h4>
-            <div class="wsd-specialty">${w.specialty}</div>
+        ${w.specialty ? `<div class="wsd-section"><h4>About</h4><div class="wsd-specialty">${escapeHtml(w.specialty)}</div></div>` : ''}
+        ${serviceChips ? `<div class="wsd-section"><h4>Services</h4><div class="wsd-chips">${serviceChips}</div></div>` : ''}
+        ${vehicleChips ? `<div class="wsd-section"><h4>Vehicles we work on</h4><div class="wsd-chips">${vehicleChips}</div></div>` : ''}
+        <div class="wsd-cta-wrap">
+            <button class="wsd-contact-btn" onclick="contactWorkshop(${wId}, ${wName}); closeWorkshopDetailDrawer();">Message Workshop</button>
         </div>
-        <div class="wsd-section">
-            <h4>Services</h4>
-            <div class="wsd-chips">${serviceChips}</div>
-        </div>
-        <div class="wsd-section">
-            <h4>Vehicles we work on</h4>
-            <div class="wsd-chips">${vehicleChips}</div>
-        </div>
-        <button class="wsd-contact-btn" onclick="contactWorkshop(${w.id}); closeWorkshopDetailDrawer();">Contact this workshop</button>
     `;
     toggleDrawer('workshopDetailDrawer', true);
 }
