@@ -475,6 +475,7 @@ const VEHICLE_DB = {
                   "Snipe",
                   "Super Snipe","Super Snipe Mk I-III","Super Snipe Mk IV","Super Snipe Series I-V",
                   "Vogue"],
+  "Hummer":      ["H1","H2","H3"],
   "Hyundai":     ["Accent","Bayon","Elantra","Getz","i20","i20 N","i30","i30 N","i30 Fastback","i40","iLoad","iMax","Ioniq","Ioniq 5","Ioniq 6","ix35","Kona","Kona Electric","Palisade","Santa Cruz","Santa Fe","Sonata","Staria","Terracan","Trajet","Tucson","Veloster","Venue"],
   "Infiniti":    ["EX","FX","G","M","Q30","Q50","Q60","QX30","QX50","QX60","QX70","QX80"],
   "Isuzu":       ["D-Max","MU-7","MU-X","Trooper"],
@@ -1118,6 +1119,11 @@ const VEHICLE_YEAR_RANGES = {
     "Vezel":          [[2014,2026]],
     "Vigor":          [[1981,1995]],
     "ZR-V":           [[2023,2026]],
+  },
+  "Hummer": {
+    "H1": [[1992,2006]],
+    "H2": [[2002,2009]],
+    "H3": [[2005,2010]],
   },
   "Humber": {
     "Hawk":                   [[1945,1967]],
