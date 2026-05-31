@@ -7333,6 +7333,16 @@ document.addEventListener('DOMContentLoaded', () => {
             showResetPasswordPanel();
             return;
         }
+        if (event === 'INITIAL_SESSION' && !session) {
+            // No real session — clear any remembered user that was speculatively shown on load
+            clearRememberedUser();
+            if (userIsSignedIn) {
+                userIsSignedIn = false;
+                currentUserName = null; currentUserTier = null; currentUserId = null; currentUserEmail = null;
+                renderAccountState();
+            }
+            return;
+        }
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
             _dataLoadStarted = true;
             currentUserId = session.user.id;
@@ -7422,6 +7432,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loadNotificationsFromSupabase();
             loadRecentlyViewedFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
+            clearRememberedUser();
             unsubscribeRealtime();
             userIsSignedIn = false;
             currentUserName  = null;
@@ -9609,6 +9620,7 @@ async function handleSignUpTradeSubmit() {
 }
 
 async function onSignOut() {
+    clearRememberedUser();
     await sb.auth.signOut();
     userIsSignedIn = false;
     currentUserName = null;
