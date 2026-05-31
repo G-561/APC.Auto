@@ -1967,8 +1967,9 @@ header {
     padding: 20px 20px 16px;
     color: white;
 }
-.wsd-name { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
-.wsd-loc  { font-size: 12px; opacity: 0.85; margin-bottom: 8px; }
+.wsd-name  { font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+.wsd-loc   { font-size: 12px; opacity: 0.85; margin-bottom: 6px; }
+.wsd-phone { display: block; font-size: 14px; font-weight: 700; color: #f07020; text-decoration: none; margin-bottom: 8px; }
 .wsd-meta-row { display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .wsd-rating { font-weight: 800; }
 .wsd-distance { opacity: 0.85; }

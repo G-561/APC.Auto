@@ -100,6 +100,7 @@ function getDefaultWorkshopProfile() {
     return {
         vehicles: [],
         address: '',
+        phone: '',
         services: {
             // Engine & Powertrain
             generalService: false, logbook: false, engineDiag: false, engineRebuild: false,
@@ -2218,6 +2219,7 @@ async function loadWorkshopDatabase() {
                 location:     p.location || '',
                 postcode:     p.postcode || '',
                 address:      p.workshop_address || '',
+                phone:        wd.phone || '',
                 about:        p.about || '',
                 serviceKeys:  activeKeys,
                 vehicleTypes: wd.vehicles || [],
@@ -6883,6 +6885,7 @@ async function syncWorkshopProfileToSupabase() {
         workshop_address: workshopProfile.address || null,
         workshop_data: {
             biz_type:         userSettings.businessType    || 'service',
+            phone:            workshopProfile.phone        || null,
             services:         workshopProfile.services     || {},
             vehicles:         workshopProfile.vehicles     || [],
             parts_categories: workshopProfile.partsCategories || [],
@@ -10351,6 +10354,8 @@ function openWorkshopProfileEditor() {
     if (aboutEl) aboutEl.value = userSettings.about        || '';
     const wsAddressEl = document.getElementById('wsAddress');
     if (wsAddressEl) wsAddressEl.value = workshopProfile.address || '';
+    const wsPhoneEl = document.getElementById('wsPhone');
+    if (wsPhoneEl) wsPhoneEl.value = workshopProfile.phone || '';
     // Pre-fill workshop location picker from saved postcode
     const wsLocWrap = document.querySelector('#workshopProfileFields .location-picker-wrap[data-mode="workshop"]');
     if (wsLocWrap) {
@@ -10456,6 +10461,7 @@ function submitWorkshopProfile() {
     workshopProfile = {
         vehicles: workshopProfile.vehicles || [],
         address: document.getElementById('wsAddress')?.value.trim() || '',
+        phone:   document.getElementById('wsPhone')?.value.trim()   || '',
         services: {
             generalService: getChk('wsGeneralService'), logbook: getChk('wsLogbook'),
             engineDiag: getChk('wsEngineDiag'),   engineRebuild: getChk('wsEngineRebuild'),
@@ -10662,7 +10668,8 @@ function openWorkshopDetail(workshopId) {
     content.innerHTML = `
         <div class="wsd-hero">
             <div class="wsd-name">${escapeHtml(w.name || '')}</div>
-            <div class="wsd-loc">📍 ${escapeHtml(w.loc || '')}</div>
+            ${w.address ? `<div class="wsd-loc">📍 ${escapeHtml(w.address)}${w.location ? ', ' + escapeHtml(w.location) : ''}</div>` : w.location ? `<div class="wsd-loc">📍 ${escapeHtml(w.location)}</div>` : ''}
+            ${w.phone ? `<a href="tel:${escapeHtml(w.phone.replace(/\s/g,''))}" class="wsd-phone">📞 ${escapeHtml(w.phone)}</a>` : ''}
             <div class="wsd-meta-row">
                 <span class="wsd-rating">${stars}</span>
                 ${w.distance ? `<span class="wsd-distance">${escapeHtml(w.distance)} away</span>` : ''}
