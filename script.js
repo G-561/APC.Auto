@@ -5042,7 +5042,7 @@ function openSellOverlay() {
     initSellVehicleDropdowns('', '', '');
     const title = document.getElementById('sellOverlayTitle');
     const submit = document.getElementById('sellSubmitBtn');
-    if (title) title.textContent = 'LIST A PART';
+    if (title) title.textContent = 'List a Part';
     if (submit) submit.textContent = 'LIST PART NOW';
     const manageSection = document.getElementById('manageSection');
     if (manageSection) manageSection.style.display = 'none';
@@ -5189,7 +5189,7 @@ function openEditListing(listingId) {
 
     const titleEl = document.getElementById('sellOverlayTitle');
     const submit  = document.getElementById('sellSubmitBtn');
-    if (titleEl) titleEl.textContent = 'MANAGE LISTING';
+    if (titleEl) titleEl.textContent = 'Manage Listing';
     if (submit)  submit.textContent  = 'SAVE CHANGES';
 
     // Show manage section and populate status + buyer rating
