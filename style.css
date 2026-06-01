@@ -4423,6 +4423,7 @@ header {
         margin-left: auto;
         margin-right: auto;
         box-sizing: border-box;
+        overflow-x: visible; /* restore viewport-relative positioning for fixed overlays */
     }
 
     /* Top utility bar: constrained to 1400px zone */
