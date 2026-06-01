@@ -5037,9 +5037,9 @@ header {
 .dtb-dashboard:hover { color: var(--apc-blue) !important; background: #e8f0fe !important; }
 
 .dash-inner {
-    max-width: 1400px;
+    max-width: 1800px;
     margin: 0 auto;
-    padding: 28px 32px 48px;
+    padding: 28px 36px 48px;
     box-sizing: border-box;
 }
 
