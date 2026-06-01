@@ -13322,10 +13322,14 @@ function openStockLookup() {
     _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
     const drawer = document.getElementById('stockLookupDrawer');
     if (!drawer) return;
-    const topBar     = document.getElementById('desktopTopBar');
-    const hdr        = document.getElementById('mainHeader');
-    const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
-    const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
+    const topBar    = document.getElementById('desktopTopBar');
+    const hdr       = document.getElementById('mainHeader');
+    const proHdr    = document.getElementById('proHeader');
+    const proOpen   = proHdr && proHdr.style.display !== 'none';
+    const topOffset = proOpen
+        ? (proHdr.offsetHeight || 54)
+        : (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 800);
     drawer.style.top    = topOffset + 'px';
     drawer.style.left   = sideOffset + 'px';
     drawer.style.right  = sideOffset + 'px';

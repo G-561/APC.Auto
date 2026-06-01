@@ -333,7 +333,7 @@ header {
 .acct-dropdown {
     display: none;
     position: fixed;
-    right: max(0px, calc(50vw - 700px));
+    right: max(0px, calc(50vw - 800px));
     top: 140px;
     width: 300px;
     background: white;
@@ -4415,13 +4415,13 @@ header {
     .desktop-sidebar { display: none !important; }
     .bottom-nav { display: none !important; }
 
-    /* Constrain page to 1400px centred — sides show html background */
+    /* Constrain page to 1600px centred — sides show html background */
     html { background: #e0e0e0; scrollbar-gutter: stable; }
     body {
         padding-bottom: 0;
         padding-left: 240px;
         padding-right: 220px;
-        max-width: 1400px;
+        max-width: 1600px;
         margin-left: auto;
         margin-right: auto;
         box-sizing: border-box;
@@ -4429,15 +4429,15 @@ header {
 
     /* Top utility bar: constrained to 1400px zone */
     .desktop-top-bar {
-        left: max(0px, calc(50vw - 700px));
-        right: max(0px, calc(50vw - 700px));
+        left: max(0px, calc(50vw - 800px));
+        right: max(0px, calc(50vw - 800px));
     }
 
     /* Header: constrained to 1400px zone */
     .top-nav-container {
         top: 36px;
-        left: max(0px, calc(50vw - 700px));
-        right: max(0px, calc(50vw - 700px));
+        left: max(0px, calc(50vw - 800px));
+        right: max(0px, calc(50vw - 800px));
         width: auto;
     }
 
@@ -4487,7 +4487,7 @@ header {
     #filterDrawer {
         display: flex !important;
         position: fixed;
-        left: max(0px, calc(50vw - 700px));
+        left: max(0px, calc(50vw - 800px));
         top: 140px; /* fallback — overridden by updateHeaderOffset() after images load */
         bottom: 0;
         height: auto;
@@ -4675,10 +4675,10 @@ header {
     }
 
     /* Right panel: constrained to 1400px zone */
-    .desktop-right-panel { right: max(0px, calc(50vw - 700px)); }
+    .desktop-right-panel { right: max(0px, calc(50vw - 800px)); }
 
     /* Drawers become right-side panels */
-    .drawer { left: auto; right: max(0px, calc(50vw - 700px)); width: 500px; }
+    .drawer { left: auto; right: max(0px, calc(50vw - 800px)); width: 500px; }
     .drawer.active { box-shadow: -4px 0 40px rgba(0,0,0,0.18); }
     #accountMenuDrawer { width: 360px; }
     #filterDrawer { right: auto; width: 240px; box-shadow: none; }
@@ -4687,8 +4687,8 @@ header {
 
     /* Sell overlay: full card-drawer, two-column form layout */
     #sellOverlay {
-        left: calc(max(0px, 50vw - 700px) + 240px) !important;
-        right: calc(max(0px, 50vw - 700px) + 220px) !important;
+        left: calc(max(0px, 50vw - 800px) + 240px) !important;
+        right: calc(max(0px, 50vw - 800px) + 220px) !important;
         width: auto !important;
         height: auto !important;
     }
@@ -4744,8 +4744,8 @@ header {
 
     /* Detail overlay: fills center column between sidebars */
     #detailOverlay {
-        left: max(0px, calc(50vw - 700px)) !important;
-        right: max(0px, calc(50vw - 700px)) !important;
+        left: max(0px, calc(50vw - 800px)) !important;
+        right: max(0px, calc(50vw - 800px)) !important;
         width: auto !important;
         height: auto !important;
         /* top is set dynamically by updateHeaderOffset() */
@@ -4871,8 +4871,8 @@ header {
 
     /* Storefront: same centre-panel positioning as detail overlay */
     #storefrontDrawer {
-        left: calc(max(0px, 50vw - 700px) + 240px) !important;
-        right: calc(max(0px, 50vw - 700px) + 220px) !important;
+        left: calc(max(0px, 50vw - 800px) + 240px) !important;
+        right: calc(max(0px, 50vw - 800px) + 220px) !important;
         width: auto !important;
         height: auto !important;
         /* top is set dynamically by updateHeaderOffset() */
@@ -4952,8 +4952,8 @@ header {
     #chatDrawer,
     #messageDetailDrawer,
     #helpDrawer {
-        left: max(0px, calc(50vw - 700px)) !important;
-        right: max(0px, calc(50vw - 700px)) !important;
+        left: max(0px, calc(50vw - 800px)) !important;
+        right: max(0px, calc(50vw - 800px)) !important;
         width: auto !important;
         height: auto !important;
         bottom: 0;
@@ -6522,7 +6522,7 @@ header {
 .report-reason-row { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f9f9f9; border-radius:8px; font-size:14px; color:#333; cursor:pointer; }
 .report-reason-row input[type="radio"] { accent-color: var(--apc-orange); width:16px; height:16px; flex-shrink:0; }
 @media (min-width: 900px) {
-    #reportSheet { left: max(0px, calc(50vw - 700px)) !important; right: max(0px, calc(50vw - 700px)) !important; border-radius: 16px; bottom: auto; top: 50%; transform: translateY(-50%); }
+    #reportSheet { left: max(0px, calc(50vw - 800px)) !important; right: max(0px, calc(50vw - 800px)) !important; border-radius: 16px; bottom: auto; top: 50%; transform: translateY(-50%); }
 }
 
 /* ─── EDW — Electronic Dismantling Workflow ─────────────────────────────── */
