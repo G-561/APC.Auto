@@ -75,7 +75,7 @@
 <div id="proHeader" style="display:none;">
     <div class="pro-hdr-inner">
         <div class="pro-hdr-left">
-            <img src="images/APC.logo.png" alt="APC" class="pro-hdr-logo">
+            <img src="images/APC.logo.png" alt="APC" class="pro-hdr-logo" onclick="closeDashboard(); dtbGoHome();" style="cursor:pointer;" title="Go to home">
             <span class="pro-hdr-pro-badge">PRO</span>
         </div>
         <nav class="pro-hdr-nav">
@@ -2617,7 +2617,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=130"></script>
+<script src="script.js?v=131"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
