@@ -18,7 +18,9 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background: var(--bg);
     padding-bottom: 90px;
-    overflow-x: hidden;
+}
+@media (max-width: 899px) {
+    body { overflow-x: hidden; }
 }
 
 .sidebar-open { overflow: hidden; }
@@ -4423,7 +4425,6 @@ header {
         margin-left: auto;
         margin-right: auto;
         box-sizing: border-box;
-        overflow-x: visible; /* restore viewport-relative positioning for fixed overlays */
     }
 
     /* Top utility bar: constrained to 1400px zone */
