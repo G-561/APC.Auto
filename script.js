@@ -11374,16 +11374,20 @@ function openDashboard() {
     const topBar  = document.getElementById('desktopTopBar');
     const hdr     = document.getElementById('mainHeader');
     const proHdr  = document.getElementById('proHeader');
+    const dv      = document.getElementById('dashboardView');
     if (fd)     fd.style.setProperty('display', 'none', 'important');
     if (rp)     rp.style.display = 'none';
     if (topBar) topBar.style.setProperty('display', 'none', 'important');
     if (hdr)    hdr.style.setProperty('display', 'none', 'important');
-    if (proHdr) { proHdr.style.display = 'block'; renderProHeader(); }
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
-    const dv = document.getElementById('dashboardView');
+    // Show dashboard FIRST so it's never stranded hidden
     if (dv) {
-        dv.style.top     = (proHdr ? proHdr.offsetHeight : 54) + 'px';
+        dv.style.top     = '54px';
         dv.style.display = 'block';
+    }
+    if (proHdr) {
+        proHdr.style.display = 'block';
+        try { renderProHeader(); } catch(e) { /* non-fatal */ }
     }
     syncBackdrop();
     closeAccountMenu();
