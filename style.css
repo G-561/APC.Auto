@@ -5015,10 +5015,10 @@ header {
     #filterDrawer .action-container { display: none; }
 
 
-    /* Dashboard: constrained to 1400px zone */
+    /* Dashboard: wider than main page — fills more of large monitors */
     #dashboardView {
-        left: max(0px, calc(50vw - 700px)) !important;
-        right: max(0px, calc(50vw - 700px)) !important;
+        left: max(0px, calc(50vw - 900px)) !important;
+        right: max(0px, calc(50vw - 900px)) !important;
     }
 }
 
