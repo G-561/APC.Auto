@@ -5221,6 +5221,8 @@ header {
 }
 .dash-stat-primary { border-top-color: var(--apc-orange); }
 .dash-stat-green   { border-top-color: #34c759; }
+.dash-stat-clickable { cursor: pointer; transition: box-shadow 0.15s, transform 0.1s; }
+.dash-stat-clickable:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-1px); }
 .dash-stat-ico {
     font-size: 22px;
     margin-bottom: 12px;
@@ -5333,18 +5335,37 @@ header {
     font-size: 14px;
     flex-shrink: 0;
 }
+.dash-act-body { flex: 1; min-width: 0; }
 .dash-act-text {
-    flex: 1;
     font-size: 12px;
     line-height: 1.4;
     color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dash-act-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+.dash-act-sub {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--apc-orange);
 }
 .dash-act-time {
     font-size: 10px;
     color: #bbb;
     font-weight: 600;
-    margin-top: 2px;
-    display: block;
+}
+.dash-activity-empty {
+    padding: 24px 12px;
+    text-align: center;
+    font-size: 11px;
+    color: #bbb;
+    font-weight: 600;
 }
 
 /* Listings search row */

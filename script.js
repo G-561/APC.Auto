@@ -14590,15 +14590,86 @@ function renderDashboardCharts(myListings) {
     }
 }
 
+function relativeTime(date) {
+    if (!date) return '—';
+    const diff = Date.now() - new Date(date).getTime();
+    if (isNaN(diff) || diff < 0) return '—';
+    const mins = Math.floor(diff / 60000);
+    const hrs  = Math.floor(mins / 60);
+    const days = Math.floor(hrs / 24);
+    if (mins < 2)   return 'Just now';
+    if (mins < 60)  return `${mins}m ago`;
+    if (hrs  < 24)  return `${hrs}h ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7)   return `${days} days ago`;
+    return new Date(date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+}
+
 function renderDashActivity() {
     const feed = document.getElementById('dashActivityFeed');
     if (!feed) return;
-    const ico   = { save: '&#x2665;&#xFE0E;', message: '💬', view: '👁', trend: '📈' };
-    const bg    = { save: '#fff3e5', message: '#e8f3ff', view: '#f4f4f4', trend: '#eafaf0' };
-    feed.innerHTML = dashMockData.activity.map(a => `
+
+    const events = [];
+    const sellerName = getCurrentSellerName();
+
+    // Listings (recent + sold)
+    [...userListings]
+        .filter(p => p.sellerId === currentUserId || p.sellerName === sellerName)
+        .sort((a, b) => new Date(b.listDate || b.createdAt || 0) - new Date(a.listDate || a.createdAt || 0))
+        .slice(0, 8)
+        .forEach(p => {
+            const isSold = p.status === 'sold';
+            events.push({
+                type: isSold ? 'sold' : 'listed',
+                text: isSold ? `Marked sold — <strong>${escapeHtml(p.title)}</strong>` : `Listed <strong>${escapeHtml(p.title)}</strong>`,
+                sub:  p.price ? `$${Number(p.price).toLocaleString()}` : '',
+                ts:   new Date(p.listDate || p.createdAt || 0)
+            });
+        });
+
+    // Enquiries received as seller
+    conversations
+        .filter(c => c.sellerId === currentUserId)
+        .forEach(c => {
+            const partName = findPartAnywhere(c.partId)?.title || c.partTitle || 'a listing';
+            events.push({
+                type: 'message',
+                text: `Enquiry on <strong>${escapeHtml(partName)}</strong>`,
+                sub:  c.unread ? '● Unread' : '',
+                ts:   new Date(c.lastMessageAt || 0)
+            });
+        });
+
+    // Offers received
+    offersDb
+        .filter(o => o.sellerId === currentUserId)
+        .forEach(o => {
+            const partName = findPartAnywhere(o.partId)?.title || 'a listing';
+            events.push({
+                type: 'offer',
+                text: `Offer <strong>$${Number(o.amount || 0).toLocaleString()}</strong> on ${escapeHtml(partName)}`,
+                sub:  o.status === 'pending' ? 'Awaiting response' : (o.status || ''),
+                ts:   new Date(o.createdAt || 0)
+            });
+        });
+
+    events.sort((a, b) => b.ts - a.ts);
+
+    if (!events.length) {
+        feed.innerHTML = `<div class="dash-activity-empty">No activity yet — list your first part to get started.</div>`;
+        return;
+    }
+
+    const icons  = { listed:'📦', sold:'✅', message:'💬', offer:'💰' };
+    const colors = { listed:'#fff3e5', sold:'#e8f8ee', message:'#e8f3ff', offer:'#fff9e5' };
+
+    feed.innerHTML = events.slice(0, 9).map(e => `
         <div class="dash-activity-item">
-            <div class="dash-act-ico" style="background:${bg[a.type] || '#f5f5f5'}">${ico[a.type] || '●'}</div>
-            <div class="dash-act-text">${a.text}<span class="dash-act-time">${a.time}</span></div>
+            <div class="dash-act-ico" style="background:${colors[e.type] || '#f5f5f5'}">${icons[e.type] || '●'}</div>
+            <div class="dash-act-body">
+                <div class="dash-act-text">${e.text}</div>
+                <div class="dash-act-meta">${e.sub ? `<span class="dash-act-sub">${e.sub}</span>` : ''}${relativeTime(e.ts) !== '—' ? `<span class="dash-act-time">${relativeTime(e.ts)}</span>` : ''}</div>
+            </div>
         </div>`).join('');
 }
 

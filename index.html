@@ -171,27 +171,27 @@
         </div>
 
         <div class="dash-stats-row">
-            <div class="dash-stat-card dash-stat-primary">
+            <div class="dash-stat-card dash-stat-primary dash-stat-clickable" onclick="document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'})">
                 <div class="dash-stat-ico">📦</div>
                 <div class="dash-stat-val" id="dashStatListings">—</div>
                 <div class="dash-stat-lbl">Active Listings</div>
             </div>
-            <div class="dash-stat-card">
+            <div class="dash-stat-card dash-stat-clickable" onclick="document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'})">
                 <div class="dash-stat-ico dash-heart-ico">&#x2665;&#xFE0E;</div>
                 <div class="dash-stat-val" id="dashStatSaves">—</div>
                 <div class="dash-stat-lbl">Total Saves</div>
             </div>
-            <div class="dash-stat-card">
+            <div class="dash-stat-card dash-stat-clickable" onclick="closeDashboard(); dtbOpenInbox();">
                 <div class="dash-stat-ico">💬</div>
                 <div class="dash-stat-val" id="dashStatMessages">—</div>
                 <div class="dash-stat-lbl">Unread Messages</div>
             </div>
-            <div class="dash-stat-card">
+            <div class="dash-stat-card dash-stat-clickable" onclick="renderDashListings('sold', document.querySelectorAll('#dashboardView .dash-tab')[2]); document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'});">
                 <div class="dash-stat-ico">✅</div>
                 <div class="dash-stat-val" id="dashStatSales">—</div>
                 <div class="dash-stat-lbl">Closed Sales</div>
             </div>
-            <div class="dash-stat-card dash-stat-green">
+            <div class="dash-stat-card dash-stat-green dash-stat-clickable" onclick="renderDashListings('sold', document.querySelectorAll('#dashboardView .dash-tab')[2]); document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'});">
                 <div class="dash-stat-ico">💰</div>
                 <div class="dash-stat-val" id="dashStatRevenue">—</div>
                 <div class="dash-stat-lbl">Revenue (30 days)</div>
