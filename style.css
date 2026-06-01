@@ -5049,9 +5049,27 @@ header {
     flex-shrink: 0;
     margin-right: 28px;
 }
-.pro-hdr-logo {
-    height: 34px;
-    width: auto;
+.pro-hdr-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+.pro-hdr-icon {
+    height: 30px;
+    width: 30px;
+    border-radius: 7px;
+    flex-shrink: 0;
+}
+.pro-hdr-wordmark {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+.pro-hdr-wordmark strong {
+    color: #f07020;
+    font-weight: 900;
 }
 .pro-hdr-pro-badge {
     background: #f07020;
