@@ -5015,11 +5015,7 @@ header {
     #filterDrawer .action-container { display: none; }
 
 
-    /* Dashboard: wider than main page — fills more of large monitors */
-    #dashboardView {
-        left: max(0px, calc(50vw - 900px)) !important;
-        right: max(0px, calc(50vw - 900px)) !important;
-    }
+    /* Dashboard: full viewport width — content width controlled by .dash-inner */
 }
 
 /* ============================================================
