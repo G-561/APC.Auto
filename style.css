@@ -5023,6 +5023,116 @@ header {
 /* ============================================================
    PRO DASHBOARD
    ============================================================ */
+
+/* ── Pro Header ─────────────────────────────────────────────── */
+#proHeader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 54px;
+    background: #1a1a2e;
+    border-bottom: 2px solid #f07020;
+    z-index: 3001;
+}
+.pro-hdr-inner {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 28px;
+    gap: 0;
+}
+.pro-hdr-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-right: 28px;
+}
+.pro-hdr-logo {
+    height: 26px;
+    width: auto;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+}
+.pro-hdr-pro-badge {
+    background: #f07020;
+    color: white;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.8px;
+}
+.pro-hdr-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+}
+.pro-hdr-link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    user-select: none;
+    position: relative;
+}
+.pro-hdr-link:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.9);
+}
+.pro-hdr-active {
+    background: rgba(240,112,32,0.15) !important;
+    color: #f07020 !important;
+}
+.pro-hdr-msg-badge {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    background: #ef4444;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+}
+.pro-hdr-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+.pro-hdr-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f07020;
+    color: white;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: opacity 0.15s;
+}
+.pro-hdr-avatar:hover { opacity: 0.85; }
+.pro-hdr-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .dtb-dashboard { color: var(--apc-blue) !important; font-weight: 800 !important; }
 .dash-hdr-btn {
     display: flex; align-items: center; gap: 6px;

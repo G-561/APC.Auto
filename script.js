@@ -10948,7 +10948,11 @@ function updateHeaderOffset() {
             if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
             if (helpDrawer)           helpDrawer.style.top           = totalH + 'px';
             if (authDrawer)           authDrawer.style.top           = totalH + 'px';
-            if (dashView)             dashView.style.top             = totalH + 'px';
+            if (dashView) {
+                const proHdr = document.getElementById('proHeader');
+                const proOpen = proHdr && proHdr.style.display !== 'none';
+                dashView.style.top = proOpen ? (proHdr.offsetHeight + 'px') : (totalH + 'px');
+            }
             if (rightPanel)           rightPanel.style.top           = totalH + 'px';
             if (accountDropdown)      accountDropdown.style.top      = (topBarH + 8) + 'px';
         }
@@ -11365,16 +11369,20 @@ let _dashJobsPollInterval = null;
 function openDashboard() {
     if (window.innerWidth < 900) return;
     setDtbActive('dtbDashboard');
-    const fd = document.getElementById('filterDrawer');
-    const rp = document.querySelector('.desktop-right-panel');
-    if (fd) fd.style.setProperty('display', 'none', 'important');
-    if (rp) rp.style.display = 'none';
+    const fd      = document.getElementById('filterDrawer');
+    const rp      = document.querySelector('.desktop-right-panel');
+    const topBar  = document.getElementById('desktopTopBar');
+    const hdr     = document.getElementById('mainHeader');
+    const proHdr  = document.getElementById('proHeader');
+    if (fd)     fd.style.setProperty('display', 'none', 'important');
+    if (rp)     rp.style.display = 'none';
+    if (topBar) topBar.style.setProperty('display', 'none', 'important');
+    if (hdr)    hdr.style.setProperty('display', 'none', 'important');
+    if (proHdr) { proHdr.style.display = 'block'; renderProHeader(); }
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
     const dv = document.getElementById('dashboardView');
     if (dv) {
-        const topBar = document.getElementById('desktopTopBar');
-        const hdr    = document.getElementById('mainHeader');
-        dv.style.top     = ((topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0)) + 'px';
+        dv.style.top     = (proHdr ? proHdr.offsetHeight : 54) + 'px';
         dv.style.display = 'block';
     }
     syncBackdrop();
@@ -11391,14 +11399,38 @@ function closeDashboard() {
     clearInterval(_dashJobsPollInterval);
     dv.style.display = 'none';
     setDtbActive(null);
+    const proHdr = document.getElementById('proHeader');
+    if (proHdr) proHdr.style.display = 'none';
     if (window.innerWidth >= 900) {
-        const fd = document.getElementById('filterDrawer');
-        const rp = document.querySelector('.desktop-right-panel');
-        if (fd) fd.style.removeProperty('display');
-        if (rp) rp.style.removeProperty('display');
+        const fd     = document.getElementById('filterDrawer');
+        const rp     = document.querySelector('.desktop-right-panel');
+        const topBar = document.getElementById('desktopTopBar');
+        const hdr    = document.getElementById('mainHeader');
+        if (fd)     fd.style.removeProperty('display');
+        if (rp)     rp.style.removeProperty('display');
+        if (topBar) topBar.style.removeProperty('display');
+        if (hdr)    hdr.style.removeProperty('display');
     }
     updateHeaderOffset();
     syncBackdrop();
+}
+
+function renderProHeader() {
+    const avatar = document.getElementById('proHdrAvatar');
+    if (!avatar) return;
+    const badge  = document.getElementById('proNavMsgBadge');
+    const unread = conversations.filter(c => c.unread).length;
+    if (badge) {
+        badge.textContent = unread || '';
+        badge.style.display = unread ? 'block' : 'none';
+    }
+    const profilePic = currentUserProfile?.avatar_url;
+    const initial    = (currentUserName || currentUserId || 'P')[0].toUpperCase();
+    if (profilePic) {
+        avatar.innerHTML = `<img src="${profilePic}" alt="avatar">`;
+    } else {
+        avatar.textContent = initial;
+    }
 }
 
 function setDemandPeriod(period) {
