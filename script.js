@@ -13571,8 +13571,27 @@ function _buildSlQualifiers() {
     const searched  = new Set(_slTabs.map(t => t.partName));
     const safeBase  = escapeHtml(base).replace(/'/g, "\\'");
 
-    // No qualifiers — show single "Select" checkbox (matches EDW pattern)
+    // No qualifiers — check for engine codes if in Engine assembly, otherwise show "Select"
     if (!qualifiers.length) {
+        const asmName = EDW_TAXONOMY[_slSelectedZone]?.assemblies[_slSelectedAsm]?.name || '';
+        const { make, model, series } = _slVehicle;
+        const engineCodes = (asmName === 'Engine' && make && model)
+            ? (VEHICLE_ENGINES?.[make]?.[model + (series ? ' ' + series : '')] || VEHICLE_ENGINES?.[make]?.[model] || [])
+            : [];
+
+        if (engineCodes.length) {
+            return engineCodes.map(code => {
+                const done    = searched.has(`${base} — ${code}`);
+                const safeCode = escapeHtml(code).replace(/'/g, "\\'");
+                return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
+                    <label class="sl-part-check" onclick="event.stopPropagation()">
+                        <input type="checkbox"${done ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','${safeCode}',this.checked)">
+                    </label>
+                    <span>${escapeHtml(code)}</span>
+                </div>`;
+            }).join('');
+        }
+
         const checked = searched.has(base);
         return `<div class="edw-panel-row sl-part-row${checked ? ' searched' : ''}">
             <label class="sl-part-check" onclick="event.stopPropagation()">
@@ -13691,19 +13710,23 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
                   listing_images(storage_path, position)`;
 
-    // Search A: own listings — direct, no listing_vehicles dependency
-    // Catches older listings that predate vehicle-linking or were listed without vehicle info
+    // Fetch vehicle-matching listing IDs first — used for both own and other-yard filtering
+    let vehicleIds = [];
+    if (make && model) {
+        const { data: vRows } = await sb
+            .from('listing_vehicles').select('listing_id').ilike('make', make).ilike('model', model);
+        vehicleIds = (vRows || []).map(v => v.listing_id).filter(Boolean);
+    }
+
+    // Search A: own listings — filter by vehicle when make+model selected
     let ownQ = sb.from('listings').select(cols)
         .eq('seller_id', currentUserId).eq('status', 'active')
         .ilike('title', `%${partBase}%`).order('created_at', { ascending: false }).limit(60);
     if (qualifier) ownQ = ownQ.ilike('title', `%${qualifier}%`);
+    if (make && model && vehicleIds.length) ownQ = ownQ.in('id', vehicleIds);
     ownQ = applyYearFilter(ownQ);
 
-    // Search B: other yards — via listing_vehicles (case-insensitive make/model match)
-    const { data: vRows } = await sb
-        .from('listing_vehicles').select('listing_id').ilike('make', make).ilike('model', model);
-    const vehicleIds = (vRows || []).map(v => v.listing_id).filter(Boolean);
-
+    // Search B: other yards — via listing_vehicles
     const promises = [ownQ];
     if (vehicleIds.length) {
         let otherQ = sb.from('listings').select(cols)
