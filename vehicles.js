@@ -818,6 +818,7 @@ const VEHICLE_DB = {
                   "Oxford","Oxford MO","Oxford Series V",
                   "Six","Ten"],
   "Nissan":      ["100NX","180SX","200SX","200SX S13","200SX S14","300ZX","300ZX Z31","300ZX Z32","350Z","370Z","Ariya","Bluebird","Bluebird 910","Bluebird U12","Bluebird U13","Bluebird U14","Cube","Cube Z10","Cube Z11","Cube Z12","Dualis","Elgrand","Elgrand E50","Elgrand E52","GT-R","Juke","Leaf","Maxima","Micra","Micra K11","Micra K12","Micra K13","Micra K14","Murano","Navara","Navara D21","Navara D22","Navara D40","Navara NP300","Note","Pathfinder","Pathfinder R50","Pathfinder R51","Pathfinder R52","Patrol","Patrol GQ","Patrol GU","Patrol Y62","Pintara","Prairie","Pulsar","Pulsar N13","Pulsar N14","Pulsar N15","Qashqai","Qashqai J10","Qashqai J11","Qashqai J12","Safari","Serena","Silvia","Silvia S12","Silvia S13","Silvia S14","Silvia S15","Skyline","Skyline R30","Skyline R31","Skyline R32","Skyline R33","Skyline R34","Skyline V35","Stagea","Stagea W30","Stagea M35","Stanza","Terrano","Terrano WD21","Terrano R50","Tiida","X-Trail","X-Trail T30","X-Trail T31","X-Trail T32","X-Trail T33","Z"],
+  "Noble":       ["M10","M12","M14","M15","M600"],
   "Peugeot":     ["1007","107","108","2008","206","207","208","3008","306","307","308","4007","4008","406","407","408","5008","508","607","807","Expert","Partner","Traveller"],
   "Porsche":     ["718 Boxster","718 Cayman","911","911 964","911 993","911 996","911 997","911 991","911 992","918","928","944","968","Boxster 986","Boxster 987","Cayman 987","Cayman 981","Cayenne","Cayenne 955","Cayenne 958","Cayenne 9YA","Cayenne E-Hybrid","Macan","Panamera","Taycan"],
   "RAM":         ["1500","2500","3500"],
@@ -1876,6 +1877,13 @@ const VEHICLE_YEAR_RANGES = {
     "X-Trail T32":     [[2013,2022]],
     "X-Trail T33":     [[2022,2024]],
     "Z":               [[2022,2024]],
+  },
+  "Noble": {
+    "M10":  [[1999,1999]],
+    "M12":  [[2001,2007]],
+    "M14":  [[2004,2004]],
+    "M15":  [[2006,2011]],
+    "M600": [[2011,2024]],
   },
   "Subaru": {
     "Impreza":    [[1992,2000],[2000,2007],[2007,2011],[2011,2016],[2016,2024]],
@@ -4863,6 +4871,14 @@ const VEHICLE_ENGINES = {
     "X-Trail T32":     ["MR20DE 2.0","R9M 2.0D","KR15DDT 1.5T"],
     "X-Trail T33":     ["KR15DDT 1.5T","MR20DD 2.0 e-Power"],
     "Z":               ["VR30DDTT 3.0TT V6"],
+  },
+
+  "Noble": {
+    "M10":  ["2.5 V6 Twin Turbo (Ford Duratec)"],
+    "M12":  ["2.5 V6 Twin Turbo (Ford Duratec)"],
+    "M14":  ["3.0 V6 Twin Turbo (Ford Duratec)"],
+    "M15":  ["3.0 V6 Twin Turbo (Ford Duratec)"],
+    "M600": ["4.4 V8 Twin Turbo (Yamaha SHO)"],
   },
 
   "Peugeot": {
