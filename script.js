@@ -11462,7 +11462,7 @@ let _proFolder = 'selling';
 let _proActiveConvId = null;
 
 function proShowView(viewId, navId) {
-    ['proEnquiriesView', 'proListingsView'].forEach(id => {
+    ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -11475,7 +11475,7 @@ function proShowView(viewId, navId) {
 }
 
 function proHideAllViews() {
-    ['proEnquiriesView', 'proListingsView'].forEach(id => {
+    ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -11728,9 +11728,16 @@ function proSendPhoto(event, convId) {
 }
 
 function proOpenStockLookup() {
-    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
-    document.getElementById('proNavStock')?.classList.add('pro-hdr-active');
-    openStockLookup();
+    if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
+    proShowView('proStockView', 'proNavStock');
+    _slVehicle = { make: '', model: '', year: '', series: '' };
+    _slTabs = []; _slActiveTab = -1;
+    _slSelectedZone = 0; _slSelectedAsm = 0; _slSelectedPartBase = null;
+    _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
+    try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
+    try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
+    _slRenderResultsArea();
+    _slLoadTodaysQuotes();
 }
 
 function proOpenEDW() {
@@ -13721,44 +13728,11 @@ let _slQuoteDebounce  = null;
 let _slProOnly        = false;     // when true, OTHER YARDS section filters to pro sellers only
 
 function openStockLookup() {
-    if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
-    _slVehicle = { make: '', model: '', year: '', series: '' };
-    _slTabs = []; _slActiveTab = -1;
-    _slSelectedZone = 0; _slSelectedAsm = 0; _slSelectedPartBase = null;
-    _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
-    const drawer = document.getElementById('stockLookupDrawer');
-    if (!drawer) return;
-    const topBar    = document.getElementById('desktopTopBar');
-    const hdr       = document.getElementById('mainHeader');
-    const proHdr    = document.getElementById('proHeader');
-    const proOpen   = proHdr && proHdr.style.display !== 'none';
-    const topOffset = proOpen
-        ? (proHdr.offsetHeight || 54)
-        : (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
-    const sideOffset = proOpen ? 0 : Math.max(0, Math.round(window.innerWidth / 2) - 800);
-    drawer.style.top    = topOffset + 'px';
-    drawer.style.left   = sideOffset + 'px';
-    drawer.style.right  = sideOffset + 'px';
-    drawer.style.bottom = '0';
-    drawer.style.width  = 'auto';
-    drawer.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
-    try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
-    _slRenderResultsArea();
-    _slLoadTodaysQuotes();
+    proOpenStockLookup();
 }
 
 function closeStockLookup() {
-    const drawer = document.getElementById('stockLookupDrawer');
-    if (drawer) drawer.classList.remove('active');
-    document.body.style.overflow = '';
-    // Reset Pro nav highlight back to Dashboard
-    const proHdr = document.getElementById('proHeader');
-    if (proHdr && proHdr.style.display !== 'none') {
-        document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
-        document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
-    }
+    proGoToDashboard();
 }
 
 function _slRenderVehicleBar() {

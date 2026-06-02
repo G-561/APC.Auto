@@ -246,6 +246,38 @@
         <div class="pro-lst-body" id="proLstBody"></div>
     </div>
 
+    <!-- Pro Stock Lookup View: full-screen stock lookup tool -->
+    <div id="proStockView" style="display:none; position:absolute; inset:0; z-index:5; flex-direction:column; overflow:hidden;">
+        <div class="sl-shell">
+            <div class="sl-header">
+                <div class="sl-header-title">Stock Lookup</div>
+                <button class="sl-close-btn" onclick="closeStockLookup()">✕</button>
+            </div>
+            <div class="sl-vehicle-bar" id="slVehicleBar"></div>
+            <div class="sl-main-area">
+                <div class="sl-left-col">
+                    <div class="sl-selector" id="slSelector"></div>
+                    <div class="sl-results-area" id="slResultsArea">
+                        <div class="sl-results-empty" id="slResultsEmpty">Select a vehicle and part to search</div>
+                        <div id="slTabBar" class="sl-tab-bar" style="display:none;"></div>
+                        <div id="slResultsContent" style="display:none; overflow-y:auto; flex:1 1 0%;"></div>
+                        <div id="slActionBar" class="sl-action-bar" style="display:none;"></div>
+                    </div>
+                </div>
+                <div class="sl-quotes-panel" id="slQuotesPanel">
+                    <div class="sl-qp-header">
+                        <span class="sl-qp-title">Today's Quotes</span>
+                    </div>
+                    <div class="sl-qp-search">
+                        <input type="text" id="slQuoteSearchInput" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
+                    </div>
+                    <div id="slQuotesList" class="sl-quotes-list"></div>
+                    <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="dash-inner" id="dashInner" style="height:100%; overflow-y:auto;">
 
         <div class="dash-page-hdr">
@@ -257,7 +289,7 @@
             </div>
             <div style="display:flex; align-items:center; gap:10px;">
                 <button onclick="openEdw()" class="dash-hdr-btn">+ Dismantle Vehicle</button>
-                <button class="dash-hdr-btn sl-dash-btn" onclick="openStockLookup()">🔍 Stock Lookup</button>
+                <button class="dash-hdr-btn sl-dash-btn" onclick="proOpenStockLookup()">🔍 Stock Lookup</button>
                 <button class="dash-hdr-btn" onclick="onMenuOpenSettings()">⚙ Settings</button>
             </div>
         </div>
@@ -356,36 +388,6 @@
 </div>
 
 <!-- Stock Lookup — dismantler parts search tool -->
-<div id="stockLookupDrawer" class="drawer" style="z-index:2100; border-radius:0;">
-    <div class="sl-shell">
-        <div class="sl-header">
-            <div class="sl-header-title">Stock Lookup</div>
-            <button class="sl-close-btn" onclick="closeStockLookup()">✕</button>
-        </div>
-        <div class="sl-vehicle-bar" id="slVehicleBar"></div>
-        <div class="sl-main-area">
-            <div class="sl-left-col">
-                <div class="sl-selector" id="slSelector"></div>
-                <div class="sl-results-area" id="slResultsArea">
-                    <div class="sl-results-empty" id="slResultsEmpty">Select a vehicle and part to search</div>
-                    <div id="slTabBar" class="sl-tab-bar" style="display:none;"></div>
-                    <div id="slResultsContent" style="display:none; overflow-y:auto; flex:1 1 0%;"></div>
-                    <div id="slActionBar" class="sl-action-bar" style="display:none;"></div>
-                </div>
-            </div>
-            <div class="sl-quotes-panel" id="slQuotesPanel">
-                <div class="sl-qp-header">
-                    <span class="sl-qp-title">Today's Quotes</span>
-                </div>
-                <div class="sl-qp-search">
-                    <input type="text" id="slQuoteSearchInput" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
-                </div>
-                <div id="slQuotesList" class="sl-quotes-list"></div>
-                <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- EDW — Electronic Dismantling Workflow -->
 <div id="edwDrawer" class="drawer" style="z-index:9100; border-radius:0;">
