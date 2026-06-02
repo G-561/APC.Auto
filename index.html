@@ -381,6 +381,20 @@
     </div>
 </nav>
 
+<!-- Vehicle Stock Card — full-screen management card for a dismantling vehicle -->
+<div id="vehicleStockCardOverlay" style="display:none; position:fixed; inset:0; z-index:3500; background:#f4f4f4; flex-direction:column; overflow:hidden;">
+    <div class="vsc-header">
+        <button class="vsc-back-btn" onclick="closeVehicleStockCard()">← Back</button>
+        <div class="vsc-header-title" id="vscTitle">Vehicle Stock Card</div>
+        <div class="vsc-header-actions">
+            <button class="vsc-action-btn" id="vscEdwBtn" onclick="">Open in EDW</button>
+        </div>
+    </div>
+    <div class="vsc-body" id="vscBody">
+        <div style="padding:40px;text-align:center;color:#aaa;">Loading…</div>
+    </div>
+</div>
+
 <div id="detailOverlay" class="drawer">
     <div class="detail-drag-handle-bar" id="detailDragHandleBar"><div class="detail-drag-handle"></div></div>
     <!-- Seller header — IDs added so JS can update name/avatar per listing -->

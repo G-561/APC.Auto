@@ -11853,6 +11853,10 @@ function _renderEdwStep1() {
                 <input id="edwStockNumber" class="edw-input" type="text" placeholder="e.g. VH2847, 2025-042" value="${escapeHtml(v.stockNumber || '')}" oninput="_edwSaveField('stockNumber', this.value)">
             </div>
             <div class="edw-field">
+                <label class="edw-label">Purchase Cost <span style="font-size:10px;font-weight:500;color:#aaa;text-transform:none;">(internal — not shown publicly)</span></label>
+                <div class="edw-price-wrap"><span class="edw-price-sym">$</span><input id="edwVehicleCost" class="edw-input edw-price-inp" type="number" min="0" step="1" placeholder="0" value="${v.vehicleCost || ''}" oninput="_edwSaveField('vehicleCost', this.value)"></div>
+            </div>
+            <div class="edw-field">
                 <label class="edw-label">Make *</label>
                 <select id="edwMake" class="edw-input" onchange="_edwOnMakeChange()">
                     <option value="">Select make…</option>
@@ -12225,6 +12229,7 @@ function _edwStartWalkaround(jobId) {
         transType: job.transmission_type || '', odometer: job.odometer || '',
         buildDate: job.build_date || '', colour: job.colour || '',
         stockNumber: job.stock_number || '', variant: job.variant || '',
+        vehicleCost: job.vehicle_cost ? String(job.vehicle_cost) : '',
         vehiclePhotos: job.vehicle_photos || [],
     };
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: false }));
@@ -12274,6 +12279,7 @@ async function _edwSaveToStock() {
         odometer: v.odometer ? Number(v.odometer) : null,
         build_date: v.buildDate || null, colour: v.colour || null,
         stock_number: v.stockNumber || null, variant: v.variant || null,
+        vehicle_cost: v.vehicleCost ? Number(v.vehicleCost) : null,
     }).select('id').single();
     if (error || !job) { showToast('Failed to save vehicle'); _renderEdwStep1(); return; }
     _edwJobId = job.id;
@@ -12944,6 +12950,7 @@ async function _edwPublish() {
             stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
             location: userSettings.location || null,
             postcode: userSettings.postcode || null,
+            dismantling_job_id: jobId || null,
         }).select('id').single();
 
         if (listing?.id) {
@@ -13430,40 +13437,63 @@ async function notifyWantedBuyer(btn) {
     }
 }
 
+let _dashSvJobs = [];
+
 async function renderDashStockVehicles() {
     const card = document.getElementById('dashStockVehiclesCard');
     if (!card || !sb || !currentUserId) return;
 
     const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, make, model, year, series, stock_number, created_at, colour, odometer')
+        .select('id, make, model, year, series, stock_number, created_at, colour, odometer, vehicle_cost')
         .eq('user_id', currentUserId)
         .eq('status', 'in_stock')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .order('created_at', { ascending: false });
 
-    if (!jobs?.length) { card.style.display = 'none'; return; }
+    _dashSvJobs = jobs || [];
+    if (!_dashSvJobs.length) { card.style.display = 'none'; return; }
     card.style.display = '';
-
-    const rows = jobs.map(j => {
-        const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
-        const meta  = [j.stock_number ? `#${escapeHtml(j.stock_number)}` : null, j.colour ? escapeHtml(j.colour) : null, j.odometer ? `${Number(j.odometer).toLocaleString()} km` : null].filter(Boolean).join(' · ');
-        const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-        return `
-        <div class="dash-sv-row">
-            <div class="dash-sv-info">
-                <div class="dash-sv-title">${escapeHtml(title)}</div>
-                <div class="dash-sv-meta">${meta ? meta + ' · ' : ''}${date}</div>
-            </div>
-            <button class="dash-sv-btn" onclick="proOpenEDW()">Dismantle →</button>
-        </div>`;
-    }).join('');
 
     card.innerHTML = `
         <div class="dash-card-hdr">
             <span class="dash-card-title">Vehicles in Stock</span>
-            <span class="dash-card-meta">${jobs.length} awaiting dismantling</span>
+            <span class="dash-card-meta" id="dashSvCount">${_dashSvJobs.length} awaiting dismantling</span>
         </div>
-        <div class="dash-sv-list">${rows}</div>`;
+        <input type="text" id="dashSvSearch" class="dash-wr-search"
+            placeholder="Search make, model, stock number…"
+            oninput="_dashSvFilter(this.value)">
+        <div class="dash-sv-list" id="dashSvList"></div>`;
+
+    _dashSvFilter('');
+}
+
+function _dashSvFilter(q) {
+    const list    = document.getElementById('dashSvList');
+    const countEl = document.getElementById('dashSvCount');
+    if (!list) return;
+    const lq = q.toLowerCase();
+    const filtered = q
+        ? _dashSvJobs.filter(j =>
+            (j.make || '').toLowerCase().includes(lq) ||
+            (j.model || '').toLowerCase().includes(lq) ||
+            (j.stock_number || '').toLowerCase().includes(lq) ||
+            String(j.year || '').includes(lq))
+        : _dashSvJobs;
+
+    if (countEl) countEl.textContent = `${filtered.length} vehicle${filtered.length !== 1 ? 's' : ''}`;
+
+    list.innerHTML = filtered.map(j => {
+        const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+        const meta  = [j.stock_number ? `#${j.stock_number}` : null, j.colour || null, j.odometer ? `${Number(j.odometer).toLocaleString()} km` : null].filter(Boolean).join(' · ');
+        const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        return `
+        <div class="dash-sv-row" onclick="openVehicleStockCard(${j.id})" style="cursor:pointer;">
+            <div class="dash-sv-info">
+                <div class="dash-sv-title">${escapeHtml(title)}</div>
+                <div class="dash-sv-meta">${meta ? escapeHtml(meta) + ' · ' : ''}${date}</div>
+            </div>
+            <span class="dash-sv-arrow">›</span>
+        </div>`;
+    }).join('') || `<div style="padding:16px 0;color:#aaa;font-size:13px;text-align:center;">No matches</div>`;
 }
 
 async function renderDashWantedRequests() {
@@ -13522,6 +13552,135 @@ function _dashWrFilter(q) {
                 onclick="listFromWanted(this.dataset.id,this.dataset.part,this.dataset.cat,this.dataset.make,this.dataset.model,this.dataset.year)">List This Part ›</button>
         </div>`;
     }).join('');
+}
+
+// ─── Vehicle Stock Card ───────────────────────────────────────────────────────
+async function openVehicleStockCard(jobId) {
+    const overlay = document.getElementById('vehicleStockCardOverlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    const body = document.getElementById('vscBody');
+    const titleEl = document.getElementById('vscTitle');
+    if (body) body.innerHTML = `<div style="padding:40px;text-align:center;color:#aaa;">Loading…</div>`;
+
+    const edwBtn = document.getElementById('vscEdwBtn');
+    if (edwBtn) edwBtn.onclick = () => { closeVehicleStockCard(); _edwLoadAndOpen(jobId); };
+
+    if (!sb || !currentUserId) return;
+
+    const [{ data: job }, { data: parts }] = await Promise.all([
+        sb.from('dismantling_jobs').select('*').eq('id', jobId).single(),
+        sb.from('listings')
+            .select('id, title, price, status, category, stock_number, created_at')
+            .eq('dismantling_job_id', jobId)
+            .order('created_at', { ascending: false }),
+    ]);
+
+    if (!job) { if (body) body.innerHTML = `<div style="padding:40px;text-align:center;color:#aaa;">Vehicle not found.</div>`; return; }
+
+    const vehicleLabel = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}`.trim();
+    if (titleEl) titleEl.textContent = vehicleLabel || 'Stock Card';
+
+    const allParts  = parts || [];
+    const active    = allParts.filter(p => p.status === 'active' || p.status === 'pending');
+    const sold      = allParts.filter(p => p.status === 'sold');
+    const cost      = job.vehicle_cost ? Number(job.vehicle_cost) : null;
+    const soldRev   = sold.reduce((s, p) => s + Number(p.price || 0), 0);
+    const activeVal = active.reduce((s, p) => s + Number(p.price || 0), 0);
+    const profit    = cost != null ? soldRev - cost : null;
+
+    const photos = (job.vehicle_photos || []).slice(0, 6);
+    const photoStrip = photos.length
+        ? `<div class="vsc-photos">${photos.map(u => `<img class="vsc-photo" src="${escapeHtml(u)}" alt="" onclick="window.open('${escapeHtml(u)}','_blank')">`).join('')}</div>`
+        : '';
+
+    const fmtMoney = (n) => n != null ? `$${Number(n).toLocaleString('en-AU')}` : '—';
+    const profitCls = profit == null ? '' : profit >= 0 ? 'vsc-profit-pos' : 'vsc-profit-neg';
+    const profitSign = profit == null ? '' : profit >= 0 ? '+' : '';
+
+    const details = [
+        ['Make', job.make], ['Model', job.model], ['Year', job.year],
+        ['Series', job.series], ['Body Type', job.body_type],
+        ['Colour', job.colour], ['Odometer', job.odometer ? `${Number(job.odometer).toLocaleString()} km` : null],
+        ['Engine Code', job.engine_code], ['Transmission', job.transmission_type || job.transmission_code],
+        ['VIN / Chassis', job.vin], ['Paint Code', job.paint_code],
+        ['Build Date', job.build_date], ['Stock Number', job.stock_number],
+    ].filter(([, v]) => v);
+
+    const partsRows = allParts.length ? allParts.map(p => {
+        const statusCls = { active:'vsc-part-active', pending:'vsc-part-pending', sold:'vsc-part-sold' }[p.status] || '';
+        const statusLabel = { active:'Active', pending:'Pending', sold:'Sold' }[p.status] || p.status;
+        return `<tr class="vsc-part-row" onclick="openItemDetail('${p.id}')">
+            <td class="vsc-part-name">${escapeHtml(p.title)}</td>
+            <td class="vsc-part-sn">${escapeHtml(p.stock_number || '—')}</td>
+            <td class="vsc-part-price">${fmtMoney(p.price)}</td>
+            <td><span class="vsc-status-chip ${statusCls}">${statusLabel}</span></td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;">No parts listed yet — open in EDW to start dismantling.</td></tr>`;
+
+    body.innerHTML = `
+        ${photoStrip}
+        <div class="vsc-grid">
+            <div class="vsc-card">
+                <div class="vsc-section-title">Vehicle Details</div>
+                <dl class="vsc-dl">
+                    ${details.map(([k, v]) => `<div class="vsc-dl-row"><dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd></div>`).join('')}
+                </dl>
+            </div>
+            <div class="vsc-card">
+                <div class="vsc-section-title">Financial Summary</div>
+                <dl class="vsc-dl">
+                    <div class="vsc-dl-row"><dt>Purchase Cost</dt><dd class="vsc-cost-val" data-job-id="${jobId}">${fmtMoney(cost)}</dd></div>
+                    <div class="vsc-dl-row"><dt>Parts Sold (${sold.length})</dt><dd>${fmtMoney(soldRev)}</dd></div>
+                    <div class="vsc-dl-row"><dt>Active Listings (${active.length})</dt><dd style="color:#888;">${fmtMoney(activeVal)}</dd></div>
+                </dl>
+                <div class="vsc-profit-banner ${profitCls}">
+                    <span class="vsc-profit-label">Profit to date</span>
+                    <span class="vsc-profit-val">${profit != null ? profitSign + fmtMoney(profit) : 'Enter purchase cost to calculate'}</span>
+                </div>
+                ${cost == null ? `<button class="vsc-set-cost-btn" onclick="_vscSetCost(${jobId})">Set Purchase Cost</button>` : `<button class="vsc-set-cost-btn" onclick="_vscSetCost(${jobId})">Edit Purchase Cost</button>`}
+            </div>
+        </div>
+        <div class="vsc-card vsc-parts-card">
+            <div class="vsc-parts-hdr">
+                <span class="vsc-section-title" style="margin-bottom:0;">Parts (${allParts.length})</span>
+                <span class="vsc-parts-summary">
+                    <span class="vsc-status-chip vsc-part-active">${active.length} active</span>
+                    <span class="vsc-status-chip vsc-part-sold">${sold.length} sold</span>
+                </span>
+            </div>
+            <table class="vsc-parts-table">
+                <thead><tr><th>Part</th><th>Stock No.</th><th>Price</th><th>Status</th></tr></thead>
+                <tbody>${partsRows}</tbody>
+            </table>
+        </div>`;
+}
+
+function closeVehicleStockCard() {
+    const overlay = document.getElementById('vehicleStockCardOverlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+async function _vscSetCost(jobId) {
+    const current = document.querySelector(`.vsc-cost-val[data-job-id="${jobId}"]`)?.textContent?.replace('$','').replace(/,/g,'').trim();
+    const val = prompt('Enter purchase cost for this vehicle ($):', current === '—' ? '' : current);
+    if (val === null) return;
+    const num = parseFloat(val);
+    if (isNaN(num) || num < 0) { showToast('Enter a valid amount'); return; }
+    await sb.from('dismantling_jobs').update({ vehicle_cost: num }).eq('id', jobId);
+    showToast('Purchase cost saved');
+    openVehicleStockCard(jobId);
+}
+
+async function _edwLoadAndOpen(jobId) {
+    const { data: job } = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
+    if (!job) { showToast('Vehicle not found'); return; }
+    _edwStock = [job];
+    _edwStartWalkaround(jobId);
+    proOpenEDW();
 }
 
 async function openJobReview(jobId) {
@@ -13655,6 +13814,7 @@ async function _jrPublish(jobId) {
             stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
             location: userSettings.location || null,
             postcode: userSettings.postcode || null,
+            dismantling_job_id: jobId || null,
         }).select('id').single();
 
         if (listing?.id) {
