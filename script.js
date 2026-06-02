@@ -12106,26 +12106,27 @@ function _fileToBase64(file) {
 
 function _edwOnMakeChange() {
     const make = document.getElementById('edwMake')?.value;
-    _edwVehicle.make   = make;
-    _edwVehicle.model  = '';
-    _edwVehicle.year   = '';
-    _edwVehicle.series = '';
+    _edwVehicle.make = make;
+    _edwVehicle.model = _edwVehicle.year = _edwVehicle.series = _edwVehicle.engineCode = '';
     const modelSel = document.getElementById('edwModel');
     if (modelSel) modelSel.innerHTML = buildModelOptions(make, '');
     const yearSel = document.getElementById('edwYear');
     if (yearSel) yearSel.innerHTML = buildYearOptions('');
     _edwRefreshSeries();
+    const ecWrap = document.getElementById('edwEngineCodeWrap');
+    if (ecWrap) ecWrap.innerHTML = _buildEngineCodeField('edw', make, '', '');
 }
 
 function _edwOnModelChange() {
     const make  = document.getElementById('edwMake')?.value;
     const model = document.getElementById('edwModel')?.value;
-    _edwVehicle.model  = model;
-    _edwVehicle.year   = '';
-    _edwVehicle.series = '';
+    _edwVehicle.model = model;
+    _edwVehicle.year = _edwVehicle.series = _edwVehicle.engineCode = '';
     const yearSel = document.getElementById('edwYear');
     if (yearSel) yearSel.innerHTML = buildYearOptionsForModel(make, model, '');
     _edwRefreshSeries();
+    const ecWrap = document.getElementById('edwEngineCodeWrap');
+    if (ecWrap) ecWrap.innerHTML = _buildEngineCodeField('edw', make, model, '');
 }
 
 function _edwOnYearChange() {
@@ -12164,6 +12165,18 @@ function _edwRefreshSeries() {
 
 function _edwSaveField(field, value) {
     _edwVehicle[field] = value;
+}
+
+function _buildEngineCodeField(prefix, make, model, currentVal) {
+    const engines = (typeof VEHICLE_ENGINES !== 'undefined' && VEHICLE_ENGINES[make]?.[model]) || [];
+    const id = `${prefix}EngineCode`;
+    if (engines.length) {
+        const opts = ['<option value="">Select engine code…</option>',
+            ...engines.map(e => `<option value="${escapeHtml(e)}"${e === currentVal ? ' selected' : ''}>${escapeHtml(e)}</option>`)
+        ].join('');
+        return `<select id="${id}" class="edw-input" onchange="_edwSaveField('engineCode',this.value)">${opts}</select>`;
+    }
+    return `<input id="${id}" class="edw-input" type="text" maxlength="60" placeholder="e.g. 1GR-FE, RB26DETT" value="${escapeHtml(currentVal || '')}" oninput="_edwSaveField('engineCode',this.value)">`;
 }
 
 function _edwStep1Next() {
