@@ -11477,11 +11477,32 @@ function proOpenConv(id) {
                     <div class="pro-mail-thread-meta">Conversation with ${otherName}${part ? ' · $' + Number(part.price||0).toLocaleString() : ''}</div>
                 </div>
                 <div class="pro-mail-thread-msgs" id="proThreadMsgs"></div>
+                ${isSelling ? `<div class="pro-quote-form" id="proQuoteForm-${id}">
+                    <div class="pro-qf-header">
+                        <span class="pro-qf-title">Send Quote</span>
+                        <span class="pro-qf-num-label">Ref: <strong id="proQuoteNum-${id}"></strong></span>
+                    </div>
+                    <div class="pro-qf-fields">
+                        <div class="pro-qf-field" style="max-width:110px">
+                            <label class="pro-qf-label">Price $</label>
+                            <input id="proQuotePrice-${id}" type="number" min="0" step="1" class="pro-qf-price" placeholder="0">
+                        </div>
+                        <div class="pro-qf-field">
+                            <label class="pro-qf-label">Terms / notes</label>
+                            <input id="proQuoteNotes-${id}" type="text" class="pro-qf-notes" placeholder="e.g. freight included · pickup only · valid 7 days">
+                        </div>
+                    </div>
+                    <div class="pro-qf-actions">
+                        <button class="cta-btn" style="font-size:12px;padding:9px 20px;" onclick="proSendQuote(${id})">Send Quote →</button>
+                        <button class="pro-mail-photo-btn" style="font-size:12px;padding:7px 14px;" onclick="proCloseQuoteForm(${id})">Cancel</button>
+                    </div>
+                </div>` : ''}
                 <div class="pro-mail-thread-reply">
                     <input type="file" id="proPhotoInput${id}" accept="image/*" style="display:none" onchange="proSendPhoto(event,${id})">
                     <button class="pro-mail-photo-btn" onclick="document.getElementById('proPhotoInput${id}').click()" title="Attach photo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </button>
+                    ${isSelling ? `<button class="pro-mail-quote-btn" onclick="proOpenQuoteForm(${id})">Quote</button>` : ''}
                     <textarea class="pro-mail-reply-input" id="proReplyInput" placeholder="Reply…" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();proSendReply(${id});}"></textarea>
                     <button class="pro-mail-reply-send" onclick="proSendReply(${id})">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -11549,8 +11570,10 @@ function proRenderThreadMsgs(conv) {
         const initial = isSent
             ? (isBuyer ? (conv.buyerName||'Y')[0] : (conv.sellerName||'Y')[0]).toUpperCase()
             : (isBuyer ? (conv.sellerName||'S')[0] : (conv.buyerName||'B')[0]).toUpperCase();
-        const content = m.offerData
-            ? `<div style="font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.2);border-radius:8px;">Offer: $${m.offerData.offerPrice}</div>`
+        const content = m.offerCard?.type === 'quote'
+            ? buildQuoteCardHTML(m.offerCard)
+            : m.offerCard
+            ? `<div style="font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.2);border-radius:8px;">Offer: $${m.offerCard.offerPrice}</div>`
             : m.photoUrl
             ? `<img src="${escapeHtml(m.photoUrl)}" style="max-width:200px;border-radius:8px;" alt="photo">`
             : escapeHtml(m.text || '');
@@ -11577,6 +11600,83 @@ function proSendReply(convId) {
     saveConversations();
     proRenderThreadMsgs(conv);
     syncMessageToSupabase(conv.supabaseConvId, text, conv.buyerId === currentUserId).catch(() => {});
+}
+
+async function proOpenQuoteForm(convId) {
+    const form  = document.getElementById(`proQuoteForm-${convId}`);
+    const numEl = document.getElementById(`proQuoteNum-${convId}`);
+    if (!form) return;
+    form.style.display = 'flex';
+    if (numEl && !numEl.textContent) {
+        numEl.textContent = '…';
+        numEl.textContent = await _slGenerateQuoteNumber();
+    }
+    document.getElementById(`proQuotePrice-${convId}`)?.focus();
+}
+
+function proCloseQuoteForm(convId) {
+    const form = document.getElementById(`proQuoteForm-${convId}`);
+    if (form) form.style.display = 'none';
+}
+
+async function proSendQuote(convId) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv || !sb) return;
+    const quoteNum = document.getElementById(`proQuoteNum-${convId}`)?.textContent?.trim();
+    const price    = parseFloat(document.getElementById(`proQuotePrice-${convId}`)?.value);
+    const notes    = document.getElementById(`proQuoteNotes-${convId}`)?.value.trim() || '';
+    if (!quoteNum || quoteNum === '…' || isNaN(price) || price <= 0) { showToast('Enter a price to send a quote'); return; }
+
+    const partTitle = getConvPartTitle(conv);
+
+    // Create quote record in DB
+    const { data: quoteRow, error: qErr } = await sb.from('quotes').insert({
+        quote_number: quoteNum, user_id: currentUserId, status: 'sent',
+        customer_name: conv.buyerName || conv.with || null,
+        notes: notes || null, freight_cost: 0,
+    }).select().single();
+    if (qErr) { showToast('Could not create quote: ' + qErr.message); return; }
+
+    // Add the part as a line item
+    if (conv.partId && conv.partId !== 'general') {
+        await sb.from('quote_lines').insert({
+            quote_id: quoteRow.id, listing_id: Number(conv.partId),
+            title: partTitle, price, qty: 1,
+        }).catch(() => {});
+    }
+
+    // Keep Today's Quotes in sync
+    if (!_slQuotes.find(q => q.id === quoteRow.id)) _slQuotes.unshift(quoteRow);
+    _slRenderQuotesList();
+
+    const quoteData = { type: 'quote', quoteNumber: quoteNum, price, notes, partTitle, listingId: conv.partId };
+    const text = `Quote ${quoteNum}: $${price.toLocaleString('en-AU')}${notes ? ' — ' + notes : ''}`;
+
+    conv.msgs = conv.msgs || [];
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, text, offerCard: quoteData, time: 'Today', clock: nowClock(), timestamp: Date.now() });
+    saveConversations();
+    proCloseQuoteForm(convId);
+    proRenderThreadMsgs(conv);
+
+    const isBuyer = conv.buyerId === currentUserId;
+    sb.from('messages').insert({
+        conversation_id: conv.supabaseConvId, sender_id: currentUserId,
+        sender_name: currentUserName, text, offer_data: quoteData,
+    }).then(() => sb.from('conversations').update({
+        last_message_at: new Date().toISOString(),
+        unread_buyer: !isBuyer, unread_seller: !!isBuyer,
+    }).eq('id', conv.supabaseConvId)).catch(() => {});
+}
+
+function buildQuoteCardHTML(q) {
+    const qNum  = q.quoteNumber || q.quote_number || '';
+    const price = q.price != null ? `$${Number(q.price).toLocaleString('en-AU')}` : '';
+    const meta  = [price, q.notes ? escapeHtml(q.notes) : ''].filter(Boolean).join(' · ');
+    return `<div class="sl-quote-card" style="margin:0;cursor:default;max-width:240px;">
+        <div><span class="sl-quote-num">${escapeHtml(qNum)}</span><span class="sl-quote-badge sent">SENT</span></div>
+        ${q.partTitle ? `<div class="sl-quote-meta">${escapeHtml(q.partTitle)}</div>` : ''}
+        ${meta ? `<div class="sl-quote-meta" style="font-weight:600;color:#333;">${meta}</div>` : ''}
+    </div>`;
 }
 
 function proEnquiriesIsOpen() {
@@ -14600,7 +14700,7 @@ async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerNa
 
     if (existing) {
         const { data: msgs } = await sb.from('messages')
-            .select('id, sender_id, text, photo_url, created_at')
+            .select('id, sender_id, text, photo_url, offer_data, created_at')
             .eq('conversation_id', existing.id).order('created_at', { ascending: true });
         conv = {
             id: nextConvId(), supabaseConvId: existing.id,
@@ -14609,7 +14709,10 @@ async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerNa
         };
         conv.msgs = (msgs || []).map((m, i) => ({
             id: i + 1, supabaseMsgId: m.id, sent: m.sender_id === currentUserId,
-            text: m.text || '', time: formatMsgDate(m.created_at), clock: formatMsgTime(m.created_at),
+            text: m.text || '',
+            ...(m.photo_url  ? { photo: m.photo_url }     : {}),
+            ...(m.offer_data ? { offerCard: m.offer_data } : {}),
+            time: formatMsgDate(m.created_at), clock: formatMsgTime(m.created_at),
         }));
         conversations.unshift(conv);
         saveConversations();
@@ -14646,6 +14749,12 @@ function _slChatRender() {
         return;
     }
     el.innerHTML = conv.msgs.map(m => {
+        if (m.offerCard?.type === 'quote') {
+            return `<div class="sl-cf-msg ${m.sent ? 'sent' : 'recv'}">
+                ${buildQuoteCardHTML(m.offerCard)}
+                <div class="sl-cf-time">${m.clock || m.time || ''}</div>
+            </div>`;
+        }
         const bubble = m.text ? escapeHtml(m.text) : (m.photo ? `<img src="${escapeHtml(m.photo)}" style="max-width:180px;border-radius:6px;" alt="">` : '');
         return `<div class="sl-cf-msg ${m.sent ? 'sent' : 'recv'}">
             <div class="sl-cf-bubble">${bubble}</div>
