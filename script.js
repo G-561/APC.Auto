@@ -2749,6 +2749,7 @@ function closeInboxOrThread() {
     } else {
         const drawer = document.getElementById('inboxDrawer');
         if (drawer?.classList.contains('pro-full')) {
+            ['left','right','bottom','width','maxWidth','borderRadius','boxShadow'].forEach(p => drawer.style.removeProperty(p));
             drawer.classList.remove('pro-full');
             document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
             document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
@@ -11450,12 +11451,12 @@ function exitProMode() {
 }
 
 function proGoToDashboard() {
-    // Close and de-promote any full-screen drawers
+    // Close and de-promote any full-screen drawers, clearing inline overrides
     document.querySelectorAll('.pro-full').forEach(el => {
+        ['left','right','bottom','width','maxWidth','borderRadius','boxShadow'].forEach(p => el.style.removeProperty(p));
         el.classList.remove('pro-full', 'active');
     });
     document.body.style.overflow = '';
-    // Reset nav active state
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
     syncBackdrop();
@@ -11465,7 +11466,15 @@ function proPromoteDrawer(drawerId, navId) {
     const drawer = document.getElementById(drawerId);
     if (!drawer) return;
     drawer.classList.add('pro-full');
-    updateHeaderOffset();
+    // Force layout inline — overrides any CSS + updateHeaderOffset competition
+    drawer.style.left         = '0';
+    drawer.style.right        = '0';
+    drawer.style.top          = '54px';
+    drawer.style.bottom       = '0';
+    drawer.style.width        = 'auto';
+    drawer.style.maxWidth     = 'none';
+    drawer.style.borderRadius = '0';
+    drawer.style.boxShadow    = 'none';
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById(navId)?.classList.add('pro-hdr-active');
 }
