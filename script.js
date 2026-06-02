@@ -11593,10 +11593,14 @@ function proOpenConv(id) {
             <div class="pro-mail-empty-msg">
                 <div class="pro-mail-thread-hdr">
                     <div class="pro-mail-thread-title">${partTitle}</div>
-                    <div class="pro-mail-thread-meta">Conversation with ${otherName}${part ? ' · $' + Number(part.price).toLocaleString() : ''}</div>
+                    <div class="pro-mail-thread-meta">Conversation with ${otherName}${part ? ' · $' + Number(part.price||0).toLocaleString() : ''}</div>
                 </div>
                 <div class="pro-mail-thread-msgs" id="proThreadMsgs"></div>
                 <div class="pro-mail-thread-reply">
+                    <input type="file" id="proPhotoInput${id}" accept="image/*" style="display:none" onchange="proSendPhoto(event,${id})">
+                    <button class="pro-mail-photo-btn" onclick="document.getElementById('proPhotoInput${id}').click()" title="Attach photo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </button>
                     <textarea class="pro-mail-reply-input" id="proReplyInput" placeholder="Reply…" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();proSendReply(${id});}"></textarea>
                     <button class="pro-mail-reply-send" onclick="proSendReply(${id})">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -11604,7 +11608,7 @@ function proOpenConv(id) {
                 </div>
             </div>`;
         proRenderThreadMsgs(conv);
-        refreshInboxContextPanel(conv, part);
+        proRenderContextPanel(conv, part);
     }
 
     // Mark as read
@@ -11617,16 +11621,45 @@ function proOpenConv(id) {
     }
 }
 
+function proRenderContextPanel(conv, part) {
+    const panel = document.getElementById('proInboxContextPanel');
+    if (!panel) return;
+    if (!part || conv?.partId === 'general') {
+        panel.innerHTML = `<div class="pro-ctx-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><div>No listing linked</div></div>`;
+        return;
+    }
+    const img    = part.images?.[0] || '';
+    const status = (part.status || 'active').toUpperCase();
+    const statusClass = part.status === 'sold' ? 'status-sold' : part.status === 'pending' ? 'status-pending' : 'inbox-context-status';
+    panel.innerHTML = `
+        ${img ? `<img src="${escapeHtml(img)}" class="inbox-context-img" alt="${escapeHtml(part.title)}">` : ''}
+        <div class="inbox-context-info">
+            <div class="inbox-context-status ${statusClass}">${status}</div>
+            <div class="inbox-context-title">${escapeHtml(part.title)}</div>
+            <div class="inbox-context-price">$${Number(part.price || 0).toLocaleString()}</div>
+            <div class="inbox-context-with">Conversation with ${escapeHtml(conv.buyerName || conv.sellerName || 'Buyer')}</div>
+            <button class="cta-btn" style="margin-top:14px; font-size:12px; padding:10px 0;" onclick="openDetailOverlay('${part.id}')">View Listing →</button>
+        </div>`;
+}
+
 function proRenderThreadMsgs(conv) {
     const container = document.getElementById('proThreadMsgs');
     if (!container || !conv.msgs) return;
+    const isBuyer = conv.buyerId === currentUserId;
     container.innerHTML = conv.msgs.map(m => {
         const isSent = m.sent;
-        const initial = isSent ? (conv.sellerName || 'S')[0].toUpperCase() : (conv.buyerName || 'B')[0].toUpperCase();
+        const initial = isSent
+            ? (isBuyer ? (conv.buyerName||'Y')[0] : (conv.sellerName||'Y')[0]).toUpperCase()
+            : (isBuyer ? (conv.sellerName||'S')[0] : (conv.buyerName||'B')[0]).toUpperCase();
+        const content = m.offerData
+            ? `<div style="font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.2);border-radius:8px;">Offer: $${m.offerData.offerPrice}</div>`
+            : m.photoUrl
+            ? `<img src="${escapeHtml(m.photoUrl)}" style="max-width:200px;border-radius:8px;" alt="photo">`
+            : escapeHtml(m.text || '');
         return `<div class="pro-mail-msg${isSent ? ' sent' : ''}">
             <div class="pro-mail-msg-avatar">${initial}</div>
             <div>
-                <div class="pro-mail-msg-bubble">${escapeHtml(m.text || '')}</div>
+                <div class="pro-mail-msg-bubble">${content}</div>
                 <div class="pro-mail-msg-time">${m.clock || m.time || ''}</div>
             </div>
         </div>`;
@@ -11646,6 +11679,24 @@ function proSendReply(convId) {
     saveConversations();
     proRenderThreadMsgs(conv);
     syncMessageToSupabase(conv.supabaseConvId, text, conv.buyerId === currentUserId).catch(() => {});
+}
+
+function proSendPhoto(event, convId) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const base64 = e.target.result;
+        conv.msgs = conv.msgs || [];
+        conv.msgs.push({ id: nextMsgId(conv), sent: true, text: '', photoUrl: base64, time: 'Today', clock: nowClock(), timestamp: Date.now() });
+        saveConversations();
+        proRenderThreadMsgs(conv);
+        syncPhotoMessageToSupabase(conv, base64, conv.buyerId === currentUserId).catch(() => {});
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
 }
 
 function proOpenEDW() {

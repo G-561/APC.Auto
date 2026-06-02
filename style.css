@@ -5245,6 +5245,13 @@ header {
 .pro-mail-reply-send { width: 36px; height: 36px; border-radius: 50%; background: #f07020; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
 .pro-mail-reply-send:hover { background: #d95f10; }
 .pro-mail-empty-list { padding: 48px 16px; text-align: center; color: #bbb; font-size: 13px; }
+.pro-mail-photo-btn { background: none; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 7px 9px; cursor: pointer; color: #888; display: flex; align-items: center; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
+.pro-mail-photo-btn:hover { border-color: #f07020; color: #f07020; }
+/* Cap thread width on large monitors so bubbles don't stretch */
+.pro-mail-empty-msg { max-width: 680px; flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+/* Wider context panel in Pro view */
+#proInboxContextPanel { width: 360px !important; flex-shrink: 0; }
+.pro-ctx-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; height: 100%; color: #ccc; font-size: 12px; font-weight: 600; padding: 20px; text-align: center; }
 
 /* ── Pro Full-Screen drawer — promoted from drawer to content pane ─── */
 @media (min-width: 900px) {
