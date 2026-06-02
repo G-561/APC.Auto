@@ -11442,12 +11442,18 @@ function proRenderConvList(filter) {
         const isUnread  = c.unread;
         const ts        = lastMsg?.timestamp ? relativeTime(new Date(lastMsg.timestamp)) : '';
         const dot       = isUnread ? '<div class="pro-mail-unread-dot"></div>' : '';
-        return `<div class="pro-mail-row${c.id === _proActiveConvId ? ' active' : ''}${isUnread ? ' unread' : ''}" onclick="proOpenConv(${c.id})">
+        return `<div class="pro-mail-row${c.id === _proActiveConvId ? ' active' : ''}${isUnread ? ' unread' : ''}${c.flagged ? ' flagged' : ''}" onclick="proOpenConv(${c.id})">
             ${dot}
             <div class="pro-mail-avatar">${initial}</div>
             <div class="pro-mail-row-body">
                 <div class="pro-mail-row-top">
                     <div class="pro-mail-sender">${otherName}</div>
+                    <div class="pro-mail-row-actions">
+                        <button class="pro-mail-row-act${c.flagged ? ' flagged' : ''}" onclick="event.stopPropagation();proFlagConv(${c.id})" title="${c.flagged ? 'Unflag' : 'Flag'}">⚑</button>
+                        <button class="pro-mail-row-act" onclick="event.stopPropagation();proDeleteConv(${c.id})" title="Delete">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </button>
+                    </div>
                     <div class="pro-mail-time">${ts}</div>
                 </div>
                 <div class="pro-mail-subject">${partTitle}</div>
@@ -11455,6 +11461,24 @@ function proRenderConvList(filter) {
             </div>
         </div>`;
     }).join('');
+}
+
+function proFlagConv(id) {
+    const conv = conversations.find(c => c.id === id);
+    if (!conv) return;
+    conv.flagged = !conv.flagged;
+    saveConversations();
+    proRenderConvList();
+}
+
+function proDeleteConv(id) {
+    deleteConversation(id);
+    if (_proActiveConvId === id) {
+        _proActiveConvId = null;
+        proShowThreadEmpty();
+    }
+    proRenderConvList();
+    proUpdateFolderBadges();
 }
 
 function proShowThreadEmpty() {

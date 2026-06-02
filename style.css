@@ -5214,6 +5214,12 @@ header {
 .pro-mail-row.unread .pro-mail-sender  { font-weight: 800; color: #111; }
 .pro-mail-row.unread .pro-mail-subject { font-weight: 700; color: #111; }
 .pro-mail-row.unread .pro-mail-time    { color: #444; font-weight: 700; }
+.pro-mail-row.flagged { border-left: 3px solid #f07020; }
+.pro-mail-row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; flex-shrink: 0; }
+.pro-mail-row:hover .pro-mail-row-actions { opacity: 1; }
+.pro-mail-row-act { background: none; border: none; cursor: pointer; color: #bbb; font-size: 13px; padding: 3px 5px; border-radius: 4px; line-height: 1; display: flex; align-items: center; transition: color 0.1s, background 0.1s; }
+.pro-mail-row-act:hover { color: #555; background: #f0f0f0; }
+.pro-mail-row-act.flagged { color: #f07020; opacity: 1; }
 .pro-mail-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #f07020; flex-shrink: 0; margin-top: 5px; }
 .pro-mail-thread-col {
     flex: 1; display: flex; flex-direction: row; overflow: hidden; background: white;
