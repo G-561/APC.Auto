@@ -11590,7 +11590,7 @@ async function proRenderContextPanel(conv, part) {
             <div class="inbox-context-price">$${Number(part.price || 0).toLocaleString()}</div>
             ${stockMeta ? `<div class="inbox-context-stock">${stockMeta}</div>` : ''}
             <div class="inbox-context-with">Conversation with ${escapeHtml(conv.buyerName || conv.sellerName || 'Buyer')}</div>
-            <button class="cta-btn" style="margin-top:14px; font-size:12px; padding:10px 0;" onclick="openItemDetail(${part.id || part.supabaseId}, false, true)">View Listing →</button>
+            <button class="inbox-context-view-btn" onclick="openItemDetail(${part.id || part.supabaseId}, false, true)">View Listing →</button>
         </div>`;
 }
 
