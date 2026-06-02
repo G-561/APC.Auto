@@ -11601,7 +11601,9 @@ function proOpenStockLookup() {
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = -1; _slSelectedPartBase = null;
     _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
-    _slColWidths = null; // recompute column widths against current styles
+    _slColWidths = null;    // recompute column widths against current styles
+    _slSearchHistory = []; // fresh session log
+    _slRenderSearchHistory();
     try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
     try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
     _slRenderResultsArea();
@@ -14100,6 +14102,7 @@ let _slSelectedPartBase = null; // { base, qualifiers[] } — selected part in c
 let _slTabs           = [];   // [{ partName, results:[], loading:false, error:null }]
 let _slActiveTab      = -1;
 let _slStockDebounce  = null;
+let _slSearchHistory  = [];   // session log: { partName, vehicle, time, tabIdx, found }
 let _slColWidths      = null; // computed once from full taxonomy — never recalculated
 let _slSelected       = new Map(); // listingId -> { title, price, stock_number }
 let _slResultsMap     = new Map(); // listingId -> result row data (populated when results load)
@@ -14464,6 +14467,7 @@ function _slSelectQualifier(base, qualifier) {
     _slTabs.push({ partName: tabName, results: [], loading: true, error: null });
     const idx = _slTabs.length - 1;
     _slSetActiveTab(idx);
+    _slLogSearch(tabName, idx);
     _slSearch(base, qualifier || null, idx);
     _slRefreshSelectorBadges();
 }
@@ -14477,6 +14481,61 @@ function _slRefreshSelectorBadges() {
     if (a) a.innerHTML = _buildSlAsms(_slSelectedZone);
     if (p) p.innerHTML = _buildSlParts(_slSelectedZone, _slSelectedAsm);
     if (q) q.innerHTML = _buildSlQualifiers();
+}
+
+function _slLogSearch(partName, tabIdx) {
+    const vehicle = [_slVehicle.year, _slVehicle.make, _slVehicle.model].filter(Boolean).join(' ');
+    const time    = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+    // Avoid duplicating the same part name searched within the same session
+    const existing = _slSearchHistory.findIndex(h => h.partName === partName);
+    if (existing >= 0) { _slSearchHistory[existing].tabIdx = tabIdx; _slSearchHistory[existing].time = time; }
+    else               { _slSearchHistory.unshift({ partName, vehicle, time, tabIdx, found: null }); }
+    _slRenderSearchHistory();
+}
+
+function _slUpdateSearchFound(tabIdx, count) {
+    const entry = _slSearchHistory.find(h => h.tabIdx === tabIdx);
+    if (entry) { entry.found = count; _slRenderSearchHistory(); }
+}
+
+function _slRenderSearchHistory() {
+    const list    = document.getElementById('slSearchHistory');
+    const countEl = document.getElementById('slSearchCount');
+    if (!list) return;
+    if (countEl) countEl.textContent = _slSearchHistory.length ? `${_slSearchHistory.length}` : '';
+    if (!_slSearchHistory.length) {
+        list.innerHTML = `<div class="sl-sp-empty">No searches yet this session</div>`;
+        return;
+    }
+    list.innerHTML = _slSearchHistory.map((h, i) => {
+        const foundChip = h.found === null
+            ? '<span class="sl-sp-chip sl-sp-searching">…</span>'
+            : h.found > 0
+                ? `<span class="sl-sp-chip sl-sp-found">${h.found} found</span>`
+                : `<span class="sl-sp-chip sl-sp-none">None</span>`;
+        return `<div class="sl-sp-row" onclick="_slJumpToSearch(${i})">
+            <div class="sl-sp-info">
+                <div class="sl-sp-part">${escapeHtml(h.partName)}</div>
+                <div class="sl-sp-meta">${escapeHtml(h.vehicle)} · ${h.time}</div>
+            </div>
+            ${foundChip}
+        </div>`;
+    }).join('');
+}
+
+function _slJumpToSearch(idx) {
+    const h = _slSearchHistory[idx];
+    if (!h) return;
+    const tabIdx = _slTabs.findIndex(t => t.partName === h.partName);
+    if (tabIdx >= 0) {
+        _slSetActiveTab(tabIdx);
+    } else {
+        // Re-run the search
+        const [base, qualifier] = h.partName.includes(' — ')
+            ? h.partName.split(' — ', 2)
+            : [h.partName, null];
+        _slSelectQualifier(base, qualifier);
+    }
 }
 
 function _slTogglePartCheck(base, qualifier, checked) {
@@ -14571,6 +14630,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         _slTabs[tabIdx].loading = false;
         _slTabs[tabIdx].error   = error ? error.message : null;
         _slTabs[tabIdx].results = results;
+        _slUpdateSearchFound(tabIdx, results.length);
     }
     if (_slActiveTab === tabIdx) _slRenderResults();
     _slRenderTabs();
