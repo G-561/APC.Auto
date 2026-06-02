@@ -11502,24 +11502,41 @@ function proOpenConv(id) {
     }
 }
 
-function proRenderContextPanel(conv, part) {
+async function proRenderContextPanel(conv, part) {
     const panel = document.getElementById('proInboxContextPanel');
     if (!panel) return;
-    if (!part || conv?.partId === 'general') {
+    if (conv?.partId === 'general' || !conv?.partId) {
         panel.innerHTML = `<div class="pro-ctx-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><div>No listing linked</div></div>`;
+        return;
+    }
+    if (!part && sb) {
+        panel.innerHTML = `<div class="pro-ctx-empty" style="font-size:12px;color:#aaa;">Loading listing…</div>`;
+        const { data } = await sb.from('listings')
+            .select('id, title, price, status, stock_number, warehouse_bin, condition')
+            .eq('id', conv.partId).maybeSingle();
+        if (data) part = { id: data.id, supabaseId: data.id, title: data.title, price: data.price, status: data.status, stock_number: data.stock_number, warehouse_bin: data.warehouse_bin, images: [] };
+    }
+    if (!part) {
+        const fallbackTitle = conv.partTitle ? `<div style="font-size:13px;font-weight:600;color:#333;margin-bottom:4px;">${escapeHtml(conv.partTitle)}</div>` : '';
+        panel.innerHTML = `<div class="pro-ctx-empty">${fallbackTitle}<div style="font-size:11px;color:#aaa;">Listing not available</div></div>`;
         return;
     }
     const img    = part.images?.[0] || '';
     const status = (part.status || 'active').toUpperCase();
     const statusClass = part.status === 'sold' ? 'status-sold' : part.status === 'pending' ? 'status-pending' : 'inbox-context-status';
+    const stockMeta = [
+        part.stock_number   ? `Stock: ${escapeHtml(String(part.stock_number))}`   : '',
+        part.warehouse_bin  ? `Bin: ${escapeHtml(String(part.warehouse_bin))}`     : '',
+    ].filter(Boolean).join(' · ');
     panel.innerHTML = `
         ${img ? `<img src="${escapeHtml(img)}" class="inbox-context-img" alt="${escapeHtml(part.title)}">` : ''}
         <div class="inbox-context-info">
             <div class="inbox-context-status ${statusClass}">${status}</div>
             <div class="inbox-context-title">${escapeHtml(part.title)}</div>
             <div class="inbox-context-price">$${Number(part.price || 0).toLocaleString()}</div>
+            ${stockMeta ? `<div class="inbox-context-stock">${stockMeta}</div>` : ''}
             <div class="inbox-context-with">Conversation with ${escapeHtml(conv.buyerName || conv.sellerName || 'Buyer')}</div>
-            <button class="cta-btn" style="margin-top:14px; font-size:12px; padding:10px 0;" onclick="openItemDetail(${part.id})">View Listing →</button>
+            <button class="cta-btn" style="margin-top:14px; font-size:12px; padding:10px 0;" onclick="openItemDetail(${part.id || part.supabaseId})">View Listing →</button>
         </div>`;
 }
 

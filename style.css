@@ -6383,6 +6383,12 @@ header {
         font-weight: 900;
         color: var(--apc-orange);
     }
+    .inbox-context-stock {
+        font-size: 11px;
+        color: #666;
+        padding-top: 3px;
+        font-family: monospace;
+    }
     .inbox-context-with {
         font-size: 12px;
         color: #888;
