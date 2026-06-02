@@ -10923,38 +10923,38 @@ function updateHeaderOffset() {
         const dashView       = document.getElementById('dashboardView');
         const drawerBackdrop = document.getElementById('drawerBackdrop');
 
+        const proHdr    = document.getElementById('proHeader');
+        const proOpen   = proHdr && proHdr.style.display !== 'none';
+        const drawerTop = proOpen ? (proHdr.offsetHeight || 54) : totalH;
+
         // Filter drawer always sits flush below the header on all screen sizes
-        if (filterDrawer)    filterDrawer.style.top    = totalH + 'px';
-        if (drawerBackdrop)  drawerBackdrop.style.top  = totalH + 'px';
+        if (filterDrawer)    filterDrawer.style.top    = drawerTop + 'px';
+        if (drawerBackdrop)  drawerBackdrop.style.top  = drawerTop + 'px';
 
         if (window.innerWidth >= 900) {
             // On desktop drawers slide in below the header — on mobile they cover it (top:0 via CSS)
-            if (detailOverlay)        detailOverlay.style.top        = totalH + 'px';
-            if (sellOverlay)          sellOverlay.style.top          = totalH + 'px';
-            if (storefrontDrawer)     storefrontDrawer.style.top     = totalH + 'px';
-            if (garageDrawer)         garageDrawer.style.top         = totalH + 'px';
+            if (detailOverlay)        detailOverlay.style.top        = drawerTop + 'px';
+            if (sellOverlay)          sellOverlay.style.top          = drawerTop + 'px';
+            if (storefrontDrawer)     storefrontDrawer.style.top     = drawerTop + 'px';
+            if (garageDrawer)         garageDrawer.style.top         = drawerTop + 'px';
             // addVehicleDrawer + addWantedDrawer are floating cards — top is fixed at 50% via CSS, not offset-driven
-            if (wantedListDrawer)     wantedListDrawer.style.top     = totalH + 'px';
-            if (savedPartsDrawer)     savedPartsDrawer.style.top     = totalH + 'px';
-            if (settingsDrawer)       settingsDrawer.style.top       = totalH + 'px';
-            if (profileDrawer)        profileDrawer.style.top        = totalH + 'px';
-            if (myPartsDrawer)        myPartsDrawer.style.top        = totalH + 'px';
-            if (workshopDrawer)       workshopDrawer.style.top       = totalH + 'px';
+            if (wantedListDrawer)     wantedListDrawer.style.top     = drawerTop + 'px';
+            if (savedPartsDrawer)     savedPartsDrawer.style.top     = drawerTop + 'px';
+            if (settingsDrawer)       settingsDrawer.style.top       = drawerTop + 'px';
+            if (profileDrawer)        profileDrawer.style.top        = drawerTop + 'px';
+            if (myPartsDrawer)        myPartsDrawer.style.top        = drawerTop + 'px';
+            if (workshopDrawer)       workshopDrawer.style.top       = drawerTop + 'px';
             const vehicleMakesDrawer = document.getElementById('vehicleMakesDrawer');
-            if (vehicleMakesDrawer)   vehicleMakesDrawer.style.top   = totalH + 'px';
-            if (recentlyViewedDrawer) recentlyViewedDrawer.style.top = totalH + 'px';
-            if (inboxDrawer)          inboxDrawer.style.top          = totalH + 'px';
-            if (messageDetailDrawer)  messageDetailDrawer.style.top  = totalH + 'px';
-            if (chatDrawer)           chatDrawer.style.top           = totalH + 'px';
-            if (helpDrawer)           helpDrawer.style.top           = totalH + 'px';
-            if (authDrawer)           authDrawer.style.top           = totalH + 'px';
-            if (dashView) {
-                const proHdr = document.getElementById('proHeader');
-                const proOpen = proHdr && proHdr.style.display !== 'none';
-                dashView.style.top = proOpen ? (proHdr.offsetHeight + 'px') : (totalH + 'px');
-            }
-            if (rightPanel)           rightPanel.style.top           = totalH + 'px';
-            if (accountDropdown)      accountDropdown.style.top      = (topBarH + 8) + 'px';
+            if (vehicleMakesDrawer)   vehicleMakesDrawer.style.top   = drawerTop + 'px';
+            if (recentlyViewedDrawer) recentlyViewedDrawer.style.top = drawerTop + 'px';
+            if (inboxDrawer)          inboxDrawer.style.top          = drawerTop + 'px';
+            if (messageDetailDrawer)  messageDetailDrawer.style.top  = drawerTop + 'px';
+            if (chatDrawer)           chatDrawer.style.top           = drawerTop + 'px';
+            if (helpDrawer)           helpDrawer.style.top           = drawerTop + 'px';
+            if (authDrawer)           authDrawer.style.top           = drawerTop + 'px';
+            if (dashView)             dashView.style.top             = drawerTop + 'px';
+            if (rightPanel)           rightPanel.style.top           = drawerTop + 'px';
+            if (accountDropdown)      accountDropdown.style.top      = proOpen ? (drawerTop + 8) + 'px' : (topBarH + 8) + 'px';
         }
     }
 }
@@ -11400,11 +11400,12 @@ function openDashboard() {
 function closeDashboard() {
     const dv = document.getElementById('dashboardView');
     if (!dv || dv.style.display === 'none') return;
+    // In Pro mode the dashboard is the persistent base layer — ignore auto-close calls
+    const proHdr = document.getElementById('proHeader');
+    if (proHdr && proHdr.style.display !== 'none') return;
     clearInterval(_dashJobsPollInterval);
     dv.style.display = 'none';
     setDtbActive(null);
-    const proHdr = document.getElementById('proHeader');
-    if (proHdr) proHdr.style.display = 'none';
     if (window.innerWidth >= 900) {
         const fd     = document.getElementById('filterDrawer');
         const rp     = document.querySelector('.desktop-right-panel');
@@ -11417,6 +11418,29 @@ function closeDashboard() {
     }
     updateHeaderOffset();
     syncBackdrop();
+}
+
+function exitProMode() {
+    const proHdr = document.getElementById('proHeader');
+    if (proHdr) proHdr.style.display = 'none';
+    closeDashboard();
+    setDtbActive(null);
+    clearInterval(_dashJobsPollInterval);
+    const dv = document.getElementById('dashboardView');
+    if (dv) dv.style.display = 'none';
+    if (window.innerWidth >= 900) {
+        const fd     = document.getElementById('filterDrawer');
+        const rp     = document.querySelector('.desktop-right-panel');
+        const topBar = document.getElementById('desktopTopBar');
+        const hdr    = document.getElementById('mainHeader');
+        if (fd)     fd.style.removeProperty('display');
+        if (rp)     rp.style.removeProperty('display');
+        if (topBar) topBar.style.removeProperty('display');
+        if (hdr)    hdr.style.removeProperty('display');
+    }
+    updateHeaderOffset();
+    syncBackdrop();
+    dtbGoHome();
 }
 
 function renderProHeader() {
