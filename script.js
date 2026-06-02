@@ -9,7 +9,6 @@ let currentUserName  = null;          // e.g. "Gary"
 let currentUserTier  = null;          // 'personal' | 'trade' | 'pro'
 let currentUserId    = null;          // Supabase UUID of signed-in user
 let currentUserEmail = null;          // signed-in user's email
-let currentSearchMode = 'parts';     // 'parts' | 'wanted'
 let _fromWantedId    = null;         // UUID of wanted request that triggered "List this Part"
 let myNotifications  = [];           // buyer's unread notifications from Supabase
 let _listingsCursor    = null;   // created_at of last fetched row for cursor pagination
@@ -2168,7 +2167,7 @@ async function loadPublicWantedFromSupabase() {
             .order('created_at', { ascending: false })
             .limit(200);
         if (error) { console.warn('public wanted load:', error.message); return; }
-        if (!rows?.length) { publicWantedDatabase.splice(0); if (currentSearchMode === 'wanted') renderMainGrid(); return; }
+        if (!rows?.length) { publicWantedDatabase.splice(0); return; }
 
         const userIds = [...new Set(rows.map(r => r.user_id))];
         const { data: profiles } = await sb.from('profiles')
@@ -2195,7 +2194,6 @@ async function loadPublicWantedFromSupabase() {
                 sellerName: prof.display_name || '',
             });
         });
-        if (currentSearchMode === 'wanted') renderMainGrid();
     } catch (e) { console.warn('loadPublicWantedFromSupabase:', e); }
 }
 
@@ -3652,7 +3650,7 @@ function updateFilterChip() {
     const chip = document.getElementById('filterStatusChip');
     if (!chip) return;
     const n = countActiveFilters();
-    if (n > 0 && currentSearchMode !== 'wanted') {
+    if (n > 0) {
         const count = getFilteredParts().length;
         chip.innerHTML = `<span>${count} result${count !== 1 ? 's' : ''} &nbsp;·&nbsp; ${n} filter${n !== 1 ? 's' : ''} active</span><button onclick="clearAllFilters()" aria-label="Clear filters">✕ Clear</button>`;
         chip.style.display = 'flex';
@@ -4000,12 +3998,6 @@ function renderMainGrid() {
 
     mainGrid.innerHTML = '';
 
-    if (currentSearchMode === 'wanted') {
-        setDtbActive(null);
-        const hdEl = document.getElementById('gridHeading');
-        if (hdEl) hdEl.style.display = 'none';
-        return renderWantedSearchResults(mainGrid);
-    }
     setDtbActive(null);
 
     const filtered = getFilteredParts();
@@ -4156,100 +4148,6 @@ async function confirmNotifyBuyers() {
 
 // Returns true if this seller already has a listing covering the wanted request.
 // Match requires part name overlap AND vehicle make/model compatibility.
-function sellerHasListedFor(wanted) {
-    const partLower = wanted.partName.toLowerCase();
-    return userListings.some(listing => {
-        const titleLower = listing.title.toLowerCase();
-        const nameMatch = titleLower.includes(partLower) || partLower.includes(titleLower);
-        if (!nameMatch) return false;
-        if (!wanted.make) return true;
-        return listing.fits.some(f =>
-            f.make.toLowerCase() === wanted.make.toLowerCase() &&
-            (!wanted.model || f.model.toLowerCase() === wanted.model.toLowerCase())
-        );
-    });
-}
-
-// FIND WANTED mode — shows other buyers' public wanted listings so sellers can see the market.
-// This is a Pro seller tool: search what buyers are looking for, then list it.
-// Wanted items the seller has already listed a matching part for are hidden automatically.
-function renderWantedSearchResults(mainGrid) {
-    const query  = activeFilters.search.toLowerCase();
-    const fMake  = activeFilters.make     || '';
-    const fModel = activeFilters.model    || '';
-    const fYear  = activeFilters.year     || '';
-    const fCat   = activeFilters.category || 'all';
-    const fState = activeFilters.location || 'all';
-    const matching = publicWantedDatabase.filter(w => {
-        if (sellerHasListedFor(w)) return false;
-        if (query && !w.partName.toLowerCase().includes(query) &&
-                     !w.make.toLowerCase().includes(query) &&
-                     !w.model.toLowerCase().includes(query)) return false;
-        if (fMake  && !w.make.toLowerCase().includes(fMake))   return false;
-        if (fModel && !w.model.toLowerCase().includes(fModel)) return false;
-        if (fYear) {
-            const searchYr = Number(fYear);
-            const wYr      = Number(w.year);
-            if (searchYr && wYr) {
-                const range = getVehicleYearRange(w.make, w.model, wYr);
-                const match = range ? (searchYr >= range[0] && searchYr <= range[1]) : (wYr === searchYr);
-                if (!match) return false;
-            }
-        }
-        if (fCat !== 'all' && w.category !== fCat)             return false;
-        if (fState !== 'all') {
-            const stateCode = w.loc.split(',')[1]?.trim();
-            if (stateCode !== fState) return false;
-        }
-        if (!activeFilters.sellerPro     &&  w.isPro) return false;
-        if (!activeFilters.sellerPrivate && !w.isPro) return false;
-        return true;
-    });
-
-    if (!matching.length) {
-        const safeSearch = escapeHtml(activeFilters.search);
-        mainGrid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">
-                <div style="font-weight: 700; margin-bottom: 10px;">No members looking for "${safeSearch}" right now</div>
-                <div style="font-size: 13px;">Try a broader search — make, model, or part type.</div>
-            </div>`;
-        return;
-    }
-
-    const wrap = document.createElement('div');
-    wrap.className = 'wanted-results-wrap';
-
-    const hdr = document.createElement('div');
-    hdr.className = 'wanted-results-hdr';
-    hdr.textContent = `${matching.length} part${matching.length === 1 ? '' : 's'} wanted`;
-    wrap.appendChild(hdr);
-
-    matching.forEach(w => {
-        const initials = w.buyer.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        const row = document.createElement('div');
-        row.className = 'wanted-row';
-        const buyerBadge = w.isPro
-            ? `<span class="wanted-chip wanted-chip-pro">APC Pro</span>`
-            : `<span class="wanted-chip wanted-chip-personal">Personal</span>`;
-        row.innerHTML = `
-            <div class="wanted-row-avatar${w.isPro ? ' wanted-avatar-pro' : ''}">${initials}</div>
-            <div class="wanted-row-body">
-                <div class="wanted-row-name">${escapeHtml(w.partName)}</div>
-                <div class="wanted-row-chips">
-                    ${buyerBadge}
-                    <span class="wanted-chip">${escapeHtml(w.make)} ${escapeHtml(w.model)} ${escapeHtml(w.year)}</span>
-                    <span class="wanted-chip">${escapeHtml(w.loc)}</span>
-                    ${w.maxPrice ? `<span class="wanted-chip wanted-chip-budget">Max $${w.maxPrice}</span>` : ''}
-                    <span class="wanted-chip wanted-chip-time">${escapeHtml(w.posted)}</span>
-                </div>
-            </div>
-            <button class="wanted-have-btn" onclick="listFromWanted('${w.id}','${escapeHtml(w.partName)}','${escapeHtml(w.category)}','${escapeHtml(w.make)}','${escapeHtml(w.model)}','${escapeHtml(w.year)}')">LIST THIS PART ›</button>
-        `;
-        wrap.appendChild(row);
-    });
-
-    mainGrid.appendChild(wrap);
-}
 
 // --- RENDER MY PARTS ---
 async function syncListingStatusToSupabase(listing, status) {
@@ -10796,8 +10694,7 @@ function renderAccountState() {
         menuUpgrade.style.display = showMenuUpgrade ? 'flex' : 'none';
         if (showMenuUpgrade) menuUpgrade.textContent = currentUserTier === 'trade' ? 'Upgrade to Pro ›' : 'Upgrade to Trade — Free ›';
     }
-    if (searchModePill) searchModePill.style.display = (currentUserTier === 'pro') ? '' : 'none';
-    syncSearchModePill();
+    if (searchModePill) searchModePill.style.display = 'none';
 
     // Update bottom nav profile circle
     const navProfileCircle = document.getElementById('navProfileCircle');
@@ -10882,10 +10779,6 @@ function renderAccountState() {
     updateSellFittingToggleVisibility();
     updateSellQuantityVisibility();
     updateWarehouseBinVisibility();
-    if (!userIsSignedIn || currentUserTier !== 'pro') {
-        currentSearchMode = 'parts';
-        setSearchMode('parts');
-    }
 
     // Header height changes when the pro toggle appears/disappears, so re-sync the grid offset.
     updateHeaderOffset();
@@ -10971,44 +10864,6 @@ window.addEventListener('resize', updateHeaderOffset);
 window.addEventListener('load', updateHeaderOffset);
 
 // --- SEARCH MODE TOGGLE ---
-function toggleSearchMode() {
-    closeDashboard();
-    currentSearchMode = currentSearchMode === 'wanted' ? 'parts' : 'wanted';
-    syncSearchModePill();
-    renderMainGrid();
-}
-
-function setSearchMode(mode) {
-    currentSearchMode = mode === 'wanted' ? 'wanted' : 'parts';
-    syncSearchModePill();
-    renderMainGrid();
-}
-
-function syncSearchModePill() {
-    const pill  = document.getElementById('searchModeToggle');
-    const input = document.getElementById('mainSearchInput');
-    const isWanted = currentSearchMode === 'wanted';
-    if (pill) {
-        pill.textContent = isWanted ? 'Search Parts' : 'Search Wanted';
-        pill.classList.toggle('mode-wanted', isWanted);
-    }
-    if (input) input.placeholder = isWanted ? "Search members' wanted lists..." : 'Search parts for sale...';
-
-    // Filter sidebar segmented control (desktop + mobile filter drawer)
-    const proSection = document.getElementById('filterProModeSection');
-    const segParts   = document.getElementById('filterSegParts');
-    const segWanted  = document.getElementById('filterSegWanted');
-    const showProMode = userIsSignedIn && currentUserTier === 'pro';
-    if (proSection) proSection.style.display = showProMode ? '' : 'none';
-    if (segParts)  segParts.classList.toggle('active', !isWanted);
-    if (segWanted) segWanted.classList.toggle('active',  isWanted);
-
-    // Grey out irrelevant filters in wanted search mode
-    ['filterSectionSort', 'filterSectionCondition', 'filterSectionLogistics', 'filterLocationPostcodeGroup'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('filter-section-muted', isWanted);
-    });
-}
 
 // --- DEBOUNCE UTILITY ---
 function debounce(fn, delay) {
@@ -15353,7 +15208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const _gridSentinel = document.getElementById('gridSentinel');
     if (_gridSentinel) {
         new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && !_listingsLoading && !_listingsExhausted && currentSearchMode !== 'wanted') {
+            if (entries[0].isIntersecting && !_listingsLoading && !_listingsExhausted) {
                 loadPublicListingsFromSupabase(true);
             }
         }, { rootMargin: '400px' }).observe(_gridSentinel);
