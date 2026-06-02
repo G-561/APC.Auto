@@ -14661,6 +14661,39 @@ function _slChatClose() {
     _slActiveChat = null;
 }
 
+function _slPreviewChat() {
+    const float = document.getElementById('slChatFloat');
+    const yard  = document.getElementById('slCfYard');
+    const part  = document.getElementById('slCfPart');
+    if (yard) yard.textContent = 'WreckIt Auto Parts — Adelaide';
+    if (part) part.textContent = 'Z6-DE 1.6 Engine to suit 2006 Mazda 3 BK';
+    if (float) { float.style.display = 'flex'; float.classList.remove('minimised'); }
+    _slChatMinimised = false;
+
+    const now = new Date();
+    const t = h => `${String(h).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    const msgs = [
+        { id:1, sent:false, text:'Hi, yes we have this engine in stock. Grade B, around 95k km on it. Pulled from a factory auto car.', clock: t(now.getHours()-1) },
+        { id:2, sent:true,  text:'Great! Does it come with the loom and ECU?', clock: t(now.getHours()-1) },
+        { id:3, sent:false, text:'Loom yes, ECU we can include for an extra $80. Engine price is $650 + freight.', clock: t(now.getHours()) },
+        { id:4, sent:true,  text:"What's freight to 3000 VIC?", clock: t(now.getHours()) },
+        { id:5, sent:false, text:'Give me a sec, I\'ll check with our freight guy…', clock: t(now.getHours()) },
+    ];
+
+    _slActiveChat = { id: 'preview', supabaseConvId: null, msgs, with: 'WreckIt Auto Parts' };
+    const el = document.getElementById('slCfMsgs');
+    if (el) {
+        el.innerHTML = msgs.map(m => {
+            const bubble = escapeHtml(m.text);
+            return `<div class="sl-cf-msg ${m.sent ? 'sent' : 'recv'}">
+                <div class="sl-cf-bubble">${bubble}</div>
+                <div class="sl-cf-time">${m.clock}</div>
+            </div>`;
+        }).join('');
+        el.scrollTop = el.scrollHeight;
+    }
+}
+
 function _slRefreshChatIfOpen(convId) {
     if (!_slActiveChat || _slActiveChat.supabaseConvId !== convId) return;
     _slChatRender();
