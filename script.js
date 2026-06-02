@@ -11891,6 +11891,23 @@ function _edwFullPartName(asmName, partName) {
     return `${first} ${partName}`;
 }
 
+function _edwPositionDrawer(drawer) {
+    if (window.innerWidth < 900) {
+        drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
+        return;
+    }
+    const proHdr = document.getElementById('proHeader');
+    const proOpen = proHdr && proHdr.style.display !== 'none';
+    const topBar  = document.getElementById('desktopTopBar');
+    const hdr     = document.getElementById('mainHeader');
+    const topOffset  = proOpen ? (proHdr.offsetHeight || 54) : (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    const sideOffset = proOpen ? 0 : Math.max(0, Math.round(window.innerWidth / 2) - 700);
+    drawer.style.top   = topOffset + 'px';
+    drawer.style.left  = sideOffset + 'px';
+    drawer.style.right = sideOffset + 'px';
+    drawer.style.width = 'auto';
+}
+
 function openEdw() {
     if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
     if (window.innerWidth < 768) { showToast('EDW requires a tablet or larger screen'); return; }
@@ -11904,18 +11921,7 @@ function openEdw() {
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
     const drawer = document.getElementById('edwDrawer');
     if (drawer) {
-        if (window.innerWidth >= 900) {
-            const topBar = document.getElementById('desktopTopBar');
-            const hdr    = document.getElementById('mainHeader');
-            const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
-            const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
-            drawer.style.top   = topOffset + 'px';
-            drawer.style.left  = sideOffset + 'px';
-            drawer.style.right = sideOffset + 'px';
-            drawer.style.width = 'auto';
-        } else {
-            drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
-        }
+        _edwPositionDrawer(drawer);
         drawer.classList.add('active');
     }
     document.body.style.overflow = 'hidden';
@@ -13543,18 +13549,7 @@ async function openJobReview(jobId) {
 function _openEdwShell(job, items) {
     const drawer = document.getElementById('edwDrawer');
     if (!drawer) return;
-    if (window.innerWidth >= 900) {
-        const topBar    = document.getElementById('desktopTopBar');
-        const hdr       = document.getElementById('mainHeader');
-        const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
-        const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 700);
-        drawer.style.top   = topOffset + 'px';
-        drawer.style.left  = sideOffset + 'px';
-        drawer.style.right = sideOffset + 'px';
-        drawer.style.width = 'auto';
-    } else {
-        drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
-    }
+    _edwPositionDrawer(drawer);
     drawer.classList.add('active');
     document.body.style.overflow = 'hidden';
     const ind = document.getElementById('edwStepIndicator');
