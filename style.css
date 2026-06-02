@@ -5149,6 +5149,27 @@ header {
     object-fit: cover;
 }
 
+/* ── Pro Full-Screen drawer — promoted from drawer to content pane ─── */
+@media (min-width: 900px) {
+    .pro-full.active {
+        left: 0 !important;
+        right: 0 !important;
+        top: 54px !important;
+        bottom: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        z-index: 2050 !important;
+        transform: none !important;
+    }
+    .pro-full .drawer-header { display: none !important; }
+
+    /* Wider columns when inbox has full real estate */
+    .pro-full .inbox-conv-col      { width: 380px; }
+    .pro-full .inbox-context-panel { width: 320px; }
+}
+
 .dtb-dashboard { color: var(--apc-blue) !important; font-weight: 800 !important; }
 .dash-hdr-btn {
     display: flex; align-items: center; gap: 6px;

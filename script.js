@@ -2747,6 +2747,12 @@ function closeInboxOrThread() {
     if (isMobile && threadCol && threadCol.classList.contains('slide-in')) {
         closeInboxThread();
     } else {
+        const drawer = document.getElementById('inboxDrawer');
+        if (drawer?.classList.contains('pro-full')) {
+            drawer.classList.remove('pro-full');
+            document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+            document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
+        }
         toggleDrawer('inboxDrawer');
     }
 }
@@ -11441,6 +11447,37 @@ function exitProMode() {
     updateHeaderOffset();
     syncBackdrop();
     dtbGoHome();
+}
+
+function proGoToDashboard() {
+    // Close and de-promote any full-screen drawers
+    document.querySelectorAll('.pro-full').forEach(el => {
+        el.classList.remove('pro-full', 'active');
+    });
+    document.body.style.overflow = '';
+    // Reset nav active state
+    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+    document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
+    syncBackdrop();
+}
+
+function proPromoteDrawer(drawerId, navId) {
+    const drawer = document.getElementById(drawerId);
+    if (!drawer) return;
+    drawer.classList.add('pro-full');
+    updateHeaderOffset();
+    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+    document.getElementById(navId)?.classList.add('pro-hdr-active');
+}
+
+function proOpenEnquiries() {
+    proPromoteDrawer('inboxDrawer', 'proNavMessages');
+    onOpenInbox();
+}
+
+function proOpenEDW() {
+    proPromoteDrawer('workshopDrawer', 'proNavEDW');
+    openEdw();
 }
 
 function renderProHeader() {
