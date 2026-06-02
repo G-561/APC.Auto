@@ -13437,6 +13437,72 @@ async function notifyWantedBuyer(btn) {
     }
 }
 
+async function renderDashVehicleSearch() {
+    const card = document.getElementById('dashVehicleSearchCard');
+    if (!card || !sb || !currentUserId) return;
+
+    const { data: jobs } = await sb.from('dismantling_jobs')
+        .select('id, make, model, year, series, stock_number, status, shell_scrapped, colour')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false });
+
+    _dashSvJobs = jobs || [];
+    const onLot = _dashSvJobs.filter(j => !j.shell_scrapped).length;
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Vehicle Stock</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span class="dash-card-meta">${onLot} on lot · ${_dashSvJobs.length} total</span>
+                <button class="dash-vsearch-add" onclick="openVehicleIntake()">+ Add</button>
+            </div>
+        </div>
+        <input type="text" id="dashVsInput" class="dash-vsearch-input"
+            placeholder="Search make, model, stock no., VIN…"
+            oninput="_dashVsRender(this.value)" autocomplete="off">
+        <div id="dashVsResults" class="dash-vsearch-results"></div>`;
+
+    _dashVsRender('');
+}
+
+function _dashVsRender(q) {
+    const results = document.getElementById('dashVsResults');
+    if (!results) return;
+    const lq = (q || '').toLowerCase().trim();
+
+    const filtered = lq
+        ? _dashSvJobs.filter(j =>
+            (j.make   || '').toLowerCase().includes(lq) ||
+            (j.model  || '').toLowerCase().includes(lq) ||
+            (j.stock_number || '').toLowerCase().includes(lq) ||
+            (j.colour || '').toLowerCase().includes(lq) ||
+            String(j.year || '').includes(lq))
+        : _dashSvJobs.slice(0, 8);
+
+    if (!filtered.length) {
+        results.innerHTML = `<div class="dash-vsearch-empty">${lq ? `No vehicles matching "${escapeHtml(lq)}"` : 'No vehicles in stock yet'}</div>`;
+        return;
+    }
+
+    results.innerHTML = filtered.slice(0, 12).map(j => {
+        const title  = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+        const sn     = j.stock_number ? `<span class="dash-vsearch-sn">#${escapeHtml(j.stock_number)}</span>` : '';
+        const st     = _VSC_STATUS[j.status] || { label: j.status, cls: '' };
+        const scrapped = j.shell_scrapped ? `<span class="dash-vsearch-scrapped">Scrapped</span>` : '';
+        return `<div class="dash-vsearch-row" onclick="openVehicleStockCard(${j.id})">
+            <div class="dash-vsearch-info">
+                <span class="dash-vsearch-name">${escapeHtml(title)}</span>
+                ${sn}${scrapped}
+            </div>
+            <span class="vsc-status-chip ${st.cls}" style="font-size:10px;flex-shrink:0;">${st.label}</span>
+        </div>`;
+    }).join('');
+
+    if (filtered.length > 12) {
+        results.innerHTML += `<div class="dash-vsearch-more">+ ${filtered.length - 12} more — refine your search</div>`;
+    }
+}
+
 let _dashSvJobs   = [];
 let _dashSvFilter2 = 'lot'; // 'all' | 'lot' | 'scrapped'
 
@@ -15225,8 +15291,8 @@ function renderDashboard() {
     renderDashboardCharts(myListings);
     renderDashActivity();
     renderDemandWidget();
+    renderDashVehicleSearch();
     renderDashJobs();
-    renderDashStockVehicles();
     renderDashWanted();
     renderDashWantedRequests();
 }
@@ -15235,28 +15301,6 @@ function renderDashboardCharts(myListings) {
     if (_dashViewsChart) { _dashViewsChart.destroy(); _dashViewsChart = null; }
     if (_dashCatChart)   { _dashCatChart.destroy();   _dashCatChart   = null; }
     if (!window.Chart) return;
-
-    const vCtx = document.getElementById('dashViewsChart');
-    if (vCtx) {
-        _dashViewsChart = new Chart(vCtx, {
-            type: 'line',
-            data: {
-                labels: dashMockData.weekLabels,
-                datasets: [
-                    { label: 'Views', data: dashMockData.weekViews, borderColor: '#F7941D', backgroundColor: 'rgba(247,148,29,0.08)', borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: '#F7941D', fill: true, tension: 0.4 },
-                    { label: 'Saves', data: dashMockData.weekSaves, borderColor: '#007AFF', backgroundColor: 'rgba(0,122,255,0.05)',   borderWidth: 2,   pointRadius: 3, pointBackgroundColor: '#007AFF', fill: true, tension: 0.4 }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { font: { size: 11, weight: '600' }, boxWidth: 12, padding: 14 } } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f5f5f5' }, ticks: { font: { size: 11 } } },
-                    x: { grid: { display: false },                       ticks: { font: { size: 11 } } }
-                }
-            }
-        });
-    }
 
     const catCounts = {};
     myListings.forEach(p => { const c = p.category || 'other'; catCounts[c] = (catCounts[c] || 0) + 1; });

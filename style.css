@@ -7525,6 +7525,26 @@ header {
 .dash-intel-left { display: flex; flex-direction: column; gap: 14px; }
 .dash-intel-right { height: 100%; }
 
+/* Vehicle Stock Search widget */
+.dash-vsearch-add { padding: 4px 10px; background: #f07020; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.dash-vsearch-add:hover { background: #d95f10; }
+.dash-vsearch-input {
+    display: block; width: 100%; box-sizing: border-box;
+    padding: 9px 14px; border: 1.5px solid #e8e8e8; border-radius: 10px;
+    font-size: 14px; color: #333; background: #f8f8f8; margin-bottom: 8px; outline: none;
+}
+.dash-vsearch-input:focus { border-color: #f07020; background: #fff; }
+.dash-vsearch-results { overflow-y: auto; max-height: 180px; }
+.dash-vsearch-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid #f5f5f5; cursor: pointer; border-radius: 6px; }
+.dash-vsearch-row:last-child { border-bottom: none; }
+.dash-vsearch-row:hover { background: #fafafa; }
+.dash-vsearch-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.dash-vsearch-name { font-size: 13px; font-weight: 700; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-vsearch-sn { font-size: 11px; color: #aaa; flex-shrink: 0; }
+.dash-vsearch-scrapped { font-size: 10px; font-weight: 700; color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
+.dash-vsearch-empty { padding: 20px 4px; color: #aaa; font-size: 13px; }
+.dash-vsearch-more { padding: 8px 4px; color: #aaa; font-size: 11px; font-style: italic; }
+
 /* Vehicles in Stock card */
 .dash-sv-list { padding: 4px 0; }
 .dash-sv-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f0f0f0; }
