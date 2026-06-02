@@ -13617,17 +13617,41 @@ async function renderDashWantedRequests() {
 
     if (!publicWantedDatabase.length) await loadPublicWantedFromSupabase();
 
-    if (!publicWantedDatabase.length) {
-        card.innerHTML = `
-            <div class="dash-card-hdr">
-                <span class="dash-card-title">Buyer Wanted Requests</span>
-                <span class="dash-card-meta">None posted yet</span>
-            </div>
-            <div class="dash-empty-state" style="padding:16px 0;color:#aaa;">No buyers have posted wanted requests yet.</div>`;
+    const total = publicWantedDatabase.length;
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Members Wanted</span>
+            <span class="dash-card-meta" id="dashWrCount">${total} request${total !== 1 ? 's' : ''}</span>
+        </div>
+        <input type="text" id="dashWrSearch" class="dash-wr-search"
+            placeholder="Search make, model, part…"
+            oninput="_dashWrFilter(this.value)">
+        <div class="dash-wr-list" id="dashWrList"></div>`;
+
+    _dashWrFilter('');
+}
+
+function _dashWrFilter(q) {
+    const list    = document.getElementById('dashWrList');
+    const countEl = document.getElementById('dashWrCount');
+    if (!list) return;
+    const lq = q.toLowerCase();
+    const filtered = q
+        ? publicWantedDatabase.filter(w =>
+            w.partName.toLowerCase().includes(lq) ||
+            w.make.toLowerCase().includes(lq) ||
+            w.model.toLowerCase().includes(lq) ||
+            (w.loc || '').toLowerCase().includes(lq))
+        : publicWantedDatabase;
+
+    if (countEl) countEl.textContent = `${filtered.length} request${filtered.length !== 1 ? 's' : ''}`;
+
+    if (!filtered.length) {
+        list.innerHTML = `<div class="dash-wr-empty">${q ? 'No results for "' + escapeHtml(q) + '"' : 'No wanted requests yet.'}</div>`;
         return;
     }
 
-    const rows = publicWantedDatabase.slice(0, 15).map(w => {
+    list.innerHTML = filtered.slice(0, 30).map(w => {
         const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
         const budget  = w.maxPrice ? `<span class="dash-wr-budget">Max $${w.maxPrice}</span>` : '';
         return `
@@ -13643,13 +13667,6 @@ async function renderDashWantedRequests() {
                 onclick="listFromWanted(this.dataset.id,this.dataset.part,this.dataset.cat,this.dataset.make,this.dataset.model,this.dataset.year)">List This Part ›</button>
         </div>`;
     }).join('');
-
-    card.innerHTML = `
-        <div class="dash-card-hdr">
-            <span class="dash-card-title">Buyer Wanted Requests</span>
-            <span class="dash-card-meta">${publicWantedDatabase.length} active request${publicWantedDatabase.length !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="dash-wr-list">${rows}</div>`;
 }
 
 async function openJobReview(jobId) {
