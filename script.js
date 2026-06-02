@@ -11461,7 +11461,18 @@ function proGoToDashboard() {
 let _proFolder = 'selling';
 let _proActiveConvId = null;
 
+function _pauseEdw() {
+    const drawer = document.getElementById('edwDrawer');
+    if (drawer) drawer.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function _edwHasActiveSession() {
+    return _edwStep > 0 || !!_edwJobId;
+}
+
 function proShowView(viewId, navId) {
+    _pauseEdw();
     ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -11475,6 +11486,7 @@ function proShowView(viewId, navId) {
 }
 
 function proHideAllViews() {
+    _pauseEdw();
     ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -11743,7 +11755,14 @@ function proOpenStockLookup() {
 function proOpenEDW() {
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById('proNavEDW')?.classList.add('pro-hdr-active');
-    openEdw();
+    if (_edwHasActiveSession()) {
+        // Resume the paused session — re-show drawer without resetting state
+        const drawer = document.getElementById('edwDrawer');
+        if (drawer) { _edwPositionDrawer(drawer); drawer.classList.add('active'); }
+        document.body.style.overflow = 'hidden';
+    } else {
+        openEdw();
+    }
 }
 
 function renderProHeader() {
@@ -11929,9 +11948,14 @@ function openEdw() {
 }
 
 function closeEdw() {
+    if (_edwHasActiveSession() && !confirm('End this EDW session? Unsaved work will be lost.')) return;
+    _edwVehicle = {}; _edwItems = {}; _edwStep = 0; _edwJobId = null;
+    _edwStock = []; _edwStockFilter = ''; _edwVehiclePhotos = [];
     const drawer = document.getElementById('edwDrawer');
     if (drawer) drawer.classList.remove('active');
     document.body.style.overflow = '';
+    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+    document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
 }
 
 function _renderEdw() {
