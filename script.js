@@ -11455,10 +11455,14 @@ function proGoToDashboard() {
     syncBackdrop();
 }
 
-let _proRoleTab = 'selling';
+let _proFolder = 'selling';
+let _proActiveConvId = null;
 
 function proShowView(viewId, navId) {
-    document.getElementById('proEnquiriesView') && (document.getElementById('proEnquiriesView').style.display = 'none');
+    ['proEnquiriesView'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
     const inner = document.getElementById('dashInner');
     if (inner) inner.style.display = 'none';
     const view = document.getElementById(viewId);
@@ -11468,95 +11472,180 @@ function proShowView(viewId, navId) {
 }
 
 function proHideAllViews() {
-    document.getElementById('proEnquiriesView') && (document.getElementById('proEnquiriesView').style.display = 'none');
+    ['proEnquiriesView'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
     const inner = document.getElementById('dashInner');
     if (inner) inner.style.display = '';
 }
 
 function proOpenEnquiries() {
     proShowView('proEnquiriesView', 'proNavMessages');
-    _proRoleTab = 'selling';
-    proSetRoleTab('selling');
-    if (currentUserId) loadConversationsFromSupabase(currentUserId).then(() => proRenderConvList());
+    proSetFolder('selling');
+    if (currentUserId) loadConversationsFromSupabase(currentUserId).then(() => { proRenderConvList(); proUpdateFolderBadges(); });
     else proRenderConvList();
 }
 
-function proSetRoleTab(tab) {
-    _proRoleTab = tab;
-    document.getElementById('proRoleTabBuying')?.classList.toggle('active', tab === 'buying');
-    document.getElementById('proRoleTabSelling')?.classList.toggle('active', tab === 'selling');
+function proSetFolder(folder) {
+    _proFolder = folder;
+    _proActiveConvId = null;
+    document.querySelectorAll('.pro-mail-folder').forEach(el => el.classList.remove('active'));
+    document.getElementById('proFolder' + folder.charAt(0).toUpperCase() + folder.slice(1))?.classList.add('active');
+    const titles = { selling:'Enquiries — Selling', buying:'Enquiries — Buying', notifications:'Notifications', trash:'Trash' };
+    const titleEl = document.getElementById('proMailFolderTitle');
+    if (titleEl) titleEl.textContent = titles[folder] || folder;
+    proShowThreadEmpty();
     proRenderConvList();
+}
+
+function proUpdateFolderBadges() {
+    const sellingUnread = conversations.filter(c => c.sellerId === currentUserId && c.unread).length;
+    const buyingUnread  = conversations.filter(c => c.buyerId  === currentUserId && c.unread).length;
+    const sb1 = document.getElementById('proFolderSellingBadge');
+    const sb2 = document.getElementById('proFolderBuyingBadge');
+    if (sb1) { sb1.textContent = sellingUnread || ''; sb1.style.display = sellingUnread ? '' : 'none'; }
+    if (sb2) { sb2.textContent = buyingUnread  || ''; sb2.style.display = buyingUnread  ? '' : 'none'; }
+    const countEl = document.getElementById('proMailCount');
+    if (countEl) {
+        const total = proGetFolderConvs().length;
+        countEl.textContent = total ? total + ' conversations' : '';
+    }
+}
+
+function proGetFolderConvs(q) {
+    let convs = [];
+    if (_proFolder === 'selling')       convs = conversations.filter(c => c.sellerId === currentUserId);
+    else if (_proFolder === 'buying')   convs = conversations.filter(c => c.buyerId  === currentUserId);
+    else if (_proFolder === 'trash')    convs = conversations.filter(c => (c.hiddenBuyer && c.buyerId === currentUserId) || (c.hiddenSeller && c.sellerId === currentUserId));
+    else                                convs = [];
+    if (q) {
+        const lq = q.toLowerCase();
+        convs = convs.filter(c => getConvPartTitle(c).toLowerCase().includes(lq) || (c.buyerName || c.sellerName || '').toLowerCase().includes(lq));
+    }
+    return convs.sort((a, b) => {
+        const aTime = a.msgs?.length ? a.msgs[a.msgs.length-1]?.timestamp || 0 : 0;
+        const bTime = b.msgs?.length ? b.msgs[b.msgs.length-1]?.timestamp || 0 : 0;
+        return bTime - aTime;
+    });
 }
 
 function proFilterConvs(val) { proRenderConvList(val); }
 
-function proSwitchInboxTab(tab) {
-    ['chats','notifications','trash'].forEach(t => {
-        document.getElementById('proItab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
-    });
-    document.getElementById('proInboxChatsPanel').style.display = tab === 'chats' ? 'flex' : 'none';
-}
-
 function proRenderConvList(filter) {
     const list = document.getElementById('proInboxConvList');
     if (!list) return;
-    const q = (filter || document.getElementById('proInboxSearch')?.value || '').toLowerCase();
-    const convs = conversations.filter(c => {
-        if (_proRoleTab === 'selling') return c.sellerId === currentUserId;
-        return c.buyerId === currentUserId || (!c.sellerId && !c.buyerId);
-    }).filter(c => {
-        if (!q) return true;
-        const title = getConvPartTitle(c).toLowerCase();
-        const other = (c.sellerName || c.buyerName || '').toLowerCase();
-        return title.includes(q) || other.includes(q);
-    });
-
+    const q = filter !== undefined ? filter : (document.getElementById('proInboxSearch')?.value || '');
+    const convs = proGetFolderConvs(q);
+    proUpdateFolderBadges();
     if (!convs.length) {
-        list.innerHTML = `<div class="inbox-empty-state"><div class="inbox-empty-icon">💬</div><div>${q ? 'No results' : 'No conversations yet'}</div></div>`;
+        list.innerHTML = `<div class="pro-mail-empty-list">${q ? 'No conversations match your search' : 'No conversations in this folder'}</div>`;
         return;
     }
     list.innerHTML = convs.map(c => {
-        const lastMsg = c.msgs?.length ? c.msgs[c.msgs.length - 1] : null;
-        const title   = escapeHtml(getConvPartTitle(c));
-        const preview = lastMsg ? escapeHtml(lastMsg.text || '').slice(0, 60) : 'No messages';
-        const unread  = c.unread ? '<span class="conv-unread-dot"></span>' : '';
-        return `<div class="inbox-conv-item${c.id === _proActiveConvId ? ' active' : ''}" onclick="proOpenConv(${c.id})">
-            <div class="conv-avatar">${(c.sellerName || c.buyerName || '?')[0].toUpperCase()}</div>
-            <div class="conv-info">
-                <div class="conv-title">${title}${unread}</div>
-                <div class="conv-preview">${preview}</div>
+        const isSelling = c.sellerId === currentUserId;
+        const otherName = escapeHtml(isSelling ? (c.buyerName || 'Buyer') : (c.sellerName || 'Seller'));
+        const initial   = otherName[0]?.toUpperCase() || '?';
+        const partTitle = escapeHtml(getConvPartTitle(c));
+        const lastMsg   = c.msgs?.length ? c.msgs[c.msgs.length - 1] : null;
+        const preview   = lastMsg ? escapeHtml(lastMsg.text || '').slice(0, 80) : '';
+        const isUnread  = c.unread;
+        const ts        = lastMsg?.timestamp ? relativeTime(new Date(lastMsg.timestamp)) : '';
+        const dot       = isUnread ? '<div class="pro-mail-unread-dot"></div>' : '';
+        return `<div class="pro-mail-row${c.id === _proActiveConvId ? ' active' : ''}${isUnread ? ' unread' : ''}" onclick="proOpenConv(${c.id})">
+            ${dot}
+            <div class="pro-mail-avatar">${initial}</div>
+            <div class="pro-mail-row-body">
+                <div class="pro-mail-row-top">
+                    <div class="pro-mail-sender">${otherName}</div>
+                    <div class="pro-mail-time">${ts}</div>
+                </div>
+                <div class="pro-mail-subject">${partTitle}</div>
+                <div class="pro-mail-preview">${preview}</div>
             </div>
         </div>`;
     }).join('');
 }
 
-let _proActiveConvId = null;
+function proShowThreadEmpty() {
+    const empty = document.getElementById('proInboxThreadEmpty');
+    const content = document.getElementById('proInboxThreadContent');
+    if (empty)   empty.style.display = '';
+    if (content) content.style.display = 'none';
+}
+
 function proOpenConv(id) {
     _proActiveConvId = id;
     proRenderConvList();
     const conv = conversations.find(c => c.id === id);
     if (!conv) return;
-    const threadContent = document.getElementById('proInboxThreadContent');
-    const threadEmpty   = document.getElementById('proInboxThreadEmpty');
-    if (threadEmpty) threadEmpty.style.display = 'none';
-    if (threadContent) {
-        threadContent.style.display = 'flex';
-        threadContent.style.flexDirection = 'column';
-        threadContent.style.flex = '1';
-        threadContent.style.overflow = 'hidden';
-        renderInboxMsgs(conv, 'proInboxThreadContent');
+
+    const empty   = document.getElementById('proInboxThreadEmpty');
+    const content = document.getElementById('proInboxThreadContent');
+    if (empty)   empty.style.display = 'none';
+    if (content) {
+        content.style.display = 'flex';
+        const partTitle = escapeHtml(getConvPartTitle(conv));
+        const part      = findPartAnywhere(conv.partId);
+        const isSelling = conv.sellerId === currentUserId;
+        const otherName = escapeHtml(isSelling ? (conv.buyerName || 'Buyer') : (conv.sellerName || 'Seller'));
+        content.innerHTML = `
+            <div class="pro-mail-empty-msg">
+                <div class="pro-mail-thread-hdr">
+                    <div class="pro-mail-thread-title">${partTitle}</div>
+                    <div class="pro-mail-thread-meta">Conversation with ${otherName}${part ? ' · $' + Number(part.price).toLocaleString() : ''}</div>
+                </div>
+                <div class="pro-mail-thread-msgs" id="proThreadMsgs"></div>
+                <div class="pro-mail-thread-reply">
+                    <textarea class="pro-mail-reply-input" id="proReplyInput" placeholder="Reply…" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();proSendReply(${id});}"></textarea>
+                    <button class="pro-mail-reply-send" onclick="proSendReply(${id})">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </div>`;
+        proRenderThreadMsgs(conv);
+        refreshInboxContextPanel(conv, part);
     }
-    refreshInboxContextPanel(conv, findPartAnywhere(conv.partId), 'proInboxContextPanel');
-    if (currentUserId) {
-        const isBuyer = conv.buyerId === currentUserId;
+
+    // Mark as read
+    if (conv.unread && currentUserId) {
+        const isBuyer  = conv.buyerId === currentUserId;
         const unreadKey = isBuyer ? 'unread_buyer' : 'unread_seller';
-        if (conv[unreadKey]) {
-            conv[unreadKey] = false;
-            conv.unread = false;
-            if (conv.supabaseConvId) sb.from('conversations').update({[unreadKey]: false}).eq('id', conv.supabaseConvId).then(() => {});
-            proRenderConvList();
-        }
+        conv[unreadKey] = false; conv.unread = false;
+        if (conv.supabaseConvId) sb.from('conversations').update({[unreadKey]:false}).eq('id', conv.supabaseConvId).then(()=>{});
+        proUpdateFolderBadges();
     }
+}
+
+function proRenderThreadMsgs(conv) {
+    const container = document.getElementById('proThreadMsgs');
+    if (!container || !conv.msgs) return;
+    container.innerHTML = conv.msgs.map(m => {
+        const isSent = m.sent;
+        const initial = isSent ? (conv.sellerName || 'S')[0].toUpperCase() : (conv.buyerName || 'B')[0].toUpperCase();
+        return `<div class="pro-mail-msg${isSent ? ' sent' : ''}">
+            <div class="pro-mail-msg-avatar">${initial}</div>
+            <div>
+                <div class="pro-mail-msg-bubble">${escapeHtml(m.text || '')}</div>
+                <div class="pro-mail-msg-time">${m.clock || m.time || ''}</div>
+            </div>
+        </div>`;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+}
+
+function proSendReply(convId) {
+    const input = document.getElementById('proReplyInput');
+    const text  = input?.value.trim();
+    if (!text) return;
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    conv.msgs = conv.msgs || [];
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, text, time: 'Today', clock: nowClock(), timestamp: Date.now() });
+    input.value = ''; input.style.height = 'auto';
+    saveConversations();
+    proRenderThreadMsgs(conv);
+    syncMessageToSupabase(conv.supabaseConvId, text, conv.buyerId === currentUserId).catch(() => {});
 }
 
 function proOpenEDW() {
