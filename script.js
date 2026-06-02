@@ -6452,7 +6452,10 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     if (sfBizName) { sfBizName.textContent = businessName || ''; sfBizName.style.display = businessName ? '' : 'none'; }
     if (sfProBadge)  sfProBadge.style.display = isPro ? '' : 'none';
     if (sfAbnChip)   sfAbnChip.style.display  = (isPro && abn) ? '' : 'none';
-    if (sfSeller)    sfSeller.textContent = sellerName || '';
+    if (sfSeller) {
+        sfSeller.textContent = sellerName || '';
+        sfSeller.style.display = (sellerName && sellerName !== businessName) ? '' : 'none';
+    }
     if (sfLoc)     { sfLoc.textContent = location ? '📍 ' + location : ''; sfLoc.style.display = location ? '' : 'none'; }
 
     // About
