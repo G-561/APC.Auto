@@ -2748,9 +2748,8 @@ function closeInboxOrThread() {
         closeInboxThread();
     } else {
         const drawer = document.getElementById('inboxDrawer');
-        if (drawer?.classList.contains('pro-full')) {
-            ['left','right','bottom','width','maxWidth','borderRadius','boxShadow'].forEach(p => drawer.style.removeProperty(p));
-            drawer.classList.remove('pro-full');
+        if (drawer?._proOrigParent) {
+            proRestoreDrawer('inboxDrawer');
             document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
             document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
         }
@@ -11451,10 +11450,13 @@ function exitProMode() {
 }
 
 function proGoToDashboard() {
-    // Close and de-promote any full-screen drawers, clearing inline overrides
-    document.querySelectorAll('.pro-full').forEach(el => {
-        ['left','right','bottom','width','maxWidth','borderRadius','boxShadow'].forEach(p => el.style.removeProperty(p));
-        el.classList.remove('pro-full', 'active');
+    // Restore any reparented drawers back to body and close them
+    ['inboxDrawer','workshopDrawer'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el?._proOrigParent) {
+            el.classList.remove('active');
+            proRestoreDrawer(id);
+        }
     });
     document.body.style.overflow = '';
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
@@ -11462,32 +11464,36 @@ function proGoToDashboard() {
     syncBackdrop();
 }
 
-function proPromoteDrawer(drawerId, navId) {
-    const drawer = document.getElementById(drawerId);
-    if (!drawer) return;
-    drawer.classList.add('pro-full');
-    // Force layout inline — overrides any CSS + updateHeaderOffset competition
-    drawer.style.left         = '0';
-    drawer.style.right        = '0';
-    drawer.style.top          = '54px';
-    drawer.style.bottom       = '0';
-    drawer.style.width        = 'auto';
-    drawer.style.maxWidth     = 'none';
-    drawer.style.borderRadius = '0';
-    drawer.style.boxShadow    = 'none';
+function proMoveDrawerIntoDash(drawerId, navId) {
+    const drawer   = document.getElementById(drawerId);
+    const dashView = document.getElementById('dashboardView');
+    if (!drawer || !dashView) return;
+    if (!drawer._proOrigParent) {
+        drawer._proOrigParent      = drawer.parentElement;
+        drawer._proOrigNextSibling = drawer.nextSibling;
+    }
+    dashView.appendChild(drawer);
+    drawer.style.cssText = 'display:flex; flex-direction:column; position:absolute; inset:0; z-index:20; border-radius:0; box-shadow:none; width:auto; height:auto;';
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById(navId)?.classList.add('pro-hdr-active');
 }
 
+function proRestoreDrawer(drawerId) {
+    const drawer = document.getElementById(drawerId);
+    if (!drawer || !drawer._proOrigParent) return;
+    drawer._proOrigParent.insertBefore(drawer, drawer._proOrigNextSibling || null);
+    drawer.style.cssText = '';
+    delete drawer._proOrigParent;
+    delete drawer._proOrigNextSibling;
+}
+
 function proOpenEnquiries() {
-    proPromoteDrawer('inboxDrawer', 'proNavMessages');
+    proMoveDrawerIntoDash('inboxDrawer', 'proNavMessages');
     onOpenInbox();
-    // Re-apply after onOpenInbox in case anything reset it
-    proPromoteDrawer('inboxDrawer', 'proNavMessages');
 }
 
 function proOpenEDW() {
-    proPromoteDrawer('workshopDrawer', 'proNavEDW');
+    proMoveDrawerIntoDash('workshopDrawer', 'proNavEDW');
     openEdw();
 }
 
