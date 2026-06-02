@@ -11732,7 +11732,7 @@ function proOpenStockLookup() {
     proShowView('proStockView', 'proNavStock');
     _slVehicle = { make: '', model: '', year: '', series: '' };
     _slTabs = []; _slActiveTab = -1;
-    _slSelectedZone = 0; _slSelectedAsm = 0; _slSelectedPartBase = null;
+    _slSelectedZone = 0; _slSelectedAsm = -1; _slSelectedPartBase = null;
     _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
     try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
     try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
@@ -13722,7 +13722,7 @@ async function _jrPublish(jobId) {
 
 let _slVehicle        = { make: '', model: '', year: '', series: '' };
 let _slSelectedZone   = 0;
-let _slSelectedAsm    = 0;
+let _slSelectedAsm    = -1;
 let _slSelectedPartBase = null; // { base, qualifiers[] } — selected part in col 3
 let _slTabs           = [];   // [{ partName, results:[], loading:false, error:null }]
 let _slActiveTab      = -1;
@@ -13811,7 +13811,7 @@ function _slClearSearch() {
     _slResultsMap     = new Map();
     _slReverseMap     = null;
     _slSelectedZone   = 0;
-    _slSelectedAsm    = 0;
+    _slSelectedAsm    = -1;
     _slSelectedPartBase = null;
     _slRenderVehicleBar();
     _slRenderResultsArea();
@@ -13966,7 +13966,7 @@ function _buildSlAsms(zI) {
     const zone = EDW_TAXONOMY[zI];
     if (!zone) return '';
     return zone.assemblies.map((asm, aI) => {
-        const active = _slSelectedAsm === aI;
+        const active = _slSelectedAsm >= 0 && _slSelectedAsm === aI;
         const count  = _slTabCountForAsm(zI, aI);
         return `<div class="edw-panel-row${active ? ' active' : ''}" onclick="_slSelectAsm(${aI})">
             <span>${escapeHtml(asm.name)}</span>
@@ -14047,14 +14047,14 @@ function _buildSlQualifiers() {
 }
 
 function _slSelectZone(zI) {
-    _slSelectedZone = zI; _slSelectedAsm = 0; _slSelectedPartBase = null;
+    _slSelectedZone = zI; _slSelectedAsm = -1; _slSelectedPartBase = null;
     const z = document.getElementById('slPanelZones');
     const a = document.getElementById('slPanelAsms');
     const p = document.getElementById('slPanelParts');
     const q = document.getElementById('slPanelQuals');
     if (z) z.innerHTML = _buildSlZones();
     if (a) { a.innerHTML = _buildSlAsms(zI); a.scrollTop = 0; }
-    if (p) { p.innerHTML = _buildSlParts(zI, 0); p.scrollTop = 0; }
+    if (p) { p.innerHTML = `<div class="edw-panel-empty">Select an assembly</div>`; p.scrollTop = 0; }
     if (q) { q.innerHTML = _buildSlQualifiers(); q.scrollTop = 0; }
 }
 
