@@ -12560,12 +12560,18 @@ function _buildEdwPanelQuals() {
     if (!group.quals.length) {
         const key     = `${zI}:${aI}:${group.directPI}`;
         const checked = !!_edwItems[key];
+        const asmName = EDW_TAXONOMY[zI]?.assemblies[aI]?.name || '';
+        const engineCode = (asmName === 'Engine' && group.base === 'Engine' && _edwVehicle.engineCode)
+            ? _edwVehicle.engineCode : null;
+        const label = engineCode
+            ? `<span class="edw-part-name">${escapeHtml(engineCode)}</span>`
+            : `<span class="edw-part-name" style="font-style:italic;color:#999;">Select</span>`;
         return `
         <div class="edw-panel-part${checked ? ' checked' : ''}">
             <div class="edw-pcell edw-pcell-name">
                 <label class="edw-part-check">
                     <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${group.directPI},this.checked)">
-                    <span class="edw-part-name" style="font-style:italic;color:#999;">Select</span>
+                    ${label}
                 </label>
             </div>
             ${_buildEdwPartControls(key, zI)}
