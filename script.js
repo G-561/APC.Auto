@@ -12370,8 +12370,9 @@ function _edwStartWalkaround(jobId) {
     document.getElementById('edwBody')?.scrollTo(0, 0);
 }
 
-async function _edwUploadVehiclePhotos(jobId) {
-    const toUpload = _edwVehiclePhotos.filter(p => (p.base64 || p.file) && p.selected);
+async function _edwUploadVehiclePhotos(jobId, photosArr = null) {
+    const photos   = photosArr || _edwVehiclePhotos;
+    const toUpload = photos.filter(p => (p.base64 || p.file));
     if (!toUpload.length) return [];
     const urls = [];
     for (let i = 0; i < toUpload.length; i++) {
@@ -13805,7 +13806,11 @@ async function openVehicleStockCard(jobId) {
     if (body) body.innerHTML = `<div style="padding:40px;text-align:center;color:#aaa;">Loading…</div>`;
 
     const edwBtn = document.getElementById('vscEdwBtn');
-    if (edwBtn) edwBtn.onclick = () => { closeVehicleStockCard(); _edwLoadAndOpen(jobId); };
+    if (edwBtn) edwBtn.onclick = () => {
+        const overlay = document.getElementById('vehicleStockCardOverlay');
+        if (overlay) overlay.style.display = 'none';
+        _edwLoadAndOpen(jobId); // keeps body.overflow:hidden — no flicker
+    };
 
     if (!sb || !currentUserId) return;
 
@@ -13907,9 +13912,11 @@ async function openVehicleStockCard(jobId) {
 
 // ─── Vehicle Intake — standalone entry form ───────────────────────────────────
 let _viVehicle = {};
+let _viVehiclePhotos = [];
 
 function openVehicleIntake() {
     _viVehicle = {};
+    _viVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, base64: null }));
     const overlay = document.getElementById('vehicleIntakeOverlay');
     if (overlay) overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -13953,6 +13960,40 @@ function _viRefreshSeries() {
     else       { grp.style.display = 'none'; }
 }
 
+function _buildVIPhotoSlots() {
+    return _viVehiclePhotos.map((vp, i) => {
+        if (vp.previewUrl) {
+            return `<div class="edw-vp-slot">
+                <img src="${escapeHtml(vp.previewUrl)}" class="edw-vp-img" alt="${escapeHtml(vp.angle)}" onclick="_viRemovePhoto(${i})" title="Tap to remove">
+                <div class="edw-vp-label">${escapeHtml(vp.angle)}</div>
+            </div>`;
+        }
+        return `<div class="edw-vp-slot">
+            <label class="edw-vp-empty">
+                <input type="file" accept="image/*" style="display:none" onchange="_viAddPhoto(${i}, this)">
+                <span class="edw-vp-add-ico">+</span>
+            </label>
+            <div class="edw-vp-label">${escapeHtml(vp.angle)}</div>
+        </div>`;
+    }).join('');
+}
+function _viAddPhoto(index, input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    _viVehiclePhotos[index].file = file;
+    _viVehiclePhotos[index].previewUrl = URL.createObjectURL(file);
+    _fileToBase64(file).then(b64 => { _viVehiclePhotos[index].base64 = b64; });
+    const grid = document.getElementById('viVpGrid');
+    if (grid) grid.innerHTML = _buildVIPhotoSlots();
+}
+function _viRemovePhoto(index) {
+    _viVehiclePhotos[index].file = null;
+    _viVehiclePhotos[index].previewUrl = null;
+    _viVehiclePhotos[index].base64 = null;
+    const grid = document.getElementById('viVpGrid');
+    if (grid) grid.innerHTML = _buildVIPhotoSlots();
+}
+
 function _renderVehicleIntakeForm() {
     const body = document.getElementById('viBody');
     if (!body) return;
@@ -13992,6 +14033,10 @@ function _renderVehicleIntakeForm() {
                     <option value="">Select…</option>
                     ${['Manual 4-speed','Manual 5-speed','Manual 6-speed','Auto 4-speed','Auto 6-speed','Auto 8-speed','Auto 9-speed','Auto 10-speed','CVT','DCT (Dual-Clutch)','Sequential','Other'].map(t=>`<option value="${t}">${t}</option>`).join('')}
                 </select></div>
+        </div>
+        <div style="margin-top:16px;">
+            <div class="edw-label" style="margin-bottom:8px;">Vehicle Photos <span style="font-weight:400;color:#aaa;font-size:10px;text-transform:none;">(optional)</span></div>
+            <div class="edw-vp-grid" id="viVpGrid">${_buildVIPhotoSlots()}</div>
         </div>`;
 }
 
@@ -14020,9 +14065,19 @@ async function saveVehicleIntake() {
         vehicle_cost: v.vehicleCost ? Number(v.vehicleCost) : null,
     }).select('id').single();
 
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save to Stock →'; }
-    if (error || !job) { showToast('Failed to save vehicle'); return; }
+    if (error || !job) {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save to Stock →'; }
+        showToast('Failed to save vehicle'); return;
+    }
 
+    const hasPhotos = _viVehiclePhotos.some(p => p.file || p.base64);
+    if (hasPhotos) {
+        if (saveBtn) saveBtn.textContent = 'Uploading photos…';
+        const photoUrls = await _edwUploadVehiclePhotos(job.id, _viVehiclePhotos);
+        if (photoUrls.length) await sb.from('dismantling_jobs').update({ vehicle_photos: photoUrls }).eq('id', job.id);
+    }
+
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save to Stock →'; }
     showToast('Vehicle added to stock');
     closeVehicleIntake();
     renderDashStockVehicles();
@@ -14059,7 +14114,7 @@ async function _vscToggleShellScrapped(jobId, scrapped) {
 
 async function _edwLoadAndOpen(jobId) {
     const { data: job } = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
-    if (!job) { showToast('Vehicle not found'); return; }
+    if (!job) { document.body.style.overflow = ''; showToast('Vehicle not found'); return; }
     _edwStock = [job];
     _edwStartWalkaround(jobId);
     proOpenEDW();
