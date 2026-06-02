@@ -2748,11 +2748,9 @@ function closeInboxOrThread() {
         closeInboxThread();
     } else {
         const drawer = document.getElementById('inboxDrawer');
-        if (drawer?._proOrigParent) {
-            proRestoreDrawer('inboxDrawer');
-            document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
-            document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
-        }
+        const proHdr = document.getElementById('proHeader');
+        const inProMode = proHdr && proHdr.style.display !== 'none';
+        if (inProMode) { proGoToDashboard(); return; }
         toggleDrawer('inboxDrawer');
     }
 }
@@ -11450,50 +11448,119 @@ function exitProMode() {
 }
 
 function proGoToDashboard() {
-    // Restore any reparented drawers back to body and close them
-    ['inboxDrawer','workshopDrawer'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el?._proOrigParent) {
-            el.classList.remove('active');
-            proRestoreDrawer(id);
-        }
-    });
-    document.body.style.overflow = '';
+    proHideAllViews();
+    _proActiveConvId = null;
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
     syncBackdrop();
 }
 
-function proMoveDrawerIntoDash(drawerId, navId) {
-    const drawer   = document.getElementById(drawerId);
-    const dashView = document.getElementById('dashboardView');
-    if (!drawer || !dashView) return;
-    if (!drawer._proOrigParent) {
-        drawer._proOrigParent      = drawer.parentElement;
-        drawer._proOrigNextSibling = drawer.nextSibling;
-    }
-    dashView.appendChild(drawer);
-    drawer.style.cssText = 'display:flex; flex-direction:column; position:absolute; inset:0; z-index:20; border-radius:0; box-shadow:none; width:auto; height:auto;';
+let _proRoleTab = 'selling';
+
+function proShowView(viewId, navId) {
+    document.getElementById('proEnquiriesView') && (document.getElementById('proEnquiriesView').style.display = 'none');
+    const inner = document.getElementById('dashInner');
+    if (inner) inner.style.display = 'none';
+    const view = document.getElementById(viewId);
+    if (view) view.style.display = 'flex';
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById(navId)?.classList.add('pro-hdr-active');
 }
 
-function proRestoreDrawer(drawerId) {
-    const drawer = document.getElementById(drawerId);
-    if (!drawer || !drawer._proOrigParent) return;
-    drawer._proOrigParent.insertBefore(drawer, drawer._proOrigNextSibling || null);
-    drawer.style.cssText = '';
-    delete drawer._proOrigParent;
-    delete drawer._proOrigNextSibling;
+function proHideAllViews() {
+    document.getElementById('proEnquiriesView') && (document.getElementById('proEnquiriesView').style.display = 'none');
+    const inner = document.getElementById('dashInner');
+    if (inner) inner.style.display = '';
 }
 
 function proOpenEnquiries() {
-    proMoveDrawerIntoDash('inboxDrawer', 'proNavMessages');
-    onOpenInbox();
+    proShowView('proEnquiriesView', 'proNavMessages');
+    _proRoleTab = 'selling';
+    proSetRoleTab('selling');
+    if (currentUserId) loadConversationsFromSupabase(currentUserId).then(() => proRenderConvList());
+    else proRenderConvList();
+}
+
+function proSetRoleTab(tab) {
+    _proRoleTab = tab;
+    document.getElementById('proRoleTabBuying')?.classList.toggle('active', tab === 'buying');
+    document.getElementById('proRoleTabSelling')?.classList.toggle('active', tab === 'selling');
+    proRenderConvList();
+}
+
+function proFilterConvs(val) { proRenderConvList(val); }
+
+function proSwitchInboxTab(tab) {
+    ['chats','notifications','trash'].forEach(t => {
+        document.getElementById('proItab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
+    });
+    document.getElementById('proInboxChatsPanel').style.display = tab === 'chats' ? 'flex' : 'none';
+}
+
+function proRenderConvList(filter) {
+    const list = document.getElementById('proInboxConvList');
+    if (!list) return;
+    const q = (filter || document.getElementById('proInboxSearch')?.value || '').toLowerCase();
+    const convs = conversations.filter(c => {
+        if (_proRoleTab === 'selling') return c.sellerId === currentUserId;
+        return c.buyerId === currentUserId || (!c.sellerId && !c.buyerId);
+    }).filter(c => {
+        if (!q) return true;
+        const title = getConvPartTitle(c).toLowerCase();
+        const other = (c.sellerName || c.buyerName || '').toLowerCase();
+        return title.includes(q) || other.includes(q);
+    });
+
+    if (!convs.length) {
+        list.innerHTML = `<div class="inbox-empty-state"><div class="inbox-empty-icon">💬</div><div>${q ? 'No results' : 'No conversations yet'}</div></div>`;
+        return;
+    }
+    list.innerHTML = convs.map(c => {
+        const lastMsg = c.msgs?.length ? c.msgs[c.msgs.length - 1] : null;
+        const title   = escapeHtml(getConvPartTitle(c));
+        const preview = lastMsg ? escapeHtml(lastMsg.text || '').slice(0, 60) : 'No messages';
+        const unread  = c.unread ? '<span class="conv-unread-dot"></span>' : '';
+        return `<div class="inbox-conv-item${c.id === _proActiveConvId ? ' active' : ''}" onclick="proOpenConv(${c.id})">
+            <div class="conv-avatar">${(c.sellerName || c.buyerName || '?')[0].toUpperCase()}</div>
+            <div class="conv-info">
+                <div class="conv-title">${title}${unread}</div>
+                <div class="conv-preview">${preview}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+let _proActiveConvId = null;
+function proOpenConv(id) {
+    _proActiveConvId = id;
+    proRenderConvList();
+    const conv = conversations.find(c => c.id === id);
+    if (!conv) return;
+    const threadContent = document.getElementById('proInboxThreadContent');
+    const threadEmpty   = document.getElementById('proInboxThreadEmpty');
+    if (threadEmpty) threadEmpty.style.display = 'none';
+    if (threadContent) {
+        threadContent.style.display = 'flex';
+        threadContent.style.flexDirection = 'column';
+        threadContent.style.flex = '1';
+        threadContent.style.overflow = 'hidden';
+        renderInboxMsgs(conv, 'proInboxThreadContent');
+    }
+    refreshInboxContextPanel(conv, findPartAnywhere(conv.partId), 'proInboxContextPanel');
+    if (currentUserId) {
+        const isBuyer = conv.buyerId === currentUserId;
+        const unreadKey = isBuyer ? 'unread_buyer' : 'unread_seller';
+        if (conv[unreadKey]) {
+            conv[unreadKey] = false;
+            conv.unread = false;
+            if (conv.supabaseConvId) sb.from('conversations').update({[unreadKey]: false}).eq('id', conv.supabaseConvId).then(() => {});
+            proRenderConvList();
+        }
+    }
 }
 
 function proOpenEDW() {
-    proMoveDrawerIntoDash('workshopDrawer', 'proNavEDW');
+    proShowView('proEnquiriesView', 'proNavEDW');
     openEdw();
 }
 
@@ -13407,7 +13474,7 @@ function openStockLookup() {
     const topOffset = proOpen
         ? (proHdr.offsetHeight || 54)
         : (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
-    const sideOffset = Math.max(0, Math.round(window.innerWidth / 2) - 800);
+    const sideOffset = proOpen ? 0 : Math.max(0, Math.round(window.innerWidth / 2) - 800);
     drawer.style.top    = topOffset + 'px';
     drawer.style.left   = sideOffset + 'px';
     drawer.style.right  = sideOffset + 'px';

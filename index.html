@@ -153,8 +153,33 @@
 </div>
 
 <!-- PRO DASHBOARD — desktop only, shown for Pro members -->
-<div id="dashboardView" style="display:none; position:fixed; left:0; right:0; bottom:0; overflow-y:auto; background:#f2f2f7; z-index:1999;">
-    <div class="dash-inner">
+<div id="dashboardView" style="display:none; position:fixed; left:0; right:0; bottom:0; background:#f2f2f7; z-index:1999; overflow:hidden;">
+
+    <!-- Pro Enquiries View: full-width inbox inside dashboardView -->
+    <div id="proEnquiriesView" style="display:none; position:absolute; inset:0; z-index:5; background:white; flex-direction:column; overflow:hidden;">
+        <div class="inbox-tab-bar">
+            <button class="itab active" id="proItabChats" onclick="proSwitchInboxTab('chats')">Chats <span id="proInboxChatsBadge" class="itab-badge" style="display:none;"></span></button>
+            <button class="itab" id="proItabNotifs" onclick="proSwitchInboxTab('notifications')">Notifications <span id="proInboxNotifsBadge" class="itab-badge" style="display:none;"></span></button>
+            <button class="itab" id="proItabTrash" onclick="proSwitchInboxTab('trash')">Trash</button>
+        </div>
+        <div id="proInboxChatsPanel" class="inbox-two-panel" style="flex:1; overflow:hidden;">
+            <div class="inbox-conv-col" id="proInboxConvCol">
+                <div class="inbox-role-tabs">
+                    <button class="inbox-role-tab active" id="proRoleTabBuying" onclick="proSetRoleTab('buying')">Buying <span class="inbox-role-badge" id="proRoleBadgeBuying" style="display:none"></span></button>
+                    <button class="inbox-role-tab" id="proRoleTabSelling" onclick="proSetRoleTab('selling')">Selling <span class="inbox-role-badge" id="proRoleBadgeSelling" style="display:none"></span></button>
+                </div>
+                <div class="inbox-conv-search"><input type="text" id="proInboxSearch" placeholder="Search by name or part…" oninput="proFilterConvs(this.value)"></div>
+                <div id="proInboxConvList" class="inbox-conv-list"></div>
+            </div>
+            <div class="inbox-thread-col" id="proInboxThreadCol">
+                <div id="proInboxThreadContent" style="display:none; flex:1; display:flex; flex-direction:column; overflow:hidden;"></div>
+                <div id="proInboxThreadEmpty" class="inbox-thread-empty"><div class="inbox-empty-icon">💬</div><div>Select a conversation</div></div>
+            </div>
+            <div id="proInboxContextPanel" class="inbox-context-panel"></div>
+        </div>
+    </div>
+
+    <div class="dash-inner" id="dashInner" style="height:100%; overflow-y:auto;">
 
         <div class="dash-page-hdr">
             <div class="dash-page-hdr-left">
@@ -2619,7 +2644,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=133"></script>
+<script src="script.js?v=134"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
