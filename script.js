@@ -11739,7 +11739,7 @@ let _edwJobId         = null; // dismantling_jobs.id for the current stock card
 let _edwStock         = [];   // loaded list of in_stock/stripping jobs
 let _edwStockFilter   = '';
 let _edwSelectedZone  = 0;
-let _edwSelectedAsm   = 0;
+let _edwSelectedAsm   = -1;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
 let _edwActiveZone = null; // currently expanded zone index in step 2 grid
 let _edwActiveAsm  = null; // currently expanded assembly index within active zone
@@ -11797,6 +11797,7 @@ function openEdw() {
     _edwStock         = [];
     _edwStockFilter   = '';
     _edwSelectedZone  = 0;
+    _edwSelectedAsm   = -1;
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
     const drawer = document.getElementById('edwDrawer');
     if (drawer) {
@@ -12471,14 +12472,14 @@ function _buildEdwPanelQuals() {
 }
 
 function _edwSelectZonePanel(zI) {
-    _edwSelectedZone = zI; _edwSelectedAsm = 0; _edwSelectedPartBase = null;
+    _edwSelectedZone = zI; _edwSelectedAsm = -1; _edwSelectedPartBase = null;
     const z = document.getElementById('edwPanelZones');
     const a = document.getElementById('edwPanelAsms');
     const p = document.getElementById('edwPanelParts');
     const q = document.getElementById('edwPanelQuals');
     if (z) z.innerHTML = _buildPanelZones();
     if (a) { a.innerHTML = _buildPanelAsms(zI); a.scrollTop = 0; }
-    if (p) { p.innerHTML = _buildPanelParts(zI, 0); p.scrollTop = 0; }
+    if (p) { p.innerHTML = _buildPanelParts(zI, -1); p.scrollTop = 0; }
     if (q) q.innerHTML = _buildEdwPanelQuals();
     _updateEdwFooterCount();
 }
@@ -12565,7 +12566,7 @@ function _buildZoneNav() {
 
 function _edwSelectZone(zI) {
     _edwSelectedZone = zI;
-    _edwSelectedAsm  = 0;
+    _edwSelectedAsm  = -1;
     const nav = document.getElementById('edwZoneNav');
     if (nav) nav.innerHTML = _buildZoneNav();
     const detail = document.getElementById('edwZoneDetail');
