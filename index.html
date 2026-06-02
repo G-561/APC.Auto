@@ -381,13 +381,28 @@
     </div>
 </nav>
 
+<!-- Vehicle Intake — standalone form to enter a vehicle into stock -->
+<div id="vehicleIntakeOverlay" style="display:none; position:fixed; inset:0; z-index:3600; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div class="vi-sheet">
+        <div class="vi-hdr">
+            <span class="vi-title">Enter Vehicle into Stock</span>
+            <button class="vi-close" onclick="closeVehicleIntake()">✕</button>
+        </div>
+        <div class="vi-body" id="viBody"></div>
+        <div class="vi-footer">
+            <button class="vi-cancel" onclick="closeVehicleIntake()">Cancel</button>
+            <button class="vi-save" onclick="saveVehicleIntake()">Save to Stock →</button>
+        </div>
+    </div>
+</div>
+
 <!-- Vehicle Stock Card — full-screen management card for a dismantling vehicle -->
 <div id="vehicleStockCardOverlay" style="display:none; position:fixed; inset:0; z-index:3500; background:#f4f4f4; flex-direction:column; overflow:hidden;">
     <div class="vsc-header">
         <button class="vsc-back-btn" onclick="closeVehicleStockCard()">← Back</button>
         <div class="vsc-header-title" id="vscTitle">Vehicle Stock Card</div>
         <div class="vsc-header-actions">
-            <button class="vsc-action-btn" id="vscEdwBtn" onclick="">Open in EDW</button>
+            <button class="vsc-action-btn" id="vscEdwBtn" onclick="">Start Dismantling →</button>
         </div>
     </div>
     <div class="vsc-body" id="vscBody">

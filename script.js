@@ -13464,7 +13464,10 @@ async function renderDashStockVehicles() {
     card.innerHTML = `
         <div class="dash-card-hdr">
             <span class="dash-card-title">Vehicle Inventory</span>
-            <span class="dash-card-meta" id="dashSvCount"></span>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="dash-card-meta" id="dashSvCount"></span>
+                <button class="pro-lst-new-btn" style="font-size:11px;padding:6px 12px;" onclick="openVehicleIntake()">+ Add Vehicle</button>
+            </div>
         </div>
         <div class="dash-sv-filter-row">
             <button class="dash-sv-pill${_dashSvFilter2==='all'?' active':''}" onclick="_dashSvSetFilter('all')">All</button>
@@ -13691,6 +13694,130 @@ async function openVehicleStockCard(jobId) {
                 <tbody>${partsRows}</tbody>
             </table>
         </div>`;
+}
+
+// ─── Vehicle Intake — standalone entry form ───────────────────────────────────
+let _viVehicle = {};
+
+function openVehicleIntake() {
+    _viVehicle = {};
+    const overlay = document.getElementById('vehicleIntakeOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    _renderVehicleIntakeForm();
+}
+
+function closeVehicleIntake() {
+    const overlay = document.getElementById('vehicleIntakeOverlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function _viSave(field, value) { _viVehicle[field] = value; }
+
+function _viOnMakeChange() {
+    const make = document.getElementById('viMake')?.value || '';
+    _viVehicle.make = make; _viVehicle.model = ''; _viVehicle.year = ''; _viVehicle.series = '';
+    const ms = document.getElementById('viModel'); if (ms) ms.innerHTML = buildModelOptions(make, '');
+    const ys = document.getElementById('viYear');  if (ys) ys.innerHTML = buildYearOptions('');
+    const ew = document.getElementById('viEngineCodeWrap'); if (ew) ew.innerHTML = _buildEngineCodeField('vi', make, '', '');
+    _viRefreshSeries();
+}
+
+function _viOnModelChange() {
+    const make = document.getElementById('viMake')?.value || '';
+    const model = document.getElementById('viModel')?.value || '';
+    _viVehicle.model = model; _viVehicle.year = ''; _viVehicle.series = '';
+    const ys = document.getElementById('viYear'); if (ys) ys.innerHTML = buildYearOptionsForModel(make, model, '');
+    const ew = document.getElementById('viEngineCodeWrap'); if (ew) ew.innerHTML = _buildEngineCodeField('vi', make, model, '');
+    _viRefreshSeries();
+}
+
+function _viOnYearChange() { _viVehicle.year = document.getElementById('viYear')?.value || ''; _viRefreshSeries(); }
+
+function _viRefreshSeries() {
+    const grp = document.getElementById('viSeriesGroup');
+    const sel = document.getElementById('viSeries');
+    if (!grp || !sel) return;
+    const html = buildSeriesOptions(_viVehicle.make, _viVehicle.model, _viVehicle.year, '');
+    if (html) { sel.innerHTML = html; grp.style.display = ''; }
+    else       { grp.style.display = 'none'; }
+}
+
+function _renderVehicleIntakeForm() {
+    const body = document.getElementById('viBody');
+    if (!body) return;
+    const makes = Object.keys(VEHICLE_DB || {}).sort();
+    body.innerHTML = `
+        <div class="vi-grid">
+            <div class="edw-field"><label class="edw-label">Stock Number</label>
+                <input id="viStockNumber" class="edw-input" type="text" placeholder="e.g. VH2847" oninput="_viSave('stockNumber',this.value)"></div>
+            <div class="edw-field"><label class="edw-label">Purchase Cost <span style="font-size:10px;color:#aaa;font-weight:500;text-transform:none;">(internal)</span></label>
+                <div class="edw-price-wrap"><span class="edw-price-sym">$</span><input id="viVehicleCost" class="edw-input edw-price-inp" type="number" min="0" step="1" placeholder="0" oninput="_viSave('vehicleCost',this.value)"></div></div>
+            <div class="edw-field"><label class="edw-label">Make *</label>
+                <select id="viMake" class="edw-input" onchange="_viOnMakeChange()">
+                    <option value="">Select make…</option>
+                    ${makes.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('')}
+                </select></div>
+            <div class="edw-field"><label class="edw-label">Model *</label>
+                <select id="viModel" class="edw-input" onchange="_viOnModelChange()">${buildModelOptions('','')}</select></div>
+            <div class="edw-field"><label class="edw-label">Year *</label>
+                <select id="viYear" class="edw-input" onchange="_viOnYearChange()">${buildYearOptions('')}</select></div>
+            <div class="edw-field" id="viSeriesGroup" style="display:none;"><label class="edw-label">Series</label>
+                <select id="viSeries" class="edw-input" onchange="_viSave('series',this.value)"><option value="">Select series…</option></select></div>
+            <div class="edw-field"><label class="edw-label">Body Type</label>
+                <select id="viBodyType" class="edw-input" onchange="_viSave('bodyType',this.value)">
+                    <option value="">Select…</option>
+                    ${['Sedan','Hatchback','Wagon','Ute / Pickup','SUV / 4WD','Van','Coupe','Convertible','People Mover'].map(t=>`<option value="${t}">${t}</option>`).join('')}
+                </select></div>
+            <div class="edw-field"><label class="edw-label">Colour</label>
+                <input id="viColour" class="edw-input" type="text" placeholder="e.g. Graphite Grey" oninput="_viSave('colour',this.value)"></div>
+            <div class="edw-field"><label class="edw-label">Odometer (km)</label>
+                <input id="viOdo" class="edw-input" type="number" placeholder="e.g. 187000" oninput="_viSave('odometer',this.value)"></div>
+            <div class="edw-field"><label class="edw-label">VIN / Chassis</label>
+                <input id="viVin" class="edw-input" type="text" placeholder="17-char VIN" maxlength="17" oninput="_viSave('vin',this.value.toUpperCase())" style="text-transform:uppercase"></div>
+            <div class="edw-field"><label class="edw-label">Engine Code</label>
+                <div id="viEngineCodeWrap">${_buildEngineCodeField('vi','','','')}</div></div>
+            <div class="edw-field"><label class="edw-label">Transmission Type</label>
+                <select id="viTransType" class="edw-input" onchange="_viSave('transType',this.value)">
+                    <option value="">Select…</option>
+                    ${['Manual 4-speed','Manual 5-speed','Manual 6-speed','Auto 4-speed','Auto 6-speed','Auto 8-speed','Auto 9-speed','Auto 10-speed','CVT','DCT (Dual-Clutch)','Sequential','Other'].map(t=>`<option value="${t}">${t}</option>`).join('')}
+                </select></div>
+        </div>`;
+}
+
+async function saveVehicleIntake() {
+    const v = _viVehicle;
+    v.make  = document.getElementById('viMake')?.value  || v.make  || '';
+    v.model = document.getElementById('viModel')?.value || v.model || '';
+    v.year  = document.getElementById('viYear')?.value  || v.year  || '';
+    v.series= document.getElementById('viSeries')?.value || '';
+    v.engineCode = document.getElementById('viEngineCode')?.value || '';
+
+    if (!v.make || !v.model || !v.year) { showToast('Please select Make, Model and Year'); return; }
+    if (!sb || !currentUserId) { showToast('Sign in required'); return; }
+
+    const saveBtn = document.querySelector('#vehicleIntakeOverlay .vi-save');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+    const { data: job, error } = await sb.from('dismantling_jobs').insert({
+        user_id: currentUserId, status: 'in_stock',
+        make: v.make, model: v.model, year: Number(v.year),
+        series: v.series || null, body_type: v.bodyType || null,
+        vin: v.vin || null, colour: v.colour || null,
+        engine_code: v.engineCode || null, transmission_type: v.transType || null,
+        odometer: v.odometer ? Number(v.odometer) : null,
+        stock_number: v.stockNumber || null,
+        vehicle_cost: v.vehicleCost ? Number(v.vehicleCost) : null,
+    }).select('id').single();
+
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save to Stock →'; }
+    if (error || !job) { showToast('Failed to save vehicle'); return; }
+
+    showToast('Vehicle added to stock');
+    closeVehicleIntake();
+    renderDashStockVehicles();
+    openVehicleStockCard(job.id);
 }
 
 function closeVehicleStockCard() {

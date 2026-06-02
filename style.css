@@ -7436,6 +7436,25 @@ header {
 .dash-wanted-btn { flex-shrink: 0; padding: 7px 14px; background: #f07020; color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
 .dash-wanted-btn:hover:not(:disabled) { background: #d95f10; }
 
+/* ─── Vehicle Intake overlay ─────────────────────────────────────────────── */
+.vi-sheet {
+    background: white; border-radius: 16px; width: 100%; max-width: 760px;
+    max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.vi-hdr { display: flex; align-items: center; padding: 18px 24px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+.vi-title { flex: 1; font-size: 16px; font-weight: 800; color: #1a1a2e; }
+.vi-close { background: none; border: none; font-size: 18px; color: #aaa; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.vi-close:hover { background: #f4f4f4; color: #333; }
+.vi-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.vi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.vi-footer { display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid #eee; flex-shrink: 0; justify-content: flex-end; }
+.vi-cancel { padding: 10px 20px; background: #f4f4f4; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; color: #555; cursor: pointer; }
+.vi-cancel:hover { background: #e8e8e8; }
+.vi-save { padding: 10px 24px; background: #f07020; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.vi-save:hover:not(:disabled) { background: #d95f10; }
+.vi-save:disabled { opacity: 0.6; cursor: default; }
+
 /* ─── Vehicle Stock Card overlay ─────────────────────────────────────────── */
 .vsc-header {
     display: flex; align-items: center; gap: 16px;
