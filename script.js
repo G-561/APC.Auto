@@ -2369,6 +2369,7 @@ function subscribeToRealtimeMessages() {
                 renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
                 updateInboxBadge();
                 proRefreshIfOpen(conv.id);
+                _slRefreshChatIfOpen(conv.supabaseConvId);
 
                 const inboxOpen = document.getElementById('inboxDrawer')?.classList.contains('active');
                 if (!inboxOpen && !proEnquiriesIsOpen()) showToast(`New message from ${conv.with}`);
@@ -11604,6 +11605,7 @@ function proOpenStockLookup() {
     _slColWidths = null;    // recompute column widths against current styles
     _slSearchHistory = []; // fresh session log
     _slRenderSearchHistory();
+    _slChatClose();
     try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
     try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
     _slRenderResultsArea();
@@ -14538,6 +14540,132 @@ function _slJumpToSearch(idx) {
     }
 }
 
+// ─── Stock Lookup: in-place chat ─────────────────────────────────────────────
+let _slActiveChat     = null;
+let _slChatMinimised  = false;
+
+function _slOpenChatBtn(btn) {
+    _slOpenChat(Number(btn.dataset.lid), btn.dataset.sid, btn.dataset.title, btn.dataset.seller);
+}
+
+async function _slOpenChat(listingId, sellerId, listingTitle, sellerName) {
+    if (!currentUserId) { showToast('Sign in to message'); return; }
+    if (sellerId === currentUserId) { showToast('This is your own listing'); return; }
+
+    const float = document.getElementById('slChatFloat');
+    const yard  = document.getElementById('slCfYard');
+    const part  = document.getElementById('slCfPart');
+    if (yard)  yard.textContent  = sellerName;
+    if (part)  part.textContent  = listingTitle;
+    if (float) { float.style.display = 'flex'; float.classList.remove('minimised'); }
+    _slChatMinimised = false;
+
+    const msgsEl = document.getElementById('slCfMsgs');
+    if (msgsEl) msgsEl.innerHTML = `<div class="sl-cf-loading">Connecting…</div>`;
+
+    const conv = await _slEnsureConversation(listingId, sellerId, listingTitle, sellerName);
+    if (!conv) return;
+    _slActiveChat = conv;
+    _slChatRender();
+}
+
+async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerName) {
+    if (!sb || !currentUserId) return null;
+
+    // Check local cache first
+    let conv = conversations.find(c => String(c.partId) === String(listingId) && c.buyerId === currentUserId);
+    if (conv) return conv;
+
+    // Check Supabase for existing conversation
+    const { data: existing } = await sb.from('conversations')
+        .select('id').eq('listing_id', listingId).eq('buyer_id', currentUserId).maybeSingle();
+
+    if (existing) {
+        const { data: msgs } = await sb.from('messages')
+            .select('id, sender_id, text, photo_url, created_at')
+            .eq('conversation_id', existing.id).order('created_at', { ascending: true });
+        conv = {
+            id: nextConvId(), supabaseConvId: existing.id,
+            partId: String(listingId), sellerId, buyerId: currentUserId,
+            buyerName: currentUserName, with: sellerName, partTitle: listingTitle, msgs: [], unread: false,
+        };
+        conv.msgs = (msgs || []).map((m, i) => ({
+            id: i + 1, supabaseMsgId: m.id, sent: m.sender_id === currentUserId,
+            text: m.text || '', time: formatMsgDate(m.created_at), clock: formatMsgTime(m.created_at),
+        }));
+        conversations.unshift(conv);
+        saveConversations();
+        return conv;
+    }
+
+    // Create new conversation
+    const { data, error } = await sb.from('conversations').insert({
+        listing_id: listingId, buyer_id: currentUserId, seller_id: sellerId,
+        buyer_name: currentUserName, seller_name: sellerName,
+        listing_title: listingTitle, unread_buyer: false, unread_seller: true,
+    }).select('id').single();
+
+    if (error) { showToast('Could not start chat: ' + error.message); return null; }
+
+    conv = {
+        id: nextConvId(), supabaseConvId: data.id,
+        partId: String(listingId), sellerId, buyerId: currentUserId,
+        buyerName: currentUserName, with: sellerName, partTitle: listingTitle, msgs: [], unread: false,
+    };
+    conversations.unshift(conv);
+    saveConversations();
+    return conv;
+}
+
+function _slChatRender() {
+    const el = document.getElementById('slCfMsgs');
+    const conv = _slActiveChat;
+    if (!el || !conv) return;
+    if (!conv.msgs?.length) {
+        el.innerHTML = `<div class="sl-cf-empty">No messages yet — send your first message below.</div>`;
+        return;
+    }
+    el.innerHTML = conv.msgs.map(m => {
+        const bubble = m.text ? escapeHtml(m.text) : (m.photo ? `<img src="${escapeHtml(m.photo)}" style="max-width:180px;border-radius:6px;" alt="">` : '');
+        return `<div class="sl-cf-msg ${m.sent ? 'sent' : 'recv'}">
+            <div class="sl-cf-bubble">${bubble}</div>
+            <div class="sl-cf-time">${m.clock || m.time || ''}</div>
+        </div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+}
+
+function _slChatSend() {
+    const input = document.getElementById('slCfInput');
+    const text  = input?.value.trim();
+    if (!text || !_slActiveChat) return;
+    const conv = _slActiveChat;
+    conv.msgs = conv.msgs || [];
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, text, time: 'Today', clock: nowClock(), timestamp: Date.now() });
+    input.value = '';
+    saveConversations();
+    _slChatRender();
+    syncMessageToSupabase(conv.supabaseConvId, text, true).catch(() => {});
+}
+
+function _slChatMinimize() {
+    const float = document.getElementById('slChatFloat');
+    if (!float) return;
+    _slChatMinimised = !_slChatMinimised;
+    float.classList.toggle('minimised', _slChatMinimised);
+}
+
+function _slChatClose() {
+    const float = document.getElementById('slChatFloat');
+    if (float) float.style.display = 'none';
+    _slActiveChat = null;
+}
+
+function _slRefreshChatIfOpen(convId) {
+    if (!_slActiveChat || _slActiveChat.supabaseConvId !== convId) return;
+    _slChatRender();
+}
+
 function _slTogglePartCheck(base, qualifier, checked) {
     if (checked) {
         _slSelectQualifier(base, qualifier);
@@ -14755,6 +14883,11 @@ function _slRenderResults() {
         const stock  = r.stock_number ? `Stock: ${escapeHtml(r.stock_number)}` : '';
         const bin    = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
         const chk    = _slSelected.has(r.id) ? ' checked' : '';
+        const chatBtn = !isOwn && r.seller_id
+            ? `<div class="sl-cell sl-cell-chat"><button class="sl-chat-row-btn"
+                  data-lid="${r.id}" data-sid="${r.seller_id}"
+                  data-title="${escapeHtml(r.title)}" data-seller="${escapeHtml(r.profiles?.display_name || 'Wrecker')}"
+                  onclick="event.stopPropagation();_slOpenChatBtn(this)">Chat</button></div>` : '';
         return `<div class="sl-row${isOwn ? ' own' : ''}${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
             <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
             <div class="sl-cell sl-cell-thumb">
@@ -14765,6 +14898,7 @@ function _slRenderResults() {
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
             ${isOwn ? `<div class="sl-cell sl-cell-meta">${stock ? `<span>${stock}</span>` : ''}${bin ? `<span>${bin}</span>` : ''}</div>` : ''}
+            ${chatBtn}
         </div>`;
     };
 
