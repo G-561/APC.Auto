@@ -7190,9 +7190,20 @@ header {
     border-bottom: 2px solid #ddd;
     overflow: hidden;
 }
-/* In the stacked layout the 3-panel sizes to its content (no bounded parent height) */
-.sl-selector .edw-3panel { flex: none; grid-template-rows: 38px auto; }
+/* Selector: compact rows, no wrapping, minimal height */
+.sl-selector .edw-3panel { flex: none; grid-template-rows: 26px auto; }
 .sl-selector .edw-3pcol  { overflow-y: visible; }
+.sl-selector .edw-3ph    { font-size: 10px; padding: 0 8px; }
+.sl-selector .edw-panel-row {
+    padding: 5px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.sl-selector .edw-panel-row span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 /* selector reuses .edw-3panel / .edw-3ph / .edw-3pcol / .edw-panel-row classes */
 .sl-part-row { cursor: pointer; }
 .sl-part-row.searched { background: #fff4ec; color: #f07020; }

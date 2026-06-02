@@ -11601,6 +11601,7 @@ function proOpenStockLookup() {
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = -1; _slSelectedPartBase = null;
     _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
+    _slColWidths = null; // recompute column widths against current styles
     try { _slRenderVehicleBar(); } catch(e) { console.error('SL veh bar error:', e); }
     try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
     _slRenderResultsArea();
@@ -14250,9 +14251,10 @@ function _slGetPartGroups(zI, aI) {
 function _slComputeColWidths() {
     if (_slColWidths) return _slColWidths;
     const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     const maxW = arr => arr.length ? Math.ceil(Math.max(...arr.map(t => ctx.measureText(t).width))) : 0;
 
+    // 16px h-padding + 28px for badge/arrow/border, min wide enough for content
     const zW = Math.max(maxW(EDW_TAXONOMY.map(z => z.zone)) + 44, 130);
     const aW = Math.max(maxW(EDW_TAXONOMY.flatMap(z => z.assemblies.map(a => a.name))) + 44, 120);
 
