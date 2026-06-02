@@ -1664,6 +1664,10 @@ async function loadPublicListingsFromSupabase(append = false) {
                     _sfUserId ? (p.sellerId === _sfUserId || p.seller === _sfSeller) : p.seller === _sfSeller
                 );
                 _sfGrid.innerHTML = _sfParts.map(p => buildCardHTML(p)).join('');
+                const _sfListEl = document.getElementById('sfStatListings');
+                const _sfSaveEl = document.getElementById('sfStatSaves');
+                if (_sfListEl) _sfListEl.textContent = _sfParts.length;
+                if (_sfSaveEl) _sfSaveEl.textContent = _sfParts.reduce((s, p) => s + (p.saves || 0), 0);
             }
         }
         if (!append) {
@@ -1766,7 +1770,9 @@ async function loadUserListingsFromSupabase(userId) {
             const parts = getAllParts().filter(p => p.sellerId === userId || p.seller === sellerName);
             sfGrid.innerHTML = parts.map(p => buildCardHTML(p)).join('');
             const listEl = document.getElementById('sfStatListings');
+            const saveEl = document.getElementById('sfStatSaves');
             if (listEl) listEl.textContent = parts.length;
+            if (saveEl) saveEl.textContent = parts.reduce((s, p) => s + (p.saves || 0), 0);
         }
     } catch (e) { showToast('Load error: ' + (e.message || e)); }
 }
