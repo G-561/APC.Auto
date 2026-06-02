@@ -5375,8 +5375,16 @@ header {
     display: grid;
     grid-template-columns: 1.6fr 1fr 0.7fr;
     gap: 14px;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
 }
+.dash-second-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+    align-items: flex-start;
+}
+.dash-second-row #dashDemandCard  { flex: 1; }
+.dash-second-row #dashWantedRequestsCard { flex: 1.4; }
 .dash-chart-main, .dash-chart-cat, .dash-activity-col { min-height: 260px; }
 
 /* Generic card */
@@ -7656,7 +7664,7 @@ header {
     margin-bottom: 10px; outline: none;
 }
 .dash-wr-search:focus { border-color: #f07020; background: #fff; }
-.dash-wr-list { overflow-y: auto; max-height: 420px; }
+.dash-wr-list { overflow-y: auto; max-height: 260px; }
 .dash-wr-empty { padding: 20px 0; color: #aaa; font-size: 13px; text-align: center; }
 .dash-wr-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
 .dash-wr-row:last-child { border-bottom: none; }
