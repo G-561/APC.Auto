@@ -11716,8 +11716,15 @@ function proSendPhoto(event, convId) {
     event.target.value = '';
 }
 
+function proOpenStockLookup() {
+    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+    document.getElementById('proNavStock')?.classList.add('pro-hdr-active');
+    openStockLookup();
+}
+
 function proOpenEDW() {
-    proShowView('proEnquiriesView', 'proNavEDW');
+    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+    document.getElementById('proNavEDW')?.classList.add('pro-hdr-active');
     openEdw();
 }
 
@@ -13649,6 +13656,12 @@ function closeStockLookup() {
     const drawer = document.getElementById('stockLookupDrawer');
     if (drawer) drawer.classList.remove('active');
     document.body.style.overflow = '';
+    // Reset Pro nav highlight back to Dashboard
+    const proHdr = document.getElementById('proHeader');
+    if (proHdr && proHdr.style.display !== 'none') {
+        document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+        document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
+    }
 }
 
 function _slRenderVehicleBar() {
