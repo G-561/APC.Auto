@@ -13437,16 +13437,24 @@ async function notifyWantedBuyer(btn) {
     }
 }
 
-let _dashSvJobs = [];
+let _dashSvJobs   = [];
+let _dashSvFilter2 = 'lot'; // 'all' | 'lot' | 'scrapped'
+
+const _VSC_STATUS = {
+    in_stock:  { label: 'In Stock',       cls: 'vsc-s-stock' },
+    stripping: { label: 'Stripping',      cls: 'vsc-s-strip' },
+    ready:     { label: 'Ready to Review',cls: 'vsc-s-ready' },
+    published: { label: 'Parts Listed',   cls: 'vsc-s-pub'   },
+    complete:  { label: 'Complete',       cls: 'vsc-s-done'  },
+};
 
 async function renderDashStockVehicles() {
     const card = document.getElementById('dashStockVehiclesCard');
     if (!card || !sb || !currentUserId) return;
 
     const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, make, model, year, series, stock_number, created_at, colour, odometer, vehicle_cost')
+        .select('id, make, model, year, series, stock_number, status, created_at, colour, odometer, vehicle_cost, shell_scrapped, shell_scrapped_at')
         .eq('user_id', currentUserId)
-        .eq('status', 'in_stock')
         .order('created_at', { ascending: false });
 
     _dashSvJobs = jobs || [];
@@ -13455,45 +13463,64 @@ async function renderDashStockVehicles() {
 
     card.innerHTML = `
         <div class="dash-card-hdr">
-            <span class="dash-card-title">Vehicles in Stock</span>
-            <span class="dash-card-meta" id="dashSvCount">${_dashSvJobs.length} awaiting dismantling</span>
+            <span class="dash-card-title">Vehicle Inventory</span>
+            <span class="dash-card-meta" id="dashSvCount"></span>
+        </div>
+        <div class="dash-sv-filter-row">
+            <button class="dash-sv-pill${_dashSvFilter2==='all'?' active':''}" onclick="_dashSvSetFilter('all')">All</button>
+            <button class="dash-sv-pill${_dashSvFilter2==='lot'?' active':''}" onclick="_dashSvSetFilter('lot')">On Lot</button>
+            <button class="dash-sv-pill${_dashSvFilter2==='scrapped'?' active':''}" onclick="_dashSvSetFilter('scrapped')">Shell Scrapped</button>
         </div>
         <input type="text" id="dashSvSearch" class="dash-wr-search"
             placeholder="Search make, model, stock number…"
-            oninput="_dashSvFilter(this.value)">
+            oninput="_dashSvRender()">
         <div class="dash-sv-list" id="dashSvList"></div>`;
 
-    _dashSvFilter('');
+    _dashSvRender();
 }
 
-function _dashSvFilter(q) {
+function _dashSvSetFilter(f) {
+    _dashSvFilter2 = f;
+    document.querySelectorAll('.dash-sv-pill').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.dash-sv-pill').forEach(b => {
+        if (b.textContent.toLowerCase().replace(/\s+/g,'') === {all:'all',lot:'onlot',scrapped:'shellscrapped'}[f]) b.classList.add('active');
+    });
+    _dashSvRender();
+}
+
+function _dashSvRender() {
     const list    = document.getElementById('dashSvList');
     const countEl = document.getElementById('dashSvCount');
+    const q       = (document.getElementById('dashSvSearch')?.value || '').toLowerCase();
     if (!list) return;
-    const lq = q.toLowerCase();
-    const filtered = q
-        ? _dashSvJobs.filter(j =>
-            (j.make || '').toLowerCase().includes(lq) ||
-            (j.model || '').toLowerCase().includes(lq) ||
-            (j.stock_number || '').toLowerCase().includes(lq) ||
-            String(j.year || '').includes(lq))
-        : _dashSvJobs;
+
+    let filtered = _dashSvJobs;
+    if (_dashSvFilter2 === 'lot')      filtered = filtered.filter(j => !j.shell_scrapped);
+    if (_dashSvFilter2 === 'scrapped') filtered = filtered.filter(j =>  j.shell_scrapped);
+    if (q) filtered = filtered.filter(j =>
+        (j.make || '').toLowerCase().includes(q) ||
+        (j.model || '').toLowerCase().includes(q) ||
+        (j.stock_number || '').toLowerCase().includes(q) ||
+        String(j.year || '').includes(q));
 
     if (countEl) countEl.textContent = `${filtered.length} vehicle${filtered.length !== 1 ? 's' : ''}`;
 
     list.innerHTML = filtered.map(j => {
-        const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
-        const meta  = [j.stock_number ? `#${j.stock_number}` : null, j.colour || null, j.odometer ? `${Number(j.odometer).toLocaleString()} km` : null].filter(Boolean).join(' · ');
-        const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        const title   = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+        const meta    = [j.stock_number ? `#${j.stock_number}` : null, j.colour || null].filter(Boolean).join(' · ');
+        const date    = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' });
+        const st      = _VSC_STATUS[j.status] || { label: j.status, cls: '' };
+        const scrappedChip = j.shell_scrapped ? `<span class="dash-sv-scrapped-chip">Shell Scrapped</span>` : '';
         return `
         <div class="dash-sv-row" onclick="openVehicleStockCard(${j.id})" style="cursor:pointer;">
             <div class="dash-sv-info">
-                <div class="dash-sv-title">${escapeHtml(title)}</div>
+                <div class="dash-sv-title">${escapeHtml(title)} ${scrappedChip}</div>
                 <div class="dash-sv-meta">${meta ? escapeHtml(meta) + ' · ' : ''}${date}</div>
             </div>
+            <span class="vsc-status-chip ${st.cls}" style="font-size:10px;flex-shrink:0;">${st.label}</span>
             <span class="dash-sv-arrow">›</span>
         </div>`;
-    }).join('') || `<div style="padding:16px 0;color:#aaa;font-size:13px;text-align:center;">No matches</div>`;
+    }).join('') || `<div style="padding:16px 0;color:#aaa;font-size:13px;text-align:center;">No vehicles match this filter.</div>`;
 }
 
 async function renderDashWantedRequests() {
@@ -13581,7 +13608,8 @@ async function openVehicleStockCard(jobId) {
     if (!job) { if (body) body.innerHTML = `<div style="padding:40px;text-align:center;color:#aaa;">Vehicle not found.</div>`; return; }
 
     const vehicleLabel = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}`.trim();
-    if (titleEl) titleEl.textContent = vehicleLabel || 'Stock Card';
+    const st = _VSC_STATUS[job.status] || { label: job.status, cls: '' };
+    if (titleEl) titleEl.innerHTML = `${escapeHtml(vehicleLabel) || 'Stock Card'} <span class="vsc-status-chip ${st.cls}" style="font-size:11px;vertical-align:middle;margin-left:8px;">${st.label}</span>${job.shell_scrapped ? '<span class="vsc-scrapped-badge">Shell Scrapped</span>' : ''}`;
 
     const allParts  = parts || [];
     const active    = allParts.filter(p => p.status === 'active' || p.status === 'pending');
@@ -13641,6 +13669,13 @@ async function openVehicleStockCard(jobId) {
                     <span class="vsc-profit-val">${profit != null ? profitSign + fmtMoney(profit) : 'Enter purchase cost to calculate'}</span>
                 </div>
                 ${cost == null ? `<button class="vsc-set-cost-btn" onclick="_vscSetCost(${jobId})">Set Purchase Cost</button>` : `<button class="vsc-set-cost-btn" onclick="_vscSetCost(${jobId})">Edit Purchase Cost</button>`}
+                <div class="vsc-shell-row">
+                    ${job.shell_scrapped
+                        ? `<div class="vsc-shell-scrapped">Shell scrapped ${job.shell_scrapped_at ? new Date(job.shell_scrapped_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : ''}</div>
+                           <button class="vsc-set-cost-btn" style="margin-top:6px;" onclick="_vscToggleShellScrapped(${jobId}, false)">Unmark — Shell Still Present</button>`
+                        : `<button class="vsc-shell-scrap-btn" onclick="_vscToggleShellScrapped(${jobId}, true)">Mark Shell as Scrapped</button>`
+                    }
+                </div>
             </div>
         </div>
         <div class="vsc-card vsc-parts-card">
@@ -13673,6 +13708,17 @@ async function _vscSetCost(jobId) {
     await sb.from('dismantling_jobs').update({ vehicle_cost: num }).eq('id', jobId);
     showToast('Purchase cost saved');
     openVehicleStockCard(jobId);
+}
+
+async function _vscToggleShellScrapped(jobId, scrapped) {
+    if (scrapped && !confirm('Mark the shell for this vehicle as scrapped? This records that the body has been disposed of.')) return;
+    const update = scrapped
+        ? { shell_scrapped: true,  shell_scrapped_at: new Date().toISOString() }
+        : { shell_scrapped: false, shell_scrapped_at: null };
+    await sb.from('dismantling_jobs').update(update).eq('id', jobId);
+    showToast(scrapped ? 'Shell marked as scrapped' : 'Shell marked as still present');
+    openVehicleStockCard(jobId);
+    renderDashStockVehicles();
 }
 
 async function _edwLoadAndOpen(jobId) {

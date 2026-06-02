@@ -7516,6 +7516,22 @@ header {
 .dash-sv-btn { flex-shrink: 0; padding: 7px 14px; background: #f07020; color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
 .dash-sv-btn:hover { background: #d95f10; }
 .dash-sv-arrow { color: #ccc; font-size: 20px; flex-shrink: 0; }
+.dash-sv-filter-row { display: flex; gap: 6px; margin-bottom: 10px; }
+.dash-sv-pill { padding: 5px 13px; border: 1px solid #e0e0e0; border-radius: 20px; background: white; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; }
+.dash-sv-pill.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+.dash-sv-scrapped-chip { display: inline-block; padding: 2px 8px; background: #fee2e2; color: #dc2626; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 6px; vertical-align: middle; }
+
+/* Vehicle stock card — lifecycle status chips */
+.vsc-s-stock  { background: #fef9c3; color: #92400e; }
+.vsc-s-strip  { background: #dbeafe; color: #1e40af; }
+.vsc-s-ready  { background: #ede9fe; color: #6d28d9; }
+.vsc-s-pub    { background: #dcfce7; color: #15803d; }
+.vsc-s-done   { background: #f3f4f6; color: #6b7280; }
+.vsc-scrapped-badge { display: inline-block; padding: 3px 10px; background: #fee2e2; color: #dc2626; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 10px; vertical-align: middle; }
+.vsc-shell-row { margin-top: 12px; }
+.vsc-shell-scrap-btn { width: 100%; padding: 9px; background: #fff1f2; border: 1px solid #fecaca; border-radius: 8px; font-size: 12px; font-weight: 700; color: #dc2626; cursor: pointer; }
+.vsc-shell-scrap-btn:hover { background: #fee2e2; }
+.vsc-shell-scrapped { font-size: 12px; font-weight: 700; color: #dc2626; padding: 8px 0; }
 
 /* Members Wanted card */
 .dash-wr-search {
