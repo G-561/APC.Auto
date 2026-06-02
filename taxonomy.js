@@ -13,7 +13,7 @@ const EDW_TAXONOMY = [
         zone: "Transmission & Drivetrain",
         apcCategory: "transmission",
         assemblies: [
-            { name: "Gearbox / Transmission", parts: ["Torque Converter", "Gearbox Mount", "Transmission Oil Cooler", "Transmission Oil Pan / Sump", "Auto Transmission", "Transfer Case (Automatic)", "Transfer Case (Manual)", "CVT Transmission", "Manual Gearbox (3 Speed)", "Manual Gearbox (4 Speed)", "Manual Gearbox (5 Speed)", "Manual Gearbox (6 Speed)"] },
+            { name: "Gearbox / Transmission", parts: ["Manual Gearbox (3 Speed)", "Manual Gearbox (4 Speed)", "Manual Gearbox (5 Speed)", "Manual Gearbox (6 Speed)", "Gearbox Mount", "Auto Transmission", "Torque Converter", "CVT Transmission", "Transmission Oil Cooler", "Transmission Oil Pan / Sump", "Transfer Case (Automatic)", "Transfer Case (Manual)"] },
             { name: "Driveshafts", parts: ["Front Driveshaft (Left - Manual)", "Front Driveshaft (Right - Manual)", "Rear Driveshaft (Left)", "Rear Driveshaft (Right)", "Propshaft (Front)", "Propshaft (Rear)", "Centre Bearing", "Front Driveshaft (Left - Auto)", "Front Driveshaft (Right - Auto)", "Intermediate Shaft"] },
             { name: "Diff & Axles", parts: ["Complete Diff (Front)", "Complete Diff (Rear)", "Rear Axle (Left)", "Rear Axle (Right)", "Front Axle (Left)", "Front Axle (Right)", "Diff Centre (Front)", "Diff Centre (Rear)"] },
             { name: "Clutch", parts: ["Clutch Kit (Plate, Pressure Plate, Bearing)", "Flywheel", "Dual Mass Flywheel", "Clutch Master Cylinder", "Clutch Slave Cylinder"] },
