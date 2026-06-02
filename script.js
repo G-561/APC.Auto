@@ -14595,6 +14595,7 @@ async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerNa
         }));
         conversations.unshift(conv);
         saveConversations();
+        proUpdateFolderBadges();
         return conv;
     }
 
@@ -14614,6 +14615,7 @@ async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerNa
     };
     conversations.unshift(conv);
     saveConversations();
+    proUpdateFolderBadges();
     return conv;
 }
 
@@ -14653,6 +14655,17 @@ function _slChatMinimize() {
     if (!float) return;
     _slChatMinimised = !_slChatMinimised;
     float.classList.toggle('minimised', _slChatMinimised);
+}
+
+function _slViewInEnquiries() {
+    const conv = _slActiveChat;
+    _slChatClose();
+    proOpenEnquiries();
+    proSetFolder('buying');
+    if (conv?.supabaseConvId) {
+        const local = conversations.find(c => c.supabaseConvId === conv.supabaseConvId);
+        if (local) setTimeout(() => openInboxConv(local.id), 250);
+    }
 }
 
 function _slChatClose() {
