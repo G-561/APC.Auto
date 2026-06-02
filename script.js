@@ -13428,6 +13428,92 @@ async function renderDashJobs() {
     `;
 }
 
+async function renderDashWanted() {
+    const card = document.getElementById('dashWantedCard');
+    if (!card || !currentUserId) return;
+
+    const myActive = userListings.filter(p => p.status === 'active' || p.status === 'pending');
+    if (!myActive.length) { card.style.display = 'none'; return; }
+
+    if (!publicWantedDatabase.length) await loadPublicWantedFromSupabase();
+    if (!publicWantedDatabase.length) { card.style.display = 'none'; return; }
+
+    const matches = [];
+    const seenWanted = new Set();
+    for (const w of publicWantedDatabase) {
+        if (seenWanted.has(w.id)) continue;
+        for (const listing of myActive) {
+            if (wantedMatchesListing(w, listing)) {
+                matches.push({ wanted: w, listing });
+                seenWanted.add(w.id);
+                break;
+            }
+        }
+        if (matches.length >= 10) break;
+    }
+
+    if (!matches.length) { card.style.display = 'none'; return; }
+    card.style.display = '';
+
+    const rows = matches.map(({ wanted: w, listing }) => {
+        const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
+        const budget  = w.maxPrice ? `<span class="dash-wanted-budget">$${w.maxPrice} budget</span>` : '';
+        const loc     = w.loc ? ` · ${escapeHtml(w.loc)}` : '';
+        return `
+        <div class="dash-wanted-row">
+            <div class="dash-wanted-info">
+                <div class="dash-wanted-part">${escapeHtml(w.partName)}</div>
+                <div class="dash-wanted-meta">${escapeHtml(vehicle)}${loc}${budget ? ' · ' + budget : ''}</div>
+                <div class="dash-wanted-match">Matches: <span>${escapeHtml(listing.title)}</span></div>
+            </div>
+            <button class="dash-wanted-btn"
+                data-wanted-id="${w.id}"
+                data-user-id="${w.userId}"
+                data-listing-id="${listing.supabaseId || ''}"
+                data-listing-title="${escapeHtml(listing.title)}"
+                onclick="notifyWantedBuyer(this)">Notify</button>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Wanted Matches</span>
+            <span class="dash-card-meta">${matches.length} buyer${matches.length !== 1 ? 's' : ''} looking for parts you may have</span>
+        </div>
+        <div class="dash-wanted-list">${rows}</div>`;
+}
+
+async function notifyWantedBuyer(btn) {
+    const wantedId     = btn.dataset.wantedId;
+    const userId       = btn.dataset.userId;
+    const listingId    = btn.dataset.listingId || null;
+    const listingTitle = btn.dataset.listingTitle;
+    if (!wantedId || !userId) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    const { error } = await sb.from('notifications').insert([{
+        user_id:        userId,
+        type:           'listing_match',
+        title:          'A seller may have what you\'re looking for',
+        body:           `Check out: "${listingTitle}"`,
+        listing_id:     listingId || null,
+        wanted_part_id: wantedId,
+        read:           false
+    }]);
+
+    if (error) {
+        showToast('Could not notify buyer');
+        btn.disabled = false;
+        btn.textContent = 'Notify';
+    } else {
+        btn.textContent = 'Notified ✓';
+        btn.style.background = '#22c55e';
+        btn.style.cursor = 'default';
+    }
+}
+
 async function openJobReview(jobId) {
     if (!sb) return;
     const { data: job }   = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
@@ -14854,6 +14940,7 @@ function renderDashboard() {
     renderDashActivity();
     renderDemandWidget();
     renderDashJobs();
+    renderDashWanted();
     renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
 }
 

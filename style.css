@@ -7423,6 +7423,19 @@ header {
 .dash-job-qr-btn { flex-shrink: 0; padding: 4px 10px; background: #f4f4f4; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; font-weight: 700; color: #555; cursor: pointer; }
 .dash-job-qr-btn:hover { background: #e8e8e8; }
 
+/* Wanted Matches card */
+.dash-wanted-list { padding: 4px 0; }
+.dash-wanted-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+.dash-wanted-row:last-child { border-bottom: none; }
+.dash-wanted-info { flex: 1; min-width: 0; }
+.dash-wanted-part { font-size: 14px; font-weight: 700; color: #333; }
+.dash-wanted-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.dash-wanted-budget { color: #f07020; font-weight: 700; }
+.dash-wanted-match { font-size: 11px; color: #aaa; margin-top: 4px; }
+.dash-wanted-match span { color: #666; font-weight: 600; }
+.dash-wanted-btn { flex-shrink: 0; padding: 7px 14px; background: #f07020; color: white; border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.dash-wanted-btn:hover:not(:disabled) { background: #d95f10; }
+
 /* ─── Job Review — worker photos + banners ──────────────────────────────── */
 .edw-review-photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 .edw-review-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; cursor: pointer; }
