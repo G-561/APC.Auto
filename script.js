@@ -11482,6 +11482,8 @@ function proPromoteDrawer(drawerId, navId) {
 function proOpenEnquiries() {
     proPromoteDrawer('inboxDrawer', 'proNavMessages');
     onOpenInbox();
+    // Re-apply after onOpenInbox in case anything reset it
+    proPromoteDrawer('inboxDrawer', 'proNavMessages');
 }
 
 function proOpenEDW() {
