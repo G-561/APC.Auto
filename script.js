@@ -13575,6 +13575,83 @@ async function notifyWantedBuyer(btn) {
     }
 }
 
+async function renderDashStockVehicles() {
+    const card = document.getElementById('dashStockVehiclesCard');
+    if (!card || !sb || !currentUserId) return;
+
+    const { data: jobs } = await sb.from('dismantling_jobs')
+        .select('id, make, model, year, series, stock_number, created_at, colour, odometer')
+        .eq('user_id', currentUserId)
+        .eq('status', 'in_stock')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+    if (!jobs?.length) { card.style.display = 'none'; return; }
+    card.style.display = '';
+
+    const rows = jobs.map(j => {
+        const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+        const meta  = [j.stock_number ? `#${escapeHtml(j.stock_number)}` : null, j.colour ? escapeHtml(j.colour) : null, j.odometer ? `${Number(j.odometer).toLocaleString()} km` : null].filter(Boolean).join(' · ');
+        const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+        return `
+        <div class="dash-sv-row">
+            <div class="dash-sv-info">
+                <div class="dash-sv-title">${escapeHtml(title)}</div>
+                <div class="dash-sv-meta">${meta ? meta + ' · ' : ''}${date}</div>
+            </div>
+            <button class="dash-sv-btn" onclick="proOpenEDW()">Dismantle →</button>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Vehicles in Stock</span>
+            <span class="dash-card-meta">${jobs.length} awaiting dismantling</span>
+        </div>
+        <div class="dash-sv-list">${rows}</div>`;
+}
+
+async function renderDashWantedRequests() {
+    const card = document.getElementById('dashWantedRequestsCard');
+    if (!card) return;
+
+    if (!publicWantedDatabase.length) await loadPublicWantedFromSupabase();
+
+    if (!publicWantedDatabase.length) {
+        card.innerHTML = `
+            <div class="dash-card-hdr">
+                <span class="dash-card-title">Buyer Wanted Requests</span>
+                <span class="dash-card-meta">None posted yet</span>
+            </div>
+            <div class="dash-empty-state" style="padding:16px 0;color:#aaa;">No buyers have posted wanted requests yet.</div>`;
+        return;
+    }
+
+    const rows = publicWantedDatabase.slice(0, 15).map(w => {
+        const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
+        const budget  = w.maxPrice ? `<span class="dash-wr-budget">Max $${w.maxPrice}</span>` : '';
+        return `
+        <div class="dash-wr-row">
+            <div class="dash-wr-info">
+                <div class="dash-wr-part">${escapeHtml(w.partName)}</div>
+                <div class="dash-wr-meta">${escapeHtml(vehicle)}${w.loc ? ' · ' + escapeHtml(w.loc) : ''} · ${escapeHtml(w.posted)}${budget ? ' · ' + budget : ''}</div>
+            </div>
+            <button class="dash-wr-btn"
+                data-id="${w.id}" data-part="${escapeHtml(w.partName)}"
+                data-cat="${escapeHtml(w.category)}" data-make="${escapeHtml(w.make)}"
+                data-model="${escapeHtml(w.model)}" data-year="${escapeHtml(w.year)}"
+                onclick="listFromWanted(this.dataset.id,this.dataset.part,this.dataset.cat,this.dataset.make,this.dataset.model,this.dataset.year)">List This Part ›</button>
+        </div>`;
+    }).join('');
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Buyer Wanted Requests</span>
+            <span class="dash-card-meta">${publicWantedDatabase.length} active request${publicWantedDatabase.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="dash-wr-list">${rows}</div>`;
+}
+
 async function openJobReview(jobId) {
     if (!sb) return;
     const { data: job }   = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
@@ -14940,25 +15017,13 @@ function renderDashboard() {
     set('dashStatSales',    dashMockData.closedSales.length);
     set('dashStatRevenue',  '$' + revenue.toLocaleString());
 
-    const countBadge = document.getElementById('dashActiveCount');
-    if (countBadge) countBadge.textContent = myListings.length;
-    const pendingBadge = document.getElementById('dashPendingCount');
-    if (pendingBadge) {
-        const pendingOfferCount = offersDb.filter(o => o.status === 'pending').length;
-        pendingBadge.textContent = pendingOfferCount || '';
-    }
-    const soldBadge = document.getElementById('dashSoldCount');
-    if (soldBadge) {
-        const realSoldCount = userListings.filter(l => l.status === 'sold' && l.seller === getCurrentSellerName()).length;
-        soldBadge.textContent = realSoldCount + dashMockData.closedSales.length;
-    }
-
     renderDashboardCharts(myListings);
     renderDashActivity();
     renderDemandWidget();
     renderDashJobs();
+    renderDashStockVehicles();
     renderDashWanted();
-    renderDashListings('active', document.querySelector('#dashListingsTabs .dash-tab.active'), 'dash');
+    renderDashWantedRequests();
 }
 
 function renderDashboardCharts(myListings) {

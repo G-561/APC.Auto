@@ -346,42 +346,11 @@
 
         <div id="dashJobsCard" class="dash-card" style="margin-bottom:20px; display:none;"></div>
 
+        <div id="dashStockVehiclesCard" class="dash-card" style="margin-bottom:20px; display:none;"></div>
+
         <div id="dashWantedCard" class="dash-card" style="margin-bottom:20px; display:none;"></div>
 
-        <div class="dash-card" id="dashListingsSection" style="margin-bottom:20px;">
-            <div class="dash-card-hdr">
-                <span class="dash-card-title">My Listings</span>
-                <div class="dash-tabs" id="dashListingsTabs">
-                    <button class="dash-tab active" onclick="renderDashListings('active',this,'dash')">Active <span id="dashActiveCount" class="dash-tab-badge"></span></button>
-                    <button class="dash-tab" onclick="renderDashListings('pending',this,'dash')">Pending <span id="dashPendingCount" class="dash-tab-badge"></span></button>
-                    <button class="dash-tab" onclick="renderDashListings('sold',this,'dash')">Sold <span id="dashSoldCount" class="dash-tab-badge"></span></button>
-                </div>
-            </div>
-            <div class="dash-search-row">
-                <input type="text" id="dashListingsSearch" class="dash-search-input" placeholder="Search by title, category, location, stock number..." oninput="filterDashListings()">
-                <select id="dashListingsCatFilter" class="dash-search-select" onchange="filterDashListings()">
-                    <option value="">All Categories</option>
-                    <option value="body">Body &amp; Exterior</option>
-                    <option value="glass">Glass &amp; Windows</option>
-                    <option value="engine">Engine</option>
-                    <option value="transmission">Transmission &amp; Drivetrain</option>
-                    <option value="suspension">Suspension &amp; Steering</option>
-                    <option value="wheels">Wheels &amp; Tyres</option>
-                    <option value="brakes">Brakes</option>
-                    <option value="electrical">Electrical &amp; Lighting</option>
-                    <option value="cooling">Cooling &amp; Air Con</option>
-                    <option value="fuel">Fuel System</option>
-                    <option value="interior">Interior</option>
-                    <option value="4x4">4x4 &amp; Off-Road</option>
-                    <option value="performance">Performance &amp; Race</option>
-                    <option value="audio">Audio &amp; In-Car Tech</option>
-                    <option value="tools">Workshop &amp; Tools</option>
-                    <option value="other">Other</option>
-                </select>
-                <span id="dashListingsCount" class="dash-results-count"></span>
-            </div>
-            <div id="dashListingsBody"></div>
-        </div>
+        <div id="dashWantedRequestsCard" class="dash-card" style="margin-bottom:20px;"></div>
 
     </div>
 </div>
