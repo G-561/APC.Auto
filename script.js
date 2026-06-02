@@ -12563,8 +12563,13 @@ function _buildEdwPanelQuals() {
         const asmName = EDW_TAXONOMY[zI]?.assemblies[aI]?.name || '';
         const engineCode = (asmName === 'Engine' && group.base === 'Engine' && _edwVehicle.engineCode)
             ? _edwVehicle.engineCode : null;
-        const label = engineCode
-            ? `<span class="edw-part-name">${escapeHtml(engineCode)}</span>`
+        const transCode  = (!engineCode && asmName === 'Gearbox / Transmission'
+            && (group.base === 'Auto Transmission' || group.base === 'CVT Transmission')
+            && _edwVehicle.transCode)
+            ? _edwVehicle.transCode : null;
+        const displayCode = engineCode || transCode;
+        const label = displayCode
+            ? `<span class="edw-part-name">${escapeHtml(displayCode)}</span>`
             : `<span class="edw-part-name" style="font-style:italic;color:#999;">Select</span>`;
         return `
         <div class="edw-panel-part${checked ? ' checked' : ''}">
