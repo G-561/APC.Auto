@@ -85,7 +85,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                 Dashboard
             </span>
-            <span class="pro-hdr-link" id="proNavListings" onclick="document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'})">
+            <span class="pro-hdr-link" id="proNavListings" onclick="proOpenMyListings()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
                 My Listings
             </span>
@@ -207,6 +207,45 @@
 
     </div>
 
+    <!-- Pro Listings View: full-width listings management -->
+    <div id="proListingsView" style="display:none; position:absolute; inset:0; z-index:5; background:#f4f4f4; flex-direction:column; overflow:hidden;">
+        <div class="pro-lst-toolbar">
+            <div class="pro-lst-toolbar-left">
+                <span class="pro-lst-title">My Listings</span>
+                <div id="proLstTabs" class="dash-tabs" style="margin-left:24px;">
+                    <button class="dash-tab active" onclick="renderDashListings('active',this,'pro')">Active</button>
+                    <button class="dash-tab" onclick="renderDashListings('pending',this,'pro')">Pending</button>
+                    <button class="dash-tab" onclick="renderDashListings('sold',this,'pro')">Sold</button>
+                </div>
+            </div>
+            <div class="pro-lst-toolbar-right">
+                <input type="text" id="proLstSearch" class="dash-search-input" placeholder="Search by title, category, stock number…" oninput="filterDashListings()">
+                <select id="proLstCatFilter" class="dash-search-select" onchange="filterDashListings()">
+                    <option value="">All Categories</option>
+                    <option value="body">Body &amp; Exterior</option>
+                    <option value="glass">Glass &amp; Windows</option>
+                    <option value="engine">Engine</option>
+                    <option value="transmission">Transmission &amp; Drivetrain</option>
+                    <option value="suspension">Suspension &amp; Steering</option>
+                    <option value="wheels">Wheels &amp; Tyres</option>
+                    <option value="brakes">Brakes</option>
+                    <option value="electrical">Electrical &amp; Lighting</option>
+                    <option value="cooling">Cooling &amp; Air Con</option>
+                    <option value="fuel">Fuel System</option>
+                    <option value="interior">Interior</option>
+                    <option value="4x4">4x4 &amp; Off-Road</option>
+                    <option value="performance">Performance &amp; Race</option>
+                    <option value="audio">Audio &amp; In-Car Tech</option>
+                    <option value="tools">Workshop &amp; Tools</option>
+                    <option value="other">Other</option>
+                </select>
+                <span id="proLstCount" class="pro-lst-count"></span>
+                <button class="pro-lst-new-btn" onclick="openSellOverlay()">+ New Listing</button>
+            </div>
+        </div>
+        <div class="pro-lst-body" id="proLstBody"></div>
+    </div>
+
     <div class="dash-inner" id="dashInner" style="height:100%; overflow-y:auto;">
 
         <div class="dash-page-hdr">
@@ -239,12 +278,12 @@
                 <div class="dash-stat-val" id="dashStatMessages">—</div>
                 <div class="dash-stat-lbl">Unread Messages</div>
             </div>
-            <div class="dash-stat-card dash-stat-clickable" onclick="renderDashListings('sold', document.querySelectorAll('#dashboardView .dash-tab')[2]); document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'});">
+            <div class="dash-stat-card dash-stat-clickable" onclick="proOpenMyListings('sold');">
                 <div class="dash-stat-ico">✅</div>
                 <div class="dash-stat-val" id="dashStatSales">—</div>
                 <div class="dash-stat-lbl">Closed Sales</div>
             </div>
-            <div class="dash-stat-card dash-stat-green dash-stat-clickable" onclick="renderDashListings('sold', document.querySelectorAll('#dashboardView .dash-tab')[2]); document.getElementById('dashListingsSection')?.scrollIntoView({behavior:'smooth'});">
+            <div class="dash-stat-card dash-stat-green dash-stat-clickable" onclick="proOpenMyListings('sold');">
                 <div class="dash-stat-ico">💰</div>
                 <div class="dash-stat-val" id="dashStatRevenue">—</div>
                 <div class="dash-stat-lbl">Revenue (30 days)</div>
@@ -281,10 +320,10 @@
         <div class="dash-card" id="dashListingsSection" style="margin-bottom:20px;">
             <div class="dash-card-hdr">
                 <span class="dash-card-title">My Listings</span>
-                <div class="dash-tabs">
-                    <button class="dash-tab active" onclick="renderDashListings('active',this)">Active <span id="dashActiveCount" class="dash-tab-badge"></span></button>
-                    <button class="dash-tab" onclick="renderDashListings('pending',this)">Pending <span id="dashPendingCount" class="dash-tab-badge"></span></button>
-                    <button class="dash-tab" onclick="renderDashListings('sold',this)">Sold <span id="dashSoldCount" class="dash-tab-badge"></span></button>
+                <div class="dash-tabs" id="dashListingsTabs">
+                    <button class="dash-tab active" onclick="renderDashListings('active',this,'dash')">Active <span id="dashActiveCount" class="dash-tab-badge"></span></button>
+                    <button class="dash-tab" onclick="renderDashListings('pending',this,'dash')">Pending <span id="dashPendingCount" class="dash-tab-badge"></span></button>
+                    <button class="dash-tab" onclick="renderDashListings('sold',this,'dash')">Sold <span id="dashSoldCount" class="dash-tab-badge"></span></button>
                 </div>
             </div>
             <div class="dash-search-row">

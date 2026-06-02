@@ -27,8 +27,9 @@ let authMode = 'signin';
 let sortOrder = 'none';  // 'none' | 'asc' | 'desc'
 let _dashViewsChart  = null;
 let _dashCatChart    = null;
-let _dashCurrentTab  = 'active';
+let _dashCurrentTab    = 'active';
 let _dashListingsShown = 25;
+let _dashListingsCtx   = 'dash'; // 'dash' | 'pro'
 let activeFilters = {
     search: '',
     category: 'all',
@@ -11461,7 +11462,7 @@ let _proFolder = 'selling';
 let _proActiveConvId = null;
 
 function proShowView(viewId, navId) {
-    ['proEnquiriesView'].forEach(id => {
+    ['proEnquiriesView', 'proListingsView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -11474,12 +11475,22 @@ function proShowView(viewId, navId) {
 }
 
 function proHideAllViews() {
-    ['proEnquiriesView'].forEach(id => {
+    ['proEnquiriesView', 'proListingsView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
     const inner = document.getElementById('dashInner');
     if (inner) inner.style.display = '';
+    _dashListingsCtx = 'dash';
+}
+
+function proOpenMyListings(tab) {
+    proShowView('proListingsView', 'proNavListings');
+    const openTab = tab || _dashCurrentTab || 'active';
+    const tabBtns = document.querySelectorAll('#proLstTabs .dash-tab');
+    const tabIdx  = ['active','pending','sold'].indexOf(openTab);
+    tabBtns.forEach((b, i) => b.classList.toggle('active', i === tabIdx));
+    renderDashListings(openTab, null, 'pro');
 }
 
 function proOpenEnquiries() {
@@ -14941,7 +14952,7 @@ function renderDashboard() {
     renderDemandWidget();
     renderDashJobs();
     renderDashWanted();
-    renderDashListings('active', document.querySelector('#dashboardView .dash-tab.active'));
+    renderDashListings('active', document.querySelector('#dashListingsTabs .dash-tab.active'), 'dash');
 }
 
 function renderDashboardCharts(myListings) {
@@ -15089,18 +15100,22 @@ function loadMoreDashListings() {
     renderDashListings(_dashCurrentTab);
 }
 
-function renderDashListings(tab, btn) {
+function renderDashListings(tab, btn, ctx) {
+    if (ctx) _dashListingsCtx = ctx;
     _dashCurrentTab = tab;
+    const isPro = _dashListingsCtx === 'pro';
     if (btn) {
-        document.querySelectorAll('#dashboardView .dash-tab').forEach(t => t.classList.remove('active'));
+        const tabScope = isPro ? '#proLstTabs' : '#dashListingsTabs';
+        document.querySelectorAll(`${tabScope} .dash-tab`).forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
     }
 
-    const q   = (document.getElementById('dashListingsSearch')?.value || '').trim().toLowerCase();
-    const cat = (document.getElementById('dashListingsCatFilter')?.value || '');
-    const countEl = document.getElementById('dashListingsCount');
+    const pfx  = isPro ? 'proLst' : 'dashListings';
+    const q    = (document.getElementById(`${pfx}Search`)?.value || '').trim().toLowerCase();
+    const cat  = (document.getElementById(`${pfx}CatFilter`)?.value || '');
+    const countEl = document.getElementById(isPro ? 'proLstCount' : 'dashListingsCount');
     const sellerName = getCurrentSellerName();
-    const body = document.getElementById('dashListingsBody');
+    const body = document.getElementById(isPro ? 'proLstBody' : 'dashListingsBody');
     if (!body) return;
 
     let rows = '';
