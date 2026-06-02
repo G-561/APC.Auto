@@ -2057,6 +2057,7 @@ async function loadConversationsFromSupabase(userId) {
         saveConversations();
         renderInboxConvList();
         updateInboxBadge();
+        proRefreshIfOpen();
         refreshInboxThreadHeader(); // correct header if auto-selected before data loaded
     } catch (e) { console.warn('Load conversations:', e); }
     subscribeToRealtimeMessages();
@@ -2368,9 +2369,10 @@ function subscribeToRealtimeMessages() {
                 if (activeConvId === conv.id) renderInboxMsgs(conv);
                 renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
                 updateInboxBadge();
+                proRefreshIfOpen(conv.id);
 
                 const inboxOpen = document.getElementById('inboxDrawer')?.classList.contains('active');
-                if (!inboxOpen) showToast(`New message from ${conv.with}`);
+                if (!inboxOpen && !proEnquiriesIsOpen()) showToast(`New message from ${conv.with}`);
             }
         )
         .subscribe();
@@ -11638,7 +11640,7 @@ function proRenderContextPanel(conv, part) {
             <div class="inbox-context-title">${escapeHtml(part.title)}</div>
             <div class="inbox-context-price">$${Number(part.price || 0).toLocaleString()}</div>
             <div class="inbox-context-with">Conversation with ${escapeHtml(conv.buyerName || conv.sellerName || 'Buyer')}</div>
-            <button class="cta-btn" style="margin-top:14px; font-size:12px; padding:10px 0;" onclick="openDetailOverlay('${part.id}')">View Listing →</button>
+            <button class="cta-btn" style="margin-top:14px; font-size:12px; padding:10px 0;" onclick="openItemDetail(${part.id})">View Listing →</button>
         </div>`;
 }
 
@@ -11679,6 +11681,21 @@ function proSendReply(convId) {
     saveConversations();
     proRenderThreadMsgs(conv);
     syncMessageToSupabase(conv.supabaseConvId, text, conv.buyerId === currentUserId).catch(() => {});
+}
+
+function proEnquiriesIsOpen() {
+    const v = document.getElementById('proEnquiriesView');
+    return v && v.style.display !== 'none';
+}
+
+function proRefreshIfOpen(updatedConvId) {
+    if (!proEnquiriesIsOpen()) return;
+    proRenderConvList();
+    proUpdateFolderBadges();
+    if (updatedConvId !== undefined && updatedConvId === _proActiveConvId) {
+        const conv = conversations.find(c => c.id === updatedConvId);
+        if (conv) proRenderThreadMsgs(conv);
+    }
 }
 
 function proSendPhoto(event, convId) {
