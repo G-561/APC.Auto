@@ -9544,20 +9544,27 @@ async function handleSignUpTradeSubmit() {
 async function onSignOut() {
     clearRememberedUser();
     await sb.auth.signOut();
-    userIsSignedIn = false;
-    currentUserName = null;
-    currentUserTier = null;
-    currentUserId   = null;
-    currentUserEmail = null;
+    userIsSignedIn     = false;
+    currentUserName    = null;
+    currentUserTier    = null;
+    currentUserId      = null;
+    currentUserEmail   = null;
     currentUserProfile = null;
-    userSettings.profilePic    = '';
-    userSettings.businessLogo  = '';
-    userSettings.businessName  = '';
-    userSettings.about         = '';
-    userSettings.location      = '';
+    // Reset all user-specific local state so the next user starts clean
+    userSettings    = getDefaultSettings();
+    workshopProfile = getDefaultWorkshopProfile();
+    userListings    = [];
+    conversations   = [];
+    trashedConversations = [];
     saveUserSettings();
+    saveWorkshopProfile();
+    saveConversations();
+    saveTrash();
+    saveUserListings();
+    document.body.classList.remove('tier-personal', 'tier-trade', 'tier-pro');
     closeAccountMenu();
     renderAccountState();
+    renderMainGrid();
 }
 
 let selectedUpgradePlan = 'monthly';
