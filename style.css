@@ -280,8 +280,8 @@ header {
     text-transform: uppercase;
     border-radius: 99px;
     padding: 2px 7px;
-    margin-top: 4px;
     line-height: 1.4;
+    flex-shrink: 0;
 }
 .tier-badge.trade { background: var(--tier-trade); color: white; }
 .tier-badge.pro   { background: var(--tier-pro);   color: white; }
