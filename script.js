@@ -4660,12 +4660,14 @@ let sellIsUniversal = false;
 function renderSellVehicleChip() {
     const chip    = document.getElementById('sellVehicleChip');
     const btn     = document.getElementById('sellVehiclePickerBtn');
+    const ecGroup = document.getElementById('sellEngineCodeGroup');
     const mmEl    = document.getElementById('sellVehicleChipMakeModel');
     const ysEl    = document.getElementById('sellVehicleChipYearSeries');
     if (!chip || !btn) return;
     if (sellIsUniversal) {
         chip.style.display = 'none';
         btn.style.display  = 'none';
+        if (ecGroup) ecGroup.style.display = 'none';
         return;
     }
     if (sellVehicleSelection?.make) {
@@ -4674,9 +4676,11 @@ function renderSellVehicleChip() {
         if (ysEl) ysEl.textContent = [year, series].filter(Boolean).join(' · ');
         chip.style.display = 'flex';
         btn.style.display  = 'none';
+        if (ecGroup) ecGroup.style.display = '';
     } else {
         chip.style.display = 'none';
         btn.style.display  = '';
+        if (ecGroup) ecGroup.style.display = 'none';
     }
 }
 
