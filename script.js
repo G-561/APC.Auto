@@ -9543,6 +9543,15 @@ async function onSignOut() {
     userIsSignedIn = false;
     currentUserName = null;
     currentUserTier = null;
+    currentUserId   = null;
+    currentUserEmail = null;
+    currentUserProfile = null;
+    userSettings.profilePic    = '';
+    userSettings.businessLogo  = '';
+    userSettings.businessName  = '';
+    userSettings.about         = '';
+    userSettings.location      = '';
+    saveUserSettings();
     closeAccountMenu();
     renderAccountState();
 }
