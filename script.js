@@ -9680,13 +9680,6 @@ function openProSettings() {
 function onAccountPillClick(e) {
     if (e) e.stopPropagation();
     if (!userIsSignedIn) { openAuthDrawer(); return; }
-    if (currentUserTier === 'personal') { onUpgradeToTrade(); return; }
-    if (currentUserTier === 'trade')    {
-        closeAccountDropdown();
-        document.getElementById('upgradeBackdrop').style.display  = '';
-        document.getElementById('upgradeModal').style.display     = '';
-        return;
-    }
     if (window.innerWidth >= 900) {
         const dd = document.getElementById('accountDropdown');
         if (dd) dd.classList.toggle('active');
@@ -10666,6 +10659,7 @@ function renderAccountState() {
     pill.classList.remove('signed-out', 'signed-in', 'tier-personal', 'tier-standard', 'tier-trade', 'tier-pro');
 
     const initial = (currentUserName || 'G').charAt(0).toUpperCase();
+    const isMobile = window.innerWidth < 900;
     const pic = userSettings.profilePic || '';
     const avatarInner = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
     const tierClass = currentUserTier === 'pro' ? 'pro' : currentUserTier === 'trade' ? 'trade' : '';
@@ -10679,12 +10673,33 @@ function renderAccountState() {
         pill.innerHTML = 'Sign In';
         if (searchModePill) searchModePill.style.display = 'none';
         if (signUpPrompt) signUpPrompt.style.display = '';
-    } else {
-        const tierCls = currentUserTier === 'pro' ? 'tier-pro' : currentUserTier === 'trade' ? 'tier-trade' : 'tier-personal';
-        pill.classList.add('signed-in', tierCls);
-        pill.innerHTML = `${avatarHTML}<span class="pill-tier-label">${tierLabel}</span>`;
-        if (searchModePill) searchModePill.style.display = currentUserTier === 'pro' ? '' : 'none';
+    } else if (currentUserTier === 'pro') {
+        pill.classList.add('signed-in', 'tier-pro');
+        pill.innerHTML = avatarHTML;
+        if (searchModePill) searchModePill.style.display = '';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
+    } else {
+        const tierCls = currentUserTier === 'trade' ? 'tier-trade' : 'tier-personal';
+        pill.classList.add('signed-in', tierCls);
+        pill.innerHTML = avatarHTML;
+        if (searchModePill) searchModePill.style.display = 'none';
+        if (signUpPrompt) signUpPrompt.style.display = 'none';
+    }
+
+    // Tier status pill — separate clickable element showing current tier
+    const tierPill = document.getElementById('tierStatusPill');
+    if (tierPill && userIsSignedIn) {
+        const label = currentUserTier === 'pro' ? 'APC Pro' : currentUserTier === 'trade' ? 'APC Trade' : 'APC Personal';
+        const cls   = currentUserTier === 'pro' ? 'tier-pro' : currentUserTier === 'trade' ? 'tier-trade' : 'tier-personal';
+        const click = currentUserTier === 'personal' ? `onUpgradeToTrade()` :
+                      currentUserTier === 'trade'    ? `closeAccountDropdown();document.getElementById('upgradeBackdrop').style.display='';document.getElementById('upgradeModal').style.display='';` : '';
+        tierPill.className = `tier-status-pill ${cls}`;
+        tierPill.textContent = label;
+        tierPill.onclick = click ? new Function(click) : null;
+        tierPill.style.cursor = click ? 'pointer' : 'default';
+        tierPill.style.display = '';
+    } else if (tierPill) {
+        tierPill.style.display = 'none';
     }
 
     if (menuName)   menuName.textContent   = currentUserName || 'Guest';
