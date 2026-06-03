@@ -5165,7 +5165,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: #f07020;
+    background: var(--tier-pro);
     color: white;
     font-size: 14px;
     font-weight: 800;

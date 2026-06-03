@@ -6445,7 +6445,11 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
         if (logoInitials)   logoInitials.style.display = 'none';
     } else {
         if (logoImg)        logoImg.style.display = 'none';
-        if (logoInitials) { logoInitials.style.display = ''; logoInitials.textContent = initial; }
+        if (logoInitials) {
+            logoInitials.style.display = '';
+            logoInitials.textContent = initial;
+            logoInitials.style.background = isPro ? 'var(--tier-pro)' : isTrade ? 'var(--tier-trade)' : 'var(--tier-personal)';
+        }
     }
 
     // Identity
@@ -10764,7 +10768,7 @@ function renderAccountState() {
                 dtbAvatar.style.background = 'transparent';
             } else {
                 dtbAvatar.textContent = initial;
-                dtbAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
+                dtbAvatar.style.background = currentUserTier === 'pro' ? 'var(--tier-pro)' : currentUserTier === 'trade' ? 'var(--tier-trade)' : 'var(--tier-personal)';
             }
         }
     }
@@ -10787,7 +10791,7 @@ function renderAccountState() {
             ddAvatar.style.background = 'transparent';
         } else {
             ddAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
-            ddAvatar.style.background = isPro ? 'var(--apc-blue)' : 'var(--apc-orange)';
+            ddAvatar.style.background = currentUserTier === 'pro' ? 'var(--tier-pro)' : currentUserTier === 'trade' ? 'var(--tier-trade)' : 'var(--tier-personal)';
         }
     }
     if (ddName)    ddName.textContent = currentUserName || 'Guest';
