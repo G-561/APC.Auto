@@ -7284,29 +7284,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         const tier = profile.tier || (profile.is_pro ? 'pro' : 'personal');
                         signIn(name, tier, false, session.user.email);
                         saveRememberedUser({ name, tier, email: session.user.email });
-                        // Supabase is authoritative — always overwrite local values with server data
-                        userSettings.location       = profile.location        || userSettings.location       || '';
+                        // Supabase is authoritative — always overwrite local values with server data.
+                        // No local fallbacks for user-identity fields — that causes cross-user bleed.
+                        userSettings.location       = profile.location        || '';
                         userSettings.businessName   = profile.business_name   || '';
                         userSettings.abn            = profile.abn             || '';
                         userSettings.about          = profile.about           || '';
-                        userSettings.profilePic     = profile.avatar_url      || userSettings.profilePic     || '';
-                        userSettings.businessLogo   = profile.business_logo   || userSettings.businessLogo   || '';
-                        userSettings.businessBanner = profile.business_banner || userSettings.businessBanner || '';
-                        userSettings.bannerColor         = profile.banner_color    || userSettings.bannerColor    || '';
-                        userSettings.postcode            = profile.postcode        || userSettings.postcode       || '';
+                        userSettings.profilePic     = profile.avatar_url      || '';
+                        userSettings.businessLogo   = profile.business_logo   || '';
+                        userSettings.businessBanner = profile.business_banner || '';
+                        userSettings.bannerColor    = profile.banner_color    || '';
+                        userSettings.postcode       = profile.postcode        || '';
                         userSettings.privacyPublicProfile = profile.is_public !== false;
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderBannerPreview();
                         // Restore workshop/repairer profile from Supabase (authoritative for Trade/Pro)
                         if (profile.workshop_data) {
                             const wd = profile.workshop_data;
                             if (wd.biz_type)        userSettings.businessType       = wd.biz_type;
-                            workshopProfile.address         = profile.workshop_address   || workshopProfile.address         || '';
-                            workshopProfile.services        = wd.services                || workshopProfile.services        || {};
-                            workshopProfile.vehicles        = wd.vehicles                || workshopProfile.vehicles        || [];
-                            workshopProfile.partsCategories = wd.parts_categories        || workshopProfile.partsCategories || [];
-                            workshopProfile.partsType       = wd.parts_type              || workshopProfile.partsType       || 'new';
-                            workshopProfile.wrecking        = wd.wrecking                ?? workshopProfile.wrecking        ?? false;
-                            workshopProfile.wreckingMakes   = wd.wrecking_makes          || workshopProfile.wreckingMakes   || [];
+                            workshopProfile.address         = profile.workshop_address   || '';
+                            workshopProfile.services        = wd.services                || {};
+                            workshopProfile.vehicles        = wd.vehicles                || [];
+                            workshopProfile.partsCategories = wd.parts_categories        || [];
+                            workshopProfile.partsType       = wd.parts_type              || 'new';
+                            workshopProfile.wrecking        = wd.wrecking                ?? false;
+                            workshopProfile.wreckingMakes   = wd.wrecking_makes          || [];
                             saveWorkshopProfile();
                         }
                     } else {
@@ -7363,6 +7364,8 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserEmail = null;
             closeDashboard();
             // Clear all user-specific data so it doesn't bleed into the next account on the same device
+            userSettings    = getDefaultSettings();    saveUserSettings();
+            workshopProfile = getDefaultWorkshopProfile(); saveWorkshopProfile();
             userListings.splice(0); saveUserListings();
             conversations.splice(0); saveConversations();
             myVehicles.splice(0); saveVehicles();
