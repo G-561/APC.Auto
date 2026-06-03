@@ -10723,6 +10723,16 @@ function renderAccountState() {
 
     const signUpPrompt = document.getElementById('signUpPrompt');
     const searchModePill = document.getElementById('searchModeToggle');
+    const tierBadge = document.getElementById('tierBadge');
+    if (tierBadge) {
+        if (userIsSignedIn && (currentUserTier === 'trade' || currentUserTier === 'pro')) {
+            tierBadge.className = `tier-badge ${currentUserTier}`;
+            tierBadge.textContent = currentUserTier === 'trade' ? 'TRADE' : 'PRO';
+            tierBadge.style.display = '';
+        } else {
+            tierBadge.style.display = 'none';
+        }
+    }
     if (!userIsSignedIn) {
         pill.classList.add('signed-out');
         pill.innerHTML = 'Sign In';
