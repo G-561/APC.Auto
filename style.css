@@ -2966,7 +2966,7 @@ body.tier-pro   header { border-bottom-color: var(--tier-pro); }
 .settings-save-btn-pro {
     background: #2563eb;
 }
-/* Pro settings section — blue-tinted, only visible for Pro users */
+/* Pro settings section — blue-tinted for Pro, green-tinted for Trade */
 .settings-pro-label {
     color: #2563eb !important;
     letter-spacing: 1px;
@@ -2976,6 +2976,13 @@ body.tier-pro   header { border-bottom-color: var(--tier-pro); }
     border-left: 3px solid #2563eb;
     margin-bottom: 8px !important;
 }
+body.tier-trade .settings-pro-label  { color: var(--tier-trade) !important; }
+body.tier-trade .settings-pro-section { background: #f0fdf4 !important; border-left-color: var(--tier-trade); }
+body.tier-trade .settings-chevron     { color: var(--tier-trade) !important; }
+/* Trade users: show their settings block above the Pro upgrade nudge */
+#settingsDrawer .settings-col-right { display: flex; flex-direction: column; }
+body.tier-trade #settingsProBlock     { order: 1; }
+body.tier-trade #settingsUpgradeNudge { order: 2; }
 .settings-pro-section-hdr {
     font-size: 10px;
     font-weight: 800;
