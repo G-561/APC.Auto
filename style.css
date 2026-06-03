@@ -1,6 +1,6 @@
- :root { 
-    --apc-orange: #F7941D; 
-    --apc-black: #1A1A1B; 
+ :root {
+    --apc-orange: #F7941D;
+    --apc-black: #1A1A1B;
     --apc-charcoal: #333333;
     --apc-soft-grey: #555555;
     --apc-blue: #007AFF;        /* was hardcoded everywhere — now a variable */
@@ -10,7 +10,11 @@
     --apc-amber: #FFF9F2;
     --apc-orange-light: #FFF4E6;
     --bg: #F4F4F4;
-    --white: #ffffff; 
+    --white: #ffffff;
+    /* Tier colours — matches sign-up screen */
+    --tier-personal: #f07020;
+    --tier-trade:    #16a34a;
+    --tier-pro:      #1d4ed8;
 }
 
 body {
@@ -90,7 +94,8 @@ header {
     overflow: hidden;
     flex-shrink: 0;
 }
-.nav-profile-circle.pro { background: var(--apc-blue); }
+.nav-profile-circle.trade { background: var(--tier-trade); }
+.nav-profile-circle.pro   { background: var(--tier-pro); }
 .nav-profile-circle.signed-out {
     background: var(--apc-orange);
     border-radius: 20px;
@@ -260,8 +265,11 @@ header {
     justify-content: center;
     box-shadow: 0 0 0 2px #F7941D, 0 0 8px rgba(247,148,29,0.3);
 }
+.account-pill.signed-in.tier-trade {
+    box-shadow: 0 0 0 2px var(--tier-trade), 0 0 8px rgba(22,163,74,0.3);
+}
 .account-pill.signed-in.tier-pro {
-    box-shadow: 0 0 0 2px #007AFF, 0 0 8px rgba(0,122,255,0.3);
+    box-shadow: 0 0 0 2px var(--tier-pro), 0 0 8px rgba(29,78,216,0.3);
 }
 .pill-avatar {
     width: 34px; height: 34px;
@@ -277,7 +285,12 @@ header {
     overflow: hidden;
     box-shadow: none;
 }
-.pill-avatar.pro { background: var(--apc-blue); }
+.pill-avatar.trade { background: var(--tier-trade); }
+.pill-avatar.pro   { background: var(--tier-pro); }
+.pill-tier-label { font-size: 11px; font-weight: 800; letter-spacing: 0.3px; white-space: nowrap; padding-right: 2px; }
+.account-pill.tier-personal .pill-tier-label { color: var(--tier-personal); }
+.account-pill.tier-trade    .pill-tier-label { color: var(--tier-trade); }
+.account-pill.tier-pro      .pill-tier-label { color: var(--tier-pro); }
 
 /* ACCOUNT MENU AVATAR — shared by drawer + dropdown */
 .account-menu-avatar {
@@ -294,7 +307,8 @@ header {
 }
 .account-menu-name   { font-weight: 800; font-size: 14px; }
 .account-menu-status { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-top: 1px; }
-.account-menu-status.pro { color: var(--apc-blue); font-weight: 800; }
+.account-menu-status.trade { color: var(--tier-trade); font-weight: 800; }
+.account-menu-status.pro   { color: var(--tier-pro);   font-weight: 800; }
 
 /* ACCOUNT MENU DRAWER — mobile */
 #accountMenuDrawer { z-index: 3200; }
@@ -796,8 +810,20 @@ header {
     font-size: 10px;
     font-weight: 900;
     letter-spacing: 0.5px;
-    color: var(--apc-blue);
-    background: rgba(0, 122, 255, 0.1);
+    color: var(--tier-pro);
+    background: rgba(29, 78, 216, 0.1);
+}
+.seller-trade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    color: var(--tier-trade);
+    background: rgba(22, 163, 74, 0.1);
 }
 .trade-only-badge {
     display: inline-flex;
@@ -3166,7 +3192,8 @@ header {
     border-radius: 999px;
     letter-spacing: 0.5px;
 }
-.profile-tier-badge.pro      { background: white; color: #007AFF; }
+.profile-tier-badge.pro      { background: white; color: var(--tier-pro); }
+.profile-tier-badge.trade    { background: white; color: var(--tier-trade); }
 .profile-tier-badge.standard { background: rgba(255,255,255,0.3); color: white; border: 1px solid rgba(255,255,255,0.6); }
 .profile-location {
     font-size: 13px;
@@ -4476,7 +4503,8 @@ header {
         gap: 0;
         transition: opacity 0.15s;
     }
-    .account-pill.signed-in.tier-pro { box-shadow: none; }
+    .account-pill.signed-in.tier-trade { box-shadow: none; }
+    .account-pill.signed-in.tier-pro   { box-shadow: none; }
     .pill-avatar { width: 36px; height: 36px; font-size: 14px; }
     .account-pill.signed-in:hover .pill-avatar { transform: scale(1.08); transition: transform 0.15s; }
 
@@ -5068,7 +5096,7 @@ header {
     white-space: nowrap;
 }
 .pro-hdr-wordmark strong {
-    color: #f07020;
+    color: var(--tier-pro);
     font-weight: 900;
 }
 .pro-hdr-pro-badge {

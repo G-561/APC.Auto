@@ -6455,9 +6455,12 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     const sfSeller   = document.getElementById('sfSellerName');
     const sfLoc      = document.getElementById('sfLocation');
 
-    if (sfBizName) { sfBizName.textContent = businessName || ''; sfBizName.style.display = businessName ? '' : 'none'; }
-    if (sfProBadge)  sfProBadge.style.display = isPro ? '' : 'none';
-    if (sfAbnChip)   sfAbnChip.style.display  = (isPro && abn) ? '' : 'none';
+    const sfTradeBadge = document.getElementById('sfTradeBadge');
+    const isTrade = !isPro && (userId ? (getAllParts().find(p => p.sellerId === userId)?.sellerTier === 'trade') : false);
+    if (sfBizName)    { sfBizName.textContent = businessName || ''; sfBizName.style.display = businessName ? '' : 'none'; }
+    if (sfProBadge)    sfProBadge.style.display   = isPro ? '' : 'none';
+    if (sfTradeBadge)  sfTradeBadge.style.display  = (!isPro && isTrade) ? '' : 'none';
+    if (sfAbnChip)     sfAbnChip.style.display     = ((isPro || isTrade) && abn) ? '' : 'none';
     if (sfSeller) {
         sfSeller.textContent = sellerName || '';
         sfSeller.style.display = (sellerName && sellerName !== businessName) ? '' : 'none';
@@ -9676,8 +9679,12 @@ function openProSettings() {
 // Pill click: open auth drawer if signed out, else toggle the dropdown menu
 function onAccountPillClick(e) {
     if (e) e.stopPropagation();
-    if (!userIsSignedIn) {
-        openAuthDrawer();
+    if (!userIsSignedIn) { openAuthDrawer(); return; }
+    if (currentUserTier === 'personal') { onUpgradeToTrade(); return; }
+    if (currentUserTier === 'trade')    {
+        closeAccountDropdown();
+        document.getElementById('upgradeBackdrop').style.display  = '';
+        document.getElementById('upgradeModal').style.display     = '';
         return;
     }
     if (window.innerWidth >= 900) {
@@ -10656,13 +10663,14 @@ function renderAccountState() {
 
     if (!pill) return;
 
-    pill.classList.remove('signed-out', 'signed-in', 'tier-standard', 'tier-pro');
+    pill.classList.remove('signed-out', 'signed-in', 'tier-personal', 'tier-standard', 'tier-trade', 'tier-pro');
 
     const initial = (currentUserName || 'G').charAt(0).toUpperCase();
-    const isMobile = window.innerWidth < 900;
     const pic = userSettings.profilePic || '';
     const avatarInner = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
-    const avatarHTML = `<span class="pill-avatar${currentUserTier === 'pro' ? ' pro' : ''}">${avatarInner}</span>`;
+    const tierClass = currentUserTier === 'pro' ? 'pro' : currentUserTier === 'trade' ? 'trade' : '';
+    const avatarHTML = `<span class="pill-avatar${tierClass ? ' ' + tierClass : ''}">${avatarInner}</span>`;
+    const tierLabel  = currentUserTier === 'pro' ? 'APC Pro' : currentUserTier === 'trade' ? 'APC Trade' : 'APC Personal';
 
     const signUpPrompt = document.getElementById('signUpPrompt');
     const searchModePill = document.getElementById('searchModeToggle');
@@ -10671,21 +10679,18 @@ function renderAccountState() {
         pill.innerHTML = 'Sign In';
         if (searchModePill) searchModePill.style.display = 'none';
         if (signUpPrompt) signUpPrompt.style.display = '';
-    } else if (currentUserTier === 'pro') {
-        pill.classList.add('signed-in', 'tier-pro');
-        pill.innerHTML = avatarHTML;
-        if (searchModePill) searchModePill.style.display = '';
-        if (signUpPrompt) signUpPrompt.style.display = 'none';
     } else {
-        pill.classList.add('signed-in', 'tier-standard');
-        pill.innerHTML = avatarHTML;
-        if (searchModePill) searchModePill.style.display = 'none';
+        const tierCls = currentUserTier === 'pro' ? 'tier-pro' : currentUserTier === 'trade' ? 'tier-trade' : 'tier-personal';
+        pill.classList.add('signed-in', tierCls);
+        pill.innerHTML = `${avatarHTML}<span class="pill-tier-label">${tierLabel}</span>`;
+        if (searchModePill) searchModePill.style.display = currentUserTier === 'pro' ? '' : 'none';
         if (signUpPrompt) signUpPrompt.style.display = 'none';
     }
 
     if (menuName)   menuName.textContent   = currentUserName || 'Guest';
     if (menuStatus) {
-        menuStatus.classList.toggle('pro', currentUserTier === 'pro');
+        menuStatus.classList.remove('pro', 'trade', 'standard');
+        menuStatus.classList.add(currentUserTier === 'pro' ? 'pro' : currentUserTier === 'trade' ? 'trade' : 'standard');
         menuStatus.textContent = currentUserTier === 'pro'      ? 'APC Pro member' :
                                  currentUserTier === 'trade'    ? 'APC Trade member' :
                                  currentUserTier === 'personal' ? 'APC Personal member' : '';
@@ -10696,7 +10701,7 @@ function renderAccountState() {
             menuAvatar.style.background = 'transparent';
         } else {
             menuAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
-            menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--apc-blue)' : 'var(--apc-orange)';
+            menuAvatar.style.background = currentUserTier === 'pro' ? 'var(--tier-pro)' : currentUserTier === 'trade' ? 'var(--tier-trade)' : 'var(--tier-personal)';
         }
     }
     if (menuUpgrade) {
@@ -10713,7 +10718,7 @@ function renderAccountState() {
             navProfileCircle.className = 'nav-profile-circle signed-out';
             navProfileCircle.innerHTML = 'Sign In';
         } else {
-            navProfileCircle.className = `nav-profile-circle${currentUserTier === 'pro' ? ' pro' : ''}`;
+            navProfileCircle.className = `nav-profile-circle${currentUserTier === 'pro' ? ' pro' : currentUserTier === 'trade' ? ' trade' : ''}`;
             navProfileCircle.innerHTML = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
         }
     }
