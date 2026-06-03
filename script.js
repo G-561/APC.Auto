@@ -4658,16 +4658,18 @@ let sellVehicleSelection = null; // { make, model, year, series }
 let sellIsUniversal = false;
 
 function renderSellVehicleChip() {
-    const chip    = document.getElementById('sellVehicleChip');
-    const btn     = document.getElementById('sellVehiclePickerBtn');
-    const ecGroup = document.getElementById('sellEngineCodeGroup');
-    const mmEl    = document.getElementById('sellVehicleChipMakeModel');
-    const ysEl    = document.getElementById('sellVehicleChipYearSeries');
+    const chip         = document.getElementById('sellVehicleChip');
+    const btn          = document.getElementById('sellVehiclePickerBtn');
+    const ecGroup      = document.getElementById('sellEngineCodeGroup');
+    const universalRow = document.getElementById('sellUniversalRow');
+    const mmEl         = document.getElementById('sellVehicleChipMakeModel');
+    const ysEl         = document.getElementById('sellVehicleChipYearSeries');
     if (!chip || !btn) return;
     if (sellIsUniversal) {
         chip.style.display = 'none';
         btn.style.display  = 'none';
-        if (ecGroup) ecGroup.style.display = 'none';
+        if (ecGroup)      ecGroup.style.display      = 'none';
+        if (universalRow) universalRow.style.display  = '';
         return;
     }
     if (sellVehicleSelection?.make) {
@@ -4676,11 +4678,13 @@ function renderSellVehicleChip() {
         if (ysEl) ysEl.textContent = [year, series].filter(Boolean).join(' · ');
         chip.style.display = 'flex';
         btn.style.display  = 'none';
-        if (ecGroup) ecGroup.style.display = '';
+        if (ecGroup)      ecGroup.style.display      = '';
+        if (universalRow) universalRow.style.display  = 'none';
     } else {
         chip.style.display = 'none';
         btn.style.display  = '';
-        if (ecGroup) ecGroup.style.display = 'none';
+        if (ecGroup)      ecGroup.style.display      = 'none';
+        if (universalRow) universalRow.style.display  = '';
     }
 }
 
@@ -4717,6 +4721,7 @@ function openSellVehiclePicker() {
             VEHICLE_MAKES.map(m => `<option value="${m}">${m}</option>`).join('');
     // Pre-fill from current selection
     const sel = sellVehicleSelection;
+    const currentEngine = document.getElementById('sellVariant')?.value || '';
     if (sel?.make) {
         if (vpMake) vpMake.value = sel.make;
         const vpModel = document.getElementById('vpModel');
@@ -4724,6 +4729,7 @@ function openSellVehiclePicker() {
         const vpYear = document.getElementById('vpYear');
         if (vpYear) { vpYear.innerHTML = buildYearOptionsForModel(sel.make, sel.model, sel.year); }
         _refreshVpSeries(sel.make, sel.model, sel.year, sel.series);
+        _refreshVpEngine(sel.make, sel.model, currentEngine);
     } else {
         const vpModel = document.getElementById('vpModel');
         if (vpModel) vpModel.innerHTML = '<option value="">Select model</option>';
@@ -4761,6 +4767,7 @@ function vpFillFromGarage(v) {
     if (vpModel) { vpModel.innerHTML = buildModelOptions(v.make || '', v.model || '');    vpModel.value = v.model || ''; }
     if (vpYear)  { vpYear.innerHTML  = buildYearOptionsForModel(v.make || '', v.model || '', String(v.year || '')); vpYear.value = String(v.year || ''); }
     _refreshVpSeries(v.make || '', v.model || '', String(v.year || ''), v.variant || '');
+    _refreshVpEngine(v.make || '', v.model || '', '');
     document.querySelectorAll('#vpGarageChips .vp-garage-chip').forEach(c => c.classList.remove('active'));
     event?.currentTarget?.classList.add('active');
 }
@@ -4776,11 +4783,29 @@ function closeSellVehiclePicker() {
     if (vpModel) vpModel.innerHTML = '<option value="">Select model</option>';
     if (vpYear)  vpYear.innerHTML  = '<option value="">Select year</option>';
     _refreshVpSeries('', '', '', '');
+    _refreshVpEngine('', '', '');
     document.querySelectorAll('#vpGarageChips .vp-garage-chip').forEach(c => c.classList.remove('active'));
 }
 
 function vpOverlayClick(e) {
     if (e.target === document.getElementById('sellVehiclePickerModal')) closeSellVehiclePicker();
+}
+
+function _refreshVpEngine(make, model, currentVal) {
+    const group = document.getElementById('vpEngineGroup');
+    const wrap  = document.getElementById('vpEngineWrap');
+    if (!group || !wrap) return;
+    if (!make || !model) { group.style.display = 'none'; return; }
+    const engines = (typeof VEHICLE_ENGINES !== 'undefined' && VEHICLE_ENGINES[make]?.[model]) || [];
+    group.style.display = '';
+    if (engines.length) {
+        const opts = ['<option value="">Engine code (optional)…</option>',
+            ...engines.map(e => `<option value="${escapeHtml(e)}"${e === currentVal ? ' selected' : ''}>${escapeHtml(e)}</option>`)
+        ].join('');
+        wrap.innerHTML = `<select id="vpEngine" style="width:100%;">${opts}</select>`;
+    } else {
+        wrap.innerHTML = `<input id="vpEngine" type="text" style="width:100%;" maxlength="60" placeholder="e.g. 1GR-FE, RB26DETT" value="${escapeHtml(currentVal || '')}">`;
+    }
 }
 
 function _refreshVpSeries(make, model, year, selected) {
@@ -4801,6 +4826,7 @@ function onVpMakeChange() {
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
     if (yearEl)  yearEl.innerHTML  = '<option value="">Select year</option>';
     _refreshVpSeries('', '', '', '');
+    _refreshVpEngine('', '', '');
 }
 
 function onVpModelChange() {
@@ -4809,6 +4835,7 @@ function onVpModelChange() {
     const yearEl = document.getElementById('vpYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
     _refreshVpSeries('', '', '', '');
+    _refreshVpEngine(make, model, '');
 }
 
 function onVpYearChange() {
@@ -4819,17 +4846,17 @@ function onVpYearChange() {
 }
 
 function confirmSellVehicle() {
-    const make   = document.getElementById('vpMake')?.value.trim()  || '';
-    const model  = document.getElementById('vpModel')?.value.trim() || '';
-    const year   = document.getElementById('vpYear')?.value.trim()  || '';
+    const make   = document.getElementById('vpMake')?.value.trim()   || '';
+    const model  = document.getElementById('vpModel')?.value.trim()  || '';
+    const year   = document.getElementById('vpYear')?.value.trim()   || '';
     const series = document.getElementById('vpSeries')?.value.trim() || '';
+    const engine = document.getElementById('vpEngine')?.value.trim() || '';
     if (!make || !model || !year) { showToast('Please select make, model and year.'); return; }
-    // Check if series is required (series data exists for this combo but none selected)
     const seriesHtml = buildSeriesOptions(make, model, year, '');
     if (seriesHtml && !series) { showToast('Please select a series.'); return; }
     sellVehicleSelection = { make, model, year, series };
     renderSellVehicleChip();
-    _refreshSellVariant(make, model, '');
+    _refreshSellVariant(make, model, engine);
     closeSellVehiclePicker();
 }
 

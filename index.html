@@ -1257,7 +1257,7 @@
                         </div>
                     </div>
                     <button id="sellVehiclePickerBtn" onclick="openSellVehiclePicker()" style="width:100%;padding:13px;background:#f4f4f4;border:1.5px dashed #ccc;border-radius:12px;font-size:13px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;">＋ Select Vehicle</button>
-                    <div class="sell-toggle-row" style="margin-top:10px; margin-bottom:0;">
+                    <div id="sellUniversalRow" class="sell-toggle-row" style="margin-top:10px; margin-bottom:0;">
                         <div>
                             <div class="sell-toggle-label" style="font-size:13px;">Universal part</div>
                             <div class="sell-toggle-sub">Fits all vehicles — e.g. spotlights, accessories</div>
@@ -2756,6 +2756,7 @@
         <div class="input-group"><label>Model</label><select id="vpModel" onchange="onVpModelChange()" style="width:100%"><option value="">Select model</option></select></div>
         <div class="input-group"><label>Year</label><select id="vpYear" onchange="onVpYearChange()" style="width:100%"><option value="">Select year</option></select></div>
         <div id="vpSeriesGroup" style="display:none;"><div class="input-group"><label>Series</label><select id="vpSeries" style="width:100%"><option value="">Select series</option></select></div></div>
+        <div id="vpEngineGroup" style="display:none;"><div class="input-group"><label>Engine Code <span style="font-weight:400;color:#aaa;">optional</span></label><div id="vpEngineWrap"><input id="vpEngine" type="text" style="width:100%;" maxlength="60" placeholder="e.g. 1GR-FE, RB26DETT"></div></div></div>
         <button onclick="confirmSellVehicle()" class="btn-full-action" style="margin-top:18px;">Confirm Vehicle</button>
     </div>
 </div>
