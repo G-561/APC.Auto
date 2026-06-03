@@ -4257,6 +4257,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
 }
 .dtb-avatar {
     width: 28px;
