@@ -40,6 +40,7 @@
         <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="dtbOpenDashboard()" style="display:none;">APC Pro</span>
     </div>
     <div class="dtb-right-zone">
+        <span id="tierBadge" style="display:none;"></span>
         <div class="dtb-avatar" id="dtbAvatar" style="display:none;" onclick="onAccountPillClick(event)">G</div>
     </div>
 </div>
@@ -55,7 +56,6 @@
             </button>
             <div id="accountPillZone">
                 <div id="accountPillRow">
-                    <span id="tierBadge" style="display:none;"></span>
                     <button class="account-pill signed-out" id="accountPill" onclick="onAccountPillClick(event)">Sign In</button>
                 </div>
                 <div id="signUpPrompt" class="sign-up-prompt">Not a member? <a href="#" class="sign-up-link" onclick="openAuthDrawer(null,'signup');return false;">Sign up free</a></div>
