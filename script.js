@@ -10697,9 +10697,6 @@ function renderAccountState() {
         tierPill.textContent = label;
         tierPill.onclick = click ? new Function(click) : null;
         tierPill.style.cursor = click ? 'pointer' : 'default';
-        tierPill.style.display = '';
-    } else if (tierPill) {
-        tierPill.style.display = 'none';
     }
 
     if (menuName)   menuName.textContent   = currentUserName || 'Guest';
@@ -10777,6 +10774,8 @@ function renderAccountState() {
     const desktopSignedIn = !isMobile && userIsSignedIn;
     if (pill)          pill.style.display          = desktopSignedIn ? 'none' : '';
     if (headerListBtn) headerListBtn.style.display = desktopSignedIn ? ''     : 'none';
+    const tierPillEl = document.getElementById('tierStatusPill');
+    if (tierPillEl) tierPillEl.style.display = (desktopSignedIn || !userIsSignedIn) ? 'none' : '';
 
     // Sync desktop dropdown
     const ddAvatar  = document.getElementById('acctDdAvatar');
