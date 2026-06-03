@@ -331,9 +331,10 @@ function _renderRvList(allParts) {
     const grid = document.createElement('div');
     grid.className = 'results-grid';
     parts.forEach(part => {
-        const wrap = document.createElement('div');
-        wrap.innerHTML = buildCardHTML(part);
-        grid.appendChild(wrap);
+        const temp = document.createElement('div');
+        temp.innerHTML = buildCardHTML(part);
+        const card = temp.firstElementChild;
+        if (card) grid.appendChild(card);
     });
 
     list.innerHTML = `<div class="rv-drawer-count-row"><span class="rv-drawer-count">${countLabel}</span></div>
