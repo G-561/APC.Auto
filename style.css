@@ -2983,6 +2983,17 @@ body.tier-trade .settings-chevron     { color: var(--tier-trade) !important; }
 #settingsDrawer .settings-col-right { display: flex; flex-direction: column; }
 body.tier-trade #settingsProBlock     { order: 1; }
 body.tier-trade #settingsUpgradeNudge { order: 2; }
+
+/* ── Workshop & Repairer profile drawer — green theme for Trade users ── */
+body.tier-trade #workshopDrawer .ws-group-label                 { color: var(--tier-trade); }
+body.tier-trade #workshopDrawer .filter-section h4              { border-bottom-color: var(--tier-trade); }
+body.tier-trade #workshopDrawer .radius-seg.active              { background: var(--tier-trade); }
+body.tier-trade #workshopDrawer .btn-full-action                { background: var(--tier-trade); }
+body.tier-trade #workshopDrawer .btn-full-action:hover          { background: #15803d; }
+body.tier-trade #workshopDrawer .apc-badge-trigger-btn          { border-color: var(--tier-trade); color: var(--tier-trade); background: rgba(22,163,74,0.06); }
+body.tier-trade #workshopDrawer .apc-badge-trigger-btn:hover    { background: rgba(22,163,74,0.14); }
+body.tier-trade #workshopDrawer input[type="checkbox"]          { accent-color: var(--tier-trade); }
+body.tier-trade #workshopDrawer .drawer-header                  { border-bottom-color: var(--tier-trade); }
 .settings-pro-section-hdr {
     font-size: 10px;
     font-weight: 800;
