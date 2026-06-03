@@ -11396,6 +11396,9 @@ function proUpdateFolderBadges() {
     const sb2 = document.getElementById('proFolderBuyingBadge');
     if (sb1) { sb1.textContent = sellingUnread || ''; sb1.style.display = sellingUnread ? '' : 'none'; }
     if (sb2) { sb2.textContent = buyingUnread  || ''; sb2.style.display = buyingUnread  ? '' : 'none'; }
+    const trashCount = trashedConversations.filter(c => c.sellerId === currentUserId || c.buyerId === currentUserId).length;
+    const tb = document.getElementById('proFolderTrashBadge');
+    if (tb) { tb.textContent = trashCount || ''; tb.style.display = trashCount ? '' : 'none'; }
     const countEl = document.getElementById('proMailCount');
     if (countEl) {
         const total = proGetFolderConvs().length;
@@ -11407,7 +11410,7 @@ function proGetFolderConvs(q) {
     let convs = [];
     if (_proFolder === 'selling')       convs = conversations.filter(c => c.sellerId === currentUserId);
     else if (_proFolder === 'buying')   convs = conversations.filter(c => c.buyerId  === currentUserId);
-    else if (_proFolder === 'trash')    convs = conversations.filter(c => (c.hiddenBuyer && c.buyerId === currentUserId) || (c.hiddenSeller && c.sellerId === currentUserId));
+    else if (_proFolder === 'trash')    convs = trashedConversations.filter(c => c.sellerId === currentUserId || c.buyerId === currentUserId);
     else                                convs = [];
     if (q) {
         const lq = q.toLowerCase();
@@ -11442,18 +11445,27 @@ function proRenderConvList(filter) {
         const isUnread  = c.unread;
         const ts        = lastMsg?.timestamp ? relativeTime(new Date(lastMsg.timestamp)) : '';
         const dot       = isUnread ? '<div class="pro-mail-unread-dot"></div>' : '';
-        return `<div class="pro-mail-row${c.id === _proActiveConvId ? ' active' : ''}${isUnread ? ' unread' : ''}${c.flagged ? ' flagged' : ''}" onclick="proOpenConv(${c.id})">
+        const isTrash = _proFolder === 'trash';
+        const actions = isTrash
+            ? `<div class="pro-mail-row-actions">
+                <button class="pro-mail-row-act" onclick="event.stopPropagation();restoreConversation(${c.id});proRenderConvList();proUpdateFolderBadges();" title="Restore">↩</button>
+                <button class="pro-mail-row-act" onclick="event.stopPropagation();permanentDeleteConversation(${c.id});proRenderConvList();proUpdateFolderBadges();" title="Delete permanently">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>`
+            : `<div class="pro-mail-row-actions">
+                <button class="pro-mail-row-act${c.flagged ? ' flagged' : ''}" onclick="event.stopPropagation();proFlagConv(${c.id})" title="${c.flagged ? 'Unflag' : 'Flag'}">⚑</button>
+                <button class="pro-mail-row-act" onclick="event.stopPropagation();proDeleteConv(${c.id})" title="Delete">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>`;
+        return `<div class="pro-mail-row${c.id === _proActiveConvId ? ' active' : ''}${isUnread ? ' unread' : ''}${c.flagged ? ' flagged' : ''}" onclick="${isTrash ? '' : `proOpenConv(${c.id})`}">
             ${dot}
             <div class="pro-mail-avatar">${initial}</div>
             <div class="pro-mail-row-body">
                 <div class="pro-mail-row-top">
                     <div class="pro-mail-sender">${otherName}</div>
-                    <div class="pro-mail-row-actions">
-                        <button class="pro-mail-row-act${c.flagged ? ' flagged' : ''}" onclick="event.stopPropagation();proFlagConv(${c.id})" title="${c.flagged ? 'Unflag' : 'Flag'}">⚑</button>
-                        <button class="pro-mail-row-act" onclick="event.stopPropagation();proDeleteConv(${c.id})" title="Delete">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-                        </button>
-                    </div>
+                    ${actions}
                     <div class="pro-mail-time">${ts}</div>
                 </div>
                 <div class="pro-mail-subject">${partTitle}</div>

@@ -5214,12 +5214,13 @@ header {
 .pro-mail-row.unread .pro-mail-sender  { font-weight: 800; color: #111; }
 .pro-mail-row.unread .pro-mail-subject { font-weight: 700; color: #111; }
 .pro-mail-row.unread .pro-mail-time    { color: #444; font-weight: 700; }
-.pro-mail-row.flagged { border-left: 3px solid #f07020; }
+.pro-mail-row.flagged { border-left: 3px solid #3b82f6; background: #eff6ff; }
+.pro-mail-row.flagged:hover { background: #e0effe; }
 .pro-mail-row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; flex-shrink: 0; }
 .pro-mail-row:hover .pro-mail-row-actions { opacity: 1; }
 .pro-mail-row-act { background: none; border: none; cursor: pointer; color: #bbb; font-size: 13px; padding: 3px 5px; border-radius: 4px; line-height: 1; display: flex; align-items: center; transition: color 0.1s, background 0.1s; }
 .pro-mail-row-act:hover { color: #555; background: #f0f0f0; }
-.pro-mail-row-act.flagged { color: #f07020; opacity: 1; }
+.pro-mail-row-act.flagged { color: #3b82f6; opacity: 1; }
 .pro-mail-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #f07020; flex-shrink: 0; margin-top: 5px; }
 .pro-mail-thread-col {
     flex: 1; display: flex; flex-direction: row; overflow: hidden; background: white;
@@ -5915,8 +5916,8 @@ header {
 }
 .inbox-conv-item:hover { background: #fafafa; }
 .inbox-conv-item.active { background: #fff8f0; border-left-color: var(--apc-orange); }
-.inbox-conv-item.flagged { background: #fff8f8; border-left-color: #FF3B30; }
-.inbox-conv-item.flagged:hover { background: #fff0f0; }
+.inbox-conv-item.flagged { background: #eff6ff; border-left-color: #3b82f6; }
+.inbox-conv-item.flagged:hover { background: #e0effe; }
 .inbox-conv-item.unread .inbox-conv-preview { font-weight: 700; color: #333; }
 .inbox-conv-item.unread .inbox-conv-name { font-weight: 900; }
 .inbox-conv-del-btn {
@@ -5934,8 +5935,8 @@ header {
     transition: color 0.12s;
 }
 .inbox-conv-flag-btn:hover { color: #bbb; }
-.inbox-conv-flag-btn.flagged { color: #FF3B30; }
-.inbox-conv-flag-btn.flagged:hover { color: #FF3B30; }
+.inbox-conv-flag-btn.flagged { color: #3b82f6; }
+.inbox-conv-flag-btn.flagged:hover { color: #3b82f6; }
 .inbox-conv-time { font-size: 12px; color: #bbb; flex-shrink: 0; margin-left: auto; padding-right: 4px; }
 .inbox-unread-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--apc-orange); flex-shrink: 0; }
 .inbox-conv-part { font-size: 13px; color: var(--apc-orange); font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
