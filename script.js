@@ -10257,7 +10257,7 @@ function handleSpbImage(input) {
     if (!file) return;
     input.value = '';
     if (file.size > 4 * 1024 * 1024) { showToast('Image too large — max 4 MB'); return; }
-    openSpbCropper(file, 360, 180, 720, 360, 'Position Image', 'Use Image', dataUrl => {
+    openSpbCropper(file, 200, 240, 400, 480, 'Position Image', 'Use Image', dataUrl => {
         _spbImageData = dataUrl;
         const prev = document.getElementById('spbHeroPreview');
         if (prev) prev.innerHTML = `<img src="${_spbImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">`;
