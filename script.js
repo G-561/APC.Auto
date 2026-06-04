@@ -10113,8 +10113,8 @@ function _spbBuildForm() {
         <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
             <input id="spbBtnUrl" type="url" placeholder="https://yourwebsite.com.au" value="${escapeHtml(e.button_url || '')}">
         </div>
-        <div class="input-group"><label>Search Keywords <span style="font-weight:400;color:#aaa;">up to 3, comma-separated</span></label>
-            <input id="spbTags" type="text" maxlength="80" placeholder="e.g. wiper blades, suspension, oil change" value="${escapeHtml(freeTags)}">
+        <div class="input-group"><label>Search Keywords <span style="font-weight:400;color:#aaa;">up to 5, comma-separated</span></label>
+            <input id="spbTags" type="text" maxlength="120" placeholder="e.g. wiper blades, suspension, oil change" value="${escapeHtml(freeTags)}">
             <div style="font-size:11px;color:#aaa;margin-top:4px;">Soft-matched against buyer search text — not the same as part categories. Use words buyers actually type.</div>
         </div>`;
 
@@ -10231,7 +10231,7 @@ function _spbUpdatePreview() {
     const price    = document.getElementById('spbPrice')?.value || '';
     const btnLabel = document.getElementById('spbBtnLabel')?.value || '';
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
-    const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
+    const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 5);
     preview.innerHTML = buildSponsoredCardHTML({
         template: 'standard', business_name: name, tagline, price,
         button_label: btnLabel, button_url: '#', tags,
@@ -10276,7 +10276,7 @@ async function submitSponsoredCard() {
     const price    = document.getElementById('spbPrice')?.value.trim() || null;
     const btnLabel = document.getElementById('spbBtnLabel')?.value.trim() || null;
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
-    const freeTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
+    const freeTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 5);
     const makeTags = _spbSlotType === 'targeted' ? _spbTargetMakes.map(m => `make:${m}`) : [];
     const catTags  = _spbSlotType === 'targeted' ? _spbTargetCategories.map(c => `cat:${c}`) : [];
     const tags = [...makeTags, ...catTags, ...freeTags];
