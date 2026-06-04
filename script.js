@@ -3377,8 +3377,7 @@ function closeWorkshopOverlay() {
     if (overlay) overlay.classList.remove('active');
     const bd = document.getElementById('wsOverlayBackdrop');
     if (bd) bd.classList.remove('active');
-    const anyOpen = document.querySelectorAll('.drawer.active').length > 0;
-    document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
+    syncBackdrop();
 }
 
 function contactWorkshop(workshopId, workshopName, prefillMsg) {
