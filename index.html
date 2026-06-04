@@ -2164,9 +2164,51 @@
     <div class="drawer-content sl-mgmt-content">
         <div class="sl-mgmt-body">
 
-            <!-- Left col: product explainer -->
+            <!-- LEFT PANEL: page diagram + pricing (permanent) -->
             <div class="sl-mgmt-info">
-                <div class="sl-section-label" style="margin-bottom:14px;">HOW IT WORKS</div>
+                <div class="sl-section-label" style="margin-bottom:12px;">WHERE YOUR AD APPEARS</div>
+
+                <!-- Mini page diagram -->
+                <div class="sl-page-diagram">
+                    <div class="sl-pd-nav">
+                        <div class="sl-pd-nav-dot"></div>
+                        <div class="sl-pd-nav-dot"></div>
+                        <div class="sl-pd-nav-dot sl-pd-nav-dot--wide"></div>
+                    </div>
+                    <div class="sl-pd-body">
+                        <div class="sl-pd-sidebar">
+                            <div class="sl-pd-filter-line"></div>
+                            <div class="sl-pd-filter-line"></div>
+                            <div class="sl-pd-filter-line sl-pd-filter-line--short"></div>
+                            <div class="sl-pd-filter-line"></div>
+                            <div class="sl-pd-filter-line sl-pd-filter-line--short"></div>
+                        </div>
+                        <div class="sl-pd-grid">
+                            <div class="sl-pd-item"></div>
+                            <div class="sl-pd-item"></div>
+                            <div class="sl-pd-item"></div>
+                            <div class="sl-pd-item sl-pd-item--ad">AD</div>
+                            <div class="sl-pd-item"></div>
+                            <div class="sl-pd-item"></div>
+                        </div>
+                        <div class="sl-pd-right">
+                            <div class="sl-pd-right-ad">AD</div>
+                            <div class="sl-pd-right-item"></div>
+                            <div class="sl-pd-right-item"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sl-pd-legend">
+                    <div class="sl-pd-legend-item">
+                        <span class="sl-pd-legend-dot"></span>In-feed — every 15 cards, all browsing sessions
+                    </div>
+                    <div class="sl-pd-legend-item">
+                        <span class="sl-pd-legend-dot"></span>Right panel — always visible on desktop
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                <div class="sl-section-label" style="margin: 18px 0 12px;">PRICING</div>
                 <div class="sl-explainer-row">
                     <div class="sl-slot-card" id="slExplainRunOfSite">
                         <div class="sl-slot-icon">📢</div>
@@ -2184,65 +2226,65 @@
                 </div>
             </div>
 
-            <!-- Right col: cards list -->
+            <!-- RIGHT PANEL: list view or inline builder -->
             <div class="sl-mgmt-cards">
-                <div class="sl-section-label">YOUR CARDS <span id="slCardCount" style="font-weight:400;color:#aaa;"></span></div>
-                <div id="slCardList"></div>
-                <button class="sl-create-btn" id="slCreateBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
-            </div>
 
-        </div>
-    </div>
-</div>
-
-<!-- SPONSORED CARD BUILDER -->
-<div id="spbBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:4000; backdrop-filter:blur(2px);" onclick="closeSponsoredBuilder()"></div>
-<div id="spbModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(720px,calc(100vw - 24px)); max-height:calc(100vh - 48px); background:white; border-radius:20px; overflow:hidden; flex-direction:column; z-index:4001; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-    <div class="spb-header">
-        <span class="spb-title">Sponsored Card Builder</span>
-        <button class="spb-close" onclick="closeSponsoredBuilder()">×</button>
-    </div>
-    <div style="padding:12px 20px 0; border-bottom:1px solid #f0f0f0;">
-        <input id="spbCardName" type="text" maxlength="50" placeholder="Card name — e.g. Summer Promo, Main Services Card…"
-            style="width:100%; padding:9px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-weight:700; outline:none; box-sizing:border-box; margin-bottom:12px;">
-    </div>
-    <div style="overflow-y:auto; flex:1; min-height:0;">
-        <div class="spb-tabs">
-            <button class="spb-tpl-tab active" data-tpl="supplier" onclick="selectSponsoredTemplate('supplier')">Services</button>
-            <button class="spb-tpl-tab" data-tpl="product" onclick="selectSponsoredTemplate('product')">Products</button>
-            <button class="spb-tpl-tab" data-tpl="partner" onclick="selectSponsoredTemplate('partner')">Partner</button>
-        </div>
-        <div class="spb-body">
-            <div class="spb-form-col">
-                <div id="spbFormFields"></div>
-                <!-- Targeting -->
-                <div class="spb-section-divider">Targeting</div>
-                <div class="spb-slot-row">
-                    <button class="spb-slot-btn active" id="spbSlotRunOfSite" onclick="spbSetSlotType('run_of_site')">
-                        <div class="spb-slot-btn-name">📢 Run of Site</div>
-                        <div class="spb-slot-btn-desc">Shows in all searches · $19/wk</div>
-                    </button>
-                    <button class="spb-slot-btn" id="spbSlotTargeted" onclick="spbSetSlotType('targeted')">
-                        <div class="spb-slot-btn-name">🎯 Targeted</div>
-                        <div class="spb-slot-btn-desc">Relevant buyers only · $39/wk</div>
-                    </button>
+                <!-- List view -->
+                <div id="slListView">
+                    <div class="sl-section-label">YOUR CARDS <span id="slCardCount" style="font-weight:400;color:#aaa;"></span></div>
+                    <div id="slCardList"></div>
+                    <button class="sl-create-btn" id="slCreateBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
                 </div>
-                <div id="spbTargetingOptions" style="display:none;">
-                    <div class="spb-target-label">Vehicle Makes <span style="font-weight:400;color:#aaa;">— leave blank for all</span></div>
-                    <div class="spb-make-wrap">
-                        <input id="spbMakeSearch" type="text" class="spb-make-input" placeholder="Type a make and press Enter…" onkeydown="spbMakeKeydown(event)" oninput="spbMakeSuggest()">
-                        <div id="spbMakeSuggestions" class="spb-suggestions"></div>
+
+                <!-- Inline builder view -->
+                <div id="slBuilderView" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                        <button onclick="closeSponsoredBuilder()" style="background:none;border:none;font-size:13px;font-weight:700;color:var(--apc-orange);cursor:pointer;padding:0;">← Back</button>
+                        <div class="sl-section-label" id="slBuilderViewTitle" style="margin-bottom:0;">NEW CARD</div>
                     </div>
-                    <div id="spbSelectedMakes" class="spb-tag-chips"></div>
-                    <div class="spb-target-label" style="margin-top:12px;">Part Categories <span style="font-weight:400;color:#aaa;">— leave blank for all</span></div>
-                    <div id="spbCategoryChips" class="spb-cat-chips"></div>
-                    <div id="spbTargetPreview" class="spb-target-preview"></div>
+                    <div style="padding:0 0 12px; border-bottom:1px solid #f0f0f0;">
+                        <input id="spbCardName" type="text" maxlength="50" placeholder="Card name — e.g. Summer Promo, Main Services Card…"
+                            style="width:100%; padding:9px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-weight:700; outline:none; box-sizing:border-box;">
+                    </div>
+                    <div class="spb-tabs">
+                        <button class="spb-tpl-tab active" data-tpl="supplier" onclick="selectSponsoredTemplate('supplier')">Services</button>
+                        <button class="spb-tpl-tab" data-tpl="product" onclick="selectSponsoredTemplate('product')">Products</button>
+                        <button class="spb-tpl-tab" data-tpl="partner" onclick="selectSponsoredTemplate('partner')">Partner</button>
+                    </div>
+                    <div class="spb-body">
+                        <div class="spb-form-col">
+                            <div id="spbFormFields"></div>
+                            <div class="spb-section-divider">Targeting</div>
+                            <div class="spb-slot-row">
+                                <button class="spb-slot-btn active" id="spbSlotRunOfSite" onclick="spbSetSlotType('run_of_site')">
+                                    <div class="spb-slot-btn-name">📢 Run of Site</div>
+                                    <div class="spb-slot-btn-desc">Shows in all searches · $19/wk</div>
+                                </button>
+                                <button class="spb-slot-btn" id="spbSlotTargeted" onclick="spbSetSlotType('targeted')">
+                                    <div class="spb-slot-btn-name">🎯 Targeted</div>
+                                    <div class="spb-slot-btn-desc">Relevant buyers only · $39/wk</div>
+                                </button>
+                            </div>
+                            <div id="spbTargetingOptions" style="display:none;">
+                                <div class="spb-target-label">Vehicle Makes <span style="font-weight:400;color:#aaa;">— leave blank for all</span></div>
+                                <div class="spb-make-wrap">
+                                    <input id="spbMakeSearch" type="text" class="spb-make-input" placeholder="Type a make and press Enter…" onkeydown="spbMakeKeydown(event)" oninput="spbMakeSuggest()">
+                                    <div id="spbMakeSuggestions" class="spb-suggestions"></div>
+                                </div>
+                                <div id="spbSelectedMakes" class="spb-tag-chips"></div>
+                                <div class="spb-target-label" style="margin-top:12px;">Part Categories <span style="font-weight:400;color:#aaa;">— leave blank for all</span></div>
+                                <div id="spbCategoryChips" class="spb-cat-chips"></div>
+                                <div id="spbTargetPreview" class="spb-target-preview"></div>
+                            </div>
+                            <button class="btn-full-action" style="margin-top:12px;" onclick="submitSponsoredCard()">Save Card</button>
+                        </div>
+                        <div class="spb-preview-col">
+                            <div class="spb-preview-label">Live Preview</div>
+                            <div id="spbPreviewCard"></div>
+                        </div>
+                    </div>
                 </div>
-                <button class="btn-full-action" style="margin-top:12px;" onclick="submitSponsoredCard()">Save Card</button>
-            </div>
-            <div class="spb-preview-col">
-                <div class="spb-preview-label">Live Preview</div>
-                <div id="spbPreviewCard"></div>
+
             </div>
         </div>
     </div>

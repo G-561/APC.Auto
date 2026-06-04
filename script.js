@@ -10058,27 +10058,29 @@ function openSponsoredBuilder(card = null) {
     _spbTemplate = card?.template || 'supplier';
     _spbLogoData = card?.logo_data || '';
     _spbImageData = card?.image_data || '';
-    // Restore targeting from saved tags
     const tags = card?.tags || [];
     _spbTargetMakes      = tags.filter(t => t.startsWith('make:')).map(t => t.slice(5));
     _spbTargetCategories = tags.filter(t => t.startsWith('cat:')).map(t => t.slice(4));
     _spbSlotType = (_spbTargetMakes.length || _spbTargetCategories.length) ? 'targeted' : 'run_of_site';
-    document.getElementById('spbBackdrop').style.display = '';
-    const modal = document.getElementById('spbModal');
-    modal.style.display = 'flex';
     const nameEl = document.getElementById('spbCardName');
     if (nameEl) nameEl.value = card?.card_name || '';
+    const titleEl = document.getElementById('slBuilderViewTitle');
+    if (titleEl) titleEl.textContent = card ? 'EDIT CARD' : 'NEW CARD';
+    document.getElementById('slListView').style.display = 'none';
+    document.getElementById('slBuilderView').style.display = '';
     _spbBuildForm();
 }
 
 async function openSponsoredBuilderById(id) {
+    const drawer = document.getElementById('sponsoredListingsDrawer');
+    if (!drawer?.classList.contains('active')) openSponsoredListingsDrawer();
     const { data } = await sb.from('sponsored_cards').select('*').eq('id', id).single();
     if (data) openSponsoredBuilder(data);
 }
 
 function closeSponsoredBuilder() {
-    document.getElementById('spbBackdrop').style.display = 'none';
-    document.getElementById('spbModal').style.display = 'none';
+    document.getElementById('slBuilderView').style.display = 'none';
+    document.getElementById('slListView').style.display = '';
 }
 
 function selectSponsoredTemplate(type) {
