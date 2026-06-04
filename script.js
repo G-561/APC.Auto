@@ -5681,12 +5681,33 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     const dotsContainer = document.getElementById('carouselDots');
     if (carousel) {
         carousel.innerHTML = '';
-        (part.images || []).forEach((src, i) => {
+        const images = part.images || [];
+        // Only the visible first image loads immediately; subsequent images load as they scroll near view.
+        // rootMargin '0px 100% 0px 0px' starts loading the next image one full carousel-width before it's reached.
+        let _carouselObserver = null;
+        if (images.length > 1 && 'IntersectionObserver' in window) {
+            _carouselObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.target.dataset.src) {
+                        entry.target.src = entry.target.dataset.src;
+                        delete entry.target.dataset.src;
+                        _carouselObserver.unobserve(entry.target);
+                    }
+                });
+            }, { root: carousel, rootMargin: '0px 100% 0px 0px', threshold: 0 });
+        }
+        images.forEach((src, i) => {
             const img = document.createElement('img');
-            img.src = src;
             img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;';
             img.alt = part.title;
-            img.onclick = () => openDetailImageViewer(src, part.images || [], i);
+            img.onclick = () => openDetailImageViewer(src, images, i);
+            if (i === 0) {
+                img.src = src;
+            } else {
+                img.dataset.src = src;
+                if (_carouselObserver) _carouselObserver.observe(img);
+                else img.src = src;
+            }
             carousel.appendChild(img);
         });
         // Reset to first image — deferred one frame so mobile browsers don't restore old scroll position
