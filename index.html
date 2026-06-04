@@ -2161,29 +2161,37 @@
         <span>Sponsored Listings</span>
         <div class="dh-close" onclick="toggleDrawer('sponsoredListingsDrawer')">×</div>
     </div>
-    <div class="drawer-content">
+    <div class="drawer-content sl-mgmt-content">
+        <div class="sl-mgmt-body">
 
-        <!-- Product explainer -->
-        <div class="sl-explainer-row">
-            <div class="sl-slot-card" id="slExplainRunOfSite">
-                <div class="sl-slot-icon">📢</div>
-                <div class="sl-slot-name">Run of Site</div>
-                <div class="sl-slot-desc">Your card shows whenever there's a free slot — across all searches and browse sessions.</div>
-                <div class="sl-slot-price">$19 <span>/ week</span></div>
+            <!-- Left col: product explainer -->
+            <div class="sl-mgmt-info">
+                <div class="sl-section-label" style="margin-bottom:14px;">HOW IT WORKS</div>
+                <div class="sl-explainer-row">
+                    <div class="sl-slot-card" id="slExplainRunOfSite">
+                        <div class="sl-slot-icon">📢</div>
+                        <div class="sl-slot-name">Run of Site</div>
+                        <div class="sl-slot-desc">Your card shows whenever there's a free slot — across all searches and browse sessions.</div>
+                        <div class="sl-slot-price">$19 <span>/ week</span></div>
+                    </div>
+                    <div class="sl-slot-card sl-slot-card--highlight" id="slExplainTargeted">
+                        <div class="sl-slot-badge">Best value</div>
+                        <div class="sl-slot-icon">🎯</div>
+                        <div class="sl-slot-name">Targeted</div>
+                        <div class="sl-slot-desc">Your card shows only to buyers searching for your specific makes or part categories.</div>
+                        <div class="sl-slot-price">$39 <span>/ week</span></div>
+                    </div>
+                </div>
             </div>
-            <div class="sl-slot-card sl-slot-card--highlight" id="slExplainTargeted">
-                <div class="sl-slot-badge">Best value</div>
-                <div class="sl-slot-icon">🎯</div>
-                <div class="sl-slot-name">Targeted</div>
-                <div class="sl-slot-desc">Your card shows only to buyers searching for your specific makes or part categories.</div>
-                <div class="sl-slot-price">$39 <span>/ week</span></div>
+
+            <!-- Right col: cards list -->
+            <div class="sl-mgmt-cards">
+                <div class="sl-section-label">YOUR CARDS <span id="slCardCount" style="font-weight:400;color:#aaa;"></span></div>
+                <div id="slCardList"></div>
+                <button class="sl-create-btn" id="slCreateBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
             </div>
+
         </div>
-
-        <!-- Cards list -->
-        <div class="sl-section-label">YOUR CARDS <span id="slCardCount" style="font-weight:400;color:#aaa;"></span></div>
-        <div id="slCardList"></div>
-        <button class="sl-create-btn" id="slCreateBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
     </div>
 </div>
 

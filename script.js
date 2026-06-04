@@ -9996,7 +9996,7 @@ async function renderSponsoredListingsMgmt() {
     if (!list || !sb || !currentUserId) return;
 
     const { data: cards } = await sb.from('sponsored_cards')
-        .select('id, card_name, template, is_active, tags, created_at')
+        .select('id, card_name, template, is_active, tags, created_at, image_data')
         .eq('user_id', currentUserId)
         .order('created_at', { ascending: true });
 
@@ -10021,12 +10021,16 @@ async function renderSponsoredListingsMgmt() {
         const targeting = isTargeted
             ? [...makes, ...cats].join(', ') || 'Targeted'
             : 'All searches';
+        const thumbHtml = c.image_data
+            ? `<img class="sl-card-thumb" src="${escapeHtml(c.image_data)}" alt="">`
+            : `<div class="sl-card-thumb-placeholder">🖼</div>`;
         return `
         <div class="sl-card-item">
             <label class="settings-toggle" style="flex-shrink:0;">
                 <input type="checkbox" ${c.is_active ? 'checked' : ''} onchange="toggleSponsorCard('${c.id}', this.checked)">
                 <span class="settings-toggle-track"></span>
             </label>
+            ${thumbHtml}
             <div style="flex:1;min-width:0;">
                 <div class="sl-card-name">${escapeHtml(c.card_name || 'Unnamed')}</div>
                 <div class="sl-card-meta">${tplLabel[c.template] || c.template} · ${targeting}</div>
