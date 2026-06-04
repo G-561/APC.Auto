@@ -10113,8 +10113,9 @@ function _spbBuildForm() {
         <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
             <input id="spbBtnUrl" type="url" placeholder="https://yourwebsite.com.au" value="${escapeHtml(e.button_url || '')}">
         </div>
-        <div class="input-group"><label>Display Tags <span style="font-weight:400;color:#aaa;">up to 3, comma-separated</span></label>
-            <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Servicing, Tyres, Performance" value="${escapeHtml(freeTags)}">
+        <div class="input-group"><label>Search Keywords <span style="font-weight:400;color:#aaa;">up to 3, comma-separated</span></label>
+            <input id="spbTags" type="text" maxlength="80" placeholder="e.g. wiper blades, suspension, oil change" value="${escapeHtml(freeTags)}">
+            <div style="font-size:11px;color:#aaa;margin-top:4px;">Soft-matched against buyer search text — not the same as part categories. Use words buyers actually type.</div>
         </div>`;
 
     document.getElementById('spbFormFields').innerHTML = html;
