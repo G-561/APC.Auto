@@ -2204,39 +2204,78 @@ async function loadPublicWantedFromSupabase() {
     } catch (e) { console.warn('loadPublicWantedFromSupabase:', e); }
 }
 
+function _workshopRowToObj(p) {
+    const wd = p.workshop_data || {};
+    const activeKeys = Object.entries(wd.services || {}).filter(([, v]) => v).map(([k]) => k);
+    const topLabels  = activeKeys.slice(0, 3).map(k => SERVICE_LABELS[k] || k);
+    return {
+        id:           p.id,
+        userId:       p.id,
+        name:         p.business_name || p.display_name || 'Workshop',
+        logo:         p.avatar_url || '',
+        location:     p.location || '',
+        postcode:     p.postcode || '',
+        address:      p.workshop_address || '',
+        phone:        wd.phone || '',
+        about:        p.about || '',
+        serviceKeys:  activeKeys,
+        vehicleTypes: wd.vehicles || [],
+        specialty:    topLabels.join(' · ') || 'Workshop Services',
+        distance:     p.location || '',
+        rating:       null,
+    };
+}
+
+const _workshopById = new Map();  // per-ID cache for on-demand lookups
+let   _workshopLoadState = 'idle'; // 'idle' | 'loading' | 'loaded'
+
+async function ensureWorkshopsLoaded() {
+    if (_workshopLoadState === 'loaded' || workshopDatabase.length > 0) return;
+    if (_workshopLoadState === 'loading') {
+        // Wait for the in-flight load to finish
+        await new Promise(r => { const t = setInterval(() => { if (_workshopLoadState !== 'loading') { clearInterval(t); r(); } }, 50); });
+        return;
+    }
+    await loadWorkshopDatabase();
+}
+
+async function fetchWorkshopById(id) {
+    if (!id || !sb) return null;
+    // Already in full cache or per-ID cache
+    const inDb = workshopDatabase.find(w => w.id === id);
+    if (inDb) return inDb;
+    if (_workshopById.has(id)) return _workshopById.get(id);
+    try {
+        const { data } = await sb.from('profiles')
+            .select('id, display_name, business_name, location, postcode, avatar_url, about, workshop_data, workshop_address')
+            .eq('id', id).single();
+        if (!data?.workshop_data) return null;
+        const ws = _workshopRowToObj(data);
+        _workshopById.set(id, ws);
+        return ws;
+    } catch { return null; }
+}
+
 async function loadWorkshopDatabase() {
     if (!sb) return;
+    _workshopLoadState = 'loading';
     try {
         const { data, error } = await sb.from('profiles')
             .select('id, display_name, business_name, location, postcode, avatar_url, about, workshop_data, workshop_address')
             .or('tier.in.(trade,pro),is_pro.eq.true')
             .not('workshop_data', 'is', null)
-            .neq('is_public', false);
-        if (error) { console.warn('loadWorkshopDatabase:', error.message); return; }
+            .neq('is_public', false)
+            .order('created_at', { ascending: false })
+            .limit(100);
+        if (error) { console.warn('loadWorkshopDatabase:', error.message); _workshopLoadState = 'idle'; return; }
         workshopDatabase.splice(0);
         (data || []).forEach(p => {
-            const wd = p.workshop_data || {};
-            const activeKeys = Object.entries(wd.services || {}).filter(([, v]) => v).map(([k]) => k);
-            if (!activeKeys.length && !wd.vehicles?.length) return;
-            const topLabels = activeKeys.slice(0, 3).map(k => SERVICE_LABELS[k] || k);
-            workshopDatabase.push({
-                id:           p.id,
-                userId:       p.id,
-                name:         p.business_name || p.display_name || 'Workshop',
-                logo:         p.avatar_url || '',
-                location:     p.location || '',
-                postcode:     p.postcode || '',
-                address:      p.workshop_address || '',
-                phone:        wd.phone || '',
-                about:        p.about || '',
-                serviceKeys:  activeKeys,
-                vehicleTypes: wd.vehicles || [],
-                specialty:    topLabels.join(' · ') || 'Workshop Services',
-                distance:     p.location || '',
-                rating:       null,
-            });
+            const ws = _workshopRowToObj(p);
+            if (!ws.serviceKeys.length && !ws.vehicleTypes.length) return;
+            workshopDatabase.push(ws);
         });
-    } catch (e) { console.warn('loadWorkshopDatabase:', e); }
+        _workshopLoadState = 'loaded';
+    } catch (e) { console.warn('loadWorkshopDatabase:', e); _workshopLoadState = 'idle'; }
 }
 
 async function loadSavedListingsFromSupabase(userId) {
@@ -3314,8 +3353,8 @@ function buildWorkshopCardHTML(ws) {
     `;
 }
 
-function openWorkshopOverlay(wsId) {
-    const ws = workshopDatabase.find(w => w.id === wsId);
+async function openWorkshopOverlay(wsId) {
+    const ws = await fetchWorkshopById(wsId);
     if (!ws) return;
 
     const overlay = document.getElementById('workshopDetailOverlay');
@@ -5917,28 +5956,33 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     // Apply blur lock to col seller card (also gets .locked class for overlay visibility — done above)
     if (detailSellerColCard) detailSellerColCard.classList.toggle('blurred-detail', !userIsSignedIn);
 
-    const workshopSection = document.getElementById('detailWorkshopSection');
-    const workshopHeadline = document.getElementById('detailWorkshopHeadline');
-    const workshopCards = document.getElementById('detailWorkshopCards');
-    if (workshopSection) workshopSection.style.display = (fromInbox || inStoreView) ? 'none' : '';
-    if (workshopSection && workshopHeadline && workshopCards && !fromInbox) {
-        const isUniversal = !part.fits || part.fits.length === 0;
-        if (isUniversal) {
-            const shuffled = [...workshopDatabase].sort(() => Math.random() - 0.5).slice(0, 3);
-            workshopHeadline.textContent = 'Recommended workshops near you';
-            workshopCards.innerHTML = shuffled.map(buildWorkshopCardHTML).join('');
-            workshopSection.style.display = 'block';
-        } else {
-            const workshops = getRecommendedWorkshops(part).slice(0, 3);
-            const vehicleLabel = getDetailVehicleLabel(part);
-            workshopHeadline.textContent = `Local ${vehicleLabel} specialists near you`;
-            workshopCards.innerHTML = workshops.length
-                ? workshops.map(buildWorkshopCardHTML).join('')
-                : `<div style="padding: 14px; border: 1px solid #eee; border-radius: 14px; background: #fbfbfb; font-size: 13px;">
-                    <div style="color:#555; margin-bottom:10px;">No local fitters are listed for this vehicle yet.</div>
-                    <div style="color:#888; line-height:1.5;">Are you a specialist workshop for this vehicle? If you offer fitting services and want to appear here, set up your <strong style="color:#555;">Workshop Profile</strong> in your <a href="#" onclick="event.preventDefault(); ${currentUserTier === 'pro' ? 'onMenuOpenSettings()' : 'onUpgradeToPro()'};" style="color:var(--apc-orange); font-weight:700; text-decoration:none;">${currentUserTier === 'pro' ? 'Pro Settings' : 'APC Pro account'}</a>.</div>
-                  </div>`;
-            workshopSection.style.display = 'block';
+    {
+        const workshopSection = document.getElementById('detailWorkshopSection');
+        if (workshopSection) workshopSection.style.display = (fromInbox || inStoreView) ? 'none' : '';
+        if (!fromInbox && !inStoreView) {
+            ensureWorkshopsLoaded().then(() => {
+                const workshopHeadline = document.getElementById('detailWorkshopHeadline');
+                const workshopCards = document.getElementById('detailWorkshopCards');
+                if (!workshopSection || !workshopHeadline || !workshopCards) return;
+                const isUniversal = !part.fits || part.fits.length === 0;
+                if (isUniversal) {
+                    const shuffled = [...workshopDatabase].sort(() => Math.random() - 0.5).slice(0, 3);
+                    workshopHeadline.textContent = 'Recommended workshops near you';
+                    workshopCards.innerHTML = shuffled.map(buildWorkshopCardHTML).join('');
+                    workshopSection.style.display = 'block';
+                } else {
+                    const workshops = getRecommendedWorkshops(part).slice(0, 3);
+                    const vehicleLabel = getDetailVehicleLabel(part);
+                    workshopHeadline.textContent = `Local ${vehicleLabel} specialists near you`;
+                    workshopCards.innerHTML = workshops.length
+                        ? workshops.map(buildWorkshopCardHTML).join('')
+                        : `<div style="padding: 14px; border: 1px solid #eee; border-radius: 14px; background: #fbfbfb; font-size: 13px;">
+                            <div style="color:#555; margin-bottom:10px;">No local fitters are listed for this vehicle yet.</div>
+                            <div style="color:#888; line-height:1.5;">Are you a specialist workshop for this vehicle? If you offer fitting services and want to appear here, set up your <strong style="color:#555;">Workshop Profile</strong> in your <a href="#" onclick="event.preventDefault(); ${currentUserTier === 'pro' ? 'onMenuOpenSettings()' : 'onUpgradeToPro()'};" style="color:var(--apc-orange); font-weight:700; text-decoration:none;">${currentUserTier === 'pro' ? 'Pro Settings' : 'APC Pro account'}</a>.</div>
+                          </div>`;
+                    workshopSection.style.display = 'block';
+                }
+            });
         }
     }
 
@@ -7382,7 +7426,6 @@ document.addEventListener('DOMContentLoaded', () => {
             loadWantedFromSupabase(session.user.id);
             loadSavedListingsFromSupabase(session.user.id);
             loadPublicWantedFromSupabase();
-            loadWorkshopDatabase();
             loadNotificationsFromSupabase();
             loadRecentlyViewedFromSupabase(session.user.id);
         } else if (event === 'SIGNED_OUT') {
@@ -10343,14 +10386,14 @@ function buildGridWithSponsored(parts) {
     return html;
 }
 
-function handleSponsoredCardClick(cardId, userId, url) {
+async function handleSponsoredCardClick(cardId, userId, url) {
     if (cardId && sb) {
         sb.from('sponsored_clicks')
             .insert({ card_id: cardId, user_id: currentUserId || null })
             .then(() => {});
     }
     // If the card owner has a workshop profile, open the workshop overlay
-    const ws = userId && workshopDatabase.find(w => w.id === userId);
+    const ws = userId ? await fetchWorkshopById(userId) : null;
     if (ws) {
         openWorkshopOverlay(userId);
         return;
@@ -10438,7 +10481,7 @@ async function deleteSponsorCard(id) {
 async function loadSponsoredCards() {
     if (!sb) return;
     const { data } = await sb.from('sponsored_cards')
-        .select('*').eq('is_active', true)
+        .select('*').eq('is_active', true).limit(30)
         .order('priority', { ascending: false })
         .order('created_at', { ascending: true });
     _sponsoredCardsData = data || [];
@@ -10492,7 +10535,7 @@ function refreshSponsoredCards() {
     if (inner) inner.style.transform = `translateY(-${window.scrollY}px)`;
 }
 
-function onMenuOpenWorkshops() {
+async function onMenuOpenWorkshops() {
     if (!userIsSignedIn) {
         openAuthDrawer(onMenuOpenWorkshops);
         return;
@@ -10501,6 +10544,7 @@ function onMenuOpenWorkshops() {
     document.querySelectorAll('#workshopRadiusControl .radius-seg').forEach((s, i, arr) => {
         s.classList.toggle('active', i === arr.length - 1);
     });
+    await ensureWorkshopsLoaded();
     renderWorkshopProfile();
     renderWorkshopBrowseView();
     populateWsLocatorPicker();
@@ -10826,8 +10870,8 @@ function buildSponsoredWorkshopCardHTML(workshop) {
     `;
 }
 
-function openWorkshopDetail(workshopId) {
-    const w = workshopDatabase.find(w => w.id === workshopId);
+async function openWorkshopDetail(workshopId) {
+    const w = await fetchWorkshopById(workshopId);
     if (!w) return;
     const content = document.getElementById('workshopDetailContent');
     if (!content) return;
