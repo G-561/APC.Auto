@@ -5003,7 +5003,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     #inboxDrawer,
     #chatDrawer,
     #messageDetailDrawer,
-    #helpDrawer {
+    #helpDrawer,
+    #sponsoredListingsDrawer {
         left: max(0px, calc(50vw - 800px)) !important;
         right: max(0px, calc(50vw - 800px)) !important;
         width: auto !important;
