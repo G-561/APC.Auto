@@ -10083,90 +10083,39 @@ function closeSponsoredBuilder() {
     document.getElementById('slListView').style.display = '';
 }
 
-function selectSponsoredTemplate(type) {
-    _spbTemplate = type;
-    document.querySelectorAll('.spb-tpl-tab').forEach(t => t.classList.toggle('active', t.dataset.tpl === type));
-    _spbBuildForm();
-}
+function selectSponsoredTemplate() { /* unified template — no-op */ }
 
 function _spbBuildForm() {
-    document.querySelectorAll('.spb-tpl-tab').forEach(t => t.classList.toggle('active', t.dataset.tpl === _spbTemplate));
     const e = _spbExistingCard || {};
-    const tpl = _spbTemplate;
-    let html = '';
-
-    if (tpl === 'supplier') {
-        html = `
-            <div class="input-group"><label>Business Name <span style="color:#e53935;">*</span></label>
-                <input id="spbName" type="text" maxlength="50" placeholder="e.g. AA Automotive" value="${escapeHtml(e.business_name || '')}">
+    const cardImg = _spbImageData || _spbLogoData;
+    // Only show free display tags — not make:/cat: targeting tags
+    const freeTags = (e.tags || []).filter(t => !t.startsWith('make:') && !t.startsWith('cat:')).join(', ');
+    const html = `
+        <div class="input-group"><label>Name / Title <span style="color:#e53935;">*</span></label>
+            <input id="spbName" type="text" maxlength="60" placeholder="e.g. AA Automotive, Bosch Wiper Blades…" value="${escapeHtml(e.business_name || '')}">
+        </div>
+        <div class="input-group"><label>Tagline <span style="font-weight:400;color:#aaa;">one line</span></label>
+            <input id="spbTagline" type="text" maxlength="80" placeholder="e.g. Adelaide's trusted specialists since 1995" value="${escapeHtml(e.tagline || e.blurb || '')}">
+        </div>
+        <div class="input-group"><label>Price <span style="font-weight:400;color:#aaa;">optional</span></label>
+            <input id="spbPrice" type="text" maxlength="20" placeholder="e.g. $149 or From $49" value="${escapeHtml(e.price || '')}">
+        </div>
+        <div class="input-group"><label>Card Image <span style="font-weight:400;color:#aaa;">photo or logo</span></label>
+            <div class="spb-hero-upload" id="spbHeroPreview" onclick="document.getElementById('spbHeroInput').click()">
+                ${cardImg ? `<img src="${cardImg}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : '<span class="spb-upload-hint">＋ Upload Image<br><small>Photo or logo · JPG / PNG</small></span>'}
             </div>
-            <div class="input-group"><label>Tagline <span style="font-weight:400;color:#aaa;">one line</span></label>
-                <input id="spbTagline" type="text" maxlength="80" placeholder="e.g. Adelaide's trusted auto specialists since 1995" value="${escapeHtml(e.tagline || '')}">
-            </div>
-            <div class="input-group"><label>Tags <span style="font-weight:400;color:#aaa;">up to 3, comma-separated</span></label>
-                <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Servicing, Tyres, Performance" value="${escapeHtml((e.tags || []).join(', '))}">
-            </div>
-            <div class="input-group"><label>Logo</label>
-                <div class="spb-logo-upload" id="spbLogoPreview" onclick="document.getElementById('spbLogoInput').click()">
-                    ${_spbLogoData ? `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">` : '<span class="spb-upload-hint">＋ Upload Logo</span>'}
-                </div>
-                <input type="file" id="spbLogoInput" accept="image/*" style="display:none;" onchange="handleSpbLogo(this)">
-                <div style="font-size:11px;color:#aaa;margin-top:4px;">PNG transparent preferred · max 500 KB</div>
-            </div>
-            <div class="input-group"><label>Button Label</label>
-                <input id="spbBtnLabel" type="text" maxlength="30" placeholder="Visit Website →" value="${escapeHtml(e.button_label || 'Visit Website →')}">
-            </div>
-            <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
-                <input id="spbBtnUrl" type="url" placeholder="https://yourwebsite.com.au" value="${escapeHtml(e.button_url || '')}">
-            </div>`;
-    } else if (tpl === 'product') {
-        html = `
-            <div class="input-group"><label>Hero Image <span style="color:#e53935;">*</span></label>
-                <div class="spb-hero-upload" id="spbHeroPreview" onclick="document.getElementById('spbHeroInput').click()">
-                    ${_spbImageData ? `<img src="${_spbImageData}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : '<span class="spb-upload-hint">＋ Upload Photo<br><small>400 × 240 px · JPG</small></span>'}
-                </div>
-                <input type="file" id="spbHeroInput" accept="image/*" style="display:none;" onchange="handleSpbImage(this)">
-                <div style="font-size:11px;color:#aaa;margin-top:4px;">max 1 MB</div>
-            </div>
-            <div class="input-group"><label>Price</label>
-                <input id="spbPrice" type="text" maxlength="20" placeholder="e.g. $149" value="${escapeHtml(e.price || '')}">
-            </div>
-            <div class="input-group"><label>Title <span style="color:#e53935;">*</span></label>
-                <input id="spbName" type="text" maxlength="60" placeholder="e.g. Bosch Wiper Blades" value="${escapeHtml(e.business_name || '')}">
-            </div>
-            <div class="input-group"><label>Seller / Brand</label>
-                <input id="spbTagline" type="text" maxlength="40" placeholder="e.g. AA Automotive" value="${escapeHtml(e.tagline || '')}">
-            </div>
-            <div class="input-group"><label>Link URL <span style="color:#e53935;">*</span></label>
-                <input id="spbBtnUrl" type="url" placeholder="https://..." value="${escapeHtml(e.button_url || '')}">
-            </div>
-            <div class="input-group"><label>Tags <span style="font-weight:400;color:#aaa;">comma-separated — used for targeting</span></label>
-                <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Brakes, Toyota, Suspension" value="${escapeHtml((e.tags || []).join(', '))}">
-            </div>`;
-    } else {
-        html = `
-            <div class="input-group"><label>Partner Name <span style="color:#e53935;">*</span></label>
-                <input id="spbName" type="text" maxlength="50" placeholder="e.g. Sendle" value="${escapeHtml(e.business_name || '')}">
-            </div>
-            <div class="input-group"><label>Short blurb <span style="color:#e53935;">*</span></label>
-                <textarea id="spbBlurb" class="apc-textarea" rows="3" maxlength="120" placeholder="e.g. Australia-wide door-to-door delivery. Get an instant quote.">${escapeHtml(e.blurb || '')}</textarea>
-            </div>
-            <div class="input-group"><label>Logo <span style="font-weight:400;color:#aaa;">optional</span></label>
-                <div class="spb-logo-upload" id="spbLogoPreview" onclick="document.getElementById('spbLogoInput').click()">
-                    ${_spbLogoData ? `<img src="${_spbLogoData}" style="width:100%;height:100%;object-fit:contain;">` : '<span class="spb-upload-hint">＋ Logo</span>'}
-                </div>
-                <input type="file" id="spbLogoInput" accept="image/*" style="display:none;" onchange="handleSpbLogo(this)">
-            </div>
-            <div class="input-group"><label>Button Label</label>
-                <input id="spbBtnLabel" type="text" maxlength="30" placeholder="Learn More →" value="${escapeHtml(e.button_label || 'Learn More →')}">
-            </div>
-            <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
-                <input id="spbBtnUrl" type="url" placeholder="https://..." value="${escapeHtml(e.button_url || '')}">
-            </div>
-            <div class="input-group"><label>Tags <span style="font-weight:400;color:#aaa;">comma-separated — used for targeting</span></label>
-                <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Insurance, All Makes, Delivery" value="${escapeHtml((e.tags || []).join(', '))}">
-            </div>`;
-    }
+            <input type="file" id="spbHeroInput" accept="image/*" style="display:none;" onchange="handleSpbImage(this)">
+            <div style="font-size:11px;color:#aaa;margin-top:4px;">max 1 MB</div>
+        </div>
+        <div class="input-group"><label>Button Label</label>
+            <input id="spbBtnLabel" type="text" maxlength="30" placeholder="Visit Website →" value="${escapeHtml(e.button_label || 'Visit Website →')}">
+        </div>
+        <div class="input-group"><label>Button URL <span style="color:#e53935;">*</span></label>
+            <input id="spbBtnUrl" type="url" placeholder="https://yourwebsite.com.au" value="${escapeHtml(e.button_url || '')}">
+        </div>
+        <div class="input-group"><label>Display Tags <span style="font-weight:400;color:#aaa;">up to 3, comma-separated</span></label>
+            <input id="spbTags" type="text" maxlength="80" placeholder="e.g. Servicing, Tyres, Performance" value="${escapeHtml(freeTags)}">
+        </div>`;
 
     document.getElementById('spbFormFields').innerHTML = html;
     document.getElementById('spbFormFields').querySelectorAll('input,textarea').forEach(el => {
@@ -10278,15 +10227,14 @@ function _spbUpdatePreview() {
     if (!preview) return;
     const name     = document.getElementById('spbName')?.value || '';
     const tagline  = document.getElementById('spbTagline')?.value || '';
-    const blurb    = document.getElementById('spbBlurb')?.value || '';
     const price    = document.getElementById('spbPrice')?.value || '';
     const btnLabel = document.getElementById('spbBtnLabel')?.value || '';
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
     const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
     preview.innerHTML = buildSponsoredCardHTML({
-        template: _spbTemplate, business_name: name, tagline, blurb, price,
+        template: 'standard', business_name: name, tagline, price,
         button_label: btnLabel, button_url: '#', tags,
-        logo_data: _spbLogoData, image_data: _spbImageData
+        image_data: _spbImageData || _spbLogoData
     });
 }
 
@@ -10322,27 +10270,25 @@ async function submitSponsoredCard() {
     const btnUrl = document.getElementById('spbBtnUrl')?.value.trim();
     if (!name)   { showToast('Name / title is required'); return; }
     if (!btnUrl) { showToast('Button URL is required'); return; }
-    if (_spbTemplate === 'product' && !_spbImageData) { showToast('Hero image is required for a Product card'); return; }
 
     const tagline  = document.getElementById('spbTagline')?.value.trim() || null;
-    const blurb    = document.getElementById('spbBlurb')?.value.trim() || null;
     const price    = document.getElementById('spbPrice')?.value.trim() || null;
     const btnLabel = document.getElementById('spbBtnLabel')?.value.trim() || null;
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
     const freeTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
-    // Build structured targeting tags
     const makeTags = _spbSlotType === 'targeted' ? _spbTargetMakes.map(m => `make:${m}`) : [];
     const catTags  = _spbSlotType === 'targeted' ? _spbTargetCategories.map(c => `cat:${c}`) : [];
     const tags = [...makeTags, ...catTags, ...freeTags];
 
     const cardName = document.getElementById('spbCardName')?.value.trim();
     if (!cardName) { showToast('Please give your card a name'); return; }
+    const imageData = _spbImageData || _spbLogoData || null;
     const payload = {
-        user_id: currentUserId, template: _spbTemplate,
+        user_id: currentUserId, template: 'standard',
         card_name: cardName,
-        business_name: name, tagline, blurb, price,
+        business_name: name, tagline, blurb: null, price,
         tags: tags.length ? tags : null,
-        logo_data: _spbLogoData || null, image_data: _spbImageData || null,
+        logo_data: null, image_data: imageData,
         button_label: btnLabel, button_url: btnUrl, is_active: true
     };
 
@@ -10433,45 +10379,23 @@ async function handleSponsoredCardClick(cardId, userId, url) {
 }
 
 function buildSponsoredCardHTML(card) {
-    const tpl  = card.template;
-    const name = escapeHtml(card.business_name || '');
-    const logo = card.logo_data  || '';
-    const image = card.image_data || '';
+    const name    = escapeHtml(card.business_name || '');
+    const sub     = escapeHtml(card.tagline || card.blurb || '');
+    const price   = escapeHtml(card.price || '');
+    const cardImg = card.image_data || card.logo_data || '';
 
     const safeUrl = /^https:\/\//i.test(card.button_url || '') ? escapeHtml(card.button_url) : '#';
     const userId  = card.user_id || '';
     const cardId  = card.id || '';
     const openCmd = `handleSponsoredCardClick('${cardId}','${userId}','${safeUrl}')`;
 
-    let imgHtml, badgeClass, badgeLabel, sub;
+    const imgHtml = cardImg
+        ? `<img src="${cardImg}" class="drp-card-img" alt="">`
+        : `<div class="drp-card-ph" style="background:linear-gradient(135deg,var(--apc-orange),#e05000)"><span>${name.slice(0, 2).toUpperCase()}</span></div>`;
 
-    if (tpl === 'supplier') {
-        imgHtml    = logo
-            ? `<img src="${logo}" class="drp-card-img drp-card-img--contain" alt="">`
-            : `<div class="drp-card-ph" style="background:linear-gradient(135deg,var(--apc-orange),#e05000)"><span>${name.slice(0, 3).toUpperCase()}</span></div>`;
-        badgeClass = 'drp-type-badge--featured';
-        badgeLabel = 'Featured';
-        sub        = escapeHtml(card.tagline || '');
-    } else if (tpl === 'product') {
-        imgHtml    = image
-            ? `<img src="${image}" class="drp-card-img" alt="">`
-            : `<div class="drp-card-ph" style="background:#ddd"><span style="color:#999;font-size:12px;">No image</span></div>`;
-        badgeClass = 'drp-type-badge--sponsored';
-        badgeLabel = 'Sponsored';
-        sub        = escapeHtml(card.tagline || '');
-    } else {
-        imgHtml    = logo
-            ? `<img src="${logo}" class="drp-card-img drp-card-img--contain" alt="">`
-            : `<div class="drp-card-ph" style="background:linear-gradient(135deg,#2d3a8c,#1a1a2e)"><span>${name.slice(0, 2).toUpperCase()}</span></div>`;
-        badgeClass = 'drp-type-badge--partner';
-        badgeLabel = 'Partner';
-        sub        = escapeHtml(card.blurb || '');
-    }
-
-    const price = escapeHtml(card.price || '');
     return `<div class="drp-card" onclick="${openCmd}">
         ${imgHtml}
-        <span class="drp-type-badge ${badgeClass}">${badgeLabel}</span>
+        <span class="drp-type-badge drp-type-badge--sponsored">Sponsored</span>
         <div class="drp-info">
             ${price ? `<div class="drp-info-price">${price}</div>` : ''}
             <div class="drp-info-name">${name}</div>
