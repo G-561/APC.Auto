@@ -6691,6 +6691,112 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     .spb-preview-col { width: 100%; }
 }
 
+/* ── SPONSORED LISTINGS DRAWER ─────────────────────────── */
+.sl-explainer-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;
+}
+.sl-slot-card {
+    position: relative; border: 1.5px solid #e8e8e8; border-radius: 14px;
+    padding: 16px 14px; display: flex; flex-direction: column; gap: 6px;
+    background: #fafafa;
+}
+.sl-slot-card--highlight {
+    border-color: var(--apc-orange); background: #fff8f2;
+}
+.sl-slot-badge {
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--apc-orange); color: white;
+    font-size: 9px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
+    border-radius: 99px; padding: 2px 9px; white-space: nowrap;
+}
+.sl-slot-icon { font-size: 22px; line-height: 1; }
+.sl-slot-name { font-size: 14px; font-weight: 900; color: #1a1a1a; }
+.sl-slot-desc { font-size: 11px; color: #777; line-height: 1.4; flex: 1; }
+.sl-slot-price { font-size: 18px; font-weight: 900; color: var(--apc-orange); margin-top: 4px; }
+.sl-slot-price span { font-size: 12px; font-weight: 600; color: #aaa; }
+.sl-section-label {
+    font-size: 10px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #999; margin-bottom: 10px;
+}
+.sl-card-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: white; border-radius: 12px;
+    border: 1px solid #eee; margin-bottom: 8px;
+}
+.sl-card-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: #222; }
+.sl-card-meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+.sl-card-slot-badge {
+    font-size: 9px; font-weight: 900; letter-spacing: 0.4px; text-transform: uppercase;
+    border-radius: 99px; padding: 2px 8px; flex-shrink: 0;
+}
+.sl-card-slot-badge.run  { background: #f0f0f0; color: #888; }
+.sl-card-slot-badge.targeted { background: rgba(240,112,32,0.12); color: var(--apc-orange); }
+.sl-create-btn {
+    width: 100%; padding: 14px; margin-top: 4px;
+    background: none; border: 1.5px dashed #ccc; border-radius: 12px;
+    font-size: 13px; font-weight: 700; color: #555; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+.sl-create-btn:hover { border-color: var(--apc-orange); color: var(--apc-orange); }
+
+/* ── CARD BUILDER — targeting section ──────────────────── */
+.spb-section-divider {
+    font-size: 10px; font-weight: 900; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #999; margin: 16px 0 10px;
+    padding-top: 16px; border-top: 1px solid #f0f0f0;
+}
+.spb-slot-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.spb-slot-btn {
+    border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 10px 12px;
+    background: #fafafa; cursor: pointer; text-align: left;
+    transition: border-color 0.15s, background 0.15s;
+}
+.spb-slot-btn.active { border-color: var(--apc-orange); background: #fff8f2; }
+.spb-slot-btn-name { font-size: 12px; font-weight: 800; color: #222; margin-bottom: 3px; }
+.spb-slot-btn-desc { font-size: 10px; color: #888; line-height: 1.35; }
+.spb-target-label {
+    font-size: 11px; font-weight: 800; color: #555;
+    margin-bottom: 6px; margin-top: 2px;
+}
+.spb-make-wrap { position: relative; margin-bottom: 6px; }
+.spb-make-input {
+    width: 100%; padding: 8px 12px; border: 1.5px solid #e0e0e0;
+    border-radius: 8px; font-size: 13px; outline: none; box-sizing: border-box;
+    font-family: inherit;
+}
+.spb-make-input:focus { border-color: var(--apc-orange); }
+.spb-suggestions {
+    position: absolute; top: 100%; left: 0; right: 0; background: white;
+    border: 1.5px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px;
+    max-height: 160px; overflow-y: auto; z-index: 10; display: none;
+}
+.spb-suggest-item {
+    padding: 8px 12px; font-size: 13px; cursor: pointer;
+    transition: background 0.1s;
+}
+.spb-suggest-item:hover { background: #f4f4f4; }
+.spb-tag-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; min-height: 10px; }
+.spb-tag-chip {
+    display: flex; align-items: center; gap: 4px;
+    background: #f0f0f0; border-radius: 99px; padding: 3px 10px 3px 12px;
+    font-size: 11px; font-weight: 700; color: #333;
+}
+.spb-tag-chip button {
+    background: none; border: none; font-size: 14px; line-height: 1;
+    color: #aaa; cursor: pointer; padding: 0; margin-left: 2px;
+}
+.spb-cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.spb-cat-chip {
+    padding: 4px 11px; border-radius: 99px; border: 1.5px solid #ddd;
+    background: white; font-size: 11px; font-weight: 700; color: #666;
+    cursor: pointer; transition: all 0.12s;
+}
+.spb-cat-chip.active { background: var(--apc-orange); border-color: var(--apc-orange); color: white; }
+.spb-target-preview {
+    background: #f4f4f4; border-radius: 8px; padding: 10px 12px;
+    font-size: 11px; color: #555; line-height: 1.5; margin-top: 4px;
+}
+
 /* ── SELL VEHICLE PICKER MODAL ─────────────────────────── */
 .vp-overlay {
     position: fixed; inset: 0;

@@ -9900,6 +9900,80 @@ function submitHelpContact() {
     window.location.href = `mailto:support@autopartsconnection.com.au?subject=${subject}&body=${body}`;
     showToast('Opening your email app…');
 }
+// ===== SPONSORED LISTINGS DRAWER =====
+
+const SPB_CATEGORIES = [
+    { value: 'body',         label: 'Body & Exterior' },
+    { value: 'engine',       label: 'Engine' },
+    { value: 'transmission', label: 'Transmission' },
+    { value: 'suspension',   label: 'Suspension' },
+    { value: 'brakes',       label: 'Brakes' },
+    { value: 'wheels',       label: 'Wheels & Tyres' },
+    { value: 'electrical',   label: 'Electrical' },
+    { value: 'cooling',      label: 'Cooling' },
+    { value: 'fuel',         label: 'Fuel System' },
+    { value: 'interior',     label: 'Interior' },
+    { value: '4x4',          label: '4x4 & Off-Road' },
+    { value: 'performance',  label: 'Performance' },
+    { value: 'audio',        label: 'Audio & Tech' },
+    { value: 'glass',        label: 'Glass' },
+    { value: 'tools',        label: 'Tools' },
+];
+
+function openSponsoredListingsDrawer() {
+    toggleDrawer('sponsoredListingsDrawer');
+    renderSponsoredListingsMgmt();
+}
+
+async function renderSponsoredListingsMgmt() {
+    const list    = document.getElementById('slCardList');
+    const countEl = document.getElementById('slCardCount');
+    const createBtn = document.getElementById('slCreateBtn');
+    if (!list || !sb || !currentUserId) return;
+
+    const { data: cards } = await sb.from('sponsored_cards')
+        .select('id, card_name, template, is_active, tags, created_at')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: true });
+
+    const cardList = cards || [];
+    if (countEl) countEl.textContent = `${cardList.length} / 10`;
+    if (createBtn) createBtn.style.display = cardList.length >= 10 ? 'none' : '';
+
+    if (!cardList.length) {
+        list.innerHTML = `<div style="text-align:center;padding:20px;color:#aaa;font-size:13px;">No cards yet — create your first one below.</div>`;
+        return;
+    }
+
+    const tplLabel = { supplier: 'Services', product: 'Products', partner: 'Partner' };
+    list.innerHTML = cardList.map(c => {
+        const tags = c.tags || [];
+        const isTargeted = tags.some(t => t.startsWith('make:') || t.startsWith('cat:'));
+        const makes = tags.filter(t => t.startsWith('make:')).map(t => t.slice(5));
+        const cats  = tags.filter(t => t.startsWith('cat:')).map(t => {
+            const found = SPB_CATEGORIES.find(x => x.value === t.slice(4));
+            return found ? found.label : t.slice(4);
+        });
+        const targeting = isTargeted
+            ? [...makes, ...cats].join(', ') || 'Targeted'
+            : 'All searches';
+        return `
+        <div class="sl-card-item">
+            <label class="settings-toggle" style="flex-shrink:0;">
+                <input type="checkbox" ${c.is_active ? 'checked' : ''} onchange="toggleSponsorCard('${c.id}', this.checked)">
+                <span class="settings-toggle-track"></span>
+            </label>
+            <div style="flex:1;min-width:0;">
+                <div class="sl-card-name">${escapeHtml(c.card_name || 'Unnamed')}</div>
+                <div class="sl-card-meta">${tplLabel[c.template] || c.template} · ${targeting}</div>
+            </div>
+            <span class="sl-card-slot-badge ${isTargeted ? 'targeted' : 'run'}">${isTargeted ? 'Targeted' : 'Run of Site'}</span>
+            <button onclick="openSponsoredBuilderById('${c.id}')" style="background:none;border:none;font-size:13px;font-weight:700;color:var(--apc-orange);cursor:pointer;padding:4px 8px;">Edit</button>
+            <button onclick="deleteSponsorCard('${c.id}')" style="background:none;border:none;font-size:18px;color:#ccc;cursor:pointer;padding:4px;">✕</button>
+        </div>`;
+    }).join('');
+}
+
 // ===== SPONSORED CARD BUILDER =====
 let _sponsoredCardsData = [];
 
@@ -9907,12 +9981,20 @@ let _spbTemplate = 'supplier';
 let _spbLogoData = '';
 let _spbImageData = '';
 let _spbExistingCard = null;
+let _spbSlotType = 'run_of_site';
+let _spbTargetMakes = [];
+let _spbTargetCategories = [];
 
 function openSponsoredBuilder(card = null) {
     _spbExistingCard = card || null;
     _spbTemplate = card?.template || 'supplier';
     _spbLogoData = card?.logo_data || '';
     _spbImageData = card?.image_data || '';
+    // Restore targeting from saved tags
+    const tags = card?.tags || [];
+    _spbTargetMakes      = tags.filter(t => t.startsWith('make:')).map(t => t.slice(5));
+    _spbTargetCategories = tags.filter(t => t.startsWith('cat:')).map(t => t.slice(4));
+    _spbSlotType = (_spbTargetMakes.length || _spbTargetCategories.length) ? 'targeted' : 'run_of_site';
     document.getElementById('spbBackdrop').style.display = '';
     const modal = document.getElementById('spbModal');
     modal.style.display = 'flex';
@@ -10021,6 +10103,104 @@ function _spbBuildForm() {
         el.addEventListener('input', _spbUpdatePreview);
     });
     _spbUpdatePreview();
+    _spbRenderTargeting();
+}
+
+function _spbRenderTargeting() {
+    // Slot type buttons
+    document.getElementById('spbSlotRunOfSite')?.classList.toggle('active', _spbSlotType === 'run_of_site');
+    document.getElementById('spbSlotTargeted')?.classList.toggle('active',   _spbSlotType === 'targeted');
+    const opts = document.getElementById('spbTargetingOptions');
+    if (opts) opts.style.display = _spbSlotType === 'targeted' ? '' : 'none';
+    if (_spbSlotType !== 'targeted') return;
+
+    // Selected makes chips
+    const makesEl = document.getElementById('spbSelectedMakes');
+    if (makesEl) {
+        makesEl.innerHTML = _spbTargetMakes.map(m =>
+            `<span class="spb-tag-chip">${escapeHtml(m)}<button onclick="spbRemoveMake('${escapeHtml(m)}')">×</button></span>`
+        ).join('');
+    }
+    // Category chips
+    const catEl = document.getElementById('spbCategoryChips');
+    if (catEl) {
+        catEl.innerHTML = SPB_CATEGORIES.map(c =>
+            `<span class="spb-cat-chip${_spbTargetCategories.includes(c.value) ? ' active' : ''}"
+                onclick="spbToggleCategory('${c.value}')">${escapeHtml(c.label)}</span>`
+        ).join('');
+    }
+    // Preview text
+    _spbUpdateTargetPreview();
+}
+
+function spbSetSlotType(type) {
+    _spbSlotType = type;
+    _spbRenderTargeting();
+}
+
+function spbMakeSuggest() {
+    const q = (document.getElementById('spbMakeSearch')?.value || '').toLowerCase().trim();
+    const box = document.getElementById('spbMakeSuggestions');
+    if (!box) return;
+    if (!q || typeof VEHICLE_MAKES === 'undefined') { box.style.display = 'none'; return; }
+    const matches = VEHICLE_MAKES.filter(m =>
+        m.toLowerCase().includes(q) && !_spbTargetMakes.includes(m)
+    ).slice(0, 8);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.innerHTML = matches.map(m =>
+        `<div class="spb-suggest-item" onclick="spbAddMake('${escapeHtml(m)}')">${escapeHtml(m)}</div>`
+    ).join('');
+    box.style.display = '';
+}
+
+function spbMakeKeydown(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const val = (document.getElementById('spbMakeSearch')?.value || '').trim();
+    if (!val) return;
+    const match = (typeof VEHICLE_MAKES !== 'undefined')
+        ? VEHICLE_MAKES.find(m => m.toLowerCase() === val.toLowerCase())
+        : null;
+    if (match) spbAddMake(match);
+}
+
+function spbAddMake(make) {
+    if (!_spbTargetMakes.includes(make)) _spbTargetMakes.push(make);
+    const inp = document.getElementById('spbMakeSearch');
+    if (inp) inp.value = '';
+    const box = document.getElementById('spbMakeSuggestions');
+    if (box) box.style.display = 'none';
+    _spbRenderTargeting();
+}
+
+function spbRemoveMake(make) {
+    _spbTargetMakes = _spbTargetMakes.filter(m => m !== make);
+    _spbRenderTargeting();
+}
+
+function spbToggleCategory(cat) {
+    if (_spbTargetCategories.includes(cat)) {
+        _spbTargetCategories = _spbTargetCategories.filter(c => c !== cat);
+    } else {
+        _spbTargetCategories.push(cat);
+    }
+    _spbRenderTargeting();
+}
+
+function _spbUpdateTargetPreview() {
+    const el = document.getElementById('spbTargetPreview');
+    if (!el) return;
+    if (!_spbTargetMakes.length && !_spbTargetCategories.length) {
+        el.textContent = 'Add at least one make or category to define your audience.';
+        return;
+    }
+    const parts = [];
+    if (_spbTargetMakes.length)      parts.push(_spbTargetMakes.join(', '));
+    if (_spbTargetCategories.length) {
+        const labels = _spbTargetCategories.map(v => SPB_CATEGORIES.find(c => c.value === v)?.label || v);
+        parts.push(labels.join(', '));
+    }
+    el.textContent = `Your card will show when buyers search for: ${parts.join(' · ')}`;
 }
 
 function _spbUpdatePreview() {
@@ -10079,7 +10259,11 @@ async function submitSponsoredCard() {
     const price    = document.getElementById('spbPrice')?.value.trim() || null;
     const btnLabel = document.getElementById('spbBtnLabel')?.value.trim() || null;
     const tagsRaw  = document.getElementById('spbTags')?.value || '';
-    const tags     = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
+    const freeTags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 3);
+    // Build structured targeting tags
+    const makeTags = _spbSlotType === 'targeted' ? _spbTargetMakes.map(m => `make:${m}`) : [];
+    const catTags  = _spbSlotType === 'targeted' ? _spbTargetCategories.map(c => `cat:${c}`) : [];
+    const tags = [...makeTags, ...catTags, ...freeTags];
 
     const cardName = document.getElementById('spbCardName')?.value.trim();
     if (!cardName) { showToast('Please give your card a name'); return; }
@@ -10101,7 +10285,7 @@ async function submitSponsoredCard() {
     if (error) { showToast('Error: ' + error.message); return; }
     showToast(_spbExistingCard?.id ? 'Card updated' : 'Sponsored card created — now live!');
     closeSponsoredBuilder();
-    renderSponsorManagement();
+    renderSponsoredListingsMgmt();
     loadSponsoredCards();
 }
 
@@ -10227,39 +10411,14 @@ function buildSponsoredCardHTML(card) {
 }
 
 async function renderSponsorManagement() {
-    const list   = document.getElementById('settingsSponsorList');
-    const addBtn = document.getElementById('settingsSponsorAddBtn');
     const countEl = document.getElementById('settingsSponsorCount');
-    if (!list || !sb || !currentUserId) return;
-
+    if (!sb || !currentUserId) return;
     const { data: cards } = await sb.from('sponsored_cards')
-        .select('id, card_name, template, is_active, created_at')
-        .eq('user_id', currentUserId)
-        .order('created_at', { ascending: true });
-
-    const cardList = cards || [];
-    if (countEl) countEl.textContent = `${cardList.length} / 10`;
-    if (addBtn)  addBtn.style.display = cardList.length >= 10 ? 'none' : '';
-
-    if (!cardList.length) {
-        list.innerHTML = `<div style="font-size:13px;color:#aaa;text-align:center;padding:12px 0;">No sponsored cards yet — create your first one below</div>`;
-        return;
-    }
-
-    const tplLabel = { supplier: 'Services', product: 'Products', partner: 'Partner' };
-    const tplColor = { supplier: '#f07020', product: '#1d4ed8', partner: '#16a34a' };
-
-    list.innerHTML = cardList.map(c => `
-        <div class="sponsor-mgmt-item">
-            <label class="settings-toggle"><input type="checkbox" ${c.is_active ? 'checked' : ''}
-                onchange="toggleSponsorCard('${c.id}', this.checked)"><span class="settings-toggle-track"></span></label>
-            <div class="sponsor-mgmt-name">${escapeHtml(c.card_name || 'Unnamed Card')}</div>
-            <span class="sponsor-mgmt-tpl" style="background:${tplColor[c.template] || '#888'}22;color:${tplColor[c.template] || '#888'};">${tplLabel[c.template] || c.template}</span>
-            <button class="sponsor-mgmt-edit" onclick="openSponsoredBuilderById('${c.id}')">Edit</button>
-            <button class="sponsor-mgmt-boost" onclick="showToast('Boost coming soon!')">⚡</button>
-            <button class="sponsor-mgmt-del" onclick="deleteSponsorCard('${c.id}')">✕</button>
-        </div>
-    `).join('');
+        .select('id').eq('user_id', currentUserId);
+    const n = (cards || []).length;
+    if (countEl) countEl.textContent = n
+        ? `${n} card${n === 1 ? '' : 's'} active — tap to manage`
+        : 'Create and target your sponsored listings';
 }
 
 async function toggleSponsorCard(id, value) {
@@ -10272,7 +10431,7 @@ async function deleteSponsorCard(id) {
     if (!confirm('Delete this sponsored card?')) return;
     const { error } = await sb.from('sponsored_cards').delete().eq('id', id).eq('user_id', currentUserId);
     if (error) { showToast('Error: ' + error.message); return; }
-    renderSponsorManagement();
+    renderSponsoredListingsMgmt();
     loadSponsoredCards();
 }
 
@@ -10290,19 +10449,30 @@ function scoreCardByContext(card, filters) {
     const tags = (card.tags || []).map(t => t.toLowerCase().trim()).filter(Boolean);
     if (!tags.length) return 0;
 
-    const terms = [
-        ...(filters.search || '').toLowerCase().split(/\s+/),
-        filters.make   || '',
-        filters.model  || '',
-        filters.category !== 'all' ? (filters.category || '') : '',
-    ].map(t => t.trim()).filter(Boolean);
-
-    if (!terms.length) return 0;
+    // Structured targeting: make:Toyota, cat:brakes
+    const targetMakes = tags.filter(t => t.startsWith('make:')).map(t => t.slice(5));
+    const targetCats  = tags.filter(t => t.startsWith('cat:')).map(t => t.slice(4));
+    const freeTags    = tags.filter(t => !t.startsWith('make:') && !t.startsWith('cat:'));
 
     let score = 0;
-    for (const term of terms) {
-        if (tags.some(tag => tag.includes(term) || term.includes(tag))) score++;
+
+    // Make match — strong signal (2 pts)
+    const activeMake = (filters.make || '').toLowerCase();
+    if (activeMake && targetMakes.some(m => m === activeMake || activeMake.includes(m))) score += 2;
+
+    // Category match — strong signal (2 pts)
+    const activeCat = filters.category && filters.category !== 'all' ? filters.category.toLowerCase() : '';
+    if (activeCat && targetCats.includes(activeCat)) score += 2;
+
+    // Search keyword fallback for free-form tags (1 pt each)
+    const searchTerms = [
+        ...(filters.search || '').toLowerCase().split(/\s+/),
+        filters.model || '',
+    ].map(t => t.trim()).filter(Boolean);
+    for (const term of searchTerms) {
+        if (freeTags.some(tag => tag.includes(term) || term.includes(tag))) score++;
     }
+
     return score;
 }
 

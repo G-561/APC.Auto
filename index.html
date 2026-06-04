@@ -1641,9 +1641,14 @@
 
                 <!-- SPONSOR CARDS — trade + pro -->
                 <div class="settings-section settings-pro-section">
-                    <div class="settings-pro-section-hdr">Sponsored Cards <span id="settingsSponsorCount" style="font-weight:400;color:#aaa;font-size:11px;"></span></div>
-                    <div id="settingsSponsorList"></div>
-                    <button class="settings-sponsor-add-btn" id="settingsSponsorAddBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
+                    <div class="settings-pro-section-hdr">Sponsored Listings</div>
+                    <div class="settings-row settings-row-tappable" onclick="openSponsoredListingsDrawer()">
+                        <div>
+                            <div class="settings-row-label">Manage Sponsored Cards</div>
+                            <div class="settings-row-sub" id="settingsSponsorCount">Create and target your sponsored listings</div>
+                        </div>
+                        <span class="settings-chevron">›</span>
+                    </div>
                 </div>
 
                 <div id="settingsProOnlyRows" style="display:none;">
@@ -2150,6 +2155,38 @@
     </div>
 </div>
 
+<!-- SPONSORED LISTINGS DRAWER -->
+<div id="sponsoredListingsDrawer" class="drawer">
+    <div class="drawer-header">
+        <span>Sponsored Listings</span>
+        <div class="dh-close" onclick="toggleDrawer('sponsoredListingsDrawer')">×</div>
+    </div>
+    <div class="drawer-content">
+
+        <!-- Product explainer -->
+        <div class="sl-explainer-row">
+            <div class="sl-slot-card" id="slExplainRunOfSite">
+                <div class="sl-slot-icon">📢</div>
+                <div class="sl-slot-name">Run of Site</div>
+                <div class="sl-slot-desc">Your card shows whenever there's a free slot — across all searches and browse sessions.</div>
+                <div class="sl-slot-price">$19 <span>/ week</span></div>
+            </div>
+            <div class="sl-slot-card sl-slot-card--highlight" id="slExplainTargeted">
+                <div class="sl-slot-badge">Best value</div>
+                <div class="sl-slot-icon">🎯</div>
+                <div class="sl-slot-name">Targeted</div>
+                <div class="sl-slot-desc">Your card shows only to buyers searching for your specific makes or part categories.</div>
+                <div class="sl-slot-price">$39 <span>/ week</span></div>
+            </div>
+        </div>
+
+        <!-- Cards list -->
+        <div class="sl-section-label">YOUR CARDS <span id="slCardCount" style="font-weight:400;color:#aaa;"></span></div>
+        <div id="slCardList"></div>
+        <button class="sl-create-btn" id="slCreateBtn" onclick="openSponsoredBuilder(null)">+ Create Sponsored Card</button>
+    </div>
+</div>
+
 <!-- SPONSORED CARD BUILDER -->
 <div id="spbBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:4000; backdrop-filter:blur(2px);" onclick="closeSponsoredBuilder()"></div>
 <div id="spbModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); width:min(720px,calc(100vw - 24px)); max-height:calc(100vh - 48px); background:white; border-radius:20px; overflow:hidden; flex-direction:column; z-index:4001; box-shadow:0 20px 60px rgba(0,0,0,0.25);">
@@ -2170,7 +2207,30 @@
         <div class="spb-body">
             <div class="spb-form-col">
                 <div id="spbFormFields"></div>
-                <button class="btn-full-action" style="margin-top:8px;" onclick="submitSponsoredCard()">Submit</button>
+                <!-- Targeting -->
+                <div class="spb-section-divider">Targeting</div>
+                <div class="spb-slot-row">
+                    <button class="spb-slot-btn active" id="spbSlotRunOfSite" onclick="spbSetSlotType('run_of_site')">
+                        <div class="spb-slot-btn-name">📢 Run of Site</div>
+                        <div class="spb-slot-btn-desc">Shows in all searches · $19/wk</div>
+                    </button>
+                    <button class="spb-slot-btn" id="spbSlotTargeted" onclick="spbSetSlotType('targeted')">
+                        <div class="spb-slot-btn-name">🎯 Targeted</div>
+                        <div class="spb-slot-btn-desc">Relevant buyers only · $39/wk</div>
+                    </button>
+                </div>
+                <div id="spbTargetingOptions" style="display:none;">
+                    <div class="spb-target-label">Vehicle Makes <span style="font-weight:400;color:#aaa;">— leave blank for all</span></div>
+                    <div class="spb-make-wrap">
+                        <input id="spbMakeSearch" type="text" class="spb-make-input" placeholder="Type a make and press Enter…" onkeydown="spbMakeKeydown(event)" oninput="spbMakeSuggest()">
+                        <div id="spbMakeSuggestions" class="spb-suggestions"></div>
+                    </div>
+                    <div id="spbSelectedMakes" class="spb-tag-chips"></div>
+                    <div class="spb-target-label" style="margin-top:12px;">Part Categories <span style="font-weight:400;color:#aaa;">— leave blank for all</span></div>
+                    <div id="spbCategoryChips" class="spb-cat-chips"></div>
+                    <div id="spbTargetPreview" class="spb-target-preview"></div>
+                </div>
+                <button class="btn-full-action" style="margin-top:12px;" onclick="submitSponsoredCard()">Save Card</button>
             </div>
             <div class="spb-preview-col">
                 <div class="spb-preview-label">Live Preview</div>
