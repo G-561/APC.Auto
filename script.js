@@ -10290,7 +10290,8 @@ async function submitSponsoredCard() {
         business_name: name, tagline, blurb: null, price,
         tags: tags.length ? tags : null,
         logo_data: null, image_data: imageData,
-        button_label: btnLabel, button_url: btnUrl, is_active: true
+        button_label: btnLabel, button_url: btnUrl, is_active: true,
+        postcode: userSettings.postcode || null
     };
 
     let error;
@@ -10466,6 +10467,22 @@ function scoreCardByContext(card, filters) {
     ].map(t => t.trim()).filter(Boolean);
     for (const term of searchTerms) {
         if (freeTags.some(tag => tag.includes(term) || term.includes(tag))) score++;
+    }
+
+    // Location proximity bonus — only when buyer has set a postcode filter
+    const buyerPc = (filters.postcode || '').trim();
+    const cardPc  = (card.postcode || '').trim();
+    if (buyerPc && cardPc) {
+        const coords = typeof AU_POSTCODE_COORDS !== 'undefined' && AU_POSTCODE_COORDS;
+        const origin = coords && coords[buyerPc];
+        const dest   = coords && coords[cardPc];
+        if (origin && dest) {
+            const km = haversineKm(origin[0], origin[1], dest[0], dest[1]);
+            if (km <= 50)       score += 2; // same metro area
+            else if (km <= 200) score += 1; // same broad region
+        } else if (buyerPc[0] === cardPc[0]) {
+            score += 1; // same state by first digit — fallback if coords missing
+        }
     }
 
     return score;
