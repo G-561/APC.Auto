@@ -10127,9 +10127,32 @@ function _spbBuildForm() {
 }
 
 function _spbRenderTargeting() {
-    // Slot type buttons
-    document.getElementById('spbSlotRunOfSite')?.classList.toggle('active', _spbSlotType === 'run_of_site');
-    document.getElementById('spbSlotTargeted')?.classList.toggle('active',   _spbSlotType === 'targeted');
+    const isEditing = !!_spbExistingCard?.id;
+    const rosBtn = document.getElementById('spbSlotRunOfSite');
+    const tgtBtn = document.getElementById('spbSlotTargeted');
+
+    // Update button labels to reflect monthly pricing + trial
+    if (rosBtn) rosBtn.innerHTML = `<div class="spb-slot-btn-name">📢 Run of Site</div><div class="spb-slot-btn-desc">${isEditing ? 'All searches · $79/mo' : 'Free 14-day trial · then $79/mo'}</div>`;
+    if (tgtBtn) tgtBtn.innerHTML = `<div class="spb-slot-btn-name">🎯 Targeted</div><div class="spb-slot-btn-desc">Relevant buyers only · $149/mo</div>`;
+
+    // Lock slot type buttons when editing an existing card
+    if (isEditing) {
+        [rosBtn, tgtBtn].forEach(btn => btn && (btn.style.pointerEvents = 'none'));
+        const lockNote = document.getElementById('spbSlotLockNote');
+        if (!lockNote) {
+            const note = document.createElement('p');
+            note.id = 'spbSlotLockNote';
+            note.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;';
+            note.textContent = 'Targeting type is locked for this card — create a new card to use a different type.';
+            document.getElementById('spbSlotRunOfSite')?.closest('.spb-slot-row')?.after(note);
+        }
+    } else {
+        [rosBtn, tgtBtn].forEach(btn => btn && (btn.style.pointerEvents = ''));
+        document.getElementById('spbSlotLockNote')?.remove();
+    }
+
+    rosBtn?.classList.toggle('active', _spbSlotType === 'run_of_site');
+    tgtBtn?.classList.toggle('active', _spbSlotType === 'targeted');
     const opts = document.getElementById('spbTargetingOptions');
     if (opts) opts.style.display = _spbSlotType === 'targeted' ? '' : 'none';
     if (_spbSlotType !== 'targeted') return;

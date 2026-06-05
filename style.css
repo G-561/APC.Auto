@@ -6710,6 +6710,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     font-size: 9px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;
     border-radius: 99px; padding: 2px 9px; white-space: nowrap;
 }
+.sl-slot-badge--trial {
+    background: #22c55e;
+}
 .sl-slot-icon { font-size: 22px; line-height: 1; }
 .sl-slot-name { font-size: 14px; font-weight: 900; color: #1a1a1a; }
 .sl-slot-desc { font-size: 11px; color: #777; line-height: 1.4; flex: 1; }
