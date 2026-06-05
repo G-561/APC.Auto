@@ -4718,6 +4718,7 @@ function renderSellVehicleChip() {
         btn.style.display  = 'none';
         if (ecGroup)      ecGroup.style.display      = '';
         if (universalRow) universalRow.style.display  = 'none';
+        _refreshSellVariant(make, model, document.getElementById('sellVariant')?.value || '');
     } else {
         chip.style.display = 'none';
         btn.style.display  = '';
