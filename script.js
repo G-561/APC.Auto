@@ -16496,7 +16496,18 @@ function whRenderWorkerQR() {
 
 function closeWarehouseDrawer() {
     whStopCamera();
+    whClearLabels();
     toggleDrawer('warehouseDrawer', false);
+}
+
+function whClearLabels() {
+    _whLabelCodes = [];
+    const grid    = document.getElementById('whLabelGrid');
+    const preview = document.getElementById('whLabelPreview');
+    const manual  = document.getElementById('whManualCodes');
+    if (grid)    grid.innerHTML      = '';
+    if (preview) preview.style.display = 'none';
+    if (manual)  manual.value        = '';
 }
 
 function whSetTab(tab) {

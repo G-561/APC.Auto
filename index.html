@@ -439,7 +439,10 @@
                 <div id="whLabelPreview" style="display:none;">
                     <div class="wh-section-label" style="margin-top:24px;">PREVIEW <span id="whLabelCount" style="font-weight:400;color:#aaa;"></span></div>
                     <div id="whLabelGrid" class="wh-label-grid"></div>
-                    <button class="btn-full-action" onclick="whPrintLabels()" style="margin-top:16px;">🖨 Print Labels</button>
+                    <div style="display:flex; gap:10px; margin-top:16px;">
+                        <button class="btn-full-action" onclick="whPrintLabels()" style="flex:1;">🖨 Print Labels</button>
+                        <button onclick="whClearLabels()" style="background:none; border:1.5px solid #ddd; border-radius:8px; padding:0 16px; font-size:13px; font-weight:700; color:#888; cursor:pointer; white-space:nowrap;">Clear</button>
+                    </div>
                 </div>
             </div>
         </div>
