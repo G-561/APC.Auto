@@ -15,6 +15,7 @@ let _listingsCursor    = null;   // created_at of last fetched row for cursor pa
 let _listingsExhausted = false;  // true when Supabase has no more pages
 let _listingsLoading   = false;  // guard against concurrent fetches
 let _pendingStoreOpen  = null;   // seller userId to auto-open storefront from ?store= URL param
+let _pendingPutAway    = false;  // open put-away scanner after auth from ?putaway=1 URL param
 let currentOpenPartId = null;  // tracks which part detail is open
 let _currentOpenPart  = null;  // direct part ref — avoids integer ID collision in getAllParts()
 let _detailHistory    = [];    // stack of part IDs for store → listing → back navigation
@@ -11073,6 +11074,11 @@ function renderAccountState() {
     updateSellQuantityVisibility();
     updateWarehouseBinVisibility();
 
+    if (_pendingPutAway && isPro) {
+        _pendingPutAway = false;
+        setTimeout(() => { openWarehouseDrawer(); whSetTab('scanner'); }, 400);
+    }
+
     // Header height changes when the pro toggle appears/disappears, so re-sync the grid offset.
     updateHeaderOffset();
 }
@@ -16446,6 +16452,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemParam = new URLSearchParams(location.search).get('item');
     if (itemParam) openItemDetail(itemParam.includes('-') ? itemParam : Number(itemParam));
 
+    // Deep-link: ?putaway=1 — open warehouse put-away scanner (worker QR code)
+    if (new URLSearchParams(location.search).get('putaway') === '1') _pendingPutAway = true;
+
     // Lightbox keyboard navigation
     document.addEventListener('keydown', e => {
         const lightbox = document.getElementById('imageLightbox');
@@ -16472,6 +16481,17 @@ function openWarehouseDrawer() {
     if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
     toggleDrawer('warehouseDrawer', true);
     whSetTab('labels');
+    whRenderWorkerQR();
+}
+
+function whRenderWorkerQR() {
+    const wrap = document.getElementById('whWorkerQr');
+    if (!wrap || !window.QRCode) return;
+    if (wrap.querySelector('canvas') || wrap.querySelector('img')) return; // already rendered
+    const base = (location.protocol === 'file:' || location.hostname === 'localhost')
+        ? 'https://autopartsconnection.com.au/'
+        : `${location.origin}${location.pathname}`;
+    new QRCode(wrap, { text: `${base}?putaway=1`, width: 90, height: 90, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 }
 
 function closeWarehouseDrawer() {

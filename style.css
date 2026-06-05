@@ -8032,3 +8032,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     .wh-label-grid { grid-template-columns: repeat(5, 1fr); }
     .wh-panel-inner { max-width: 700px; }
 }
+.wh-worker-qr-card { display: flex; align-items: center; gap: 16px; background: #f8f8f8; border: 1px solid #eee; border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+.wh-worker-qr-wrap { flex-shrink: 0; line-height: 0; }
+.wh-worker-qr-info { flex: 1; min-width: 0; }
+.wh-worker-qr-title { font-size: 13px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+.wh-worker-qr-desc { font-size: 11px; color: #888; line-height: 1.5; }

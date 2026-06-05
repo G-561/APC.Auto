@@ -400,7 +400,17 @@
         <!-- ── LABELS TAB ─────────────────────────────────────── -->
         <div id="whLabelsTab" class="wh-tab-panel">
             <div class="wh-panel-inner">
-                <div class="wh-section-label">BATCH GENERATOR</div>
+                <!-- Worker access QR -->
+                <div class="wh-section-label">WORKER ACCESS</div>
+                <div class="wh-worker-qr-card">
+                    <div id="whWorkerQr" class="wh-worker-qr-wrap"></div>
+                    <div class="wh-worker-qr-info">
+                        <div class="wh-worker-qr-title">Put-Away Scanner</div>
+                        <div class="wh-worker-qr-desc">Workers scan this QR with their phone to open the put-away scanner directly — no menu navigation needed.</div>
+                    </div>
+                </div>
+
+                <div class="wh-section-label" style="margin-top:24px;">BATCH GENERATOR</div>
                 <div class="wh-batch-row">
                     <input id="whBatchPrefix" class="wh-input" placeholder="Prefix e.g. A-" style="width:90px;">
                     <span class="wh-batch-sep">from</span>
