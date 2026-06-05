@@ -3394,8 +3394,8 @@ async function openWorkshopOverlay(wsId) {
         ` : ''}
     `;
 
-    // Build context-aware prefill from the item the user was looking at
-    const part = _currentOpenPart;
+    // Only prefill from a listing if the detail overlay is actually open right now
+    const part = document.getElementById('detailOverlay')?.classList.contains('active') ? _currentOpenPart : null;
     let prefillMsg;
     if (part) {
         const make    = part.fits?.[0]?.make  || '';
