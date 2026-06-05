@@ -10374,12 +10374,20 @@ function buildGridWithSponsored(parts) {
         const sd = scoreCardByContext(b, activeFilters) - scoreCardByContext(a, activeFilters);
         return sd !== 0 ? sd : (b.priority || 0) - (a.priority || 0);
     });
+    // One card per advertiser for in-feed rotation too
+    const seen = new Set();
+    const deduped = sorted.filter(card => {
+        const uid = card.user_id || card.id;
+        if (seen.has(uid)) return false;
+        seen.add(uid);
+        return true;
+    });
     let html = '';
     let si = 0;
     parts.forEach((part, i) => {
         html += buildCardHTML(part, i < 6);
         if ((i + 1) % INTERVAL === 0) {
-            html += buildSponsoredInFeedHTML(sorted[si % sorted.length]);
+            html += buildSponsoredInFeedHTML(deduped[si % deduped.length]);
             si++;
         }
     });
@@ -10524,7 +10532,16 @@ function refreshSponsoredCards() {
         return (b.priority || 0) - (a.priority || 0);
     });
 
-    panel.innerHTML = `<div id="drpScrollInner"><div class="drp-section-heading">Sponsored</div>${sorted.map(buildSponsoredCardHTML).join('')}</div>`;
+    // One card per advertiser — their highest-scoring card wins the slot
+    const seen = new Set();
+    const deduped = sorted.filter(card => {
+        const uid = card.user_id || card.id;
+        if (seen.has(uid)) return false;
+        seen.add(uid);
+        return true;
+    });
+
+    panel.innerHTML = `<div id="drpScrollInner"><div class="drp-section-heading">Sponsored</div>${deduped.map(buildSponsoredCardHTML).join('')}</div>`;
     const inner = document.getElementById('drpScrollInner');
     if (inner) inner.style.transform = `translateY(-${window.scrollY}px)`;
 }
