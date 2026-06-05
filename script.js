@@ -11001,8 +11001,12 @@ function renderAccountState() {
     const amenuDash = document.getElementById('amenuDashboard');
     if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
     if (amenuDash) amenuDash.style.display = isPro ? 'flex' : 'none';
-    const amenuEdw = document.getElementById('amenuEdw');
-    if (amenuEdw)  amenuEdw.style.display  = isPro ? 'flex' : 'none';
+    const amenuEdw       = document.getElementById('amenuEdw');
+    const amenuWarehouse = document.getElementById('amenuWarehouse');
+    if (amenuEdw)       amenuEdw.style.display       = isPro ? 'flex' : 'none';
+    if (amenuWarehouse) amenuWarehouse.style.display = isPro ? 'flex' : 'none';
+    const proNavWarehouse = document.getElementById('proNavWarehouse');
+    if (proNavWarehouse) proNavWarehouse.style.display = isPro ? '' : 'none';
 
     const headerInboxBtn   = document.getElementById('headerInboxBtn');
     const dtbMessages      = document.getElementById('dtbMessages');
@@ -16451,4 +16455,273 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
     });
 
-});
+})();
+
+// ================================================================
+// WAREHOUSE — Label Generator + Put-Away Scanner
+// ================================================================
+
+let _whCameraStream   = null;
+let _whScanState      = 'idle'; // idle | scan_part | scan_rack | saved
+let _whScannedPart    = null;   // { id, title, meta, thumb }
+let _whScannedRack    = null;   // location string
+let _whLabelCodes     = [];     // codes staged for printing
+let _whRafId          = null;
+
+function openWarehouseDrawer() {
+    if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
+    toggleDrawer('warehouseDrawer', true);
+    whSetTab('labels');
+}
+
+function closeWarehouseDrawer() {
+    whStopCamera();
+    toggleDrawer('warehouseDrawer', false);
+}
+
+function whSetTab(tab) {
+    const labelsTab  = document.getElementById('whLabelsTab');
+    const scannerTab = document.getElementById('whScannerTab');
+    const btnLabels  = document.getElementById('whTabLabels');
+    const btnScanner = document.getElementById('whTabScanner');
+    if (tab === 'labels') {
+        labelsTab.style.display  = '';
+        scannerTab.style.display = 'none';
+        btnLabels.classList.add('wh-tab--active');
+        btnScanner.classList.remove('wh-tab--active');
+        whStopCamera();
+    } else {
+        labelsTab.style.display  = 'none';
+        scannerTab.style.display = 'flex';
+        btnLabels.classList.remove('wh-tab--active');
+        btnScanner.classList.add('wh-tab--active');
+        whResetScan();
+        whStartCamera();
+    }
+}
+
+// ── Label Generator ───────────────────────────────────────────────
+
+function whGenerateBatch() {
+    const prefix = document.getElementById('whBatchPrefix')?.value.trim() || '';
+    const from   = parseInt(document.getElementById('whBatchFrom')?.value) || 1;
+    const to     = parseInt(document.getElementById('whBatchTo')?.value)   || 20;
+    const pad    = parseInt(document.getElementById('whBatchPad')?.value)   || 2;
+    if (from > to || to - from > 199) { showToast('Range must be 1–200 labels'); return; }
+    const codes = [];
+    for (let i = from; i <= to; i++) codes.push(prefix + String(i).padStart(pad, '0'));
+    whRenderLabelPreview(codes);
+}
+
+function whGenerateManual() {
+    const raw   = document.getElementById('whManualCodes')?.value || '';
+    const codes = raw.split('\n').map(s => s.trim()).filter(Boolean);
+    if (!codes.length) { showToast('Enter at least one code'); return; }
+    whRenderLabelPreview(codes);
+}
+
+function whRenderLabelPreview(codes) {
+    _whLabelCodes = codes;
+    const grid    = document.getElementById('whLabelGrid');
+    const preview = document.getElementById('whLabelPreview');
+    const countEl = document.getElementById('whLabelCount');
+    if (!grid || !preview) return;
+    if (countEl) countEl.textContent = `${codes.length} label${codes.length !== 1 ? 's' : ''}`;
+    grid.innerHTML = '';
+    codes.forEach(code => {
+        const card = document.createElement('div');
+        card.className = 'wh-label-card';
+        const qrWrap = document.createElement('div');
+        qrWrap.className = 'wh-label-qr';
+        card.appendChild(qrWrap);
+        const label = document.createElement('div');
+        label.className = 'wh-label-card-code';
+        label.textContent = code;
+        card.appendChild(label);
+        grid.appendChild(card);
+        if (window.QRCode) {
+            new QRCode(qrWrap, { text: code, width: 72, height: 72, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+        }
+    });
+    preview.style.display = '';
+}
+
+function whPrintLabels() {
+    if (!_whLabelCodes.length) return;
+    const qrSize = 140;
+    const labelHtml = _whLabelCodes.map(code => {
+        const qrId = 'pqr_' + Math.random().toString(36).slice(2);
+        return `<div class="wl-label" id="cont_${qrId}"><div id="${qrId}"></div><div class="wl-code">${escapeHtml(code)}</div></div>`;
+    }).join('');
+    const win = window.open('', '_blank');
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>APC Warehouse Labels</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:system-ui,sans-serif;background:#fff;}
+  .wl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10mm;max-width:210mm;margin:auto;}
+  .wl-label{border:1px solid #ccc;border-radius:6px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;break-inside:avoid;}
+  .wl-code{font-size:13px;font-weight:900;letter-spacing:0.3px;text-align:center;color:#1a1a1a;}
+  @media print{@page{margin:8mm;size:A4;}body{-webkit-print-color-adjust:exact;}}
+</style></head><body>
+<div class="wl-grid">${labelHtml}</div>
+<script>
+  document.querySelectorAll('.wl-label').forEach(cont => {
+    const qrEl = cont.querySelector('[id^="pqr_"]');
+    const code = cont.querySelector('.wl-code').textContent;
+    new QRCode(qrEl, {text:code,width:${qrSize},height:${qrSize},colorDark:'#1a1a1a',colorLight:'#ffffff'});
+  });
+  setTimeout(() => window.print(), 800);
+<\/script></body></html>`);
+    win.document.close();
+}
+
+// ── Put-Away Scanner ──────────────────────────────────────────────
+
+function whStartCamera() {
+    const video = document.getElementById('whCameraVideo');
+    if (!video) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+        whSetStatus('Camera not supported on this device');
+        return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } } })
+        .then(stream => {
+            _whCameraStream = stream;
+            video.srcObject = stream;
+            video.play();
+            video.addEventListener('loadedmetadata', () => {
+                _whScanState = 'scan_part';
+                whSetStatus('Point camera at a part label');
+                whScanLoop();
+            }, { once: true });
+        })
+        .catch(() => whSetStatus('Camera access denied — check browser permissions'));
+}
+
+function whStopCamera() {
+    if (_whRafId)          { cancelAnimationFrame(_whRafId); _whRafId = null; }
+    if (_whCameraStream)   { _whCameraStream.getTracks().forEach(t => t.stop()); _whCameraStream = null; }
+    _whScanState = 'idle';
+}
+
+function whScanLoop() {
+    if (!_whCameraStream || _whScanState === 'idle' || _whScanState === 'saved') return;
+    const video  = document.getElementById('whCameraVideo');
+    const canvas = document.getElementById('whCameraCanvas');
+    if (!video || !canvas || video.readyState < 2) { _whRafId = requestAnimationFrame(whScanLoop); return; }
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code?.data) {
+        whHandleQR(code.data);
+    } else {
+        _whRafId = requestAnimationFrame(whScanLoop);
+    }
+}
+
+async function whHandleQR(data) {
+    if (_whScanState === 'scan_part') {
+        // Part labels encode the listing URL: ?item=ID
+        const match = data.match(/[?&]item=([^&]+)/);
+        if (!match) {
+            // Not a listing URL — ignore and keep scanning
+            _whRafId = requestAnimationFrame(whScanLoop);
+            return;
+        }
+        const listingId = match[1];
+        whSetStatus('Fetching part…');
+        if (!sb) { showToast('Not signed in'); return; }
+        const { data: row } = await sb.from('listings')
+            .select('id, title, apc_id, listing_images(storage_path, position), listing_vehicles(make, model)')
+            .eq('id', listingId).eq('seller_id', currentUserId).single();
+        if (!row) { whSetStatus('Part not found or not yours — try again'); _whRafId = requestAnimationFrame(whScanLoop); return; }
+        const thumb  = (row.listing_images || []).sort((a,b) => a.position - b.position)[0]?.storage_path || '';
+        const v      = (row.listing_vehicles || [])[0];
+        const vehicle = v ? `${v.make} ${v.model}` : '';
+        _whScannedPart = { id: row.id, title: row.title, apcId: row.apc_id, thumb, vehicle };
+        whShowPartCard();
+        _whScanState = 'scan_rack';
+        whSetStatus('Now scan the rack location label');
+        _whRafId = requestAnimationFrame(whScanLoop);
+    } else if (_whScanState === 'scan_rack') {
+        // Any non-listing-URL QR = rack location
+        if (data.match(/[?&]item=/)) { _whRafId = requestAnimationFrame(whScanLoop); return; }
+        _whScannedRack = data.trim();
+        whShowRackCard();
+        _whScanState = 'saved';
+        whSetStatus('Ready to save');
+    }
+}
+
+function whShowPartCard() {
+    const card  = document.getElementById('whPartCard');
+    const title = document.getElementById('whPartTitle');
+    const meta  = document.getElementById('whPartMeta');
+    const thumb = document.getElementById('whPartThumb');
+    const hint  = document.getElementById('whScanHint');
+    if (!card) return;
+    if (title) title.textContent = _whScannedPart.title;
+    if (meta)  meta.textContent  = [_whScannedPart.apcId, _whScannedPart.vehicle].filter(Boolean).join(' · ');
+    if (thumb) {
+        thumb.innerHTML = _whScannedPart.thumb
+            ? `<img src="${escapeHtml(_whScannedPart.thumb)}" alt="">`
+            : '📦';
+    }
+    card.style.display = 'flex';
+    if (hint) hint.style.display = 'none';
+}
+
+function whShowRackCard() {
+    const card    = document.getElementById('whRackCard');
+    const codeEl  = document.getElementById('whRackCode');
+    const saveBtn = document.getElementById('whSaveBtn');
+    if (codeEl)  codeEl.textContent  = _whScannedRack;
+    if (card)    card.style.display  = 'flex';
+    if (saveBtn) saveBtn.style.display = '';
+}
+
+async function whSaveLocation() {
+    if (!_whScannedPart?.id || !_whScannedRack) return;
+    const saveBtn = document.getElementById('whSaveBtn');
+    if (saveBtn) saveBtn.textContent = 'Saving…';
+    const { error } = await sb.from('listings')
+        .update({ warehouse_bin: _whScannedRack })
+        .eq('id', _whScannedPart.id)
+        .eq('seller_id', currentUserId);
+    if (error) { showToast('Error: ' + error.message); if (saveBtn) saveBtn.textContent = 'Save Location'; return; }
+    showToast(`📍 Saved: ${_whScannedPart.title} → ${_whScannedRack}`);
+    if (saveBtn)  saveBtn.style.display  = 'none';
+    const resetBtn = document.getElementById('whResetBtn');
+    if (resetBtn) resetBtn.style.display = '';
+    whSetStatus('Saved! Tap "Scan another part" to continue');
+    // Also update local cache
+    const local = userListings.find(l => l.supabaseId === _whScannedPart.id || l.id === _whScannedPart.id);
+    if (local) local.warehouseBin = _whScannedRack;
+}
+
+function whResetScan() {
+    _whScannedPart = null;
+    _whScannedRack = null;
+    _whScanState   = 'scan_part';
+    const partCard  = document.getElementById('whPartCard');
+    const rackCard  = document.getElementById('whRackCard');
+    const saveBtn   = document.getElementById('whSaveBtn');
+    const resetBtn  = document.getElementById('whResetBtn');
+    const hint      = document.getElementById('whScanHint');
+    if (partCard)  { partCard.style.display  = 'none'; }
+    if (rackCard)  { rackCard.style.display  = 'none'; }
+    if (saveBtn)   { saveBtn.style.display   = 'none'; saveBtn.textContent = 'Save Location'; }
+    if (resetBtn)  { resetBtn.style.display  = 'none'; }
+    if (hint)      { hint.style.display      = ''; }
+    whSetStatus('Point camera at a part label');
+    whScanLoop();
+}
+
+function whSetStatus(msg) {
+    const el = document.getElementById('whScanStatus');
+    if (el) el.textContent = msg;
+}

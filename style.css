@@ -7980,3 +7980,55 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .jr-banner { font-size: 13px; font-weight: 600; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; }
 .jr-done { background: #dcfce7; color: #15803d; }
 .jr-pending { background: #fef9c3; color: #92400e; }
+
+/* ================================================================
+   WAREHOUSE DRAWER
+   ================================================================ */
+.wh-tab-bar { display: flex; gap: 2px; background: rgba(255,255,255,0.12); border-radius: 8px; padding: 3px; }
+.wh-tab { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.wh-tab--active { background: white; color: #1a1a2e; }
+.wh-tab-panel { display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
+.wh-panel-inner { padding: 20px; }
+.wh-section-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.6px; color: #999; margin-bottom: 10px; }
+.wh-batch-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.wh-batch-sep { font-size: 12px; color: #888; }
+.wh-input { border: 1.5px solid #ddd; border-radius: 8px; padding: 7px 10px; font-size: 13px; color: #333; outline: none; }
+.wh-input:focus { border-color: var(--apc-orange); }
+.wh-btn { background: var(--apc-orange); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.wh-btn:hover { background: #d95f10; }
+.wh-btn--full { width: 100%; padding: 12px; }
+.wh-textarea { width: 100%; min-height: 100px; border: 1.5px solid #ddd; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #333; resize: vertical; outline: none; box-sizing: border-box; font-family: inherit; }
+.wh-textarea:focus { border-color: var(--apc-orange); }
+.wh-label-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.wh-label-card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: white; }
+.wh-label-card-code { font-size: 13px; font-weight: 900; color: #1a1a2e; letter-spacing: 0.5px; text-align: center; }
+.wh-label-qr { line-height: 0; }
+
+/* Put-Away scanner */
+.wh-camera-wrap { position: relative; width: 100%; background: #000; overflow: hidden; flex-shrink: 0; aspect-ratio: 4/3; max-height: 300px; }
+.wh-camera-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wh-scan-corner { position: absolute; width: 22px; height: 22px; border-color: var(--apc-orange); border-style: solid; }
+.wh-sc-tl { top: 14px; left: 14px; border-width: 3px 0 0 3px; }
+.wh-sc-tr { top: 14px; right: 14px; border-width: 3px 3px 0 0; }
+.wh-sc-bl { bottom: 14px; left: 14px; border-width: 0 0 3px 3px; }
+.wh-sc-br { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; }
+.wh-scan-status-bar { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.65); color: white; font-size: 13px; font-weight: 700; text-align: center; padding: 8px 12px; }
+.wh-scan-info { padding: 12px 15px; display: flex; flex-direction: column; gap: 8px; }
+.wh-result-card { display: flex; align-items: center; gap: 12px; background: white; border: 1.5px solid #eee; border-radius: 12px; padding: 12px 14px; }
+.wh-result-card--rack { border-color: var(--apc-orange); background: #fff8f2; }
+.wh-result-thumb { width: 48px; height: 48px; border-radius: 8px; background: #f4f4f4; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.wh-result-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.wh-result-thumb--rack { background: #fff4ec; }
+.wh-result-body { flex: 1; min-width: 0; }
+.wh-result-title { font-size: 14px; font-weight: 800; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wh-result-meta { font-size: 11px; color: #888; margin-top: 2px; }
+.wh-result-check { font-size: 18px; color: #22c55e; flex-shrink: 0; }
+.wh-ghost-btn { background: none; border: none; color: var(--apc-orange); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 0; text-align: left; }
+.wh-scan-hint { font-size: 11px; color: #bbb; line-height: 1.5; text-align: center; padding: 4px 0; }
+
+@media (min-width: 900px) {
+    #warehouseDrawer { left: max(0px, calc(50vw - 800px)) !important; right: max(0px, calc(50vw - 800px)) !important; width: auto !important; height: auto !important; bottom: 0; box-shadow: none !important; border-radius: 0 !important; }
+    .wh-camera-wrap { max-height: 360px; }
+    .wh-label-grid { grid-template-columns: repeat(5, 1fr); }
+    .wh-panel-inner { max-width: 700px; }
+}

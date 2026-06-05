@@ -23,6 +23,7 @@
     <link rel="apple-touch-icon" href="images/apc_icon_512_orange.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </head>
 <body id="body">
 
@@ -100,6 +101,10 @@
             <span class="pro-hdr-link" id="proNavEDW" onclick="proOpenEDW()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
                 Dismantle
+            </span>
+            <span class="pro-hdr-link" id="proNavWarehouse" onclick="openWarehouseDrawer()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+                Warehouse
             </span>
             <span class="pro-hdr-link" id="proNavStock" onclick="proOpenStockLookup()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -374,6 +379,84 @@
 
         <div id="dashJobsCard" class="dash-card" style="display:none; margin-bottom:14px;"></div>
         <div id="dashWantedCard" class="dash-card" style="display:none; margin-bottom:14px;"></div>
+
+    </div>
+</div>
+
+<!-- WAREHOUSE DRAWER -->
+<div id="warehouseDrawer" class="drawer" style="z-index:9050;">
+    <div class="drawer-header">
+        <div style="display:flex; align-items:center; gap:14px; min-width:0;">
+            <span>Warehouse</span>
+            <div class="wh-tab-bar">
+                <button class="wh-tab wh-tab--active" id="whTabLabels" onclick="whSetTab('labels')">Labels</button>
+                <button class="wh-tab" id="whTabScanner" onclick="whSetTab('scanner')">Put-Away</button>
+            </div>
+        </div>
+        <div class="dh-close" onclick="closeWarehouseDrawer()">×</div>
+    </div>
+    <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+
+        <!-- ── LABELS TAB ─────────────────────────────────────── -->
+        <div id="whLabelsTab" class="wh-tab-panel">
+            <div class="wh-panel-inner">
+                <div class="wh-section-label">BATCH GENERATOR</div>
+                <div class="wh-batch-row">
+                    <input id="whBatchPrefix" class="wh-input" placeholder="Prefix e.g. A-" style="width:90px;">
+                    <span class="wh-batch-sep">from</span>
+                    <input id="whBatchFrom" class="wh-input" type="number" min="1" value="1" style="width:58px;">
+                    <span class="wh-batch-sep">to</span>
+                    <input id="whBatchTo" class="wh-input" type="number" min="1" value="20" style="width:58px;">
+                    <input id="whBatchPad" class="wh-input" type="number" min="1" max="4" value="2" style="width:50px;" title="Zero-pad digits">
+                    <button class="wh-btn" onclick="whGenerateBatch()">Generate</button>
+                </div>
+                <div style="font-size:11px; color:#aaa; margin:4px 0 20px;">e.g. prefix "A-" · from 1 to 20 · pad 2 → A-01 … A-20</div>
+
+                <div class="wh-section-label">OR ENTER CODES MANUALLY</div>
+                <textarea id="whManualCodes" class="wh-textarea" placeholder="One code per line, e.g.&#10;FRONT-LEFT&#10;REAR-RIGHT-HIGH&#10;SHELF-4B"></textarea>
+                <button class="wh-btn wh-btn--full" onclick="whGenerateManual()" style="margin-top:8px;">Preview Labels</button>
+
+                <div id="whLabelPreview" style="display:none;">
+                    <div class="wh-section-label" style="margin-top:24px;">PREVIEW <span id="whLabelCount" style="font-weight:400;color:#aaa;"></span></div>
+                    <div id="whLabelGrid" class="wh-label-grid"></div>
+                    <button class="btn-full-action" onclick="whPrintLabels()" style="margin-top:16px;">🖨 Print Labels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PUT-AWAY TAB ───────────────────────────────────── -->
+        <div id="whScannerTab" class="wh-tab-panel" style="display:none; flex-direction:column;">
+            <div class="wh-camera-wrap">
+                <video id="whCameraVideo" autoplay playsinline muted class="wh-camera-video"></video>
+                <canvas id="whCameraCanvas" style="display:none;"></canvas>
+                <div class="wh-scan-corner wh-sc-tl"></div>
+                <div class="wh-scan-corner wh-sc-tr"></div>
+                <div class="wh-scan-corner wh-sc-bl"></div>
+                <div class="wh-scan-corner wh-sc-br"></div>
+                <div class="wh-scan-status-bar" id="whScanStatus">Point camera at a part label</div>
+            </div>
+            <div class="wh-scan-info">
+                <div id="whPartCard" class="wh-result-card" style="display:none;">
+                    <div id="whPartThumb" class="wh-result-thumb"></div>
+                    <div class="wh-result-body">
+                        <div class="wh-result-title" id="whPartTitle"></div>
+                        <div class="wh-result-meta" id="whPartMeta"></div>
+                    </div>
+                    <div class="wh-result-check">✓</div>
+                </div>
+                <div id="whRackCard" class="wh-result-card wh-result-card--rack" style="display:none;">
+                    <div class="wh-result-thumb wh-result-thumb--rack">📍</div>
+                    <div class="wh-result-body">
+                        <div class="wh-result-title" id="whRackCode"></div>
+                        <div class="wh-result-meta">Rack location scanned</div>
+                    </div>
+                    <div class="wh-result-check">✓</div>
+                </div>
+                <button id="whSaveBtn" class="btn-full-action" style="display:none; margin:12px 15px 4px;" onclick="whSaveLocation()">Save Location</button>
+                <button id="whResetBtn" class="wh-ghost-btn" style="display:none;" onclick="whResetScan()">Scan another part →</button>
+                <div id="whScanHint" class="wh-scan-hint">Scan the QR code on a part label first, then scan the rack location label.</div>
+            </div>
+        </div>
 
     </div>
 </div>
@@ -2630,6 +2713,7 @@
         <div class="amenu-section">
             <button id="amenuDashboard" class="account-menu-item" onclick="onDashboardMenuTap()" style="display:none;">My Dashboard <span class="amenu-desktop-badge">Desktop</span><span class="account-menu-chevron">›</span></button>
             <button id="amenuEdw" class="account-menu-item" onclick="closeAccountMenu(); openEdw();" style="display:none;">Dismantle Vehicle <span class="account-menu-chevron">›</span></button>
+            <button id="amenuWarehouse" class="account-menu-item" onclick="closeAccountMenu(); openWarehouseDrawer();" style="display:none;">Warehouse <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onOpenGarage(); closeAccountMenu()">My Garage <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
