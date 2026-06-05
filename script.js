@@ -16464,7 +16464,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape')     { e.preventDefault(); closeDetailImageViewer(); }
     });
 
-})();
+});
 
 // ================================================================
 // WAREHOUSE — Label Generator + Put-Away Scanner

@@ -8037,3 +8037,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-worker-qr-info { flex: 1; min-width: 0; }
 .wh-worker-qr-title { font-size: 13px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
 .wh-worker-qr-desc { font-size: 11px; color: #888; line-height: 1.5; }
+
+.wh-batch-field { display:flex; flex-direction:column; gap:3px; }
+.wh-batch-field-label { font-size:10px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.4px; }
