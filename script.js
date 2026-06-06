@@ -6047,7 +6047,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
 
     let html = '';
 
-    {
+    if (part.isPro) {
         const sellerParts = collectFooter(allActive.filter(p => p.seller === part.seller), FOOTER_TARGET);
         const need = FOOTER_TARGET - sellerParts.length;
         const catFill = need > 0 ? collectFooter(allActive.filter(p => p.category === part.category), need) : [];
@@ -6059,6 +6059,13 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             <span onclick="openStorefront(${part.id})" style="color:var(--apc-orange);font-weight:900;cursor:pointer;font-size:10px;">VISIT STORE →</span>
         </div>
         <div class="detail-footer-strip">${buildStrip(allStrip)}</div>`;
+    } else {
+        const catParts    = collectFooter(allActive.filter(p => p.category === part.category), FOOTER_TARGET);
+        const remaining   = FOOTER_TARGET - catParts.length;
+        const recentFill  = remaining > 0 ? collectFooter(allActive, remaining) : [];
+        const allFill = [...catParts, ...recentFill];
+        html += `<div class="detail-footer-label">SIMILAR ITEMS</div>
+        <div class="detail-footer-strip">${buildStrip(allFill)}</div>`;
     }
 
     footer.innerHTML = (inStoreView || fromInbox) ? '' : html;
@@ -6532,6 +6539,8 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
         }
     }
 
+    const isTrade = !isPro && (userId ? (getAllParts().find(p => p.sellerId === userId)?.sellerTier === 'trade') : false);
+
     // Logo / initials
     const logoImg      = document.getElementById('sfLogoImg');
     const logoInitials = document.getElementById('sfLogoInitials');
@@ -6555,7 +6564,6 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
     const sfLoc      = document.getElementById('sfLocation');
 
     const sfTradeBadge = document.getElementById('sfTradeBadge');
-    const isTrade = !isPro && (userId ? (getAllParts().find(p => p.sellerId === userId)?.sellerTier === 'trade') : false);
     if (sfBizName)    { sfBizName.textContent = businessName || ''; sfBizName.style.display = businessName ? '' : 'none'; }
     if (sfProBadge)    sfProBadge.style.display   = isPro ? '' : 'none';
     if (sfTradeBadge)  sfTradeBadge.style.display  = (!isPro && isTrade) ? '' : 'none';
