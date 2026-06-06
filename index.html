@@ -2041,16 +2041,16 @@
                         <input type="text" id="proSettingABN" placeholder="12 345 678 901">
                     </div>
                 </div>
+                <div class="input-group">
+                    <label>Street Address <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <input type="text" id="wsAddress" placeholder="e.g. 47 Richmond Road" autocomplete="street-address">
+                </div>
                 <div class="input-group" style="margin-bottom:12px;">
                     <label>Suburb, State</label>
                     <div class="location-picker-wrap" data-mode="workshop">
                         <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
                         <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
                     </div>
-                </div>
-                <div class="input-group">
-                    <label>Street Address <span style="font-weight:400;color:#aaa;">optional</span></label>
-                    <input type="text" id="wsAddress" placeholder="e.g. 47 Richmond Road" autocomplete="street-address">
                 </div>
                 <div class="input-group">
                     <label>Contact Phone <span style="font-weight:400;color:#aaa;">optional</span></label>
@@ -2065,20 +2065,12 @@
                     <input type="url" id="wsWebsite" placeholder="e.g. https://yourshop.com.au" autocomplete="off">
                 </div>
                 <div class="input-group">
-                    <label>Business Hours <span style="font-weight:400;color:#aaa;">optional</span></label>
-                    <div id="wsHoursGrid" class="ws-hours-grid"></div>
-                </div>
-                <div class="input-group">
-                    <label>I am a</label>
-                    <div class="radius-seg-control" id="bizTypeControl">
-                        <div class="radius-seg active" data-type="supplier" onclick="setBizType(this,'supplier')">Part Supplier</div>
-                        <div class="radius-seg" data-type="service" onclick="setBizType(this,'service')">Service Provider</div>
-                        <div class="radius-seg" data-type="both" onclick="setBizType(this,'both')">Parts &amp; Services</div>
-                    </div>
-                </div>
-                <div class="input-group">
                     <label>About <span style="font-weight:400; color:#aaa;">optional</span></label>
                     <textarea id="proSettingAbout" class="apc-textarea" rows="3" placeholder="e.g. Specialising in Japanese imports, serving SA since 2005. We stock 500+ vehicles at any time."></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Business Hours <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <div id="wsHoursGrid" class="ws-hours-grid"></div>
                 </div>
             </div>
 
@@ -2098,6 +2090,17 @@
 
             <!-- Right column: Workshop Services + Parts Supply -->
             <div class="ws-col-left">
+
+            <div class="filter-section">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>I am a</label>
+                    <div class="radius-seg-control" id="bizTypeControl">
+                        <div class="radius-seg active" data-type="supplier" onclick="setBizType(this,'supplier')">Part Supplier</div>
+                        <div class="radius-seg" data-type="service" onclick="setBizType(this,'service')">Service Provider</div>
+                        <div class="radius-seg" data-type="both" onclick="setBizType(this,'both')">Parts &amp; Services</div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Services — shown for Service Provider / Parts & Services -->
             <div class="filter-section" id="workshopServicesSection" style="display:none;">
