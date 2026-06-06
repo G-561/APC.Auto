@@ -10339,26 +10339,17 @@ function buildSponsoredInFeedHTML(card) {
     const cardId  = card.id || '';
     const userId  = card.user_id || '';
     const safeUrl = /^https:\/\//i.test(card.button_url || '') ? escapeHtml(card.button_url) : '#';
-    const tpl     = card.template;
+    const cardImg = card.image_data || card.logo_data || '';
 
-    let imgHtml;
-    if (tpl === 'product' && card.image_data) {
-        imgHtml = `<img class="item-img" src="${card.image_data}" alt="${name}" loading="lazy" style="object-fit:cover;">`;
-    } else if (card.logo_data) {
-        imgHtml = `<img class="item-img" src="${card.logo_data}" alt="${name}" loading="lazy" style="object-fit:contain; background:#f8f8f8;">`;
-    } else {
-        const bg = tpl === 'supplier' ? 'linear-gradient(135deg,var(--apc-orange),#e05000)' : 'linear-gradient(135deg,#2d3a8c,#1a1a2e)';
-        imgHtml = `<div class="item-img" style="background:${bg}; display:flex; align-items:center; justify-content:center;"><span style="color:white;font-size:22px;font-weight:900;letter-spacing:1px;">${name.slice(0,3).toUpperCase()}</span></div>`;
-    }
-
-    const badgeClass = tpl === 'supplier' ? 'drp-type-badge--featured' : tpl === 'product' ? 'drp-type-badge--sponsored' : 'drp-type-badge--partner';
-    const badgeLabel = tpl === 'supplier' ? 'Featured' : tpl === 'product' ? 'Sponsored' : 'Partner';
+    const imgHtml = cardImg
+        ? `<img class="item-img" src="${cardImg}" alt="${name}" loading="lazy" style="object-fit:cover;">`
+        : `<div class="item-img" style="background:linear-gradient(135deg,var(--apc-orange),#e05000);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-size:22px;font-weight:900;letter-spacing:1px;">${name.slice(0,2).toUpperCase()}</span></div>`;
 
     return `<div class="item-card" onclick="handleSponsoredCardClick('${cardId}','${userId}','${safeUrl}')">
         ${imgHtml}
-        <span class="drp-type-badge ${badgeClass}">${badgeLabel}</span>
+        <span class="drp-type-badge drp-type-badge--sponsored">Sponsored</span>
         <div class="item-info">
-            <div class="price-row">${price ? `<span class="item-price">${price}</span>` : `<span style="font-size:10px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">${badgeLabel}</span>`}</div>
+            <div class="price-row">${price ? `<span class="item-price">${price}</span>` : `<span style="font-size:10px;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Sponsored</span>`}</div>
             <div class="item-title">${name}</div>
             ${tagline ? `<div class="item-loc">${tagline}</div>` : ''}
         </div>
