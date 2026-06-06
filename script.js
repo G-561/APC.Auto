@@ -6612,8 +6612,10 @@ function renderStorefront(sellerName, isPro, logo, businessName, abn, about, loc
                 _sfRatings = data;
                 const avg = data.reduce((s, r) => s + (r.stars || 0), 0) / data.length;
                 if (ratingEl) {
-                    ratingEl.textContent = `★ ${avg.toFixed(1)}  (${data.length})`;
+                    ratingEl.textContent = `★ ${avg.toFixed(1)} (${data.length})`;
                     ratingEl.style.display = '';
+                    const divEl = document.getElementById('sfRatingDivider');
+                    if (divEl) divEl.style.display = '';
                 }
             });
     }
