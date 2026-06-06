@@ -2057,6 +2057,18 @@
                     <input type="tel" id="wsPhone" placeholder="e.g. 08 9123 4567" autocomplete="tel">
                 </div>
                 <div class="input-group">
+                    <label>Email <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <input type="email" id="wsEmail" placeholder="e.g. info@yourshop.com.au" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>Website <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <input type="url" id="wsWebsite" placeholder="e.g. https://yourshop.com.au" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>Business Hours <span style="font-weight:400;color:#aaa;">optional</span></label>
+                    <div id="wsHoursGrid" class="ws-hours-grid"></div>
+                </div>
+                <div class="input-group">
                     <label>I am a</label>
                     <div class="radius-seg-control" id="bizTypeControl">
                         <div class="radius-seg active" data-type="supplier" onclick="setBizType(this,'supplier')">Part Supplier</div>
@@ -2478,6 +2490,7 @@
                 <div class="input-group" style="margin:0;"><label>Year *</label><select id="vehYear" onchange="onVehYearChange()"><option value="">Year</option></select></div>
             </div>
             <div id="vehSeriesGroup" style="display:none"><div class="input-group"><label>Series</label><select id="vehVariant" style="width:100%"><option value="">Select series</option></select></div></div>
+            <div id="vehEngineGroup" style="display:none"><div class="input-group"><label>Engine Code <span style="font-weight:400;color:#aaa;">optional</span></label><div id="vehEngineWrap"><input id="vehEngineCode" type="text" style="width:100%;" maxlength="60" placeholder="e.g. 1GR-FE, RB26DETT"></div></div></div>
         </div>
         <div class="filter-section">
             <h4>Optional</h4>

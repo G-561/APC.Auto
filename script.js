@@ -2087,14 +2087,16 @@ async function loadVehiclesFromSupabase(userId) {
             if (existing) {
                 Object.assign(existing, {
                     make: r.make || '', model: r.model || '', year: r.year || '',
-                    variant: r.variant || '', nickname: r.nickname || '', vin: r.vin || ''
+                    variant: r.variant || '', engineCode: r.engine_code || '',
+                    nickname: r.nickname || '', vin: r.vin || ''
                 });
             } else {
                 myVehicles.push({
                     id: nextVehicleId(),
                     supabaseId: r.id,
                     make: r.make || '', model: r.model || '', year: r.year || '',
-                    variant: r.variant || '', nickname: r.nickname || '', vin: r.vin || ''
+                    variant: r.variant || '', engineCode: r.engine_code || '',
+                    nickname: r.nickname || '', vin: r.vin || ''
                 });
             }
         });
@@ -2104,7 +2106,8 @@ async function loadVehiclesFromSupabase(userId) {
         for (const v of unsynced) {
             const { data, error: e } = await sb.from('vehicles').insert({
                 user_id: userId, make: v.make, model: v.model, year: String(v.year || ''),
-                variant: v.variant || '', nickname: v.nickname || '', vin: v.vin || ''
+                variant: v.variant || '', engine_code: v.engineCode || null,
+                nickname: v.nickname || '', vin: v.vin || ''
             }).select('id').single();
             if (!e && data) v.supabaseId = data.id;
         }
@@ -2217,8 +2220,11 @@ function _workshopRowToObj(p) {
         location:     p.location || '',
         postcode:     p.postcode || '',
         address:      p.workshop_address || '',
-        phone:        wd.phone || '',
-        about:        p.about || '',
+        phone:         wd.phone    || '',
+        email:         wd.email    || '',
+        website:       wd.website  || '',
+        businessHours: wd.business_hours || null,
+        about:         p.about     || '',
         serviceKeys:  activeKeys,
         vehicleTypes: wd.vehicles || [],
         specialty:    topLabels.join(' · ') || 'Workshop Services',
@@ -6924,14 +6930,17 @@ async function syncWorkshopProfileToSupabase() {
     await sb.from('profiles').update({
         workshop_address: workshopProfile.address || null,
         workshop_data: {
-            biz_type:         userSettings.businessType    || 'service',
-            phone:            workshopProfile.phone        || null,
-            services:         workshopProfile.services     || {},
-            vehicles:         workshopProfile.vehicles     || [],
+            biz_type:         userSettings.businessType      || 'service',
+            phone:            workshopProfile.phone          || null,
+            email:            workshopProfile.email          || null,
+            website:          workshopProfile.website        || null,
+            business_hours:   workshopProfile.businessHours || null,
+            services:         workshopProfile.services       || {},
+            vehicles:         workshopProfile.vehicles       || [],
             parts_categories: workshopProfile.partsCategories || [],
-            parts_type:       workshopProfile.partsType    || 'new',
-            wrecking:         workshopProfile.wrecking     || false,
-            wrecking_makes:   workshopProfile.wreckingMakes || [],
+            parts_type:       workshopProfile.partsType      || 'new',
+            wrecking:         workshopProfile.wrecking       || false,
+            wrecking_makes:   workshopProfile.wreckingMakes  || [],
         },
     }).eq('id', currentUserId);
 }
@@ -7399,6 +7408,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             const wd = profile.workshop_data;
                             if (wd.biz_type)        userSettings.businessType       = wd.biz_type;
                             workshopProfile.address         = profile.workshop_address   || '';
+                            workshopProfile.phone           = wd.phone                   || '';
+                            workshopProfile.email           = wd.email                   || '';
+                            workshopProfile.website         = wd.website                 || '';
+                            workshopProfile.businessHours   = wd.business_hours          || null;
                             workshopProfile.services        = wd.services                || {};
                             workshopProfile.vehicles        = wd.vehicles                || [];
                             workshopProfile.partsCategories = wd.parts_categories        || [];
@@ -7515,7 +7528,24 @@ function _refreshVehSeries(make, model, year, selected) {
     group.style.display = '';
 }
 
-function initVehicleDropdowns(make, model, year, variant) {
+function _refreshVehEngine(make, model, currentVal) {
+    const group = document.getElementById('vehEngineGroup');
+    const wrap  = document.getElementById('vehEngineWrap');
+    if (!group || !wrap) return;
+    if (!make || !model) { group.style.display = 'none'; return; }
+    const engines = (typeof VEHICLE_ENGINES !== 'undefined' && VEHICLE_ENGINES[make]?.[model]) || [];
+    group.style.display = '';
+    if (engines.length) {
+        const opts = ['<option value="">Engine code (optional)…</option>',
+            ...engines.map(e => `<option value="${escapeHtml(e)}"${e === currentVal ? ' selected' : ''}>${escapeHtml(e)}</option>`)
+        ].join('');
+        wrap.innerHTML = `<select id="vehEngineCode" style="width:100%;">${opts}</select>`;
+    } else {
+        wrap.innerHTML = `<input id="vehEngineCode" type="text" style="width:100%;" maxlength="60" placeholder="e.g. 1GR-FE, RB26DETT" value="${escapeHtml(currentVal || '')}">`;
+    }
+}
+
+function initVehicleDropdowns(make, model, year, variant, engineCode) {
     const makeEl  = document.getElementById('vehMake');
     const modelEl = document.getElementById('vehModel');
     const yearEl  = document.getElementById('vehYear');
@@ -7524,6 +7554,7 @@ function initVehicleDropdowns(make, model, year, variant) {
     modelEl.innerHTML = buildModelOptions(make || '', model || '');
     yearEl.innerHTML  = buildYearOptionsForModel(make || '', model || '', year || '');
     _refreshVehSeries(make || '', model || '', year || '', variant || '');
+    _refreshVehEngine(make || '', model || '', engineCode || '');
 }
 
 function onVehMakeChange() {
@@ -7533,6 +7564,7 @@ function onVehMakeChange() {
     if (modelEl) modelEl.innerHTML = buildModelOptions(make, '');
     if (yearEl)  yearEl.innerHTML  = buildYearOptions('');
     _refreshVehSeries('', '', '', '');
+    _refreshVehEngine('', '', '');
 }
 
 function onVehModelChange() {
@@ -7541,6 +7573,7 @@ function onVehModelChange() {
     const yearEl = document.getElementById('vehYear');
     if (yearEl) yearEl.innerHTML = buildYearOptionsForModel(make, model, '');
     _refreshVehSeries('', '', '', '');
+    _refreshVehEngine(make, model, '');
 }
 
 function onVehYearChange() {
@@ -7568,7 +7601,7 @@ function openEditVehicleDrawer(id) {
     editingVehicleId = id;
     const title = document.querySelector('#addVehicleDrawer .drawer-header span');
     if (title) title.textContent = 'EDIT VEHICLE';
-    initVehicleDropdowns(v.make || '', v.model || '', v.year || '', v.variant || '');
+    initVehicleDropdowns(v.make || '', v.model || '', v.year || '', v.variant || '', v.engineCode || '');
     document.getElementById('vehNickname').value = v.nickname || '';
     document.getElementById('vehVin').value      = v.vin      || '';
     toggleDrawer('addVehicleDrawer', true);
@@ -7578,12 +7611,13 @@ function openEditVehicleDrawer(id) {
 
 // Validate + save the new vehicle
 function submitAddVehicle() {
-    const make     = document.getElementById('vehMake').value.trim();
-    const model    = document.getElementById('vehModel').value.trim();
-    const yearStr  = document.getElementById('vehYear').value.trim();
-    const variant  = document.getElementById('vehVariant').value.trim();
-    const nickname = document.getElementById('vehNickname').value.trim();
-    const vin      = document.getElementById('vehVin').value.trim();
+    const make       = document.getElementById('vehMake').value.trim();
+    const model      = document.getElementById('vehModel').value.trim();
+    const yearStr    = document.getElementById('vehYear').value.trim();
+    const variant    = document.getElementById('vehVariant').value.trim();
+    const engineCode = document.getElementById('vehEngineCode')?.value.trim() || '';
+    const nickname   = document.getElementById('vehNickname').value.trim();
+    const vin        = document.getElementById('vehVin').value.trim();
 
     if (!make || !model) {
         showToast('Make and Model are required.');
@@ -7595,11 +7629,11 @@ function submitAddVehicle() {
         const idx = myVehicles.findIndex(v => v.id === editingVehicleId);
         if (idx !== -1) {
             myVehicles[idx] = { ...myVehicles[idx], make, model, year,
-                variant: variant||'', nickname: nickname||'', vin: vin||'' };
+                variant: variant||'', engineCode: engineCode||'', nickname: nickname||'', vin: vin||'' };
             if (currentUserId && myVehicles[idx].supabaseId) {
                 sb.from('vehicles').update({
                     make, model, year: String(year||''),
-                    variant: variant||'', nickname: nickname||'', vin: vin||''
+                    variant: variant||'', engine_code: engineCode||null, nickname: nickname||'', vin: vin||''
                 }).eq('id', myVehicles[idx].supabaseId)
                   .then(({ error }) => { if (error) console.warn('vehicle update:', error.message); });
             }
@@ -7608,13 +7642,13 @@ function submitAddVehicle() {
     } else {
         const newV = {
             id: nextVehicleId(), make, model, year,
-            variant: variant||'', nickname: nickname||'', vin: vin||''
+            variant: variant||'', engineCode: engineCode||'', nickname: nickname||'', vin: vin||''
         };
         myVehicles.push(newV);
         if (currentUserId) {
             sb.from('vehicles').insert({
                 user_id: currentUserId, make, model, year: String(year||''),
-                variant: variant||'', nickname: nickname||'', vin: vin||''
+                variant: variant||'', engine_code: engineCode||null, nickname: nickname||'', vin: vin||''
             }).select('id').single()
               .then(({ data, error }) => {
                   if (error) console.warn('vehicle insert:', error.message);
@@ -10573,6 +10607,11 @@ function openWorkshopProfileEditor() {
     if (wsAddressEl) wsAddressEl.value = workshopProfile.address || '';
     const wsPhoneEl = document.getElementById('wsPhone');
     if (wsPhoneEl) wsPhoneEl.value = workshopProfile.phone || '';
+    const wsEmailEl = document.getElementById('wsEmail');
+    if (wsEmailEl) wsEmailEl.value = workshopProfile.email || '';
+    const wsWebsiteEl = document.getElementById('wsWebsite');
+    if (wsWebsiteEl) wsWebsiteEl.value = workshopProfile.website || '';
+    renderWsHoursGrid(workshopProfile.businessHours || {});
     // Pre-fill workshop location picker from saved postcode
     const wsLocWrap = document.querySelector('#workshopProfileFields .location-picker-wrap[data-mode="workshop"]');
     if (wsLocWrap) {
@@ -10677,8 +10716,11 @@ function submitWorkshopProfile() {
     const getChk = id => document.getElementById(id)?.checked || false;
     workshopProfile = {
         vehicles: workshopProfile.vehicles || [],
-        address: document.getElementById('wsAddress')?.value.trim() || '',
-        phone:   document.getElementById('wsPhone')?.value.trim()   || '',
+        address:  document.getElementById('wsAddress')?.value.trim()  || '',
+        phone:    document.getElementById('wsPhone')?.value.trim()    || '',
+        email:    document.getElementById('wsEmail')?.value.trim()    || '',
+        website:  document.getElementById('wsWebsite')?.value.trim()  || '',
+        businessHours: readWsHoursGrid(),
         services: {
             generalService: getChk('wsGeneralService'), logbook: getChk('wsLogbook'),
             engineDiag: getChk('wsEngineDiag'),   engineRebuild: getChk('wsEngineRebuild'),
@@ -10886,20 +10928,83 @@ async function openWorkshopDetail(workshopId) {
         <div class="wsd-hero">
             <div class="wsd-name">${escapeHtml(w.name || '')}</div>
             ${w.address ? `<div class="wsd-loc">📍 ${escapeHtml(w.address)}${w.location ? ', ' + escapeHtml(w.location) : ''}</div>` : w.location ? `<div class="wsd-loc">📍 ${escapeHtml(w.location)}</div>` : ''}
-            ${w.phone ? `<a href="tel:${escapeHtml(w.phone.replace(/\s/g,''))}" class="wsd-phone">📞 ${escapeHtml(w.phone)}</a>` : ''}
+            ${w.phone   ? `<a href="tel:${escapeHtml(w.phone.replace(/\s/g,''))}" class="wsd-phone">📞 ${escapeHtml(w.phone)}</a>` : ''}
+            ${w.email   ? `<a href="mailto:${escapeHtml(w.email)}" class="wsd-phone">✉ ${escapeHtml(w.email)}</a>` : ''}
+            ${w.website ? `<a href="${escapeHtml(w.website)}" target="_blank" rel="noopener" class="wsd-phone">🌐 ${escapeHtml(w.website.replace(/^https?:\/\//, ''))}</a>` : ''}
             <div class="wsd-meta-row">
                 <span class="wsd-rating">${stars}</span>
-                ${w.distance ? `<span class="wsd-distance">${escapeHtml(w.distance)} away</span>` : ''}
             </div>
         </div>
-        ${w.specialty ? `<div class="wsd-section"><h4>About</h4><div class="wsd-specialty">${escapeHtml(w.specialty)}</div></div>` : ''}
+        ${w.about ? `<div class="wsd-section"><h4>About</h4><div class="wsd-specialty">${escapeHtml(w.about)}</div></div>` : w.specialty ? `<div class="wsd-section"><h4>About</h4><div class="wsd-specialty">${escapeHtml(w.specialty)}</div></div>` : ''}
         ${serviceChips ? `<div class="wsd-section"><h4>Services</h4><div class="wsd-chips">${serviceChips}</div></div>` : ''}
         ${vehicleChips ? `<div class="wsd-section"><h4>Vehicles we work on</h4><div class="wsd-chips">${vehicleChips}</div></div>` : ''}
+        ${w.businessHours ? `<div class="wsd-section"><h4>Business Hours</h4><div class="wsd-hours">${formatBusinessHours(w.businessHours)}</div></div>` : ''}
         <div class="wsd-cta-wrap">
             <button class="wsd-contact-btn" onclick="contactWorkshop(${wId}, ${wName}); closeWorkshopDetailDrawer();">Message Workshop</button>
         </div>
     `;
     toggleDrawer('workshopDetailDrawer', true);
+}
+
+const WS_DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
+const WS_DAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function renderWsHoursGrid(hours) {
+    const grid = document.getElementById('wsHoursGrid');
+    if (!grid) return;
+    grid.innerHTML = WS_DAYS.map((d, i) => {
+        const h = hours[d] || {};
+        const isOpen = h.open || false;
+        return `<div class="ws-hours-row" id="wsHoursRow_${d}">
+            <span class="ws-hours-day">${WS_DAY_LABELS[i]}</span>
+            <label class="settings-toggle" style="flex-shrink:0;">
+                <input type="checkbox" id="wsHoursOpen_${d}" ${isOpen ? 'checked' : ''} onchange="wsToggleDay('${d}')">
+                <span class="settings-toggle-track"></span>
+            </label>
+            <div class="ws-hours-times" id="wsHoursTimes_${d}" style="${isOpen ? '' : 'display:none;'}">
+                <input type="time" id="wsHoursFrom_${d}" value="${escapeHtml(h.from || '08:00')}">
+                <span class="ws-hours-sep">–</span>
+                <input type="time" id="wsHoursTo_${d}" value="${escapeHtml(h.to || '17:00')}">
+            </div>
+            <span class="ws-hours-closed" id="wsHoursClosed_${d}" style="${isOpen ? 'display:none;' : ''}">Closed</span>
+        </div>`;
+    }).join('');
+}
+
+function wsToggleDay(d) {
+    const isOpen = document.getElementById(`wsHoursOpen_${d}`)?.checked;
+    const times  = document.getElementById(`wsHoursTimes_${d}`);
+    const closed = document.getElementById(`wsHoursClosed_${d}`);
+    if (times)  times.style.display  = isOpen ? '' : 'none';
+    if (closed) closed.style.display = isOpen ? 'none' : '';
+}
+
+function readWsHoursGrid() {
+    const result = {};
+    WS_DAYS.forEach(d => {
+        const open = document.getElementById(`wsHoursOpen_${d}`)?.checked || false;
+        const from = document.getElementById(`wsHoursFrom_${d}`)?.value || '';
+        const to   = document.getElementById(`wsHoursTo_${d}`)?.value   || '';
+        result[d] = { open, from: open ? from : '', to: open ? to : '' };
+    });
+    return result;
+}
+
+function _fmtTime(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':').map(Number);
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const h12  = h % 12 || 12;
+    return m ? `${h12}:${String(m).padStart(2,'0')}${ampm}` : `${h12}${ampm}`;
+}
+
+function formatBusinessHours(hours) {
+    if (!hours) return '';
+    return WS_DAYS.map((d, i) => {
+        const h = hours[d];
+        if (!h || !h.open) return `<span class="wsd-hours-row"><span class="wsd-hours-day">${WS_DAY_LABELS[i]}</span><span class="wsd-hours-closed">Closed</span></span>`;
+        return `<span class="wsd-hours-row"><span class="wsd-hours-day">${WS_DAY_LABELS[i]}</span><span class="wsd-hours-time">${_fmtTime(h.from)} – ${_fmtTime(h.to)}</span></span>`;
+    }).join('');
 }
 
 function closeWorkshopDetailDrawer() {

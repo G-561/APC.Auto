@@ -8040,3 +8040,19 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 
 .wh-batch-field { display:flex; flex-direction:column; gap:3px; }
 .wh-batch-field-label { font-size:10px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.4px; }
+
+/* Workshop business hours grid */
+.ws-hours-grid { display: flex; flex-direction: column; gap: 6px; }
+.ws-hours-row { display: flex; align-items: center; gap: 8px; }
+.ws-hours-day { width: 32px; font-size: 12px; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 0.3px; flex-shrink: 0; }
+.ws-hours-times { display: flex; align-items: center; gap: 6px; flex: 1; }
+.ws-hours-times input[type="time"] { border: 1.5px solid #ddd; border-radius: 6px; padding: 5px 8px; font-size: 12px; color: #333; outline: none; flex: 1; min-width: 0; }
+.ws-hours-times input[type="time"]:focus { border-color: var(--apc-orange); }
+.ws-hours-sep { font-size: 11px; color: #aaa; flex-shrink: 0; }
+.ws-hours-closed { font-size: 11px; color: #aaa; flex: 1; }
+
+.wsd-hours { display: flex; flex-direction: column; gap: 4px; }
+.wsd-hours-row { display: flex; gap: 10px; font-size: 13px; }
+.wsd-hours-day { width: 36px; font-weight: 700; color: #333; flex-shrink: 0; }
+.wsd-hours-time { color: #555; }
+.wsd-hours-closed { color: #aaa; font-style: italic; }
