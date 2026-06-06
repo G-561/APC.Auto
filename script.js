@@ -16347,7 +16347,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Always start with a blank filter postcode — never pre-fill from browser autocomplete or profile
     const fp = document.getElementById('filterPostcode');
-    if (fp) fp.value = '';
+    if (fp) {
+        fp.value = '';
+        // Autocomplete fires after DOMContentLoaded — clear again after a tick
+        setTimeout(() => { fp.value = ''; }, 200);
+        // Guard: reject anything non-numeric that autocomplete sneaks in on focus
+        fp.addEventListener('focus', () => { if (!/^\d*$/.test(fp.value)) fp.value = ''; });
+    }
     document.addEventListener('click', e => { if (!e.target.closest('#inboxStatusWrap')) closeInboxStatusPicker(); });
     updateHeaderOffset();
     initFilterVehicleDropdowns();
