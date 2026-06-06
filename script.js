@@ -4717,9 +4717,8 @@ function renderSellVehicleChip() {
         if (ysEl) ysEl.textContent = [year, series].filter(Boolean).join(' · ');
         chip.style.display = 'flex';
         btn.style.display  = 'none';
-        if (ecGroup)      ecGroup.style.display      = '';
+        if (ecGroup)      ecGroup.style.display      = 'none';
         if (universalRow) universalRow.style.display  = 'none';
-        _refreshSellVariant(make, model, document.getElementById('sellVariant')?.value || '');
     } else {
         chip.style.display = 'none';
         btn.style.display  = '';
@@ -4761,7 +4760,7 @@ function openSellVehiclePicker() {
             VEHICLE_MAKES.map(m => `<option value="${m}">${m}</option>`).join('');
     // Pre-fill from current selection
     const sel = sellVehicleSelection;
-    const currentEngine = document.getElementById('sellVariant')?.value || '';
+    const currentEngine = sellVehicleSelection?.engine || '';
     if (sel?.make) {
         if (vpMake) vpMake.value = sel.make;
         const vpModel = document.getElementById('vpModel');
@@ -4894,9 +4893,8 @@ function confirmSellVehicle() {
     if (!make || !model || !year) { showToast('Please select make, model and year.'); return; }
     const seriesHtml = buildSeriesOptions(make, model, year, '');
     if (seriesHtml && !series) { showToast('Please select a series.'); return; }
-    sellVehicleSelection = { make, model, year, series };
+    sellVehicleSelection = { make, model, year, series, engine };
     renderSellVehicleChip();
-    _refreshSellVariant(make, model, engine);
     closeSellVehiclePicker();
 }
 
@@ -4906,14 +4904,13 @@ function clearSellVehicle() {
     _refreshSellVariant('', '', '');
 }
 
-function initSellVehicleDropdowns(make, model, year, variant) {
+function initSellVehicleDropdowns(make, model, year, variant, engine) {
     if (make && model && year) {
-        sellVehicleSelection = { make, model, year, series: variant || '' };
+        sellVehicleSelection = { make, model, year, series: variant || '', engine: engine || '' };
     } else {
         sellVehicleSelection = null;
     }
     renderSellVehicleChip();
-    _refreshSellVariant(make, model, '');
 }
 
 function _refreshSellVariant(make, model, currentVal) {
@@ -5160,8 +5157,7 @@ function openEditListing(listingId) {
 
     document.getElementById('sellTitle').value = listing.title || '';
     document.getElementById('sellCategory').value = listing.category || '';
-    initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '', listing.fits?.[0]?.variant || '');
-    _refreshSellVariant(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.variant || '');
+    initSellVehicleDropdowns(listing.fits?.[0]?.make || '', listing.fits?.[0]?.model || '', listing.year || '', listing.fits?.[0]?.variant || '', listing.variant || '');
     const isUniversal = !listing.fits?.length && !VEHICLE_EXEMPT_CATEGORIES.includes(listing.category || '');
     sellIsUniversal = isUniversal;
     const uToggle = document.getElementById('sellUniversalToggle');
@@ -5443,7 +5439,7 @@ async function submitSellListing() {
     }
     hideSellError();
 
-    const engineVariant = document.getElementById('sellVariant')?.value.trim() || null;
+    const engineVariant = sellVehicleSelection?.engine?.trim() || null;
     const fits = (make && model) ? [{ make: make.trim(), model: model.trim(), ...(variant ? { variant } : {}) }] : [];
     const fittingAvailable = userIsSignedIn && currentUserTier === 'pro' && document.getElementById('sellFittingAvailable')?.checked;
     const stockNumber = document.getElementById('sellStockNumber')?.value.trim() || null;
