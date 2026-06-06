@@ -8056,3 +8056,37 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wsd-hours-day { width: 36px; font-weight: 700; color: #333; flex-shrink: 0; }
 .wsd-hours-time { color: #555; }
 .wsd-hours-closed { color: #aaa; font-style: italic; }
+
+/* --- ONBOARDING OVERLAY --- */
+.onboarding-overlay { display: none; position: fixed; inset: 0; background: #fff; z-index: 9999; overflow-y: auto; flex-direction: column; }
+.onb-container { max-width: 520px; margin: 0 auto; padding-bottom: 40px; min-height: 100%; }
+.onb-top-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 15px 14px; background: #f07020; }
+.onb-logo { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 1px; }
+.onb-skip-link { background: none; border: none; color: rgba(255,255,255,0.85); font-size: 13px; cursor: pointer; padding: 4px 0; text-decoration: underline; min-height: 44px; }
+.onb-progress-wrap { display: flex; align-items: center; gap: 10px; padding: 12px 15px 0; }
+.onb-progress-track { flex: 1; height: 4px; background: #eee; border-radius: 2px; overflow: hidden; }
+.onb-progress-fill { height: 100%; background: #f07020; border-radius: 2px; transition: width 0.3s ease; }
+.onb-step-label { font-size: 12px; color: #888; white-space: nowrap; }
+.onb-screen { padding: 20px 15px; }
+.onb-heading { font-size: 22px; font-weight: 800; color: #333; margin: 0 0 6px; }
+.onb-subhead { font-size: 14px; color: #666; margin: 0 0 20px; line-height: 1.5; }
+.onb-fields { display: flex; flex-direction: column; gap: 4px; margin-bottom: 24px; }
+.onb-label { font-size: 12px; font-weight: 600; color: #555; margin-top: 10px; }
+.onb-fields .onb-label:first-child { margin-top: 0; }
+.onb-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; color: #333; background: #fff; box-sizing: border-box; -webkit-appearance: none; }
+.onb-input:focus { outline: none; border-color: #f07020; box-shadow: 0 0 0 2px rgba(240,112,32,0.15); }
+.onb-btn-primary { width: 100%; padding: 16px; background: #f07020; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(255,152,0,0.2); min-height: 44px; }
+.onb-btn-primary:active { background: #d95f10; }
+.onb-section { margin-bottom: 20px; }
+.onb-section-label { font-size: 11px; font-weight: 700; color: #888; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.onb-radio-row { display: flex; flex-direction: column; gap: 8px; }
+.onb-radio-item { display: flex; align-items: center; gap: 10px; font-size: 15px; color: #333; cursor: pointer; padding: 12px; border: 1.5px solid #eee; border-radius: 8px; min-height: 44px; }
+.onb-radio-item input[type="radio"] { accent-color: #f07020; width: 18px; height: 18px; flex-shrink: 0; }
+.onb-svc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.onb-svc-item { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: #333; cursor: pointer; padding: 9px 10px; border: 1.5px solid #eee; border-radius: 6px; line-height: 1.3; }
+.onb-svc-item input[type="checkbox"] { accent-color: #f07020; flex-shrink: 0; margin-top: 1px; width: 16px; height: 16px; }
+.onb-makes-btn { width: 100%; padding: 14px 12px; background: #fff; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; text-align: left; cursor: pointer; color: #333; min-height: 44px; }
+.onb-makes-btn.onb-makes-empty { color: #aaa; }
+.onb-action-row { display: flex; gap: 10px; margin-top: 24px; }
+.onb-btn-back { flex-shrink: 0; padding: 16px 20px; background: #f4f4f4; border: none; border-radius: 8px; font-size: 15px; color: #555; cursor: pointer; min-height: 44px; }
+.onb-btn-complete { flex: 1; }

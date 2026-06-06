@@ -1269,6 +1269,7 @@ function onMakeCheckChange() {
 function _updateMakesSummary(fieldKey, makes) {
     const summaryId = fieldKey === 'vehicles' ? 'vehicleMakesSummary' : 'wreckingMakesSummary';
     const el = document.getElementById(summaryId);
+    if (fieldKey === 'vehicles') _updateObMakesBtn(makes);
     if (!el) return;
     if (!makes || makes.length === 0) {
         el.textContent = 'Tap to select makes…';
@@ -7419,6 +7420,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             workshopProfile.wrecking        = wd.wrecking                ?? false;
                             workshopProfile.wreckingMakes   = wd.wrecking_makes          || [];
                             saveWorkshopProfile();
+                        } else if (tier === 'trade' || tier === 'pro' || profile.is_pro) {
+                            showOnboardingIfNeeded();
                         }
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
@@ -16873,4 +16876,172 @@ function whResetScan() {
 function whSetStatus(msg) {
     const el = document.getElementById('whScanStatus');
     if (el) el.textContent = msg;
+}
+
+// --- TRADE / PRO ONBOARDING ---
+
+function showOnboardingIfNeeded() {
+    if (!document.getElementById('onboardingOverlay')) _buildOnboardingOverlay();
+    _openOnboardingOverlay();
+}
+
+function _buildOnboardingOverlay() {
+    const svcHTML = Object.entries(SERVICE_LABELS).map(([k, label]) =>
+        `<label class="onb-svc-item"><input type="checkbox" id="obSvc_${k}"> <span>${escapeHtml(label)}</span></label>`
+    ).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'onboardingOverlay';
+    overlay.className = 'onboarding-overlay';
+    overlay.innerHTML = `
+        <div class="onb-container">
+            <div class="onb-top-bar">
+                <div class="onb-logo">APC</div>
+                <button class="onb-skip-link" onclick="onboardSkip()">Skip for now</button>
+            </div>
+            <div class="onb-progress-wrap">
+                <div class="onb-progress-track"><div class="onb-progress-fill" id="onbProgressFill" style="width:50%"></div></div>
+                <span class="onb-step-label" id="onbStepLabel">Step 1 of 2</span>
+            </div>
+            <div id="onbScreen1" class="onb-screen">
+                <h2 class="onb-heading">Welcome to APC!</h2>
+                <p class="onb-subhead">To help us provide a better service to the community, please take a few minutes to tell us about your business.</p>
+                <div class="onb-fields">
+                    <label class="onb-label">Business name</label>
+                    <input class="onb-input" type="text" id="obBizName" placeholder="e.g. Smiths Auto Repairs" autocomplete="organization">
+                    <label class="onb-label">Phone</label>
+                    <input class="onb-input" type="tel" id="obPhone" placeholder="e.g. 0400 123 456" autocomplete="tel">
+                    <label class="onb-label">Email</label>
+                    <input class="onb-input" type="email" id="obEmail" placeholder="workshop@example.com.au" autocomplete="email">
+                    <label class="onb-label">Website</label>
+                    <input class="onb-input" type="url" id="obWebsite" placeholder="https://...">
+                    <label class="onb-label">Business address</label>
+                    <input class="onb-input" type="text" id="obAddress" placeholder="Street, suburb, state" autocomplete="street-address">
+                </div>
+                <button class="onb-btn-primary" onclick="onboardNextStep()">Next →</button>
+            </div>
+            <div id="onbScreen2" class="onb-screen" style="display:none">
+                <h2 class="onb-heading">What does your business do?</h2>
+                <p class="onb-subhead">Help us match you with the right customers.</p>
+                <div class="onb-section">
+                    <div class="onb-section-label">Business type</div>
+                    <div class="onb-radio-row">
+                        <label class="onb-radio-item"><input type="radio" name="obBizType" value="service" checked> Workshop / Service</label>
+                        <label class="onb-radio-item"><input type="radio" name="obBizType" value="supplier"> Parts dealer</label>
+                        <label class="onb-radio-item"><input type="radio" name="obBizType" value="both"> Both</label>
+                    </div>
+                </div>
+                <div class="onb-section">
+                    <div class="onb-section-label">Services offered</div>
+                    <div class="onb-svc-grid">${svcHTML}</div>
+                </div>
+                <div class="onb-section">
+                    <div class="onb-section-label">Vehicle makes you specialise in</div>
+                    <button class="onb-makes-btn onb-makes-empty" id="obMakesBtn" onclick="openMakesDrawer('vehicles')">Tap to select makes…</button>
+                </div>
+                <div class="onb-action-row">
+                    <button class="onb-btn-back" onclick="onboardPrevStep()">← Back</button>
+                    <button class="onb-btn-primary onb-btn-complete" onclick="onboardComplete()">Complete setup</button>
+                </div>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function _openOnboardingOverlay() {
+    const overlay = document.getElementById('onboardingOverlay');
+    if (!overlay) return;
+    const bizNameEl = document.getElementById('obBizName');
+    const phoneEl   = document.getElementById('obPhone');
+    const emailEl   = document.getElementById('obEmail');
+    const websiteEl = document.getElementById('obWebsite');
+    const addrEl    = document.getElementById('obAddress');
+    if (bizNameEl) bizNameEl.value = userSettings.businessName || '';
+    if (phoneEl)   phoneEl.value   = workshopProfile.phone || '';
+    if (emailEl)   emailEl.value   = workshopProfile.email || currentUserEmail || '';
+    if (websiteEl) websiteEl.value = workshopProfile.website || '';
+    if (addrEl)    addrEl.value    = workshopProfile.address || '';
+    document.getElementById('onbScreen1').style.display = '';
+    document.getElementById('onbScreen2').style.display = 'none';
+    const fill = document.getElementById('onbProgressFill');
+    const label = document.getElementById('onbStepLabel');
+    if (fill)  fill.style.width = '50%';
+    if (label) label.textContent = 'Step 1 of 2';
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function onboardNextStep() {
+    workshopProfile.phone   = document.getElementById('obPhone')?.value.trim()   || '';
+    workshopProfile.email   = document.getElementById('obEmail')?.value.trim()   || '';
+    workshopProfile.website = document.getElementById('obWebsite')?.value.trim() || '';
+    workshopProfile.address = document.getElementById('obAddress')?.value.trim() || '';
+    const bizName = document.getElementById('obBizName')?.value.trim();
+    if (bizName) userSettings.businessName = bizName;
+    document.getElementById('onbScreen1').style.display = 'none';
+    document.getElementById('onbScreen2').style.display = '';
+    const fill = document.getElementById('onbProgressFill');
+    const label = document.getElementById('onbStepLabel');
+    if (fill)  fill.style.width = '100%';
+    if (label) label.textContent = 'Step 2 of 2';
+    _updateObMakesBtn(workshopProfile.vehicles || []);
+    document.getElementById('onboardingOverlay').scrollTop = 0;
+}
+
+function onboardPrevStep() {
+    document.getElementById('onbScreen2').style.display = 'none';
+    document.getElementById('onbScreen1').style.display = '';
+    const fill = document.getElementById('onbProgressFill');
+    const label = document.getElementById('onbStepLabel');
+    if (fill)  fill.style.width = '50%';
+    if (label) label.textContent = 'Step 1 of 2';
+    document.getElementById('onboardingOverlay').scrollTop = 0;
+}
+
+async function onboardComplete() {
+    const bizTypeEl = document.querySelector('input[name="obBizType"]:checked');
+    userSettings.businessType = bizTypeEl?.value || 'service';
+    const services = {};
+    Object.keys(SERVICE_LABELS).forEach(k => {
+        services[k] = document.getElementById(`obSvc_${k}`)?.checked || false;
+    });
+    workshopProfile.services = services;
+    _closeOnboardingOverlay();
+    if (userSettings.businessName && currentUserId && sb) {
+        sb.from('profiles').update({ business_name: userSettings.businessName }).eq('id', currentUserId).then(() => {});
+    }
+    await syncWorkshopProfileToSupabase();
+    showToast('Profile saved — welcome to APC!');
+}
+
+async function onboardSkip() {
+    _closeOnboardingOverlay();
+    if (!currentUserId || !sb) return;
+    await sb.from('profiles').update({
+        workshop_data: { biz_type: userSettings.businessType || 'service', _onboard_skipped: true },
+    }).eq('id', currentUserId);
+}
+
+function _closeOnboardingOverlay() {
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function _updateObMakesBtn(makes) {
+    const btn = document.getElementById('obMakesBtn');
+    if (!btn) return;
+    if (!makes || makes.length === 0) {
+        btn.textContent = 'Tap to select makes…';
+        btn.classList.add('onb-makes-empty');
+    } else if (makes.includes('All Makes')) {
+        btn.textContent = 'All Makes';
+        btn.classList.remove('onb-makes-empty');
+    } else if (makes.length <= 4) {
+        btn.textContent = makes.join(', ');
+        btn.classList.remove('onb-makes-empty');
+    } else {
+        btn.textContent = `${makes.slice(0, 3).join(', ')} +${makes.length - 3} more`;
+        btn.classList.remove('onb-makes-empty');
+    }
 }
