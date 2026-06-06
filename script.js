@@ -7421,7 +7421,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             workshopProfile.wreckingMakes   = wd.wrecking_makes          || [];
                             saveWorkshopProfile();
                         } else if (tier === 'trade' || tier === 'pro' || profile.is_pro) {
-                            showOnboardingIfNeeded();
+                            const ageMs = profile.created_at ? Date.now() - new Date(profile.created_at).getTime() : Infinity;
+                            if (ageMs < 2 * 60 * 1000) {
+                                showOnboardingIfNeeded();
+                            } else {
+                                _showOnboardingReminder();
+                            }
                         }
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
@@ -7448,6 +7453,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (meta.postcode) { userSettings.postcode = meta.postcode; }
                                 if (meta.location) { userSettings.location = meta.location; }
                                 saveUserSettings(); populateLocationPickers();
+                                if (metaTier === 'trade' || metaTier === 'pro' || isPro) {
+                                    showOnboardingIfNeeded();
+                                }
                             } else {
                                 console.warn('Profile insert failed:', insertErr.code, insertErr.message);
                                 showToast('Profile setup incomplete — please sign out and back in.');
@@ -17026,6 +17034,28 @@ function _closeOnboardingOverlay() {
     const overlay = document.getElementById('onboardingOverlay');
     if (overlay) overlay.style.display = 'none';
     document.body.style.overflow = '';
+}
+
+function _showOnboardingReminder() {
+    if (!currentUserId) return;
+    const key = `apc.onbRemind.${currentUserId}`;
+    const count = parseInt(localStorage.getItem(key) || '0', 10);
+    if (count >= 3) return;
+    localStorage.setItem(key, String(count + 1));
+    if (document.getElementById('onbReminderBanner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'onbReminderBanner';
+    banner.className = 'onb-reminder-banner';
+    banner.innerHTML = `
+        <div class="onb-reminder-inner">
+            <div class="onb-reminder-text">
+                <strong>Your profile is incomplete</strong>
+                <span>Complete your setup to appear in workshop searches.</span>
+            </div>
+            <button class="onb-reminder-cta" onclick="showOnboardingIfNeeded(); document.getElementById('onbReminderBanner').remove();">Set up now</button>
+            <button class="onb-reminder-close" onclick="document.getElementById('onbReminderBanner').remove();" aria-label="Dismiss">×</button>
+        </div>`;
+    document.body.appendChild(banner);
 }
 
 function _updateObMakesBtn(makes) {
