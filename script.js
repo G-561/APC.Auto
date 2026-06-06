@@ -16301,7 +16301,7 @@ function renderDashListings(tab, btn, ctx) {
     } else {
         const sellerName = getCurrentSellerName();
         const realSold = userListings
-            .filter(l => l.status === 'sold' && l.seller === sellerName)
+            .filter(l => l.status === 'sold')
             .map(l => ({ id: l.id, title: l.title, price: l.price, buyer: null, date: l.soldDate, img: (l.images && l.images[0]) || 'images/placeholder.png', isReal: true }));
         const mockSold = dashMockData.closedSales.map(s => ({ ...s, isReal: false }));
         let items = [...realSold, ...mockSold];
