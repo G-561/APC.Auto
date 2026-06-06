@@ -5961,18 +5961,19 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
 
     // Seller rating in header
     _detailRatings = [];
-    const detailRatingEl = document.getElementById('detailSellerRating');
-    if (detailRatingEl) detailRatingEl.style.display = 'none';
+    const detailRatingEl    = document.getElementById('detailSellerRating');
+    const detailRatingColEl = document.getElementById('detailSellerRatingCol');
+    if (detailRatingEl)    detailRatingEl.style.display    = 'none';
+    if (detailRatingColEl) detailRatingColEl.style.display = 'none';
     if (part.sellerId && sb) {
         sb.from('seller_ratings').select('stars, note, created_at, rater_id').eq('seller_id', part.sellerId).order('created_at', { ascending: false }).limit(100)
           .then(({ data }) => {
               if (!data?.length) return;
               _detailRatings = data;
-              const avg = data.reduce((s, r) => s + (r.stars || 0), 0) / data.length;
-              if (detailRatingEl) {
-                  detailRatingEl.textContent = `★ ${avg.toFixed(1)}`;
-                  detailRatingEl.style.display = '';
-              }
+              const avg   = data.reduce((s, r) => s + (r.stars || 0), 0) / data.length;
+              const label = `★ ${avg.toFixed(1)} (${data.length})`;
+              if (detailRatingEl)    { detailRatingEl.textContent    = label; detailRatingEl.style.display    = ''; }
+              if (detailRatingColEl) { detailRatingColEl.textContent = label; detailRatingColEl.style.display = ''; }
           });
     }
 
