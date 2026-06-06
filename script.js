@@ -10865,7 +10865,7 @@ function buildSponsoredWorkshopCardHTML(workshop) {
             <div class="workshop-card-specialty">${workshop.specialty}</div>
             <div class="workshop-card-footer">
                 ${stars}
-                <button class="workshop-card-button" onclick="openWorkshopDetail(${JSON.stringify(workshop.id)})">View →</button>
+                <button class="workshop-card-button" onclick="openWorkshopDetail('${escapeHtml(workshop.id)}')">View →</button>
             </div>
         </div>
     `;
