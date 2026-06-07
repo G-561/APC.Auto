@@ -5273,7 +5273,7 @@ function openEditListing(listingId) {
     if (detailEl) detailEl.classList.remove('active');
 
     const sellOverlayEl = document.getElementById('sellOverlay');
-    if (sellOverlayEl) sellOverlayEl.style.zIndex = '3200';
+    if (sellOverlayEl) sellOverlayEl.style.zIndex = '3800'; // above VSC (3500) and detailOverlay (3700)
     toggleDrawer('sellOverlay', true);
 }
 
@@ -17256,8 +17256,8 @@ function _vscBuildPartRows(parts) {
     return parts.map(p => {
         const sc = { active:'vsc-part-active', pending:'vsc-part-pending', sold:'vsc-part-sold' }[p.status] || '';
         const sl = { active:'Active', pending:'Pending', sold:'Sold' }[p.status] || (p.status || 'Active');
-        return `<tr class="vsc-part-row">
-            <td class="vsc-part-name">${escapeHtml(p.title)}&nbsp;<a href="javascript:void(0)" onclick="_vscViewPart('${p.id}')" class="vsc-view-link" title="View listing">↗</a></td>
+        return `<tr class="vsc-part-row" onclick="_vscViewPart('${p.id}')">
+            <td class="vsc-part-name">${escapeHtml(p.title)}&nbsp;<span class="vsc-view-link">↗</span></td>
             <td class="vsc-part-sn">${escapeHtml(p.stock_number || '—')}</td>
             <td class="vsc-part-price">${fmt(p.price)}</td>
             <td><span class="vsc-status-chip ${sc} vsc-status-tap" onclick="_vscStatusPicker(event,${p.id},'${p.status||'active'}')">${sl} ▾</span></td>
