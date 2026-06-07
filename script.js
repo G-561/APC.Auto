@@ -14580,8 +14580,9 @@ async function openVehicleStockCard(jobId) {
     const profit    = cost != null ? soldRev - cost : null;
 
     const photos = (job.vehicle_photos || []).slice(0, 6);
+    _vscPhotos = photos;
     const photoStrip = photos.length
-        ? `<div class="vsc-photos">${photos.map(u => `<img class="vsc-photo" src="${escapeHtml(u)}" alt="" onclick="window.open('${escapeHtml(u)}','_blank')">`).join('')}</div>`
+        ? `<div class="vsc-photos">${photos.map((u, i) => `<img class="vsc-photo" src="${escapeHtml(u)}" alt="" onclick="_vscOpenPhoto(${i})" style="cursor:zoom-in;">`).join('')}</div>`
         : '';
 
     const fmtMoney = (n) => n != null ? `$${Number(n).toLocaleString('en-AU')}` : '—';
@@ -17243,9 +17244,11 @@ function _showOnboardingReminder() {
 
 function _updateObMakesBtn() {} // stub — kept so _updateMakesSummary call is harmless
 
-// --- VSC: search + status change + close-before-view ---
+// --- VSC: search + status change + photo lightbox ---
 let _vscCurrentJobId = null;
 let _vscAllParts     = [];
+let _vscPhotos       = [];
+let _vscPhotoIdx     = 0;
 
 function _vscBuildPartRows(parts) {
     const fmt = n => n != null ? `$${Number(n).toLocaleString('en-AU')}` : '—';
@@ -17274,6 +17277,35 @@ function _vscFilterParts(q) {
 
 function _vscViewPart(partId) {
     openItemDetail(partId); // detail (z-index 3700) opens on top of VSC (z-index 3500)
+}
+
+function _vscOpenPhoto(idx) {
+    _vscPhotoIdx = idx;
+    document.getElementById('vscPhotoLightbox')?.remove();
+    const total = _vscPhotos.length;
+    const url   = _vscPhotos[idx];
+    if (!url) return;
+    const lb = document.createElement('div');
+    lb.id = 'vscPhotoLightbox';
+    lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:4500;display:flex;align-items:center;justify-content:center;';
+    lb.onclick = e => { if (e.target === lb) lb.remove(); };
+    lb.innerHTML = `
+        <button onclick="document.getElementById('vscPhotoLightbox')?.remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:rgba(255,255,255,0.7);font-size:28px;cursor:pointer;line-height:1;padding:8px;z-index:1;">✕</button>
+        ${total > 1 ? `<div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;pointer-events:none;">${idx+1} / ${total}</div>` : ''}
+        <img id="vscLbImg" src="${escapeHtml(url)}" alt="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;display:block;">
+        ${total > 1 ? `
+            <button onclick="event.stopPropagation();_vscPhotoNav(-1)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:30px;cursor:pointer;padding:10px 16px;border-radius:8px;line-height:1;min-height:44px;">&#8249;</button>
+            <button onclick="event.stopPropagation();_vscPhotoNav(1)"  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:30px;cursor:pointer;padding:10px 16px;border-radius:8px;line-height:1;min-height:44px;">&#8250;</button>
+        ` : ''}`;
+    document.body.appendChild(lb);
+}
+
+function _vscPhotoNav(dir) {
+    _vscPhotoIdx = (_vscPhotoIdx + dir + _vscPhotos.length) % _vscPhotos.length;
+    const img = document.getElementById('vscLbImg');
+    if (img) img.src = _vscPhotos[_vscPhotoIdx];
+    const counter = document.querySelector('#vscPhotoLightbox div');
+    if (counter && counter.style.pointerEvents === 'none') counter.textContent = `${_vscPhotoIdx + 1} / ${_vscPhotos.length}`;
 }
 
 function _vscStatusPicker(e, partId, currentStatus) {
