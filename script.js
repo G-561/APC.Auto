@@ -1632,19 +1632,31 @@ async function loadPublicListingsFromSupabase(append = false) {
         }
         if (!rows || rows.length < 20) _listingsExhausted = true;
 
-        // Batch-fetch current display names, profile pics, and visibility status
+        // Batch-fetch current display names, profile pics, visibility status, and seller ratings
         const sellerIds = [...new Set((rows || []).map(r => r.seller_id).filter(Boolean))];
         let nameMap = {};
         if (sellerIds.length) {
-            const { data: profiles } = await sb.from('profiles')
-                .select('id, display_name, avatar_url, is_public')
-                .in('id', sellerIds);
+            const [{ data: profiles }, { data: ratings }] = await Promise.all([
+                sb.from('profiles').select('id, display_name, avatar_url, is_public').in('id', sellerIds),
+                sb.from('seller_ratings').select('seller_id, stars').in('seller_id', sellerIds),
+            ]);
             (profiles || []).forEach(p => {
                 if (p.display_name) nameMap[p.id] = p.display_name;
                 if (p.avatar_url)   _sellerPicCache[p.id] = p.avatar_url;
                 if (p.is_public === false) _hiddenSellerIds.add(p.id);
                 else _hiddenSellerIds.delete(p.id);
             });
+            if (ratings?.length) {
+                const grouped = {};
+                ratings.forEach(r => {
+                    if (!grouped[r.seller_id]) grouped[r.seller_id] = [];
+                    grouped[r.seller_id].push(r.stars);
+                });
+                Object.entries(grouped).forEach(([sid, stars]) => {
+                    const avg = stars.reduce((a, b) => a + b, 0) / stars.length;
+                    _sellerRatingCache[sid] = { avg: Math.round(avg * 10) / 10, count: stars.length };
+                });
+            }
         }
 
         let newCount = 0;
@@ -4006,6 +4018,11 @@ function buildCardHTML(part, eager = false) {
         ? `<div class="item-fits">${escapeHtml(fit.make)} ${escapeHtml(fit.model)}${fit.variant ? ' ' + escapeHtml(fit.variant) : ''}${part.year ? ' · ' + part.year : ''}</div>`
         : '';
 
+    const rating = _sellerRatingCache[part.sellerId];
+    const ratingHTML = rating
+        ? `<div class="item-rating">★ ${rating.avg} <span class="item-rating-count">(${rating.count})</span></div>`
+        : '';
+
     return `
         <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
@@ -4018,6 +4035,7 @@ function buildCardHTML(part, eager = false) {
                 <div class="item-title">${escapeHtml(part.title)}</div>
                 ${fitsLine}
                 <div class="item-loc">${locationHTML}</div>
+                ${ratingHTML}
             </div>
             ${savedDot}
         </div>`;
@@ -7980,7 +7998,8 @@ let savedPartsTab = 'active';        // 'active' | 'ended' | 'stores'
 const SAVED_STORES_KEY = 'apc.savedStores.v1';
 let savedStores = loadSavedStores(); // Array<{ sellerName, businessName, isPro, savedAt }>
 let currentStorefrontSeller = null;  // tracks whose storefront is open
-let _sellerPicCache = {};            // sellerId → profile_pic URL
+let _sellerPicCache    = {};          // sellerId → profile_pic URL
+let _sellerRatingCache = {};         // sellerId → { avg, count }
 let _hiddenSellerIds = new Set();   // sellers with is_public = false
 let pendingGeneralEnquiry  = null;  // { seller, isPro } — set when contacting from storefront
 

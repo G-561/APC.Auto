@@ -1671,6 +1671,8 @@ header {
     color: #888;
     font-weight: 700;
 }
+.item-rating { font-size: 10px; font-weight: 700; color: #f07020; margin-top: 3px; }
+.item-rating-count { color: #aaa; font-weight: 500; }
 .item-fits {
     font-size: 9px;
     font-weight: 700;
