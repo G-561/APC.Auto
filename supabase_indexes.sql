@@ -21,58 +21,58 @@ CREATE POLICY "insert only" ON error_logs FOR INSERT TO anon, authenticated WITH
 
 -- ── listings ──────────────────────────────────────────────────────────────
 -- Seller dashboard + realtime + search filters
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listings_seller_status
+CREATE INDEX IF NOT EXISTS idx_listings_seller_status
     ON listings (seller_id, status);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listings_status_created
+CREATE INDEX IF NOT EXISTS idx_listings_status_created
     ON listings (status, created_at DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listings_category_status
+CREATE INDEX IF NOT EXISTS idx_listings_category_status
     ON listings (category, status);
 
 -- ── listing_vehicles ──────────────────────────────────────────────────────
 -- Vehicle-fit filter queries (most common search pattern)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lv_make_model
+CREATE INDEX IF NOT EXISTS idx_lv_make_model
     ON listing_vehicles (make, model);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lv_listing_id
+CREATE INDEX IF NOT EXISTS idx_lv_listing_id
     ON listing_vehicles (listing_id);
 
 -- ── listing_images ────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_li_listing_position
+CREATE INDEX IF NOT EXISTS idx_li_listing_position
     ON listing_images (listing_id, position);
 
 -- ── conversations ─────────────────────────────────────────────────────────
 -- Inbox load + realtime fan-out
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conv_buyer
+CREATE INDEX IF NOT EXISTS idx_conv_buyer
     ON conversations (buyer_id, last_message_at DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conv_seller
+CREATE INDEX IF NOT EXISTS idx_conv_seller
     ON conversations (seller_id, last_message_at DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_conv_listing
+CREATE INDEX IF NOT EXISTS idx_conv_listing
     ON conversations (listing_id);
 
 -- ── messages ──────────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_msg_conv_created
+CREATE INDEX IF NOT EXISTS idx_msg_conv_created
     ON messages (conversation_id, created_at ASC);
 
 -- ── notifications ─────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notif_user
+CREATE INDEX IF NOT EXISTS idx_notif_user
     ON notifications (user_id, created_at DESC);
 
 -- ── saved_listings ────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_saved_user
+CREATE INDEX IF NOT EXISTS idx_saved_user
     ON saved_listings (user_id);
 
 -- ── seller_ratings ────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ratings_seller
+CREATE INDEX IF NOT EXISTS idx_ratings_seller
     ON seller_ratings (seller_id);
 
 -- ── wanted_parts ──────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_wanted_user_created
+CREATE INDEX IF NOT EXISTS idx_wanted_user_created
     ON wanted_parts (user_id, created_at DESC);
 
 -- ── dismantling_jobs ──────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_djobs_user_status
+CREATE INDEX IF NOT EXISTS idx_djobs_user_status
     ON dismantling_jobs (user_id, status);
