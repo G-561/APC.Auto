@@ -10939,8 +10939,8 @@ async function openWorkshopDetail(workshopId) {
     const serviceChips = (w.serviceKeys || [])
         .map(s => `<span class="wsd-chip">${escapeHtml(SERVICE_LABELS[s] || s)}</span>`).join('');
     const vehicleChips = (w.vehicleTypes || []).map(v => `<span class="wsd-chip">${escapeHtml(v)}</span>`).join('');
-    const wId   = JSON.stringify(w.id);
-    const wName = JSON.stringify(w.name || '');
+    const wId   = `'${escapeHtml(w.id)}'`;
+    const wName = `'${escapeHtml(w.name || '')}'`;
     content.innerHTML = `
         <div class="wsd-hero">
             <div class="wsd-name">${escapeHtml(w.name || '')}</div>
