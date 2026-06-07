@@ -10890,13 +10890,13 @@ function renderWorkshopBrowseView() {
             if (isNaN(dist) || dist > workshopRadiusKm) return false;
         }
         if (query) {
-            const haystack = [w.name, w.loc, ...w.vehicleTypes, ...w.services].join(' ').toLowerCase();
+            const haystack = [w.name, w.loc, ...w.vehicleTypes, ...(w.serviceKeys || [])].join(' ').toLowerCase();
             if (!haystack.includes(query)) return false;
         }
         if (!anyFilter) return true;
-        if (activeKeys.length && activeKeys.some(k => w.services.includes(k))) return true;
-        if (filterParts    && w.services.some(x => x === 'parts' || x === 'partsSupplier')) return true;
-        if (filterWrecking && w.services.includes('wrecking')) return true;
+        if (activeKeys.length && activeKeys.some(k => (w.serviceKeys || []).includes(k))) return true;
+        if (filterParts    && (w.serviceKeys || []).some(x => x === 'parts' || x === 'partsSupplier')) return true;
+        if (filterWrecking && (w.serviceKeys || []).includes('wrecking')) return true;
         return false;
     });
 
