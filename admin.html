@@ -167,6 +167,26 @@
         .gift-tag { display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#fff8ec;color:#F7941D;border:1px solid #fde8c5; }
         .action-btns { display:flex;gap:6px;flex-wrap:wrap; }
 
+        /* ── Listing preview modal ── */
+        #listingModalBackdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:900;align-items:center;justify-content:center; }
+        #listingModalBackdrop.open { display:flex; }
+        #listingModal { background:#fff;border-radius:16px;width:92%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);position:relative; }
+        .lm-close { position:absolute;top:14px;right:16px;background:rgba(0,0,0,0.08);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;line-height:32px;text-align:center;cursor:pointer;color:#555;z-index:2; }
+        .lm-close:hover { background:rgba(0,0,0,0.15); }
+        .lm-img { width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:16px 16px 0 0;display:block;background:#f4f4f4; }
+        .lm-img-placeholder { width:100%;aspect-ratio:4/3;background:#f0f0f0;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px; }
+        .lm-body { padding:20px; }
+        .lm-price { font-size:22px;font-weight:900;color:#f07020;margin-bottom:6px; }
+        .lm-title { font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:10px;line-height:1.3; }
+        .lm-badges { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px; }
+        .lm-badge { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 9px;border-radius:10px;background:#f4f4f4;color:#555; }
+        .lm-row { display:flex;gap:8px;font-size:13px;color:#555;margin-bottom:6px;align-items:flex-start; }
+        .lm-row strong { color:#333;min-width:70px;flex-shrink:0; }
+        .lm-divider { border:none;border-top:1px solid #eee;margin:14px 0; }
+        .lm-footer { display:flex;justify-content:space-between;align-items:center;margin-top:16px; }
+        .lm-site-link { font-size:13px;color:#f07020;text-decoration:none;font-weight:600; }
+        .lm-site-link:hover { text-decoration:underline; }
+
         /* ── Error Log ── */
         .err-msg { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: 12px; color: #c0392b; }
         .err-src { font-size: 11px; color: #888; font-family: monospace; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -177,6 +197,14 @@
     </style>
 </head>
 <body>
+
+<!-- LISTING PREVIEW MODAL -->
+<div id="listingModalBackdrop" onclick="closeListingModal(event)">
+    <div id="listingModal">
+        <button class="lm-close" onclick="closeListingModal()">×</button>
+        <div id="listingModalContent"></div>
+    </div>
+</div>
 
 <!-- AUTH OVERLAY -->
 <div id="authOverlay">
@@ -666,7 +694,7 @@ async function loadReports() {
             <td class="td-muted">${esc(r.note || '—')}</td>
             <td class="td-muted">${fmtDate(r.created_at)}</td>
             <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                ${r.listing_id ? `<a href="https://autopartsconnection.com.au/?listing=${r.listing_id}" target="_blank" rel="noopener" class="dismiss-btn" style="color:#f07020;border-color:#f07020;text-decoration:none;">View ↗</a>` : ''}
+                ${r.listing_id ? `<button class="dismiss-btn" style="color:#f07020;border-color:#f07020;" onclick="viewListing(${r.listing_id})">View</button>` : ''}
                 ${r.listing_id ? `<button class="dismiss-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeReportedListing(${r.listing_id},${r.id})">Remove</button>` : ''}
                 ${sellerId ? `<button class="dismiss-btn" style="color:#ef4444;border-color:#ef4444;" onclick="blockUser('${sellerId}',${r.listing_id || 'null'},${r.id})">Block User</button>` : ''}
                 <button class="dismiss-btn" onclick="dismissReport(${r.id})">Dismiss</button>
@@ -790,6 +818,64 @@ async function clearAllErrors() {
     setVal('metricErrorUsers', '0');
     const badge = document.getElementById('errBadge');
     if (badge) badge.style.display = 'none';
+}
+
+// ── LISTING PREVIEW MODAL ────────────────────────────────────────────────────
+
+async function viewListing(id) {
+    const backdrop = document.getElementById('listingModalBackdrop');
+    const content  = document.getElementById('listingModalContent');
+    content.innerHTML = '<div style="padding:40px;text-align:center;color:#aaa;">Loading…</div>';
+    backdrop.classList.add('open');
+
+    const { data: l, error } = await sb.from('listings')
+        .select('id, title, price, condition, category, description, status, location, seller_id, created_at, listing_images(storage_path, position), listing_vehicles(make, model, series)')
+        .eq('id', id).single();
+
+    if (error || !l) {
+        content.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;">Failed to load listing.</div>';
+        return;
+    }
+
+    const { data: seller } = await sb.from('profiles')
+        .select('display_name, tier, is_pro, location').eq('id', l.seller_id).single();
+
+    const imgs = (l.listing_images || []).sort((a,b) => a.position - b.position);
+    const imgUrl = imgs[0]?.storage_path;
+
+    const vehicles = (l.listing_vehicles || []).map(v => [v.make, v.model, v.series].filter(Boolean).join(' ')).join(', ');
+    const sellerTier = seller?.tier || (seller?.is_pro ? 'pro' : 'personal');
+    const tierLabel = sellerTier === 'pro' ? '· <span style="color:#f07020;font-weight:700;">Pro</span>' : sellerTier === 'trade' ? '· <span style="color:#22c55e;font-weight:700;">Trade</span>' : '';
+    const statusStyle = l.status !== 'active' ? 'background:#fef3c7;color:#92400e;' : 'background:#dcfce7;color:#166534;';
+
+    content.innerHTML = `
+        ${imgUrl
+            ? `<img class="lm-img" src="${esc(imgUrl)}" alt="${esc(l.title)}" loading="lazy">`
+            : `<div class="lm-img-placeholder">No image</div>`}
+        <div class="lm-body">
+            <div class="lm-price">${l.price != null ? '$' + Number(l.price).toLocaleString('en-AU') : 'POA'}</div>
+            <div class="lm-title">${esc(l.title)}</div>
+            <div class="lm-badges">
+                ${l.condition ? `<span class="lm-badge">${esc(l.condition)}</span>` : ''}
+                ${l.category  ? `<span class="lm-badge">${esc(l.category)}</span>`  : ''}
+                <span class="lm-badge" style="${statusStyle}">${esc(l.status || 'unknown')}</span>
+            </div>
+            ${vehicles ? `<div class="lm-row"><strong>Fits</strong>${esc(vehicles)}</div>` : ''}
+            ${l.description ? `<div class="lm-row"><strong>Desc</strong>${esc(l.description)}</div>` : ''}
+            <hr class="lm-divider">
+            <div class="lm-row"><strong>Seller</strong>${esc(seller?.display_name || '—')} ${tierLabel}</div>
+            <div class="lm-row"><strong>Location</strong>${esc(l.location || seller?.location || '—')}</div>
+            <div class="lm-row"><strong>Listed</strong>${fmtDate(l.created_at)}</div>
+            <div class="lm-footer">
+                <span style="font-size:11px;color:#aaa;">ID #${l.id}</span>
+                <a href="https://autopartsconnection.com.au/?listing=${l.id}" target="_blank" rel="noopener" class="lm-site-link">View on site ↗</a>
+            </div>
+        </div>`;
+}
+
+function closeListingModal(e) {
+    if (e && e.target !== document.getElementById('listingModalBackdrop')) return;
+    document.getElementById('listingModalBackdrop').classList.remove('open');
 }
 
 // ── USER MANAGEMENT ──────────────────────────────────────────────────────────
