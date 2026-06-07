@@ -182,13 +182,15 @@
         #listingModal { background:#fff;border-radius:16px;width:92%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);position:relative; }
         .lm-close { position:absolute;top:14px;right:16px;background:rgba(0,0,0,0.08);border:none;border-radius:50%;width:32px;height:32px;font-size:18px;line-height:32px;text-align:center;cursor:pointer;color:#555;z-index:2; }
         .lm-close:hover { background:rgba(0,0,0,0.15); }
-        .lm-img-strip { display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:16px 16px 0 0;background:#f0f0f0;scrollbar-width:none; }
+        .lm-carousel { position:relative;border-radius:16px 16px 0 0;overflow:hidden;background:#f0f0f0; }
+        .lm-img-strip { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none; }
         .lm-img-strip::-webkit-scrollbar { display:none; }
-        .lm-img-strip img { flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:start;border-radius:0; }
-        .lm-img-strip img:first-child { border-radius:16px 0 0 0; }
-        .lm-img-strip img:last-child { border-radius:0 16px 0 0; }
-        .lm-img-strip.single img { border-radius:16px 16px 0 0; }
-        .lm-img-count { font-size:11px;color:#888;text-align:right;padding:4px 12px 0; }
+        .lm-img-strip img { flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:start; }
+        .lm-img-count { font-size:11px;color:#888;text-align:center;padding:5px 0 2px; }
+        .lm-arrow { position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;color:#fff;width:36px;height:36px;border-radius:50%;font-size:18px;line-height:36px;text-align:center;cursor:pointer;z-index:2;transition:background 0.15s; }
+        .lm-arrow:hover { background:rgba(0,0,0,0.7); }
+        .lm-arrow.prev { left:10px; }
+        .lm-arrow.next { right:10px; }
         .lm-img-placeholder { width:100%;aspect-ratio:4/3;background:#f0f0f0;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:13px; }
         .lm-body { padding:20px; }
         .lm-price { font-size:22px;font-weight:900;color:#f07020;margin-bottom:6px; }
@@ -887,7 +889,7 @@ async function viewListing(id) {
     const tierLabel = sellerTier === 'pro' ? '· <span style="color:#f07020;font-weight:700;">Pro</span>' : sellerTier === 'trade' ? '· <span style="color:#22c55e;font-weight:700;">Trade</span>' : '';
     const statusStyle = l.status !== 'active' ? 'background:#fef3c7;color:#92400e;' : 'background:#dcfce7;color:#166534;';
     const imgStrip = imgs.length
-        ? `<div class="lm-img-strip${imgs.length === 1 ? ' single' : ''}">${imgs.map(img => `<img src="${esc(img.storage_path)}" alt="${esc(l.title)}" loading="lazy">`).join('')}</div>${imgs.length > 1 ? `<div class="lm-img-count">${imgs.length} photos — scroll to view all</div>` : ''}`
+        ? `<div class="lm-carousel">${imgs.length > 1 ? `<button class="lm-arrow prev" onclick="lmScroll(-1)">&#8249;</button><button class="lm-arrow next" onclick="lmScroll(1)">&#8250;</button>` : ''}<div class="lm-img-strip" id="lmStrip">${imgs.map(img => `<img src="${esc(img.storage_path)}" alt="${esc(l.title)}" loading="lazy">`).join('')}</div></div>${imgs.length > 1 ? `<div class="lm-img-count" id="lmCount">1 / ${imgs.length}</div>` : ''}`
         : `<div class="lm-img-placeholder">No images</div>`;
 
     content.innerHTML = `
@@ -911,6 +913,17 @@ async function viewListing(id) {
                 <a href="https://autopartsconnection.com.au/?item=${l.id}" target="_blank" rel="noopener" class="lm-site-link">View on site ↗</a>
             </div>
         </div>`;
+}
+
+function lmScroll(dir) {
+    const strip = document.getElementById('lmStrip');
+    if (!strip) return;
+    strip.scrollBy({ left: dir * strip.clientWidth, behavior: 'smooth' });
+    setTimeout(() => {
+        const idx = Math.round(strip.scrollLeft / strip.clientWidth);
+        const count = document.getElementById('lmCount');
+        if (count) count.textContent = `${idx + 1} / ${strip.children.length}`;
+    }, 320);
 }
 
 function closeListingModal(e) {
