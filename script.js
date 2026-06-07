@@ -17039,7 +17039,7 @@ function whStartCamera() {
             _whCameraStream = stream;
             video.srcObject = stream;
             video.play();
-            video.addEventListener('loadedmetadata', () => {
+            video.addEventListener('canplay', () => {
                 _whScanState = 'scan_part';
                 whSetStatus('Point camera at a part label');
                 whScanLoop();
@@ -17058,17 +17058,36 @@ function whScanLoop() {
     if (!_whCameraStream || _whScanState === 'idle' || _whScanState === 'saved') return;
     const video  = document.getElementById('whCameraVideo');
     const canvas = document.getElementById('whCameraCanvas');
-    if (!video || !canvas || video.readyState < 2) { _whRafId = requestAnimationFrame(whScanLoop); return; }
+    if (!video || !canvas || video.readyState < 2 || !video.videoWidth) { _whRafId = requestAnimationFrame(whScanLoop); return; }
     canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
     if (code?.data) {
         whHandleQR(code.data);
     } else {
         _whRafId = requestAnimationFrame(whScanLoop);
+    }
+}
+
+function whCaptureNow() {
+    if (!_whCameraStream || _whScanState === 'idle' || _whScanState === 'saved') return;
+    const video  = document.getElementById('whCameraVideo');
+    const canvas = document.getElementById('whCameraCanvas');
+    if (!video || !canvas || !video.videoWidth) { whSetStatus('Camera not ready — try again'); return; }
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+    if (code?.data) {
+        cancelAnimationFrame(_whRafId);
+        whHandleQR(code.data);
+    } else {
+        whSetStatus('No QR code found — hold steady and try again');
     }
 }
 
