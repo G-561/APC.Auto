@@ -1812,8 +1812,13 @@ header {
 #detailOverlay.vsc-modal .detail-drag-handle-bar { display: none !important; }
 /* Show the circular floating close button in this mode */
 #detailOverlay.vsc-modal .detail-float-close { display: flex !important; }
-/* Hide footer strips — pro user just needs the listing info */
-#detailOverlay.vsc-modal #dynamicDetailFooter { display: none !important; }
+/* Hide sections not needed in pro stock reference view */
+#detailOverlay.vsc-modal #dynamicDetailFooter     { display: none !important; }
+#detailOverlay.vsc-modal .detail-sell-yours-block { display: none !important; }
+#detailOverlay.vsc-modal #sellYoursMobile         { display: none !important; }
+#detailOverlay.vsc-modal #detailWorkshopSection   { display: none !important; }
+/* Breathing room so right-column content doesn't clip at card edge */
+#detailOverlay.vsc-modal .detail-info-col         { padding-right: 20px !important; }
 #detailOverlay.vsc-modal #detailScrollArea {
     width: 100% !important; max-width: none !important;
     height: calc(100% - 62px) !important; max-height: none !important;
