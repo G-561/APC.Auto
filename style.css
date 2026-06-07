@@ -7902,6 +7902,10 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .vsc-part-active { background: #e0f2fe; color: #0369a1; }
 .vsc-part-pending { background: #fef9c3; color: #92400e; }
 .vsc-part-sold { background: #dcfce7; color: #15803d; }
+.vsc-status-tap { cursor: pointer; -webkit-tap-highlight-color: rgba(0,0,0,0.06); }
+.vsc-status-tap:active { opacity: 0.75; }
+.vsc-view-link { color: #f07020; text-decoration: none; font-size: 11px; font-weight: 700; opacity: 0.65; margin-left: 2px; }
+.vsc-view-link:hover { opacity: 1; }
 
 /* EDW step 1 price field */
 .edw-price-wrap { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white; }

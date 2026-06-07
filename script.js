@@ -14570,6 +14570,8 @@ async function openVehicleStockCard(jobId) {
     if (titleEl) titleEl.innerHTML = `${escapeHtml(vehicleLabel) || 'Stock Card'} <span class="vsc-status-chip ${st.cls}" style="font-size:11px;vertical-align:middle;margin-left:8px;">${st.label}</span>${job.shell_scrapped ? '<span class="vsc-scrapped-badge">Shell Scrapped</span>' : ''}`;
 
     const allParts  = parts || [];
+    _vscCurrentJobId = jobId;
+    _vscAllParts     = allParts;
     const active    = allParts.filter(p => p.status === 'active' || p.status === 'pending');
     const sold      = allParts.filter(p => p.status === 'sold');
     const cost      = job.vehicle_cost ? Number(job.vehicle_cost) : null;
@@ -14595,16 +14597,7 @@ async function openVehicleStockCard(jobId) {
         ['Build Date', job.build_date], ['Stock Number', job.stock_number],
     ].filter(([, v]) => v);
 
-    const partsRows = allParts.length ? allParts.map(p => {
-        const statusCls = { active:'vsc-part-active', pending:'vsc-part-pending', sold:'vsc-part-sold' }[p.status] || '';
-        const statusLabel = { active:'Active', pending:'Pending', sold:'Sold' }[p.status] || p.status;
-        return `<tr class="vsc-part-row" onclick="openItemDetail('${p.id}')">
-            <td class="vsc-part-name">${escapeHtml(p.title)}</td>
-            <td class="vsc-part-sn">${escapeHtml(p.stock_number || '—')}</td>
-            <td class="vsc-part-price">${fmtMoney(p.price)}</td>
-            <td><span class="vsc-status-chip ${statusCls}">${statusLabel}</span></td>
-        </tr>`;
-    }).join('') : `<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;">No parts listed yet — open in EDW to start dismantling.</td></tr>`;
+    const partsRows = _vscBuildPartRows(allParts);
 
     body.innerHTML = `
         ${photoStrip}
@@ -14644,9 +14637,13 @@ async function openVehicleStockCard(jobId) {
                     <span class="vsc-status-chip vsc-part-sold">${sold.length} sold</span>
                 </span>
             </div>
+            <input id="vscPartsSearch" type="text" placeholder="Search parts, stock number…"
+                oninput="_vscFilterParts(this.value)"
+                style="width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px;box-sizing:border-box;"
+                onfocus="this.style.borderColor='#f07020'" onblur="this.style.borderColor='#e0e0e0'">
             <table class="vsc-parts-table">
                 <thead><tr><th>Part</th><th>Stock No.</th><th>Price</th><th>Status</th></tr></thead>
-                <tbody>${partsRows}</tbody>
+                <tbody id="vscPartsBody">${partsRows}</tbody>
             </table>
         </div>`;
 }
@@ -17245,6 +17242,74 @@ function _showOnboardingReminder() {
 }
 
 function _updateObMakesBtn() {} // stub — kept so _updateMakesSummary call is harmless
+
+// --- VSC: search + status change + close-before-view ---
+let _vscCurrentJobId = null;
+let _vscAllParts     = [];
+
+function _vscBuildPartRows(parts) {
+    const fmt = n => n != null ? `$${Number(n).toLocaleString('en-AU')}` : '—';
+    if (!parts.length) return `<tr><td colspan="4" style="padding:20px;text-align:center;color:#aaa;">No parts listed yet — open in EDW to start dismantling.</td></tr>`;
+    return parts.map(p => {
+        const sc = { active:'vsc-part-active', pending:'vsc-part-pending', sold:'vsc-part-sold' }[p.status] || '';
+        const sl = { active:'Active', pending:'Pending', sold:'Sold' }[p.status] || (p.status || 'Active');
+        return `<tr class="vsc-part-row">
+            <td class="vsc-part-name">${escapeHtml(p.title)}&nbsp;<a href="javascript:void(0)" onclick="_vscViewPart('${p.id}')" class="vsc-view-link" title="View listing">↗</a></td>
+            <td class="vsc-part-sn">${escapeHtml(p.stock_number || '—')}</td>
+            <td class="vsc-part-price">${fmt(p.price)}</td>
+            <td><span class="vsc-status-chip ${sc} vsc-status-tap" onclick="_vscStatusPicker(event,${p.id},'${p.status||'active'}')">${sl} ▾</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function _vscFilterParts(q) {
+    const lq = (q || '').toLowerCase();
+    const filtered = lq ? _vscAllParts.filter(p =>
+        (p.title||'').toLowerCase().includes(lq) ||
+        (p.stock_number||'').toLowerCase().includes(lq)
+    ) : _vscAllParts;
+    const tbody = document.getElementById('vscPartsBody');
+    if (tbody) tbody.innerHTML = _vscBuildPartRows(filtered);
+}
+
+function _vscViewPart(partId) {
+    const ov = document.getElementById('vehicleStockCardOverlay');
+    if (ov) { ov.style.display = 'none'; document.body.style.overflow = ''; }
+    openItemDetail(partId);
+}
+
+function _vscStatusPicker(e, partId, currentStatus) {
+    e.stopPropagation();
+    document.getElementById('vscStatusMenu')?.remove();
+    const menu = document.createElement('div');
+    menu.id = 'vscStatusMenu';
+    const x = Math.min(e.clientX, window.innerWidth - 150);
+    const y = Math.min(e.clientY + 8, window.innerHeight - 130);
+    menu.style.cssText = `position:fixed;top:${y}px;left:${Math.max(10,x)}px;background:#fff;border:1px solid #eee;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:4100;min-width:130px;padding:6px 0;`;
+    ['active','pending','sold'].forEach(s => {
+        const opt = document.createElement('div');
+        opt.textContent = s === 'active' ? '● Active' : s === 'pending' ? '⏳ Pending' : '✓ Sold';
+        opt.style.cssText = `padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;color:${s===currentStatus?'#f07020':'#333'};`;
+        opt.onmouseenter = () => opt.style.background = '#f9f9f9';
+        opt.onmouseleave = () => opt.style.background = '';
+        opt.onclick = () => { menu.remove(); _vscChangeStatus(partId, s); };
+        menu.appendChild(opt);
+    });
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function h() { menu.remove(); document.removeEventListener('click', h); }), 10);
+}
+
+async function _vscChangeStatus(partId, status) {
+    const { error } = await sb.from('listings').update({ status }).eq('id', partId);
+    if (error) { showToast('Failed to update status'); return; }
+    const part = _vscAllParts.find(p => p.id === partId);
+    if (part) part.status = status;
+    const listing = userListings.find(l => l.supabaseId === partId || l.id === partId);
+    if (listing) { listing.status = status === 'active' ? undefined : status; saveUserListings(); renderMainGrid(); renderMyParts(); }
+    const tbody = document.getElementById('vscPartsBody');
+    if (tbody) tbody.innerHTML = _vscBuildPartRows(_vscAllParts);
+    showToast(status === 'sold' ? 'Marked as sold' : status === 'pending' ? 'Marked as pending' : 'Relisted as active');
+}
 
 // --- LISTING SHARE PROMPT ---
 let _lspUrl = '', _lspTitle = '', _lspText = '';
