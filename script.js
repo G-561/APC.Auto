@@ -12949,16 +12949,14 @@ function _edwPartsTabHtml(parts) {
             p.warehouse_bin ? `Bin: ${escapeHtml(p.warehouse_bin)}` : null,
             p.condition ? escapeHtml(p.condition) : null,
         ].filter(Boolean).join(' · ');
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f4f4f4;gap:10px;">
+        return `<div onclick="_edwPartStatusPicker(event,${p.id},'${s}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f4f4f4;gap:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(240,112,32,0.08);">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:13px;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.title||'Untitled')}</div>
                 ${meta ? `<div style="font-size:11px;color:#aaa;margin-top:2px;">${meta}</div>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                 <span style="font-size:13px;font-weight:700;color:#f07020;">${p.price != null ? '$'+Number(p.price).toLocaleString('en-AU') : '—'}</span>
-                <div style="position:relative;">
-                    <button onclick="_edwPartStatusPicker(event,${p.id},'${s}')" style="padding:4px 10px;border:1.5px solid ${statusColor(s)};color:${statusColor(s)};background:#fff;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">● ${statusLabel(s)} ▾</button>
-                </div>
+                <span style="padding:4px 10px;border:1.5px solid ${statusColor(s)};color:${statusColor(s)};border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;">● ${statusLabel(s)} ▾</span>
             </div>
         </div>`;
     }).join('') : `<div style="padding:24px;text-align:center;color:#aaa;font-size:13px;">${q ? 'No parts match your search' : 'No parts published yet for this vehicle'}</div>`;
@@ -12976,8 +12974,9 @@ function _edwPartStatusPicker(e, listingId, currentStatus) {
     document.getElementById('edwPartStatusMenu')?.remove();
     const menu = document.createElement('div');
     menu.id = 'edwPartStatusMenu';
-    const rect = e.currentTarget.getBoundingClientRect();
-    menu.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;background:#fff;border:1px solid #eee;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:9999;min-width:130px;padding:6px 0;`;
+    const x = Math.min(e.clientX, window.innerWidth - 150);
+    const y = Math.min(e.clientY + 8, window.innerHeight - 130);
+    menu.style.cssText = `position:fixed;top:${y}px;left:${Math.max(10,x)}px;background:#fff;border:1px solid #eee;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:9999;min-width:130px;padding:6px 0;`;
     ['active','pending','sold'].forEach(s => {
         const opt = document.createElement('div');
         opt.textContent = s === 'active' ? '● Active' : s === 'pending' ? '⏳ Pending' : '✓ Sold';
@@ -13016,14 +13015,14 @@ function _edwPartsRowsHtml(parts) {
     return filtered.map(p => {
         const s = p.status || 'active';
         const meta = [p.stock_number?`#${escapeHtml(p.stock_number)}`:null, p.warehouse_bin?`Bin: ${escapeHtml(p.warehouse_bin)}`:null, p.condition?escapeHtml(p.condition):null].filter(Boolean).join(' · ');
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f4f4f4;gap:10px;">
+        return `<div onclick="_edwPartStatusPicker(event,${p.id},'${s}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f4f4f4;gap:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(240,112,32,0.08);">
             <div style="flex:1;min-width:0;">
                 <div style="font-size:13px;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.title||'Untitled')}</div>
                 ${meta?`<div style="font-size:11px;color:#aaa;margin-top:2px;">${meta}</div>`:''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                 <span style="font-size:13px;font-weight:700;color:#f07020;">${p.price!=null?'$'+Number(p.price).toLocaleString('en-AU'):'—'}</span>
-                <button onclick="_edwPartStatusPicker(event,${p.id},'${s}')" style="padding:4px 10px;border:1.5px solid ${statusColor(s)};color:${statusColor(s)};background:#fff;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">● ${statusLabel(s)} ▾</button>
+                <span style="padding:4px 10px;border:1.5px solid ${statusColor(s)};color:${statusColor(s)};border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;">● ${statusLabel(s)} ▾</span>
             </div>
         </div>`;
     }).join('');
