@@ -14579,6 +14579,7 @@ async function openVehicleStockCard(jobId) {
 
     const allParts  = parts || [];
     _vscCurrentJobId = jobId;
+    _vscCurrentJob   = job;
     _vscAllParts     = allParts;
     const active    = allParts.filter(p => p.status === 'active' || p.status === 'pending');
     const sold      = allParts.filter(p => p.status === 'sold');
@@ -14611,9 +14612,12 @@ async function openVehicleStockCard(jobId) {
     body.innerHTML = `
         ${photoStrip}
         <div class="vsc-grid">
-            <div class="vsc-card">
-                <div class="vsc-section-title">Vehicle Details</div>
-                <dl class="vsc-dl">
+            <div class="vsc-card" id="vscVehicleCard">
+                <div class="vsc-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    Vehicle Details
+                    <button onclick="_vscEditVehicle()" style="background:none;border:1.5px solid #f07020;color:#f07020;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Edit</button>
+                </div>
+                <dl class="vsc-dl" id="vscVehicleDl">
                     ${details.map(([k, v]) => `<div class="vsc-dl-row"><dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd></div>`).join('')}
                 </dl>
             </div>
@@ -17301,9 +17305,95 @@ function _updateObMakesBtn() {} // stub — kept so _updateMakesSummary call is 
 
 // --- VSC: search + status change + photo lightbox ---
 let _vscCurrentJobId = null;
+let _vscCurrentJob   = null;
 let _vscAllParts     = [];
 let _vscPhotos       = [];
 let _vscPhotoIdx     = 0;
+
+function _vscEditVehicle() {
+    const card = document.getElementById('vscVehicleCard');
+    if (!card || !_vscCurrentJob) return;
+    const j = _vscCurrentJob;
+    const f = (key, label, val, type = 'text') =>
+        `<div style="margin-bottom:10px;">
+            <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#aaa;margin-bottom:3px;">${label}</label>
+            <input id="vscEd_${key}" type="${type}" value="${escapeHtml(String(val || ''))}"
+                style="width:100%;padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;"
+                onfocus="this.style.borderColor='#f07020'" onblur="this.style.borderColor='#e0e0e0'">
+        </div>`;
+    card.innerHTML = `
+        <div class="vsc-section-title">Edit Vehicle Details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 12px;">
+            ${f('year','Year',j.year,'number')}
+            ${f('make','Make',j.make)}
+            ${f('model','Model',j.model)}
+            ${f('series','Series / Variant',j.series)}
+            ${f('stock_number','Stock #',j.stock_number)}
+            ${f('vin','VIN / Chassis',j.vin)}
+            ${f('colour','Colour',j.colour)}
+            ${f('odometer','Odometer (km)',j.odometer,'number')}
+            ${f('body_type','Body Type',j.body_type)}
+            ${f('engine_code','Engine Code',j.engine_code)}
+            ${f('variant','Engine / Variant',j.variant)}
+            ${f('transmission_type','Transmission',j.transmission_type)}
+            ${f('transmission_code','Trans Code',j.transmission_code)}
+            ${f('paint_code','Paint Code',j.paint_code)}
+            ${f('build_date','Build Date',j.build_date)}
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+            <button onclick="_vscCancelEditVehicle()" style="flex:1;padding:11px;border:1.5px solid #ddd;color:#888;background:#fff;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>
+            <button onclick="_vscSaveVehicle()" style="flex:2;padding:11px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;">Save Changes</button>
+        </div>`;
+}
+
+function _vscCancelEditVehicle() {
+    // Re-render the details view from cached job
+    const card = document.getElementById('vscVehicleCard');
+    if (!card || !_vscCurrentJob) return;
+    const j = _vscCurrentJob;
+    const details = [
+        ['Make', j.make], ['Model', j.model], ['Year', j.year],
+        ['Series', j.series], ['Body Type', j.body_type],
+        ['Colour', j.colour], ['Odometer', j.odometer ? `${Number(j.odometer).toLocaleString()} km` : null],
+        ['Engine Code', j.engine_code], ['Transmission', j.transmission_type || j.transmission_code],
+        ['VIN / Chassis', j.vin], ['Paint Code', j.paint_code],
+        ['Build Date', j.build_date], ['Stock Number', j.stock_number],
+    ].filter(([, v]) => v);
+    card.innerHTML = `
+        <div class="vsc-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+            Vehicle Details
+            <button onclick="_vscEditVehicle()" style="background:none;border:1.5px solid #f07020;color:#f07020;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">Edit</button>
+        </div>
+        <dl class="vsc-dl" id="vscVehicleDl">
+            ${details.map(([k, v]) => `<div class="vsc-dl-row"><dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd></div>`).join('')}
+        </dl>`;
+}
+
+async function _vscSaveVehicle() {
+    if (!_vscCurrentJob || !_vscCurrentJobId) return;
+    const get = key => document.getElementById(`vscEd_${key}`)?.value.trim() || null;
+    const updates = {
+        year: get('year') ? Number(get('year')) : null,
+        make: get('make'), model: get('model'), series: get('series'),
+        stock_number: get('stock_number'), vin: get('vin'), colour: get('colour'),
+        odometer: get('odometer') ? Number(get('odometer')) : null,
+        body_type: get('body_type'), engine_code: get('engine_code'), variant: get('variant'),
+        transmission_type: get('transmission_type'), transmission_code: get('transmission_code'),
+        paint_code: get('paint_code'), build_date: get('build_date'),
+    };
+    const saveBtn = document.querySelector('#vscVehicleCard button[onclick="_vscSaveVehicle()"]');
+    if (saveBtn) saveBtn.textContent = 'Saving…';
+    const { error } = await sb.from('dismantling_jobs').update(updates).eq('id', _vscCurrentJobId);
+    if (error) { showToast('Save failed: ' + error.message); if (saveBtn) saveBtn.textContent = 'Save Changes'; return; }
+    Object.assign(_vscCurrentJob, updates);
+    // Also sync the stub in the EDW stock list so the card title updates
+    if (typeof _edwStock !== 'undefined') {
+        const stub = _edwStock.find(j => j.id === _vscCurrentJobId);
+        if (stub) Object.assign(stub, updates);
+    }
+    showToast('Vehicle details saved');
+    _vscCancelEditVehicle(); // returns to read view
+}
 
 function _vscBuildPartRows(parts) {
     const fmt = n => n != null ? `$${Number(n).toLocaleString('en-AU')}` : '—';
