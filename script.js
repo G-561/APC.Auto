@@ -17438,14 +17438,18 @@ function _vscOpenPhoto(idx) {
     lb.id = 'vscPhotoLightbox';
     lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:4500;display:flex;align-items:center;justify-content:center;';
     lb.onclick = e => { if (e.target === lb) lb.remove(); };
+    // All controls are inside a wrapper sized to the image — so arrows/close sit ON the image
     lb.innerHTML = `
-        <button onclick="document.getElementById('vscPhotoLightbox')?.remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:rgba(255,255,255,0.7);font-size:28px;cursor:pointer;line-height:1;padding:8px;z-index:1;">✕</button>
-        ${total > 1 ? `<div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;pointer-events:none;">${idx+1} / ${total}</div>` : ''}
-        <img id="vscLbImg" src="${escapeHtml(url)}" alt="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;display:block;">
-        ${total > 1 ? `
-            <button onclick="event.stopPropagation();_vscPhotoNav(-1)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:30px;cursor:pointer;padding:10px 16px;border-radius:8px;line-height:1;min-height:44px;">&#8249;</button>
-            <button onclick="event.stopPropagation();_vscPhotoNav(1)"  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:30px;cursor:pointer;padding:10px 16px;border-radius:8px;line-height:1;min-height:44px;">&#8250;</button>
-        ` : ''}`;
+        <div style="position:relative;max-width:92vw;max-height:88vh;line-height:0;">
+            <img id="vscLbImg" src="${escapeHtml(url)}" alt="" style="max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;display:block;">
+            <button onclick="document.getElementById('vscPhotoLightbox')?.remove()"
+                style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:22px;font-weight:300;cursor:pointer;line-height:1;padding:0;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;">✕</button>
+            ${total > 1 ? `<div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.4);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;pointer-events:none;">${idx+1} / ${total}</div>` : ''}
+            ${total > 1 ? `
+                <button onclick="event.stopPropagation();_vscPhotoNav(-1)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:28px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;">&#8249;</button>
+                <button onclick="event.stopPropagation();_vscPhotoNav(1)"  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.45);border:none;color:#fff;font-size:28px;cursor:pointer;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;">&#8250;</button>
+            ` : ''}
+        </div>`;
     document.body.appendChild(lb);
 }
 
