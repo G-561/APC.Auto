@@ -16887,12 +16887,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // WAREHOUSE — Label Generator + Put-Away Scanner
 // ================================================================
 
-let _whCameraStream   = null;
-let _whScanState      = 'idle'; // idle | scan_part | scan_rack | saved
-let _whScannedPart    = null;   // { id, title, meta, thumb }
-let _whScannedRack    = null;   // location string
-let _whLabelCodes     = [];     // codes staged for printing
-let _whRafId          = null;
+let _whCameraStream     = null;
+let _whScanState        = 'idle'; // idle | scan_part | scan_rack | saved
+let _whScannedPart      = null;
+let _whScannedRack      = null;
+let _whLabelCodes       = [];
+let _whRafId            = null;
+let _whBarcodeDetector  = null;
 
 function openWarehouseDrawer() {
     if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
@@ -17030,9 +17031,9 @@ function whPrintLabels() {
 function whStartCamera() {
     const video = document.getElementById('whCameraVideo');
     if (!video) return;
-    if (!navigator.mediaDevices?.getUserMedia) {
-        whSetStatus('Camera not supported on this device');
-        return;
+    if (!navigator.mediaDevices?.getUserMedia) { whSetStatus('Camera not supported on this device'); return; }
+    if ('BarcodeDetector' in window && !_whBarcodeDetector) {
+        try { _whBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] }); } catch(e) {}
     }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } } })
         .then(stream => {
@@ -17049,34 +17050,56 @@ function whStartCamera() {
 }
 
 function whStopCamera() {
-    if (_whRafId)          { cancelAnimationFrame(_whRafId); _whRafId = null; }
-    if (_whCameraStream)   { _whCameraStream.getTracks().forEach(t => t.stop()); _whCameraStream = null; }
+    if (_whRafId) { clearTimeout(_whRafId); _whRafId = null; }
+    if (_whCameraStream) { _whCameraStream.getTracks().forEach(t => t.stop()); _whCameraStream = null; }
     _whScanState = 'idle';
 }
 
-function whScanLoop() {
+async function whScanLoop() {
     if (!_whCameraStream || _whScanState === 'idle' || _whScanState === 'saved') return;
-    const video  = document.getElementById('whCameraVideo');
-    const canvas = document.getElementById('whCameraCanvas');
-    if (!video || !canvas || video.readyState < 2 || !video.videoWidth) { _whRafId = requestAnimationFrame(whScanLoop); return; }
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
-    if (code?.data) {
-        whHandleQR(code.data);
-    } else {
-        _whRafId = requestAnimationFrame(whScanLoop);
+    const video = document.getElementById('whCameraVideo');
+    if (!video || video.readyState < 2 || !video.videoWidth) { _whRafId = setTimeout(whScanLoop, 200); return; }
+
+    // Native BarcodeDetector (Chrome/Android — hardware accelerated)
+    if (_whBarcodeDetector) {
+        try {
+            const results = await _whBarcodeDetector.detect(video);
+            if (results.length) { whHandleQR(results[0].rawValue); return; }
+        } catch(e) {}
     }
+
+    // jsQR fallback
+    const canvas = document.getElementById('whCameraCanvas');
+    if (canvas) {
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
+        if (code?.data) { whHandleQR(code.data); return; }
+    }
+
+    _whRafId = setTimeout(whScanLoop, 250);
 }
 
-function whCaptureNow() {
+async function whCaptureNow() {
     if (!_whCameraStream || _whScanState === 'idle' || _whScanState === 'saved') return;
-    const video  = document.getElementById('whCameraVideo');
+    const video = document.getElementById('whCameraVideo');
+    if (!video || !video.videoWidth) { whSetStatus('Camera not ready — try again'); return; }
+
+    if (_whBarcodeDetector) {
+        try {
+            const results = await _whBarcodeDetector.detect(video);
+            if (results.length) {
+                clearTimeout(_whRafId); _whRafId = null;
+                whHandleQR(results[0].rawValue); return;
+            }
+        } catch(e) {}
+    }
+
     const canvas = document.getElementById('whCameraCanvas');
-    if (!video || !canvas || !video.videoWidth) { whSetStatus('Camera not ready — try again'); return; }
+    if (!canvas) return;
     canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
@@ -17084,7 +17107,7 @@ function whCaptureNow() {
     const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
     if (code?.data) {
-        cancelAnimationFrame(_whRafId);
+        clearTimeout(_whRafId); _whRafId = null;
         whHandleQR(code.data);
     } else {
         whSetStatus('No QR code found — hold steady and try again');
@@ -17144,12 +17167,14 @@ function whShowPartCard() {
 }
 
 function whShowRackCard() {
-    const card    = document.getElementById('whRackCard');
-    const codeEl  = document.getElementById('whRackCode');
-    const saveBtn = document.getElementById('whSaveBtn');
-    if (codeEl)  codeEl.textContent  = _whScannedRack;
-    if (card)    card.style.display  = 'flex';
-    if (saveBtn) saveBtn.style.display = '';
+    const card       = document.getElementById('whRackCard');
+    const codeEl     = document.getElementById('whRackCode');
+    const saveBtn    = document.getElementById('whSaveBtn');
+    const captureBtn = document.getElementById('whCaptureBtn');
+    if (codeEl)      codeEl.textContent       = _whScannedRack;
+    if (card)        card.style.display       = 'flex';
+    if (saveBtn)     saveBtn.style.display    = '';
+    if (captureBtn)  captureBtn.style.display = 'none';
 }
 
 async function whSaveLocation() {
@@ -17175,16 +17200,18 @@ function whResetScan() {
     _whScannedPart = null;
     _whScannedRack = null;
     _whScanState   = 'scan_part';
-    const partCard  = document.getElementById('whPartCard');
-    const rackCard  = document.getElementById('whRackCard');
-    const saveBtn   = document.getElementById('whSaveBtn');
-    const resetBtn  = document.getElementById('whResetBtn');
-    const hint      = document.getElementById('whScanHint');
-    if (partCard)  { partCard.style.display  = 'none'; }
-    if (rackCard)  { rackCard.style.display  = 'none'; }
-    if (saveBtn)   { saveBtn.style.display   = 'none'; saveBtn.textContent = 'Save Location'; }
-    if (resetBtn)  { resetBtn.style.display  = 'none'; }
-    if (hint)      { hint.style.display      = ''; }
+    const partCard   = document.getElementById('whPartCard');
+    const rackCard   = document.getElementById('whRackCard');
+    const saveBtn    = document.getElementById('whSaveBtn');
+    const resetBtn   = document.getElementById('whResetBtn');
+    const hint       = document.getElementById('whScanHint');
+    const captureBtn = document.getElementById('whCaptureBtn');
+    if (partCard)   { partCard.style.display   = 'none'; }
+    if (rackCard)   { rackCard.style.display   = 'none'; }
+    if (saveBtn)    { saveBtn.style.display    = 'none'; saveBtn.textContent = 'Save Location'; }
+    if (resetBtn)   { resetBtn.style.display   = 'none'; }
+    if (hint)       { hint.style.display       = ''; }
+    if (captureBtn) { captureBtn.style.display = ''; }
     whSetStatus('Point camera at a part label');
     whScanLoop();
 }
