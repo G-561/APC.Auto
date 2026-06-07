@@ -11807,12 +11807,18 @@ function _pauseEdw() {
     document.body.style.overflow = '';
 }
 
+function _pauseWarehouse() {
+    const drawer = document.getElementById('warehouseDrawer');
+    if (drawer) drawer.classList.remove('active');
+}
+
 function _edwHasActiveSession() {
     return _edwStep > 0 || !!_edwJobId;
 }
 
 function proShowView(viewId, navId) {
     _pauseEdw();
+    _pauseWarehouse();
     ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -11827,6 +11833,7 @@ function proShowView(viewId, navId) {
 
 function proHideAllViews() {
     _pauseEdw();
+    _pauseWarehouse();
     ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
@@ -12292,6 +12299,7 @@ function proOpenStockLookup() {
 }
 
 function proOpenEDW() {
+    _pauseWarehouse();
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById('proNavEDW')?.classList.add('pro-hdr-active');
     if (_edwHasActiveSession()) {
@@ -16888,6 +16896,7 @@ let _whRafId          = null;
 
 function openWarehouseDrawer() {
     if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
+    _pauseEdw();
     toggleDrawer('warehouseDrawer', true);
     whSetTab('labels');
     whRenderWorkerQR();
