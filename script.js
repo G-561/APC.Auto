@@ -5610,10 +5610,13 @@ async function submitSellListing() {
         if (sellSuccess) sellSuccess.style.display = 'none';
         closeSellOverlay();
         if (submitBtn) submitBtn.disabled = false;
-        // After close: offer to notify buyers whose wanted requests match (Pro new listings only)
-        if (isNewListing && currentUserTier === 'pro' && syncTarget?.supabaseId) {
-            const matches = findWantedMatches(syncTarget);
-            if (matches.length) setTimeout(() => showNotifyBuyersModal(matches, syncTarget), 350);
+        if (isNewListing && syncTarget) {
+            let showShare = true;
+            if (currentUserTier === 'pro' && syncTarget.supabaseId) {
+                const matches = findWantedMatches(syncTarget);
+                if (matches.length) { setTimeout(() => showNotifyBuyersModal(matches, syncTarget), 350); showShare = false; }
+            }
+            if (showShare) setTimeout(() => _showListingSharePrompt(syncTarget), 400);
         }
         _fromWantedId = null;
     }, 1500);
@@ -6564,10 +6567,11 @@ function shareCurrentListing(btn) {
     const part = findPartAnywhere(currentOpenPartId);
     if (!part) return;
     const text = `${part.title} — $${part.price} | Auto Parts Connection`;
+    const shareUrl = `${location.origin}${location.pathname}?item=${part.supabaseId || part.id}`;
     if (navigator.share) {
-        navigator.share({ title: part.title, text, url: window.location.href }).catch(() => {});
+        navigator.share({ title: part.title, text, url: shareUrl }).catch(() => {});
     } else {
-        navigator.clipboard?.writeText(text)
+        navigator.clipboard?.writeText(shareUrl)
             .then(() => showToast('Link copied!'))
             .catch(() => showToast('Share not available on this browser'));
     }
@@ -7497,6 +7501,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             } else {
                                 _showOnboardingReminder();
                             }
+                        } else {
+                            // Personal tier returning user — nudge profile completion if still incomplete
+                            const ageMs = profile.created_at ? Date.now() - new Date(profile.created_at).getTime() : Infinity;
+                            if (ageMs > 2 * 60 * 1000) setTimeout(_showPersonalProfileReminder, 2000);
                         }
                     } else {
                         // Profile row missing — trigger may have failed at sign-up; create it now
@@ -9896,6 +9904,7 @@ function closeWelcomeModal() {
     document.getElementById('welcomeBackdrop').style.display = 'none';
     document.getElementById('welcomeModal').style.display    = 'none';
     localStorage.setItem('apcWelcomeSeen', '1');
+    if (!currentUserTier || currentUserTier === 'personal') setTimeout(_showPersonalProfileReminder, 600);
 }
 
 
@@ -17237,3 +17246,98 @@ function _showOnboardingReminder() {
 }
 
 function _updateObMakesBtn() {} // stub — kept so _updateMakesSummary call is harmless
+
+// --- LISTING SHARE PROMPT ---
+let _lspUrl = '', _lspTitle = '', _lspText = '';
+
+function _showListingSharePrompt(listing) {
+    const id = listing.supabaseId || listing.id;
+    if (!id) return;
+    _lspUrl   = `${location.origin}${location.pathname}?item=${id}`;
+    _lspTitle = listing.title || 'Part listing';
+    _lspText  = `${listing.title} — $${listing.price} | Auto Parts Connection`;
+
+    document.getElementById('listingSharePrompt')?.remove();
+    const el = document.createElement('div');
+    el.id = 'listingSharePrompt';
+    el.className = 'lsp-wrap';
+    const hasNative = !!navigator.share;
+    el.innerHTML = `
+        <div class="lsp-backdrop" onclick="document.getElementById('listingSharePrompt')?.remove()"></div>
+        <div class="lsp-sheet">
+            <div class="lsp-handle"></div>
+            <div class="lsp-heading">Your listing is live!</div>
+            <div class="lsp-sub">Share it to reach more buyers</div>
+            <div class="lsp-grid${hasNative ? ' has-native' : ''}">
+                ${hasNative ? '<button class="lsp-btn lsp-native" onclick="_lspNativeShare()">Share via&hellip;</button>' : ''}
+                <button class="lsp-btn lsp-fb" onclick="_lspFacebook()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                    Facebook
+                </button>
+                <button class="lsp-btn lsp-wa" onclick="_lspWhatsApp()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    WhatsApp
+                </button>
+                <button class="lsp-btn lsp-x" onclick="_lspX()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L2.013 2.25H8.08l4.256 5.647 5.908-5.647zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    Post on X
+                </button>
+                <button class="lsp-btn lsp-copy" onclick="_lspCopyLink()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy Link
+                </button>
+            </div>
+            <button class="lsp-dismiss" onclick="document.getElementById('listingSharePrompt')?.remove()">No thanks</button>
+        </div>`;
+    document.body.appendChild(el);
+    // Slide up animation
+    const sheet = el.querySelector('.lsp-sheet');
+    sheet.style.transform = 'translateY(100%)';
+    requestAnimationFrame(() => {
+        sheet.style.transition = 'transform 0.28s cubic-bezier(0.22,1,0.36,1)';
+        sheet.style.transform  = '';
+    });
+}
+
+function _lspNativeShare() {
+    navigator.share({ title: _lspTitle, text: _lspText, url: _lspUrl }).catch(() => {});
+}
+function _lspFacebook() {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(_lspUrl)}`, '_blank', 'noopener,width=600,height=500');
+}
+function _lspWhatsApp() {
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(_lspText + ' ' + _lspUrl)}`, '_blank', 'noopener');
+}
+function _lspX() {
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(_lspText)}&url=${encodeURIComponent(_lspUrl)}`, '_blank', 'noopener,width=600,height=400');
+}
+function _lspCopyLink() {
+    if (!navigator.clipboard) { showToast('Cannot copy on this browser'); return; }
+    navigator.clipboard.writeText(_lspUrl)
+        .then(() => showToast('Link copied!'))
+        .catch(() => showToast('Cannot copy on this browser'));
+}
+
+// --- PERSONAL PROFILE COMPLETENESS REMINDER ---
+function _showPersonalProfileReminder() {
+    if (!currentUserId) return;
+    if (userSettings.profilePic && userSettings.about?.trim()) return;
+    const key   = `apc.profRemind.${currentUserId}`;
+    const count = parseInt(localStorage.getItem(key) || '0', 10);
+    if (count >= 2) return;
+    localStorage.setItem(key, String(count + 1));
+    if (document.getElementById('personalProfileReminder')) return;
+    const banner = document.createElement('div');
+    banner.id = 'personalProfileReminder';
+    banner.className = 'ppr-banner';
+    banner.innerHTML = `
+        <div class="ppr-inner">
+            <div class="ppr-text">
+                <strong>Complete your profile</strong>
+                <span>Add a photo and bio so buyers know who they're dealing with.</span>
+            </div>
+            <button class="ppr-cta" onclick="onMenuOpenSettings(); document.getElementById('personalProfileReminder')?.remove();">Update profile</button>
+            <button class="ppr-close" onclick="document.getElementById('personalProfileReminder')?.remove();" aria-label="Dismiss">&times;</button>
+        </div>`;
+    document.body.appendChild(banner);
+}
