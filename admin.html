@@ -167,6 +167,15 @@
         .gift-tag { display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:#fff8ec;color:#F7941D;border:1px solid #fde8c5; }
         .action-btns { display:flex;gap:6px;flex-wrap:wrap; }
 
+        /* ── Ban reminder banner ── */
+        #banReminder { display:none;position:fixed;top:56px;left:0;right:0;z-index:800;background:#fff3cd;border-bottom:2px solid #f59e0b;padding:12px 20px;display:none;align-items:center;gap:12px;flex-wrap:wrap; }
+        #banReminder.visible { display:flex; }
+        .ban-reminder-text { flex:1;font-size:13px;color:#92400e;font-weight:600;min-width:200px; }
+        .ban-reminder-link { font-size:13px;color:#f07020;font-weight:700;text-decoration:none;white-space:nowrap; }
+        .ban-reminder-link:hover { text-decoration:underline; }
+        .ban-reminder-dismiss { background:none;border:1px solid #f59e0b;color:#92400e;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit; }
+        .ban-reminder-dismiss:hover { background:#f59e0b;color:#fff; }
+
         /* ── Listing preview modal ── */
         #listingModalBackdrop { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:900;align-items:center;justify-content:center; }
         #listingModalBackdrop.open { display:flex; }
@@ -197,6 +206,13 @@
     </style>
 </head>
 <body>
+
+<!-- BAN REMINDER BANNER -->
+<div id="banReminder">
+    <span class="ban-reminder-text">⚠ User blocked in APC — also Ban them in Supabase Auth to prevent re-registration with the same email.</span>
+    <a href="https://supabase.com/dashboard/project/ufpsnjtnvchazqswntch/auth/users" target="_blank" rel="noopener" class="ban-reminder-link">Go to Supabase Auth ↗</a>
+    <button class="ban-reminder-dismiss" onclick="document.getElementById('banReminder').classList.remove('visible')">Dismiss</button>
+</div>
 
 <!-- LISTING PREVIEW MODAL -->
 <div id="listingModalBackdrop" onclick="closeListingModal(event)">
@@ -735,6 +751,7 @@ async function blockUser(userId, listingId, reportId) {
     if (listErr) console.warn('Could not remove listings:', listErr.message);
     await dismissReport(reportId);
     showAdminToast('User blocked and listings removed.');
+    document.getElementById('banReminder').classList.add('visible');
     loadAllMetrics();
 }
 
@@ -990,6 +1007,7 @@ async function blockUserDirect(userId, name) {
     await sb.from('listings').update({ status: 'removed' })
         .eq('seller_id', userId).in('status', ['active', 'pending']);
     showAdminToast('User blocked.');
+    document.getElementById('banReminder').classList.add('visible');
     _refreshUserRow(userId);
 }
 
