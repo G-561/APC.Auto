@@ -1798,48 +1798,44 @@ header {
     #detailOverlay.chat-card .mobile-carousel { display: block !important; }
 }
 
-/* VSC modal: floating card with dark backdrop — opened from Vehicle Stock Card */
+/* VSC panel: right-side panel (same footprint as sellOverlay) over the VSC */
 #detailOverlay.vsc-modal {
-    background: rgba(0,0,0,0.58) !important;
-    align-items: center !important;
+    background: #fff !important;
+    top: 0 !important; right: 0 !important; left: auto !important; bottom: 0 !important;
+    width: 440px !important; height: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: -6px 0 32px rgba(0,0,0,0.22) !important;
+    transform: none !important;
+    align-items: stretch !important;
     justify-content: flex-start !important;
-    padding: 20px 12px 12px !important;
-    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-    width: 100% !important; height: 100% !important;
-    border-radius: 0 !important; box-shadow: none !important; transform: none !important;
+    padding: 0 !important;
 }
 #detailOverlay.vsc-modal .detail-drag-handle-bar { display: none !important; }
 #detailOverlay.vsc-modal .detail-float-close     { display: none !important; }
-#detailOverlay.vsc-modal .drawer-header {
-    width: 100%; max-width: 500px;
-    border-radius: 16px 16px 0 0;
-    overflow: hidden; flex-shrink: 0;
-}
 #detailOverlay.vsc-modal #detailScrollArea {
-    width: 100% !important; max-width: 500px;
-    height: auto !important; max-height: calc(90vh - 96px);
-    border-radius: 0 0 16px 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
-    flex-shrink: 0; overflow-y: auto !important;
+    width: 100% !important; max-width: none !important;
+    height: calc(100% - 62px) !important; max-height: none !important;
+    border-radius: 0 !important; box-shadow: none !important;
+    overflow-y: auto !important; flex-shrink: 1;
 }
-@media (max-width: 899px) {
-    #detailOverlay.vsc-modal .drawer-header { max-width: 100%; border-radius: 16px 16px 0 0; }
-    #detailOverlay.vsc-modal #detailScrollArea { max-width: 100%; }
-}
+/* On desktop override the wide left/right pinning */
 @media (min-width: 900px) {
     #detailOverlay.vsc-modal {
-        top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
-        width: 100% !important;
+        left: auto !important; right: 0 !important; width: 440px !important;
     }
     #detailOverlay.vsc-modal .desktop-detail-images { display: none !important; }
     #detailOverlay.vsc-modal .mobile-carousel       { display: block !important; }
     #detailOverlay.vsc-modal #detailScrollArea {
-        max-width: 520px; display: flex !important;
-        flex-direction: column !important;
-        height: auto !important; max-height: calc(90vh - 96px) !important;
+        display: flex !important; flex-direction: column !important;
+        height: calc(100% - 62px) !important; max-height: none !important;
         overflow-y: auto !important;
     }
-    #detailOverlay.vsc-modal .drawer-header { max-width: 520px; }
+}
+/* Mobile: full-screen (VSC isn't visible on small screens anyway) */
+@media (max-width: 899px) {
+    #detailOverlay.vsc-modal {
+        left: 0 !important; width: 100% !important;
+    }
 }
 
 /* Inbox and chat sit above the detail overlay so Message Seller works from a listing */
