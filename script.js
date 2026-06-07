@@ -6207,7 +6207,7 @@ function closeDetailOverlay() {
     }
     _detailHistory = [];
     const el = document.getElementById('detailOverlay');
-    if (el) { el.classList.remove('active', 'chat-card'); el.style.zIndex = ''; el.style.transform = ''; el.style.opacity = ''; el.style.transition = ''; }
+    if (el) { el.classList.remove('active', 'chat-card', 'vsc-modal'); el.style.zIndex = ''; el.style.transform = ''; el.style.opacity = ''; el.style.transition = ''; }
     syncBackdrop();
     history.pushState(null, '', location.pathname);
 }
@@ -17421,7 +17421,9 @@ function _vscFilterParts(q) {
 }
 
 function _vscViewPart(partId) {
-    openItemDetail(partId); // detail (z-index 3700) opens on top of VSC (z-index 3500)
+    const overlay = document.getElementById('detailOverlay');
+    if (overlay) overlay.classList.add('vsc-modal');
+    openItemDetail(partId);
 }
 
 function _vscOpenPhoto(idx) {
