@@ -10937,9 +10937,9 @@ async function openWorkshopDetail(workshopId) {
     const content = document.getElementById('workshopDetailContent');
     if (!content) return;
     const stars = w.rating ? `★ ${w.rating}` : '';
-    const serviceChips = w.services
+    const serviceChips = (w.serviceKeys || [])
         .map(s => `<span class="wsd-chip">${escapeHtml(SERVICE_LABELS[s] || s)}</span>`).join('');
-    const vehicleChips = w.vehicleTypes.map(v => `<span class="wsd-chip">${escapeHtml(v)}</span>`).join('');
+    const vehicleChips = (w.vehicleTypes || []).map(v => `<span class="wsd-chip">${escapeHtml(v)}</span>`).join('');
     const wId   = JSON.stringify(w.id);
     const wName = JSON.stringify(w.name || '');
     content.innerHTML = `
@@ -10961,7 +10961,7 @@ async function openWorkshopDetail(workshopId) {
             <button class="wsd-contact-btn" onclick="contactWorkshop(${wId}, ${wName}); closeWorkshopDetailDrawer();">Message Workshop</button>
         </div>
     `;
-    toggleDrawer('workshopDetailDrawer', true);
+    openDrawer('workshopDetailDrawer');
 }
 
 const WS_DAYS = ['mon','tue','wed','thu','fri','sat','sun'];
