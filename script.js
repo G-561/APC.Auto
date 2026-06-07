@@ -12820,56 +12820,244 @@ function _edwStockCardHtml(j) {
     `;
 }
 
-async function _edwOpenStockCard(jobId) {
-    const stub = _edwStock.find(j => j.id === jobId);
-    if (!stub) return;
+async function _edwOpenStockCard(jobId, activeTab = 'vehicle') {
+    document.getElementById('edwStockCardOverlay')?.remove();
     const { data: job } = await sb.from('dismantling_jobs').select('*').eq('id', jobId).single();
     if (!job) { showToast('Could not load vehicle'); return; }
+    const { data: parts } = await sb.from('listings')
+        .select('id, title, price, status, stock_number, warehouse_bin, condition')
+        .eq('dismantling_job_id', jobId)
+        .eq('seller_id', currentUserId)
+        .order('title');
+    _edwStockCardData = { job, parts: parts || [] };
+    _edwRenderStockCard(activeTab);
+}
 
-    const existing = document.getElementById('edwStockCardOverlay');
-    if (existing) existing.remove();
+let _edwStockCardData = null;
+let _edwStockCardEditMode = false;
+let _edwPartsFilter = '';
 
+function _edwRenderStockCard(activeTab = 'vehicle') {
+    document.getElementById('edwStockCardOverlay')?.remove();
+    const { job, parts } = _edwStockCardData;
     const label = `${job.year} ${job.make} ${job.model}${job.series ? ' ' + job.series : ''}`;
-    const rows = [
-        ['Stock #',       job.stock_number],
-        ['VIN',           job.vin],
-        ['Colour',        job.colour],
-        ['Odometer',      job.odometer ? `${Number(job.odometer).toLocaleString()} km` : null],
-        ['Body Type',     job.body_type],
-        ['Engine Code',   job.engine_code],
-        ['Engine / Variant', job.variant],
-        ['Transmission',  job.transmission_type],
-        ['Trans Code',    job.transmission_code],
-        ['Paint Code',    job.paint_code],
-        ['Build Date',    job.build_date],
-    ].filter(r => r[1]);
-
     const overlay = document.createElement('div');
     overlay.id = 'edwStockCardOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9900;display:flex;align-items:center;justify-content:center;';
     overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
-    const photosHtml = job.vehicle_photos?.length
-        ? `<div style="display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid #eee;">${job.vehicle_photos.map(url => `<img src="${escapeHtml(url)}" alt="" style="height:80px;width:auto;border-radius:6px;flex-shrink:0;" loading="lazy">`).join('')}</div>`
-        : '';
-    const rowsHtml = rows.map(([k, v]) => `
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #f4f4f4;gap:12px;">
-            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#aaa;flex-shrink:0;">${k}</span>
-            <span style="font-size:13px;color:#333;font-weight:600;text-align:right;">${escapeHtml(String(v))}</span>
-        </div>`).join('');
+
+    const tabBtn = (id, label, active) =>
+        `<button onclick="_edwStockCardTab('${id}')" style="padding:8px 18px;border:none;border-bottom:2px solid ${active?'#f07020':'transparent'};background:none;font-size:13px;font-weight:${active?'700':'500'};color:${active?'#f07020':'#888'};cursor:pointer;font-family:inherit;">${label}${id==='parts'&&parts.length?` <span style="background:#f07020;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;">${parts.length}</span>`:''}</button>`;
+
     overlay.innerHTML = `
-        <div style="background:#fff;border-radius:14px;width:560px;max-width:92vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.25);">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eee;flex-shrink:0;">
+        <div style="background:#fff;border-radius:14px;width:600px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 0;flex-shrink:0;">
                 <span style="font-size:15px;font-weight:800;color:#333;">${escapeHtml(label)}</span>
                 <button onclick="document.getElementById('edwStockCardOverlay')?.remove()" style="background:none;border:none;font-size:20px;color:#aaa;cursor:pointer;padding:4px;line-height:1;">✕</button>
             </div>
-            ${photosHtml}
-            <div style="flex:1;overflow-y:auto;padding:12px 16px;">${rowsHtml}</div>
-            <div style="padding:14px 16px;border-top:1px solid #eee;flex-shrink:0;">
-                <button onclick="_edwStartWalkaround(${jobId})" style="width:100%;padding:14px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;">Select Parts to Dismantle →</button>
+            <div style="display:flex;border-bottom:1px solid #eee;padding:0 18px;flex-shrink:0;">
+                ${tabBtn('vehicle','Vehicle Info', activeTab==='vehicle')}
+                ${tabBtn('parts','Parts', activeTab==='parts')}
             </div>
-        </div>
-    `;
+            <div id="edwStockCardBody" style="flex:1;overflow-y:auto;"></div>
+            <div id="edwStockCardFooter" style="padding:14px 16px;border-top:1px solid #eee;flex-shrink:0;"></div>
+        </div>`;
     document.body.appendChild(overlay);
+    _edwStockCardTab(activeTab);
+}
+
+function _edwStockCardTab(tab) {
+    const { job, parts } = _edwStockCardData;
+    const body   = document.getElementById('edwStockCardBody');
+    const footer = document.getElementById('edwStockCardFooter');
+    if (!body || !footer) return;
+
+    if (tab === 'vehicle') {
+        const photosHtml = job.vehicle_photos?.length
+            ? `<div style="display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid #eee;">${job.vehicle_photos.map(url => `<img src="${escapeHtml(url)}" alt="" style="height:80px;width:auto;border-radius:6px;flex-shrink:0;" loading="lazy">`).join('')}</div>`
+            : '';
+        const fields = [
+            ['stock_number','Stock #',job.stock_number], ['vin','VIN',job.vin],
+            ['colour','Colour',job.colour], ['odometer','Odometer',job.odometer],
+            ['body_type','Body Type',job.body_type], ['engine_code','Engine Code',job.engine_code],
+            ['variant','Engine / Variant',job.variant], ['transmission_type','Transmission',job.transmission_type],
+            ['transmission_code','Trans Code',job.transmission_code], ['paint_code','Paint Code',job.paint_code],
+            ['build_date','Build Date',job.build_date],
+        ];
+        const rowsHtml = fields.filter(([,, v]) => v).map(([key, label, val]) => `
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #f4f4f4;gap:12px;">
+                <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#aaa;flex-shrink:0;">${label}</span>
+                <span style="font-size:13px;color:#333;font-weight:600;text-align:right;">${escapeHtml(String(val))}</span>
+            </div>`).join('');
+        const emptyMsg = fields.every(([,,v]) => !v) ? '<div style="padding:20px;text-align:center;color:#aaa;font-size:13px;">No vehicle details recorded</div>' : '';
+        body.innerHTML = `${photosHtml}<div style="padding:4px 16px 12px;">${rowsHtml}${emptyMsg}</div>`;
+        footer.innerHTML = `
+            <div style="display:flex;gap:10px;">
+                <button onclick="_edwEditVehicle(${job.id})" style="flex:1;padding:12px;border:1.5px solid #f07020;color:#f07020;background:#fff;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">Edit Vehicle</button>
+                <button onclick="_edwStartWalkaround(${job.id})" style="flex:2;padding:12px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;">Select Parts to Dismantle →</button>
+            </div>`;
+    } else {
+        _edwPartsFilter = '';
+        body.innerHTML = _edwPartsTabHtml(parts);
+        footer.innerHTML = `<button onclick="_edwStartWalkaround(${job.id})" style="width:100%;padding:12px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;">Select Parts to Dismantle →</button>`;
+    }
+}
+
+function _edwPartsTabHtml(parts) {
+    const q = _edwPartsFilter.toLowerCase();
+    const filtered = q ? parts.filter(p =>
+        (p.title||'').toLowerCase().includes(q) ||
+        (p.stock_number||'').toLowerCase().includes(q) ||
+        (p.warehouse_bin||'').toLowerCase().includes(q)
+    ) : parts;
+
+    const statusColor = s => s === 'sold' ? '#ef4444' : s === 'pending' ? '#f59e0b' : '#22c55e';
+    const statusLabel = s => s === 'sold' ? 'SOLD' : s === 'pending' ? 'PENDING' : 'ACTIVE';
+
+    const rowsHtml = filtered.length ? filtered.map(p => {
+        const s = p.status || 'active';
+        const meta = [
+            p.stock_number ? `#${escapeHtml(p.stock_number)}` : null,
+            p.warehouse_bin ? `Bin: ${escapeHtml(p.warehouse_bin)}` : null,
+            p.condition ? escapeHtml(p.condition) : null,
+        ].filter(Boolean).join(' · ');
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f4f4f4;gap:10px;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.title||'Untitled')}</div>
+                ${meta ? `<div style="font-size:11px;color:#aaa;margin-top:2px;">${meta}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <span style="font-size:13px;font-weight:700;color:#f07020;">${p.price != null ? '$'+Number(p.price).toLocaleString('en-AU') : '—'}</span>
+                <div style="position:relative;">
+                    <button onclick="_edwPartStatusPicker(event,${p.id},'${s}')" style="padding:4px 10px;border:1.5px solid ${statusColor(s)};color:${statusColor(s)};background:#fff;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">● ${statusLabel(s)} ▾</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('') : `<div style="padding:24px;text-align:center;color:#aaa;font-size:13px;">${q ? 'No parts match your search' : 'No parts published yet for this vehicle'}</div>`;
+
+    return `<div style="padding:10px 16px 4px;">
+        <input id="edwPartsSearch" type="text" placeholder="Search parts, stock #, bin…" value="${escapeHtml(_edwPartsFilter)}"
+            oninput="_edwPartsFilter=this.value;document.getElementById('edwPartsBody').innerHTML=_edwPartsRowsHtml(window._edwStockCardData?.parts||[])"
+            style="width:100%;padding:9px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;">
+        <div id="edwPartsBody">${rowsHtml}</div>
+    </div>`;
+}
+
+function _edwPartStatusPicker(e, listingId, currentStatus) {
+    e.stopPropagation();
+    document.getElementById('edwPartStatusMenu')?.remove();
+    const menu = document.createElement('div');
+    menu.id = 'edwPartStatusMenu';
+    const rect = e.currentTarget.getBoundingClientRect();
+    menu.style.cssText = `position:fixed;top:${rect.bottom+4}px;left:${rect.left}px;background:#fff;border:1px solid #eee;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:9999;min-width:130px;padding:6px 0;`;
+    ['active','pending','sold'].forEach(s => {
+        const opt = document.createElement('div');
+        opt.textContent = s === 'active' ? '● Active' : s === 'pending' ? '⏳ Pending' : '✓ Sold';
+        opt.style.cssText = `padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;color:${s===currentStatus?'#f07020':'#333'};`;
+        opt.onmouseenter = () => opt.style.background = '#f9f9f9';
+        opt.onmouseleave = () => opt.style.background = '';
+        opt.onclick = () => { menu.remove(); _edwChangePartStatus(listingId, s); };
+        menu.appendChild(opt);
+    });
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function h() { menu.remove(); document.removeEventListener('click', h); }), 10);
+}
+
+async function _edwChangePartStatus(listingId, status) {
+    const { error } = await sb.from('listings').update({ status }).eq('id', listingId);
+    if (error) { showToast('Failed to update status'); return; }
+    const part = _edwStockCardData?.parts.find(p => p.id === listingId);
+    if (part) part.status = status;
+    const listing = userListings.find(l => l.supabaseId === listingId || l.id === listingId);
+    if (listing) { listing.status = status === 'active' ? undefined : status; saveUserListings(); renderMainGrid(); renderMyParts(); }
+    const body = document.getElementById('edwPartsBody');
+    if (body) body.innerHTML = _edwPartsRowsHtml(_edwStockCardData.parts);
+    showToast(status === 'sold' ? 'Marked as sold' : status === 'pending' ? 'Marked as pending' : 'Relisted as active');
+}
+
+function _edwPartsRowsHtml(parts) {
+    const q = _edwPartsFilter.toLowerCase();
+    const filtered = q ? parts.filter(p =>
+        (p.title||'').toLowerCase().includes(q) ||
+        (p.stock_number||'').toLowerCase().includes(q) ||
+        (p.warehouse_bin||'').toLowerCase().includes(q)
+    ) : parts;
+    const statusColor = s => s === 'sold' ? '#ef4444' : s === 'pending' ? '#f59e0b' : '#22c55e';
+    const statusLabel = s => s === 'sold' ? 'SOLD' : s === 'pending' ? 'PENDING' : 'ACTIVE';
+    if (!filtered.length) return `<div style="padding:24px;text-align:center;color:#aaa;font-size:13px;">${q ? 'No parts match your search' : 'No parts published yet'}</div>`;
+    return filtered.map(p => {
+        const s = p.status || 'active';
+        const meta = [p.stock_number?`#${escapeHtml(p.stock_number)}`:null, p.warehouse_bin?`Bin: ${escapeHtml(p.warehouse_bin)}`:null, p.condition?escapeHtml(p.condition):null].filter(Boolean).join(' · ');
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f4f4f4;gap:10px;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.title||'Untitled')}</div>
+                ${meta?`<div style="font-size:11px;color:#aaa;margin-top:2px;">${meta}</div>`:''}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <span style="font-size:13px;font-weight:700;color:#f07020;">${p.price!=null?'$'+Number(p.price).toLocaleString('en-AU'):'—'}</span>
+                <button onclick="_edwPartStatusPicker(event,${p.id},'${s}')" style="padding:4px 10px;border:1.5px solid ${statusColor(s)};color:${statusColor(s)};background:#fff;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">● ${statusLabel(s)} ▾</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function _edwEditVehicle(jobId) {
+    const { job } = _edwStockCardData;
+    const body   = document.getElementById('edwStockCardBody');
+    const footer = document.getElementById('edwStockCardFooter');
+    if (!body || !footer) return;
+    const field = (key, label, val, type='text') =>
+        `<div style="margin-bottom:12px;">
+            <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#aaa;margin-bottom:4px;">${label}</label>
+            <input id="edwEdit_${key}" type="${type}" value="${escapeHtml(String(val||''))}" style="width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;" onfocus="this.style.borderColor='#f07020'" onblur="this.style.borderColor='#e0e0e0'">
+        </div>`;
+    body.innerHTML = `<div style="padding:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px;">
+            ${field('year','Year',job.year,'number')}
+            ${field('make','Make',job.make)}
+            ${field('model','Model',job.model)}
+            ${field('series','Series / Variant',job.series)}
+            ${field('stock_number','Stock #',job.stock_number)}
+            ${field('vin','VIN',job.vin)}
+            ${field('colour','Colour',job.colour)}
+            ${field('odometer','Odometer (km)',job.odometer,'number')}
+            ${field('body_type','Body Type',job.body_type)}
+            ${field('engine_code','Engine Code',job.engine_code)}
+            ${field('variant','Engine / Variant',job.variant)}
+            ${field('transmission_type','Transmission',job.transmission_type)}
+            ${field('transmission_code','Trans Code',job.transmission_code)}
+            ${field('paint_code','Paint Code',job.paint_code)}
+            ${field('build_date','Build Date',job.build_date)}
+        </div>
+    </div>`;
+    footer.innerHTML = `
+        <div style="display:flex;gap:10px;">
+            <button onclick="_edwStockCardTab('vehicle')" style="flex:1;padding:12px;border:1.5px solid #ddd;color:#888;background:#fff;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">Cancel</button>
+            <button onclick="_edwSaveVehicle(${jobId})" style="flex:2;padding:12px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;">Save Changes</button>
+        </div>`;
+}
+
+async function _edwSaveVehicle(jobId) {
+    const get = key => document.getElementById(`edwEdit_${key}`)?.value.trim() || null;
+    const updates = {
+        year: get('year') ? Number(get('year')) : null,
+        make: get('make'), model: get('model'), series: get('series'),
+        stock_number: get('stock_number'), vin: get('vin'), colour: get('colour'),
+        odometer: get('odometer') ? Number(get('odometer')) : null,
+        body_type: get('body_type'), engine_code: get('engine_code'), variant: get('variant'),
+        transmission_type: get('transmission_type'), transmission_code: get('transmission_code'),
+        paint_code: get('paint_code'), build_date: get('build_date'),
+    };
+    const { error } = await sb.from('dismantling_jobs').update(updates).eq('id', jobId);
+    if (error) { showToast('Save failed: ' + error.message); return; }
+    Object.assign(_edwStockCardData.job, updates);
+    const stub = _edwStock.find(j => j.id === jobId);
+    if (stub) Object.assign(stub, updates);
+    const label = `${updates.year||''} ${updates.make||''} ${updates.model||''}${updates.series?' '+updates.series:''}`.trim();
+    const titleEl = document.querySelector('#edwStockCardOverlay span[style*="font-size:15px"]');
+    if (titleEl) titleEl.textContent = label;
+    showToast('Vehicle updated');
+    _edwStockCardTab('vehicle');
 }
 
 function _edwStartWalkaround(jobId) {
