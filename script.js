@@ -7420,6 +7420,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(async ({ data: profile, error: profErr }) => {
                     if (profErr && profErr.code !== 'PGRST116') console.warn('Profile fetch:', profErr.message);
                     if (profile) {
+                        if (profile.blocked) {
+                            await sb.auth.signOut();
+                            clearRememberedUser();
+                            setTimeout(() => showToast('Your account has been suspended. Contact support@autopartsconnection.com.au'), 300);
+                            return;
+                        }
                         const name = profile.display_name || metaName;
                         const metaTierMeta = session.user.user_metadata?.tier;
                         let tier = profile.tier || (profile.is_pro ? 'pro' : 'personal');

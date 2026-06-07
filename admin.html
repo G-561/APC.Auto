@@ -379,7 +379,8 @@
 <script>
 const SUPABASE_URL  = 'https://ufpsnjtnvchazqswntch.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcHNuanRudmNoYXpxc3dudGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc5MDAsImV4cCI6MjA5Mzg4MzkwMH0.Wl60CI8rcIo26EnNx1A1Dd7xfZEFOBlAXJDpXA6fyCA';
-const ADMIN_EMAIL   = 'gary561d@gmail.com';
+const ADMIN_EMAIL   = 'admin@autopartsconnection.com.au';
+const ADMIN_UUID    = '7c4f3050-bdf0-4b25-933b-d466722d5988';
 const GA_ID         = 'G-WZ0E96WJRX'; // Replace with your GA4 Measurement ID
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -610,23 +611,28 @@ async function loadReports() {
     if (!tbody) return;
     if (!reports.length) { tbody.innerHTML = '<tr><td colspan="5" class="td-muted">No reports — all clear</td></tr>'; return; }
 
-    // Fetch listing titles for the referenced listing IDs
+    // Fetch listing titles + seller IDs for the referenced listings
     const ids = [...new Set(reports.filter(r => r.listing_id).map(r => r.listing_id))];
-    let titleMap = {};
+    let titleMap = {}, sellerMap = {};
     if (ids.length) {
-        const { data: listings } = await sb.from('listings').select('id, title').in('id', ids);
-        (listings || []).forEach(l => { titleMap[l.id] = l.title; });
+        const { data: listings } = await sb.from('listings').select('id, title, seller_id').in('id', ids);
+        (listings || []).forEach(l => { titleMap[l.id] = l.title; sellerMap[l.id] = l.seller_id; });
     }
 
     tbody.innerHTML = reports.map(r => {
-        const title  = titleMap[r.listing_id] ? esc(titleMap[r.listing_id]) : `<span class="td-muted">Listing #${r.listing_id || '—'}</span>`;
-        const reason = REASON_LABELS[r.reason] || esc(r.reason || '—');
+        const title    = titleMap[r.listing_id] ? esc(titleMap[r.listing_id]) : `<span class="td-muted">Listing #${r.listing_id || '—'}</span>`;
+        const reason   = REASON_LABELS[r.reason] || esc(r.reason || '—');
+        const sellerId = sellerMap[r.listing_id] || '';
         return `<tr id="report-row-${r.id}">
             <td class="td-title" title="${esc(titleMap[r.listing_id] || '')}">${title}</td>
             <td><span class="reason-badge">${reason}</span></td>
             <td class="td-muted">${esc(r.note || '—')}</td>
             <td class="td-muted">${fmtDate(r.created_at)}</td>
-            <td><button class="dismiss-btn" onclick="dismissReport(${r.id})">Dismiss</button></td>
+            <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                ${r.listing_id ? `<button class="dismiss-btn" style="color:#f07020;border-color:#f07020;" onclick="removeReportedListing(${r.listing_id},${r.id})">Remove Listing</button>` : ''}
+                ${sellerId ? `<button class="dismiss-btn" style="color:#ef4444;border-color:#ef4444;" onclick="blockUser('${sellerId}',${r.listing_id || 'null'},${r.id})">Block User</button>` : ''}
+                <button class="dismiss-btn" onclick="dismissReport(${r.id})">Dismiss</button>
+            </td>
         </tr>`;
     }).join('');
 }
@@ -639,6 +645,39 @@ async function dismissReport(id) {
     const remaining = tbody?.querySelectorAll('tr[id^="report-row-"]').length ?? 0;
     setVal('metricReports', fmt(remaining));
     if (!remaining) tbody.innerHTML = '<tr><td colspan="5" class="td-muted">No reports — all clear</td></tr>';
+}
+
+async function removeReportedListing(listingId, reportId) {
+    if (!confirm('Remove this listing? It will be hidden from all buyers immediately.')) return;
+    const { error } = await sb.from('listings').update({ status: 'removed' }).eq('id', listingId);
+    if (error) { alert('Failed to remove listing: ' + error.message); return; }
+    await dismissReport(reportId);
+    showAdminToast('Listing removed.');
+}
+
+async function blockUser(userId, listingId, reportId) {
+    if (!confirm('Block this user?\n\nThis will:\n• Prevent them signing in\n• Hide all their listings\n\nThis cannot be easily undone.')) return;
+    const { error: profErr } = await sb.from('profiles')
+        .update({ blocked: true, blocked_at: new Date().toISOString() })
+        .eq('id', userId);
+    if (profErr) { alert('Failed to block user: ' + profErr.message); return; }
+    // Remove all their listings
+    const { error: listErr } = await sb.from('listings')
+        .update({ status: 'removed' })
+        .eq('seller_id', userId)
+        .in('status', ['active', 'pending']);
+    if (listErr) console.warn('Could not remove listings:', listErr.message);
+    await dismissReport(reportId);
+    showAdminToast('User blocked and listings removed.');
+    loadAllMetrics();
+}
+
+function showAdminToast(msg, isError = false) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:${isError ? '#ef4444' : '#1a1a2e'};color:#fff;padding:11px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
 }
 
 async function loadErrorLogs() {
