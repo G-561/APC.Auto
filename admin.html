@@ -159,6 +159,14 @@
         .dismiss-btn { background: none; border: 1px solid #ddd; color: #888; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; }
         .dismiss-btn:hover { border-color: #ef4444; color: #ef4444; }
         .reason-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #fff3f3; color: #c0392b; }
+
+        /* ── Error Log ── */
+        .err-msg { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: 12px; color: #c0392b; }
+        .err-src { font-size: 11px; color: #888; font-family: monospace; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .err-stack-toggle { background: none; border: 1px solid #e5e5e5; color: #aaa; font-size: 10px; cursor: pointer; padding: 2px 7px; border-radius: 4px; margin-top: 4px; font-family: inherit; }
+        .err-stack-toggle:hover { color: #555; border-color: #bbb; }
+        .err-stack { display: none; font-size: 11px; font-family: monospace; color: #555; white-space: pre-wrap; word-break: break-all; padding: 8px; background: #f9f9f9; border-radius: 6px; margin-top: 6px; max-height: 180px; overflow-y: auto; border: 1px solid #eee; }
+        .err-badge { display: inline-block; background: #ef4444; color: white; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -185,7 +193,7 @@
             <span class="last-updated" id="lastUpdated"></span>
             <a href="/taxonomy-editor.html" target="_blank" class="refresh-btn" style="text-decoration:none;">🗂 Taxonomy</a>
             <button class="refresh-btn" onclick="vdbOpen()">🚗 Vehicle DB</button>
-            <button class="refresh-btn" onclick="loadAllMetrics()">↻ Refresh</button>
+            <button class="refresh-btn" onclick="loadAllMetrics()">↻ Refresh<span id="errBadge" class="err-badge" style="display:none;"></span></button>
             <button class="sign-out-btn" onclick="adminSignOut()">Sign Out</button>
         </div>
     </div>
@@ -280,6 +288,33 @@
                 <table>
                     <thead><tr><th>Listing</th><th>Reason</th><th>Note</th><th>Date</th><th></th></tr></thead>
                     <tbody id="reportsBody"><tr><td colspan="5" class="td-muted">Loading…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ERROR MONITORING -->
+        <div class="section-title">Error Monitoring</div>
+        <div class="cards-grid" style="margin-bottom:14px;">
+            <div class="card card-red">
+                <div class="card-label">JS Errors (24h)</div>
+                <div class="card-value" id="metricErrors24h"><span class="shimmer"></span></div>
+                <div class="card-sub" id="metricErrors7d"></div>
+            </div>
+            <div class="card">
+                <div class="card-label">Users Affected (24h)</div>
+                <div class="card-value" id="metricErrorUsers"><span class="shimmer"></span></div>
+                <div class="card-sub">unique users</div>
+            </div>
+        </div>
+        <div class="panel" style="margin-bottom:28px;">
+            <h3 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                Error Log <span style="font-size:11px;color:#bbb;font-weight:400;margin-left:6px;">(last 50)</span>
+                <button class="dismiss-btn" onclick="clearAllErrors()" style="color:#ef4444;border-color:#efaaaa;">Clear All</button>
+            </h3>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Message</th><th>Source</th><th>Line</th><th>User</th><th>Page</th><th>Date</th><th></th></tr></thead>
+                    <tbody id="errorsBody"><tr><td colspan="7" class="td-muted">Loading…</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -534,6 +569,7 @@ async function loadAllMetrics() {
 
     setVal('lastUpdated', `Updated ${new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`);
     loadReports();
+    loadErrorLogs();
 }
 
 const REASON_LABELS = {
@@ -583,6 +619,80 @@ async function dismissReport(id) {
     const remaining = tbody?.querySelectorAll('tr[id^="report-row-"]').length ?? 0;
     setVal('metricReports', fmt(remaining));
     if (!remaining) tbody.innerHTML = '<tr><td colspan="5" class="td-muted">No reports — all clear</td></tr>';
+}
+
+async function loadErrorLogs() {
+    const now24h = new Date(Date.now() - 86400000).toISOString();
+    const now7d  = new Date(Date.now() - 7 * 86400000).toISOString();
+
+    const [count24h, count7d, recentErrors] = await Promise.all([
+        safeCount('error_logs', [['gte', 'created_at', now24h]]),
+        safeCount('error_logs', [['gte', 'created_at', now7d]]),
+        safeSelect('error_logs', 'id, message, source, line_number, col_number, stack, user_id, page_url, created_at',
+            q => q.order('created_at', { ascending: false }).limit(50)),
+    ]);
+
+    setVal('metricErrors24h', fmt(count24h));
+    setVal('metricErrors7d', `${fmt(count7d)} this week`);
+
+    const uniqueUsers = new Set(recentErrors.filter(e => e.user_id).map(e => e.user_id)).size;
+    setVal('metricErrorUsers', fmt(uniqueUsers));
+
+    const badge = document.getElementById('errBadge');
+    if (badge) { badge.textContent = count24h || ''; badge.style.display = count24h ? 'inline-block' : 'none'; }
+
+    const tbody = document.getElementById('errorsBody');
+    if (!tbody) return;
+    if (!recentErrors.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="td-muted">No errors recorded — all clear</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = recentErrors.map(e => {
+        const shortSrc = (e.source || '').replace(/.*\//, '').slice(0, 50) || '—';
+        const shortPage = (e.page_url || '').replace('https://autopartsconnection.com.au', '').slice(0, 30) || '—';
+        return `<tr id="err-row-${e.id}">
+            <td>
+                <div class="err-msg" title="${esc(e.message || '')}">${esc((e.message || '').slice(0, 100))}</div>
+                ${e.stack ? `<button class="err-stack-toggle" onclick="toggleErrStack(${e.id})">▸ stack</button><div class="err-stack" id="err-stack-${e.id}">${esc(e.stack)}</div>` : ''}
+            </td>
+            <td class="err-src" title="${esc(e.source || '')}">${esc(shortSrc)}</td>
+            <td class="td-muted">${e.line_number ? `${e.line_number}:${e.col_number || 0}` : '—'}</td>
+            <td class="td-muted" style="font-size:11px;" title="${esc(e.user_id || 'anonymous')}">${e.user_id ? e.user_id.slice(0, 8) + '…' : 'anon'}</td>
+            <td class="td-muted" style="font-size:11px;" title="${esc(e.page_url || '')}">${esc(shortPage)}</td>
+            <td class="td-muted">${fmtDate(e.created_at)}</td>
+            <td><button class="dismiss-btn" onclick="dismissError(${e.id})">Dismiss</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function toggleErrStack(id) {
+    const el = document.getElementById(`err-stack-${id}`);
+    const btn = el?.previousElementSibling;
+    if (!el) return;
+    const open = el.style.display !== 'none' && el.style.display !== '';
+    el.style.display = open ? 'none' : 'block';
+    if (btn) btn.textContent = open ? '▸ stack' : '▾ stack';
+}
+
+async function dismissError(id) {
+    await sb.from('error_logs').delete().eq('id', id);
+    document.getElementById(`err-row-${id}`)?.remove();
+    const remaining = document.querySelectorAll('[id^="err-row-"]').length;
+    if (!remaining) setVal('errorsBody', '<tr><td colspan="7" class="td-muted">No errors recorded — all clear</td></tr>');
+    const badge = document.getElementById('errBadge');
+    if (badge) { const n = parseInt(badge.textContent || '0') - 1; badge.textContent = n > 0 ? n : ''; badge.style.display = n > 0 ? 'inline-block' : 'none'; }
+}
+
+async function clearAllErrors() {
+    if (!confirm('Clear all error logs? This cannot be undone.')) return;
+    await sb.from('error_logs').delete().gte('id', 0);
+    setVal('errorsBody', '<tr><td colspan="7" class="td-muted">No errors recorded — all clear</td></tr>');
+    setVal('metricErrors24h', '0');
+    setVal('metricErrors7d', '0 this week');
+    setVal('metricErrorUsers', '0');
+    const badge = document.getElementById('errBadge');
+    if (badge) badge.style.display = 'none';
 }
 
 function renderBarChart(containerId, counts, color) {
