@@ -660,16 +660,14 @@ async function loadReports() {
         const title    = titleMap[r.listing_id] ? esc(titleMap[r.listing_id]) : `<span class="td-muted">Listing #${r.listing_id || '—'}</span>`;
         const reason   = REASON_LABELS[r.reason] || esc(r.reason || '—');
         const sellerId = sellerMap[r.listing_id] || '';
-        const viewLink = r.listing_id
-            ? `<a href="https://autopartsconnection.com.au/?listing=${r.listing_id}" target="_blank" rel="noopener" style="font-size:11px;color:#f07020;margin-left:6px;white-space:nowrap;">View ↗</a>`
-            : '';
         return `<tr id="report-row-${r.id}">
-            <td class="td-title" title="${esc(titleMap[r.listing_id] || '')}">${title}${viewLink}</td>
+            <td class="td-title" title="${esc(titleMap[r.listing_id] || '')}">${title}</td>
             <td><span class="reason-badge">${reason}</span></td>
             <td class="td-muted">${esc(r.note || '—')}</td>
             <td class="td-muted">${fmtDate(r.created_at)}</td>
             <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                ${r.listing_id ? `<button class="dismiss-btn" style="color:#f07020;border-color:#f07020;" onclick="removeReportedListing(${r.listing_id},${r.id})">Remove Listing</button>` : ''}
+                ${r.listing_id ? `<a href="https://autopartsconnection.com.au/?listing=${r.listing_id}" target="_blank" rel="noopener" class="dismiss-btn" style="color:#f07020;border-color:#f07020;text-decoration:none;">View ↗</a>` : ''}
+                ${r.listing_id ? `<button class="dismiss-btn" style="color:#ef4444;border-color:#ef4444;" onclick="removeReportedListing(${r.listing_id},${r.id})">Remove</button>` : ''}
                 ${sellerId ? `<button class="dismiss-btn" style="color:#ef4444;border-color:#ef4444;" onclick="blockUser('${sellerId}',${r.listing_id || 'null'},${r.id})">Block User</button>` : ''}
                 <button class="dismiss-btn" onclick="dismissReport(${r.id})">Dismiss</button>
             </td>
