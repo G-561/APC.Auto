@@ -10918,16 +10918,13 @@ function buildSponsoredWorkshopCardHTML(workshop) {
         ? `<span class="card-approved-badge">${workshop.approvedClub} Approved</span>`
         : '';
     return `
-        <div class="workshop-card workshop-sponsor-card">
+        <div class="workshop-card workshop-sponsor-card" onclick="openWorkshopDetail('${escapeHtml(workshop.id)}')" style="cursor:pointer;">
             <div class="workshop-card-header">
-                <div class="workshop-card-name">${workshop.name} ${approvedBadge}</div>
-                <div class="workshop-card-distance">${workshop.distance}</div>
+                <div class="workshop-card-name">${escapeHtml(workshop.name)} ${approvedBadge}</div>
+                <div class="workshop-card-distance">${escapeHtml(workshop.distance)}</div>
             </div>
-            <div class="workshop-card-specialty">${workshop.specialty}</div>
-            <div class="workshop-card-footer">
-                ${stars}
-                <button class="workshop-card-button" onclick="openWorkshopDetail('${escapeHtml(workshop.id)}')">View →</button>
-            </div>
+            <div class="workshop-card-specialty">${escapeHtml(workshop.specialty)}</div>
+            ${stars ? `<div class="workshop-card-footer">${stars}</div>` : ''}
         </div>
     `;
 }
