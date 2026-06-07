@@ -11337,6 +11337,8 @@ function updateHeaderOffset() {
             // On desktop drawers slide in below the header — on mobile they cover it (top:0 via CSS)
             if (detailOverlay)        detailOverlay.style.top        = drawerTop + 'px';
             if (sellOverlay)          sellOverlay.style.top          = drawerTop + 'px';
+            const warehouseDrawer = document.getElementById('warehouseDrawer');
+            if (warehouseDrawer)      warehouseDrawer.style.top      = drawerTop + 'px';
             if (storefrontDrawer)     storefrontDrawer.style.top     = drawerTop + 'px';
             if (garageDrawer)         garageDrawer.style.top         = drawerTop + 'px';
             // addVehicleDrawer + addWantedDrawer are floating cards — top is fixed at 50% via CSS, not offset-driven

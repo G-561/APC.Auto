@@ -8111,7 +8111,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-scan-hint { font-size: 11px; color: #bbb; line-height: 1.5; text-align: center; padding: 4px 0; }
 
 @media (min-width: 900px) {
-    #warehouseDrawer { left: max(0px, calc(50vw - 800px)) !important; right: max(0px, calc(50vw - 800px)) !important; width: auto !important; height: auto !important; bottom: 0; box-shadow: none !important; border-radius: 0 !important; }
+    #warehouseDrawer { left: calc(max(0px, 50vw - 800px) + 240px) !important; right: calc(max(0px, 50vw - 800px) + 220px) !important; width: auto !important; height: auto !important; bottom: 16px !important; border-radius: 16px !important; box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important; border: none !important; overflow: hidden; }
     .wh-camera-wrap { max-height: 360px; }
     .wh-label-grid { grid-template-columns: repeat(5, 1fr); }
     .wh-panel-inner { max-width: 700px; }
