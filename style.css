@@ -1798,22 +1798,22 @@ header {
     #detailOverlay.chat-card .mobile-carousel { display: block !important; }
 }
 
-/* VSC detail: centred floating card — same aesthetic as sellOverlay */
+/* VSC detail: exact same dimensions/aesthetic as sellOverlay floating card */
 #detailOverlay.vsc-modal {
     background: #fff !important;
-    left: 50% !important; right: auto !important;
-    top: 16px !important; bottom: 16px !important;
-    transform: translateX(-50%) !important;
-    width: 520px !important; height: auto !important;
+    bottom: 16px !important;
     border-radius: 16px !important;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.18) !important;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important;
+    border: none !important;
     overflow: hidden !important;
-    align-items: stretch !important;
-    justify-content: flex-start !important;
+    transform: none !important;
     padding: 0 !important;
 }
 #detailOverlay.vsc-modal .detail-drag-handle-bar { display: none !important; }
-#detailOverlay.vsc-modal .detail-float-close     { display: none !important; }
+/* Show the circular floating close button in this mode */
+#detailOverlay.vsc-modal .detail-float-close { display: flex !important; }
+/* Hide footer strips — pro user just needs the listing info */
+#detailOverlay.vsc-modal #dynamicDetailFooter { display: none !important; }
 #detailOverlay.vsc-modal #detailScrollArea {
     width: 100% !important; max-width: none !important;
     height: calc(100% - 62px) !important; max-height: none !important;
@@ -1822,7 +1822,9 @@ header {
 }
 @media (min-width: 900px) {
     #detailOverlay.vsc-modal {
-        left: 50% !important; right: auto !important; width: 520px !important;
+        left: calc(max(0px, 50vw - 800px) + 240px) !important;
+        right: calc(max(0px, 50vw - 800px) + 220px) !important;
+        width: auto !important;
     }
     #detailOverlay.vsc-modal .desktop-detail-images { display: none !important; }
     #detailOverlay.vsc-modal .mobile-carousel       { display: block !important; }

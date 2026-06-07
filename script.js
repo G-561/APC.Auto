@@ -5270,7 +5270,7 @@ function openEditListing(listingId) {
     updateSellFittingToggleVisibility();
     // Close detail overlay so edit form isn't stacked behind it
     const detailEl = document.getElementById('detailOverlay');
-    if (detailEl) detailEl.classList.remove('active');
+    if (detailEl) detailEl.classList.remove('active', 'vsc-modal');
 
     const sellOverlayEl = document.getElementById('sellOverlay');
     if (sellOverlayEl) sellOverlayEl.style.zIndex = '3800'; // above VSC (3500) and detailOverlay (3700)
