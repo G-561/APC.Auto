@@ -6161,7 +6161,8 @@ async function submitReport() {
     });
     closeReportSheet();
     if (error) {
-        showToast('Report received — we\'ll look into it.');
+        console.warn('submitReport:', error.message);
+        showToast('Unable to submit report — please try again.');
     } else {
         showToast('Report submitted. Thank you.');
     }
