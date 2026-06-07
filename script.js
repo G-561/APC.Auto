@@ -9106,6 +9106,8 @@ function updateInboxBadge() {
     const notifsBadge = document.getElementById('inboxNotifsBadge');
     if (chatsBadge)  { chatsBadge.textContent  = unreadConvs;  chatsBadge.style.display  = unreadConvs  > 0 ? 'inline' : 'none'; }
     if (notifsBadge) { notifsBadge.textContent = unreadNotifs; notifsBadge.style.display = unreadNotifs > 0 ? 'inline' : 'none'; }
+    const proMsgBadge = document.getElementById('proNavMsgBadge');
+    if (proMsgBadge) { proMsgBadge.textContent = unreadConvs || ''; proMsgBadge.style.display = unreadConvs > 0 ? 'block' : 'none'; }
 }
 
 function setInboxTab(tab) {
@@ -11827,7 +11829,7 @@ function proSetFolder(folder) {
     _proActiveConvId = null;
     document.querySelectorAll('.pro-mail-folder').forEach(el => el.classList.remove('active'));
     document.getElementById('proFolder' + folder.charAt(0).toUpperCase() + folder.slice(1))?.classList.add('active');
-    const titles = { selling:'Enquiries — Selling', buying:'Enquiries — Buying', notifications:'Notifications', trash:'Trash' };
+    const titles = { selling:'Messages — Selling', buying:'Messages — Buying', notifications:'Notifications', trash:'Trash' };
     const titleEl = document.getElementById('proMailFolderTitle');
     if (titleEl) titleEl.textContent = titles[folder] || folder;
     proShowThreadEmpty();
