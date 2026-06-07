@@ -12033,22 +12033,63 @@ async function proRenderContextPanel(conv, part) {
         return;
     }
     const img    = part.images?.[0] || '';
-    const status = (part.status || 'active').toUpperCase();
-    const statusClass = part.status === 'sold' ? 'status-sold' : part.status === 'pending' ? 'status-pending' : 'inbox-context-status';
+    const s      = part.status || 'active';
+    const statusLabel = s === 'pending' ? 'PENDING' : s === 'sold' ? 'SOLD' : 'ACTIVE';
+    const statusClass = s === 'sold' ? 'status-sold' : s === 'pending' ? 'status-pending' : 'inbox-context-status';
     const stockMeta = [
         part.stock_number   ? `Stock: ${escapeHtml(String(part.stock_number))}`   : '',
         part.warehouse_bin  ? `Bin: ${escapeHtml(String(part.warehouse_bin))}`     : '',
     ].filter(Boolean).join(' · ');
+    const partId = part.supabaseId || part.id;
+    const isSeller = userListings.some(l => l.supabaseId === partId || l.id === partId);
     panel.innerHTML = `
         ${img ? `<img src="${escapeHtml(img)}" class="inbox-context-img" alt="${escapeHtml(part.title)}">` : ''}
         <div class="inbox-context-info">
-            <div class="inbox-context-status ${statusClass}">${status}</div>
+            ${isSeller ? `
+            <div style="position:relative;display:inline-block;margin-bottom:8px;">
+                <button class="inbox-status-btn isp-status-${s}" id="proCtxStatusBtn" onclick="toggleProCtxStatusPicker(event,${partId})">● ${statusLabel} ▾</button>
+                <div id="proCtxStatusPicker" style="display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #eee;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:50;min-width:140px;padding:6px 0;">
+                    ${['active','pending','sold'].map(opt => `<div class="isp-option${s===opt?' active':''}" onclick="proSetListingStatus('${opt}',${partId})">${opt==='active'?'● ACTIVE':opt==='pending'?'⏳ PENDING':'✓ SOLD'}</div>`).join('')}
+                </div>
+            </div>` : `<div class="inbox-context-status ${statusClass}">${statusLabel}</div>`}
             <div class="inbox-context-title">${escapeHtml(part.title)}</div>
             <div class="inbox-context-price">$${Number(part.price || 0).toLocaleString()}</div>
             ${stockMeta ? `<div class="inbox-context-stock">${stockMeta}</div>` : ''}
             <div class="inbox-context-with">Conversation with ${escapeHtml(conv.buyerName || conv.sellerName || 'Buyer')}</div>
-            <button class="inbox-context-view-btn" onclick="openItemDetail(${part.id || part.supabaseId}, false, true)">View Listing →</button>
+            <button class="inbox-context-view-btn" onclick="openItemDetail(${partId}, false, true)">View Listing →</button>
         </div>`;
+}
+
+function toggleProCtxStatusPicker(e, partId) {
+    if (e) e.stopPropagation();
+    const picker = document.getElementById('proCtxStatusPicker');
+    if (!picker) return;
+    picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+}
+
+function proSetListingStatus(status, partId) {
+    const picker = document.getElementById('proCtxStatusPicker');
+    if (picker) picker.style.display = 'none';
+    const listing = userListings.find(l => l.supabaseId === partId || l.id === partId);
+    if (!listing) return;
+    const doSet = () => {
+        listing.status   = status === 'active' ? undefined : status;
+        listing.soldDate = status === 'sold' ? Date.now() : (status === 'active' ? null : listing.soldDate);
+        saveUserListings();
+        renderMainGrid();
+        renderMyParts();
+        if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+        // Refresh the context panel to reflect the new status
+        const conv = conversations.find(c => c.id === activeConvId || (c.partId === partId && c.sellerId === currentUserId));
+        if (conv) proRenderContextPanel(conv, listing);
+        const msg = status === 'active' ? 'Listing relisted as active' : status === 'pending' ? 'Listing marked as pending' : 'Listing marked as sold!';
+        showToast(msg);
+        syncListingStatusToSupabase(listing, status === 'active' ? 'active' : status);
+    };
+    if (status === 'sold') {
+        if (!confirm('Mark this listing as sold?')) return;
+    }
+    doSet();
 }
 
 function proRenderThreadMsgs(conv) {
@@ -16487,7 +16528,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Guard: reject anything non-numeric that autocomplete sneaks in on focus
         fp.addEventListener('focus', () => { if (!/^\d*$/.test(fp.value)) fp.value = ''; });
     }
-    document.addEventListener('click', e => { if (!e.target.closest('#inboxStatusWrap')) closeInboxStatusPicker(); });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#inboxStatusWrap')) closeInboxStatusPicker();
+        if (!e.target.closest('#proCtxStatusBtn') && !e.target.closest('#proCtxStatusPicker')) {
+            const p = document.getElementById('proCtxStatusPicker');
+            if (p) p.style.display = 'none';
+        }
+    });
     updateHeaderOffset();
     initFilterVehicleDropdowns();
     // Deep-link: ?store=USERID — open the storefront directly (profile fetch is independent of listings)
