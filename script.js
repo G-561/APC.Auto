@@ -44,6 +44,7 @@ let _listingsCursor    = null;   // created_at of last fetched row for cursor pa
 let _listingsExhausted = false;  // true when Supabase has no more pages
 let _listingsLoading   = false;  // guard against concurrent fetches
 let _pendingStoreOpen  = null;   // seller userId to auto-open storefront from ?store= URL param
+let _pendingItemOpen   = null;   // listing id to auto-open from ?item= URL param after listings load
 let _pendingPutAway    = false;  // open put-away scanner after auth from ?putaway=1 URL param
 let currentOpenPartId = null;  // tracks which part detail is open
 let _currentOpenPart  = null;  // direct part ref — avoids integer ID collision in getAllParts()
@@ -1704,6 +1705,11 @@ async function loadPublicListingsFromSupabase(append = false) {
                 const sid = _pendingStoreOpen;
                 _pendingStoreOpen = null;
                 openStorefrontByUserId(sid);
+            }
+            if (_pendingItemOpen) {
+                const iid = _pendingItemOpen;
+                _pendingItemOpen = null;
+                openItemDetail(iid);
             }
         }
     } catch (e) {
@@ -16589,9 +16595,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Prepare the sell form preview boxes
     renderSellImagePreviews();
 
-    // Deep-link: if URL contains ?item=123, open that listing directly
+    // Deep-link: ?item=123 — defer until after listings load (partDatabase is empty at this point)
     const itemParam = new URLSearchParams(location.search).get('item');
-    if (itemParam) openItemDetail(itemParam.includes('-') ? itemParam : Number(itemParam));
+    if (itemParam) _pendingItemOpen = itemParam.includes('-') ? itemParam : Number(itemParam);
 
     // Deep-link: ?putaway=1 — open warehouse put-away scanner (worker QR code)
     if (new URLSearchParams(location.search).get('putaway') === '1') _pendingPutAway = true;
