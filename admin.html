@@ -468,6 +468,7 @@ async function loadAllMetrics() {
         listingsAll,
         totalUsers,
         proUsers,
+        tradeUsers,
         newUsersWeek,
         newUsersMonth,
         totalConvs,
@@ -484,7 +485,8 @@ async function loadAllMetrics() {
         safeCount('listings'),
         safeSelect('listings', 'status', q => q.neq('status', 'removed')),
         safeCount('profiles'),
-        safeCount('profiles', [['eq', 'is_pro', true]]),
+        safeCount('profiles', [['eq', 'tier', 'pro']]),
+        safeCount('profiles', [['eq', 'tier', 'trade']]),
         safeCount('profiles', [['gte', 'created_at', weekAgo]]),
         safeCount('profiles', [['gte', 'created_at', monthAgo]]),
         safeCount('conversations'),
@@ -497,7 +499,7 @@ async function loadAllMetrics() {
         safeSelect('listing_vehicles', 'make'),
         safeSelect('listings', 'title, price, status, created_at, seller_name, is_pro',
             q => q.order('created_at', { ascending: false }).limit(12)),
-        safeSelect('profiles', 'display_name, is_pro, location, created_at',
+        safeSelect('profiles', 'display_name, is_pro, tier, location, created_at',
             q => q.order('created_at', { ascending: false }).limit(12)),
     ]);
 
@@ -516,7 +518,7 @@ async function loadAllMetrics() {
     ].join(''));
 
     setVal('metricTotalUsers',    fmt(totalUsers));
-    setVal('metricProUsers',      `${fmt(proUsers)} Pro ${proUsers === 1 ? 'account' : 'accounts'}`);
+    setVal('metricProUsers',      `${fmt(proUsers)} Pro · ${fmt(tradeUsers)} Trade`);
     setVal('metricConversations', fmt(totalConvs));
     setVal('metricConvSub',       '');
     setVal('metricWanted',        fmt(totalWanted));
@@ -559,12 +561,18 @@ async function loadAllMetrics() {
     // ── Recent users table ──
     const ubody = document.getElementById('recentUsersBody');
     if (ubody) {
-        ubody.innerHTML = recentUsers.length ? recentUsers.map(r => `<tr>
+        ubody.innerHTML = recentUsers.length ? recentUsers.map(r => {
+            const tier = r.tier || (r.is_pro ? 'pro' : 'personal');
+            const tierTag = tier === 'pro'   ? '<span class="pro-tag">Pro</span>'
+                          : tier === 'trade' ? '<span class="pro-tag" style="color:#22c55e;">Trade</span>'
+                          :                   '<span class="td-muted">Personal</span>';
+            return `<tr>
             <td>${esc(r.display_name || 'Unknown')}</td>
-            <td>${r.is_pro ? '<span class="pro-tag">Pro</span>' : '<span class="td-muted">Standard</span>'}</td>
+            <td>${tierTag}</td>
             <td class="td-muted">${esc(r.location || '—')}</td>
             <td class="td-muted">${fmtDate(r.created_at)}</td>
-        </tr>`).join('') : '<tr><td colspan="4" class="td-muted">No users yet</td></tr>';
+        </tr>`;
+        }).join('') : '<tr><td colspan="4" class="td-muted">No users yet</td></tr>';
     }
 
     setVal('lastUpdated', `Updated ${new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' })}`);
