@@ -17273,9 +17273,7 @@ function _vscFilterParts(q) {
 }
 
 function _vscViewPart(partId) {
-    const ov = document.getElementById('vehicleStockCardOverlay');
-    if (ov) { ov.style.display = 'none'; document.body.style.overflow = ''; }
-    openItemDetail(partId);
+    openItemDetail(partId); // detail (z-index 3700) opens on top of VSC (z-index 3500)
 }
 
 function _vscStatusPicker(e, partId, currentStatus) {

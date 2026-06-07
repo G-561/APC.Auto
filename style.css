@@ -1720,7 +1720,7 @@ header {
     overflow-x: hidden;
 }
 /* Detail overlay always stacks on top of any other open drawer */
-#detailOverlay { z-index: 3150; }
+#detailOverlay { z-index: 3700; }
 
 /* Chat reference card — centred floating modal */
 #detailOverlay.chat-card {
@@ -5046,8 +5046,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
         border-radius: 0 !important;
     }
 
-    /* Detail overlay always sits above other open drawers (e.g. garage) */
-    #detailOverlay { z-index: 2050; }
+    /* Detail overlay always sits above other open drawers (e.g. garage, VSC) */
+    #detailOverlay { z-index: 3700; }
 
     /* Card-style drawers: rounded corners + shadow */
     /* top is set dynamically by updateHeaderOffset() — no hardcoded value here */
