@@ -1826,12 +1826,10 @@ header {
         right: calc(max(0px, 50vw - 800px) + 220px) !important;
         width: auto !important;
     }
-    #detailOverlay.vsc-modal .desktop-detail-images { display: none !important; }
-    #detailOverlay.vsc-modal .mobile-carousel       { display: block !important; }
+    /* Let the natural 2-column layout show — images left, info right */
     #detailOverlay.vsc-modal #detailScrollArea {
-        display: flex !important; flex-direction: column !important;
-        height: calc(100% - 62px) !important; max-height: none !important;
-        overflow-y: auto !important;
+        height: calc(100% - 62px) !important;
+        max-height: none !important;
     }
 }
 @media (max-width: 899px) {
