@@ -3,6 +3,35 @@ const SUPABASE_URL  = 'https://ufpsnjtnvchazqswntch.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmcHNuanRudmNoYXpxc3dudGNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzMDc5MDAsImV4cCI6MjA5Mzg4MzkwMH0.Wl60CI8rcIo26EnNx1A1Dd7xfZEFOBlAXJDpXA6fyCA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+// --- ERROR MONITORING ---
+window.onerror = function(msg, src, line, col, err) {
+    try {
+        sb.from('error_logs').insert({
+            message:     String(msg).slice(0, 500),
+            source:      String(src || '').slice(0, 200),
+            line_number: line || null,
+            col_number:  col  || null,
+            stack:       err?.stack ? String(err.stack).slice(0, 1000) : null,
+            user_id:     currentUserId || null,
+            user_agent:  navigator.userAgent.slice(0, 300),
+            page_url:    location.href.slice(0, 300),
+        });
+    } catch (_) {}
+};
+window.onunhandledrejection = function(e) {
+    try {
+        const msg = e.reason?.message || String(e.reason || 'Unhandled rejection');
+        sb.from('error_logs').insert({
+            message:    String(msg).slice(0, 500),
+            source:     'unhandledrejection',
+            stack:      e.reason?.stack ? String(e.reason.stack).slice(0, 1000) : null,
+            user_id:    currentUserId || null,
+            user_agent: navigator.userAgent.slice(0, 300),
+            page_url:   location.href.slice(0, 300),
+        });
+    } catch (_) {}
+};
+
 // --- GLOBAL STATE ---
 let userIsSignedIn = false;          // starts logged out — header shows "Sign In" pill
 let currentUserName  = null;          // e.g. "Gary"
