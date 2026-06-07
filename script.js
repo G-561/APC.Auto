@@ -56,8 +56,6 @@ const partDatabase = [];
 // --- OFFERS ---
 const OFFERS_KEY = 'apc.offers.v1';
 let offersDb = loadOffers();
-const _dismissedMockOfferIds = new Set();
-
 function loadOffers() {
     try { return JSON.parse(localStorage.getItem(OFFERS_KEY) || '[]'); } catch { return []; }
 }
@@ -72,9 +70,7 @@ const dashMockData = {
     weekLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     weekViews:  [0, 0, 0, 0, 0, 0, 0],
     weekSaves:  [0, 0, 0, 0, 0, 0, 0],
-    closedSales:  [],
-    pendingSales: [],
-    activity:     []
+    activity:   []
 };
 
 const publicWantedDatabase = [];
@@ -1922,36 +1918,40 @@ async function syncNewConversationToSupabase(conv) {
     }
     const firstMsg = conv.msgs[0];
     if (firstMsg && !firstMsg.offerCard) {
-        await sb.from('messages').insert({
+        const { error: msgErr } = await sb.from('messages').insert({
             conversation_id: conv.supabaseConvId,
             sender_id: currentUserId,
             sender_name: currentUserName,
             text: firstMsg.text,
         });
+        if (msgErr) console.warn('syncNewConv message insert:', msgErr.message);
         // Update last_message_at so this conversation sorts to the top for the recipient
-        await sb.from('conversations').update({
+        const { error: convErr } = await sb.from('conversations').update({
             last_message_at: new Date().toISOString(),
             unread_buyer: false,
             unread_seller: true,
         }).eq('id', conv.supabaseConvId);
+        if (convErr) console.warn('syncNewConv conv update:', convErr.message);
     }
 }
 
 async function syncOfferMessageToSupabase(conv, offerText, offerData) {
     const ok = await ensureSupabaseConversation(conv);
     if (!ok) return;
-    await sb.from('messages').insert({
+    const { error: msgErr } = await sb.from('messages').insert({
         conversation_id: conv.supabaseConvId,
         sender_id: currentUserId,
         sender_name: currentUserName,
         text: offerText,
         offer_data: offerData,
     });
-    await sb.from('conversations').update({
+    if (msgErr) console.warn('syncOfferMsg insert:', msgErr.message);
+    const { error: convErr } = await sb.from('conversations').update({
         last_message_at: new Date().toISOString(),
         unread_buyer: false,
         unread_seller: true,
     }).eq('id', conv.supabaseConvId);
+    if (convErr) console.warn('syncOfferMsg conv update:', convErr.message);
 }
 
 async function syncPhotoMessageToSupabase(conv, base64, isBuyer) {
@@ -2174,7 +2174,7 @@ async function loadPublicWantedFromSupabase() {
         const excludeId = currentUserId || '00000000-0000-0000-0000-000000000000';
         const { data: rows, error } = await sb
             .from('wanted_parts')
-            .select('*')
+            .select('id, user_id, part_name, title, make, model, year, max_price, budget_max, category, created_at')
             .neq('user_id', excludeId)
             .order('created_at', { ascending: false })
             .limit(200);
@@ -2291,7 +2291,8 @@ async function loadSavedListingsFromSupabase(userId) {
         const { data: rows, error } = await sb
             .from('saved_listings')
             .select('listing_id')
-            .eq('user_id', userId);
+            .eq('user_id', userId)
+            .limit(500);
         if (error) { console.warn('saved_listings load:', error.message); return; }
         if (!rows?.length) return;
 
@@ -2386,7 +2387,8 @@ function subscribeToRealtimeMessages() {
                 if (!conv) {
                     // New conversation the recipient hasn't loaded yet — fetch and create it
                     const { data: convRow } = await sb.from('conversations')
-                        .select('*').eq('id', msg.conversation_id).single();
+                        .select('id, buyer_id, seller_id, listing_id, listing_title, buyer_name, seller_name, last_message_at, unread_buyer, unread_seller')
+                        .eq('id', msg.conversation_id).single();
                     if (!convRow) return;
                     const isBuyer = convRow.buyer_id === currentUserId;
                     const otherName = isBuyer ? (convRow.seller_name || 'Seller') : (convRow.buyer_name || 'Buyer');
@@ -5926,7 +5928,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     function applyAvatar(el, pic) {
         if (!el) return;
         if (pic) {
-            el.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            el.innerHTML = `<img src="${escapeHtml(pic)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
             el.style.background  = 'transparent';
             el.style.boxShadow   = 'none';
         } else {
@@ -9934,7 +9936,7 @@ function renderBannerColourPicker() {
     if (previewLogo) {
         const pic = userSettings.profilePic || userSettings.businessLogo || '';
         if (pic) {
-            previewLogo.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            previewLogo.innerHTML = `<img src="${escapeHtml(pic)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
             previewLogo.style.color = '';
         } else {
             previewLogo.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
@@ -11101,7 +11103,7 @@ function renderAccountState() {
     }
     if (menuAvatar) {
         if (pic) {
-            menuAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            menuAvatar.innerHTML = `<img src="${escapeHtml(pic)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
             menuAvatar.style.background = 'transparent';
         } else {
             menuAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
@@ -11123,7 +11125,7 @@ function renderAccountState() {
             navProfileCircle.innerHTML = 'Sign In';
         } else {
             navProfileCircle.className = `nav-profile-circle${currentUserTier === 'pro' ? ' pro' : currentUserTier === 'trade' ? ' trade' : ''}`;
-            navProfileCircle.innerHTML = pic ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
+            navProfileCircle.innerHTML = pic ? `<img src="${escapeHtml(pic)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">` : initial;
         }
     }
     const isPro = userIsSignedIn && currentUserTier === 'pro';
@@ -11156,7 +11158,7 @@ function renderAccountState() {
         dtbAvatar.style.display = userIsSignedIn ? 'flex' : 'none';
         if (userIsSignedIn) {
             if (pic) {
-                dtbAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+                dtbAvatar.innerHTML = `<img src="${escapeHtml(pic)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
                 dtbAvatar.style.background = 'transparent';
             } else {
                 dtbAvatar.textContent = initial;
@@ -11179,7 +11181,7 @@ function renderAccountState() {
     const ddDash    = document.getElementById('acctDdDashboard');
     if (ddAvatar) {
         if (pic) {
-            ddAvatar.innerHTML = `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
+            ddAvatar.innerHTML = `<img src="${escapeHtml(pic)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="">`;
             ddAvatar.style.background = 'transparent';
         } else {
             ddAvatar.textContent = (currentUserName || 'G').charAt(0).toUpperCase();
@@ -11566,30 +11568,12 @@ function submitCounterOffer(offerId) {
     const input = document.getElementById('counter-input-' + offerId);
     const price = parseFloat(input?.value);
     if (!price || price <= 0) { showToast('Enter a valid counter price'); return; }
-    if (offerId < 0) {
-        _dismissedMockOfferIds.add(offerId);
-        showToast(`Counter of $${price} sent!`);
-        renderDashListings('pending');
-        return;
-    }
     const o = offersDb.find(x => x.id === offerId);
     if (!o) return;
     o.status       = 'countered';
     o.counterPrice = price;
     saveOffers();
     showToast(`Counter offer of $${price} sent to ${o.buyer}`);
-    renderDashListings('pending');
-}
-
-function acceptMockOffer(mockId) {
-    _dismissedMockOfferIds.add(mockId);
-    showToast('Offer accepted — congrats on the sale!');
-    renderDashListings('pending');
-}
-
-function declineMockOffer(mockId) {
-    _dismissedMockOfferIds.add(mockId);
-    showToast('Offer declined');
     renderDashListings('pending');
 }
 
@@ -11658,6 +11642,7 @@ let _dashJobsPollInterval = null;
 
 function openDashboard() {
     if (window.innerWidth < 900) return;
+    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Pro Dashboard requires APC Pro membership'); return; }
     setDtbActive('dtbDashboard');
     const fd      = document.getElementById('filterDrawer');
     const rp      = document.querySelector('.desktop-right-panel');
@@ -12128,7 +12113,7 @@ async function proSendQuote(convId) {
     }).then(() => sb.from('conversations').update({
         last_message_at: new Date().toISOString(),
         unread_buyer: !isBuyer, unread_seller: !!isBuyer,
-    }).eq('id', conv.supabaseConvId)).catch(() => {});
+    }).eq('id', conv.supabaseConvId)).catch(err => console.warn('proSendQuote sync:', err?.message || err));
 }
 
 function buildQuoteCardHTML(q) {
@@ -12177,6 +12162,7 @@ function proSendPhoto(event, convId) {
 
 function proOpenStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
+    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Stock Lookup requires APC Pro'); return; }
     proShowView('proStockView', 'proNavStock');
     _slVehicle = { make: '', model: '', year: '', series: '' };
     _slTabs = []; _slActiveTab = -1;
@@ -12217,7 +12203,7 @@ function renderProHeader() {
     const profilePic = currentUserProfile?.avatar_url;
     const initial    = (currentUserName || currentUserId || 'P')[0].toUpperCase();
     if (profilePic) {
-        avatar.innerHTML = `<img src="${profilePic}" alt="avatar">`;
+        avatar.innerHTML = `<img src="${escapeHtml(profilePic)}" alt="avatar">`;
     } else {
         avatar.textContent = initial;
     }
@@ -13906,13 +13892,14 @@ async function renderDashJobs() {
     const card = document.getElementById('dashJobsCard');
     if (!card || !sb || !currentUserId) return;
 
-    const { data: jobs } = await sb.from('dismantling_jobs')
+    const { data: jobs, error: jobsErr } = await sb.from('dismantling_jobs')
         .select('id, make, model, year, series, stock_number, status, created_at, job_token')
         .eq('user_id', currentUserId)
         .in('status', ['stripping', 'ready'])
         .order('created_at', { ascending: false })
         .limit(10);
 
+    if (jobsErr) { console.warn('renderDashJobs:', jobsErr.message); return; }
     if (!jobs?.length) { card.style.display = 'none'; return; }
     card.style.display = '';
 
@@ -16172,9 +16159,10 @@ function renderDashboard() {
     loadDashGraphData();
     const sellerName = getCurrentSellerName();
     const myListings = userListings.filter(p => p.status !== 'removed');
-    const totalSaves = myListings.reduce((s, p) => s + (p.saves || 0), 0);
-    const revenue    = dashMockData.closedSales.reduce((s, p) => s + p.price, 0);
-    const unread     = conversations.filter(c => c.unread).length;
+    const totalSaves  = myListings.reduce((s, p) => s + (p.saves || 0), 0);
+    const soldListings = userListings.filter(p => p.status === 'sold');
+    const revenue      = soldListings.reduce((s, p) => s + (Number(p.price) || 0), 0);
+    const unread       = conversations.filter(c => c.unread).length;
 
     const welcome = document.getElementById('dashWelcome');
     if (welcome) welcome.textContent = `Welcome back, ${currentUserName || 'Pro'} — here\'s your business overview`;
@@ -16183,7 +16171,7 @@ function renderDashboard() {
     set('dashStatListings', myListings.length);
     set('dashStatSaves',    totalSaves);
     set('dashStatMessages', unread);
-    set('dashStatSales',    dashMockData.closedSales.length);
+    set('dashStatSales',    soldListings.length);
     set('dashStatRevenue',  '$' + revenue.toLocaleString());
 
     renderDashboardCharts(myListings);
@@ -16370,22 +16358,14 @@ function renderDashListings(tab, btn, ctx) {
             </td></tr>`).join('');
     } else if (tab === 'pending') {
         const sellerName = getCurrentSellerName();
-        // Real offers on seller's parts, plus mock data for demo
         const realOffers = offersDb.filter(o => {
             const part = getPartById(o.partId);
             return part && part.seller === sellerName && o.status === 'pending';
         });
-        const mockOffers = dashMockData.pendingSales.map((s, i) => ({
-            id: -1 - i, partTitle: s.title, partImg: s.img,
-            listedPrice: s.price + 50, offerPrice: s.price,
-            buyerNote: 'Can you include postage to Melbourne?',
-            buyer: s.buyer, date: s.offered, status: 'pending', counterPrice: null
-        })).filter(o => !_dismissedMockOfferIds.has(o.id));
-        let items = [...realOffers, ...mockOffers];
+        let items = [...realOffers];
         if (q) items = items.filter(o => o.partTitle.toLowerCase().includes(q) || o.buyer.toLowerCase().includes(q));
         if (countEl) countEl.textContent = `${items.length} offer${items.length !== 1 ? 's' : ''}`;
         rows = items.map(o => {
-            const isMock = o.id < 0;
             const counterRowId = `counter-row-${o.id}`;
             const counterInputId = `counter-input-${o.id}`;
             return `<tr>
@@ -16401,22 +16381,13 @@ function renderDashListings(tab, btn, ctx) {
             </td>
             <td class="dash-td-date">${o.date}</td>
             <td>
-                ${isMock
-                    ? `<button class="dash-action-btn dash-btn-primary" onclick="acceptMockOffer(${o.id})">Accept</button>
-                       <button class="dash-action-btn dash-btn-danger" onclick="declineMockOffer(${o.id})">Decline</button>
-                       <button class="dash-action-btn" onclick="showCounterInput(${o.id})">Counter</button>
-                       <div class="dash-counter-row" id="counter-row-${o.id}" style="display:none;">
-                           <input id="counter-input-${o.id}" type="number" class="dash-counter-input" placeholder="$">
-                           <button class="dash-action-btn dash-btn-primary" onclick="submitCounterOffer(${o.id})">Send</button>
-                       </div>`
-                    : `<button class="dash-action-btn dash-btn-primary" onclick="acceptOffer(${o.id})">Accept</button>
-                       <button class="dash-action-btn dash-btn-danger" onclick="declineOffer(${o.id})">Decline</button>
-                       <button class="dash-action-btn" onclick="showCounterInput(${o.id})">Counter</button>
-                       <div class="dash-counter-row" id="${counterRowId}" style="display:none;">
-                           <input id="${counterInputId}" type="number" class="dash-counter-input" placeholder="$">
-                           <button class="dash-action-btn dash-btn-primary" onclick="submitCounterOffer(${o.id})">Send</button>
-                       </div>`
-                }
+                <button class="dash-action-btn dash-btn-primary" onclick="acceptOffer(${o.id})">Accept</button>
+                <button class="dash-action-btn dash-btn-danger" onclick="declineOffer(${o.id})">Decline</button>
+                <button class="dash-action-btn" onclick="showCounterInput(${o.id})">Counter</button>
+                <div class="dash-counter-row" id="${counterRowId}" style="display:none;">
+                    <input id="${counterInputId}" type="number" class="dash-counter-input" placeholder="$">
+                    <button class="dash-action-btn dash-btn-primary" onclick="submitCounterOffer(${o.id})">Send</button>
+                </div>
             </td></tr>`;
         }).join('');
     } else {
@@ -16424,8 +16395,7 @@ function renderDashListings(tab, btn, ctx) {
         const realSold = userListings
             .filter(l => l.status === 'sold')
             .map(l => ({ id: l.id, title: l.title, price: l.price, buyer: null, date: l.soldDate, img: (l.images && l.images[0]) || 'images/placeholder.png', isReal: true }));
-        const mockSold = dashMockData.closedSales.map(s => ({ ...s, isReal: false }));
-        let items = [...realSold, ...mockSold];
+        let items = [...realSold];
         if (q) items = items.filter(s => s.title.toLowerCase().includes(q) || (s.buyer || '').toLowerCase().includes(q));
         if (countEl) countEl.textContent = `${items.length} listing${items.length !== 1 ? 's' : ''}`;
         rows = items.map(s => `<tr>
@@ -16433,8 +16403,8 @@ function renderDashListings(tab, btn, ctx) {
             <td><div class="dash-part-name">${escapeHtml(s.title)}</div>${s.buyer ? `<div class="dash-part-sub">Sold to ${escapeHtml(s.buyer)}</div>` : ''}</td>
             <td class="dash-td-price">$${s.price}</td>
             <td></td>
-            <td class="dash-td-date">${s.isReal ? dashFmtDate(s.date) : s.date}</td>
-            <td>${s.isReal ? `<button class="dash-action-btn" onclick="relistPart(${s.id})">Relist</button>` : ''}</td>
+            <td class="dash-td-date">${dashFmtDate(s.date)}</td>
+            <td><button class="dash-action-btn" onclick="relistPart(${s.id})">Relist</button></td>
         </tr>`).join('');
     }
 
