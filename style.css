@@ -1960,6 +1960,19 @@ header {
         max-height: 85vh !important;
         overflow: hidden !important;
     }
+    #workshopDetailDrawer {
+        top: 50% !important;
+        left: 50% !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: 520px !important;
+        transform: translate(-50%, -50%) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 8px 50px rgba(0,0,0,0.3) !important;
+        max-height: 88vh !important;
+        overflow: hidden !important;
+    }
+    #workshopDetailDrawer .drawer-content { overflow-y: auto; }
 }
 .ws-overlay-header-row {
     display: flex;
@@ -5012,7 +5025,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     /* Wide drawers: full viewport width like the dashboard — square corners, no shadow */
     #settingsDrawer,
     #workshopDrawer,
-    #workshopDetailDrawer,
     #garageDrawer,
     #myPartsDrawer,
     #wantedListDrawer,
