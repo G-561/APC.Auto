@@ -497,7 +497,7 @@ async function loadAllMetrics() {
         safeCount('listings',    [['gte', 'created_at', monthAgo]]),
         safeSelect('listings', 'category', q => q.neq('status', 'removed')),
         safeSelect('listing_vehicles', 'make'),
-        safeSelect('listings', 'title, price, status, created_at, seller_name, is_pro',
+        safeSelect('listings', 'title, price, status, created_at, seller_name, seller_id, is_pro',
             q => q.order('created_at', { ascending: false }).limit(12)),
         safeSelect('profiles', 'display_name, is_pro, tier, location, created_at',
             q => q.order('created_at', { ascending: false }).limit(12)),
@@ -543,14 +543,26 @@ async function loadAllMetrics() {
     makesRows.forEach(r => { if (r.make) makeCounts[r.make] = (makeCounts[r.make] || 0) + 1; });
     renderBarChart('makesChart', makeCounts, '#007aff');
 
-    // ── Recent listings table ──
+    // ── Recent listings table — cross-ref seller tier from profiles ──
+    const sellerIds = [...new Set(recentListings.map(r => r.seller_id).filter(Boolean))];
+    const sellerProfiles = sellerIds.length
+        ? await safeSelect('profiles', 'id, tier, is_pro', q => q.in('id', sellerIds))
+        : [];
+    const sellerTierMap = Object.fromEntries(
+        sellerProfiles.map(p => [p.id, p.tier || (p.is_pro ? 'pro' : 'personal')])
+    );
+
     const tbody = document.getElementById('recentListingsBody');
     if (tbody) {
         tbody.innerHTML = recentListings.length ? recentListings.map(r => {
             const dot = r.status === 'pending' ? 'dot-pending' : r.status === 'sold' ? 'dot-sold' : 'dot-active';
+            const tier = sellerTierMap[r.seller_id] || (r.is_pro ? 'pro' : 'personal');
+            const tierTag = tier === 'pro'   ? ' <span class="pro-tag">PRO</span>'
+                          : tier === 'trade' ? ' <span class="pro-tag" style="color:#22c55e;">TRADE</span>'
+                          : '';
             return `<tr>
                 <td class="td-title">${esc(r.title || '—')}</td>
-                <td class="td-muted">${esc(r.seller_name || '—')}${r.is_pro ? ' <span class="pro-tag">PRO</span>' : ''}</td>
+                <td class="td-muted">${esc(r.seller_name || '—')}${tierTag}</td>
                 <td>$${(r.price || 0).toLocaleString()}</td>
                 <td><span class="status-dot ${dot}"></span>${r.status || 'active'}</td>
                 <td class="td-muted">${fmtDate(r.created_at)}</td>
