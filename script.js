@@ -3687,6 +3687,7 @@ function setSortOrder(el, order) {
 
 function countActiveFilters() {
     let n = 0;
+    if (activeFilters.search) n++;
     if (activeFilters.category !== 'all') n++;
     if (activeFilters.make) n++;
     if (activeFilters.model) n++;
@@ -10932,10 +10933,11 @@ function buildSponsoredWorkshopCardHTML(workshop) {
 }
 
 async function openWorkshopDetail(workshopId) {
-    const w = await fetchWorkshopById(workshopId);
-    if (!w) return;
+    let w;
+    try { w = await fetchWorkshopById(workshopId); } catch (e) { showToast('Could not load workshop'); return; }
+    if (!w) { showToast('Workshop not found'); return; }
     const content = document.getElementById('workshopDetailContent');
-    if (!content) return;
+    if (!content) { showToast('UI error: detail panel missing'); return; }
     const stars = w.rating ? `★ ${w.rating}` : '';
     const serviceChips = (w.serviceKeys || [])
         .map(s => `<span class="wsd-chip">${escapeHtml(SERVICE_LABELS[s] || s)}</span>`).join('');

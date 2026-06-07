@@ -66,7 +66,7 @@
 
         <div class="search-col">
         <div class="search-group">
-            <input type="text" id="mainSearchInput" placeholder="Search parts for sale..." onfocus="closeDashboard()">
+            <input type="text" id="mainSearchInput" placeholder="Search parts for sale..." onfocus="closeDashboard()" oninput="activeFilters.search=this.value.trim();renderMainGrid();updateFilterChip();">
             <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
         </div>
         <div id="filterStatusChip" class="filter-status-chip" style="display:none;"></div>
