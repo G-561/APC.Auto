@@ -12035,32 +12035,12 @@ function proOpenConv(id) {
                     <div class="pro-mail-thread-meta">Conversation with ${otherName}${part ? ' · $' + Number(part.price||0).toLocaleString() : ''}</div>
                 </div>
                 <div class="pro-mail-thread-msgs" id="proThreadMsgs"></div>
-                ${isSelling ? `<div class="pro-quote-form" id="proQuoteForm-${id}">
-                    <div class="pro-qf-header">
-                        <span class="pro-qf-title">Send Quote</span>
-                        <span class="pro-qf-num-label">Ref: <strong id="proQuoteNum-${id}"></strong></span>
-                    </div>
-                    <div class="pro-qf-fields">
-                        <div class="pro-qf-field" style="max-width:110px">
-                            <label class="pro-qf-label">Price $</label>
-                            <input id="proQuotePrice-${id}" type="number" min="0" step="1" class="pro-qf-price" placeholder="0">
-                        </div>
-                        <div class="pro-qf-field">
-                            <label class="pro-qf-label">Terms / notes</label>
-                            <input id="proQuoteNotes-${id}" type="text" class="pro-qf-notes" placeholder="e.g. freight included · pickup only · valid 7 days">
-                        </div>
-                    </div>
-                    <div class="pro-qf-actions">
-                        <button class="cta-btn" style="font-size:12px;padding:9px 20px;" onclick="proSendQuote(${id})">Send Quote →</button>
-                        <button class="pro-mail-photo-btn" style="font-size:12px;padding:7px 14px;" onclick="proCloseQuoteForm(${id})">Cancel</button>
-                    </div>
-                </div>` : ''}
                 <div class="pro-mail-thread-reply">
                     <input type="file" id="proPhotoInput${id}" accept="image/*" style="display:none" onchange="proSendPhoto(event,${id})">
                     <button class="pro-mail-photo-btn" onclick="document.getElementById('proPhotoInput${id}').click()" title="Attach photo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </button>
-                    ${isSelling ? `<button class="pro-mail-quote-btn" onclick="proOpenQuoteForm(${id})">Quote</button>` : ''}
+                    ${isSelling ? `<button class="pro-mail-quote-btn" onclick="proOpenQuoteFromConv(${id})">Quote</button>` : ''}
                     <textarea class="pro-mail-reply-input" id="proReplyInput" placeholder="Reply…" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();proSendReply(${id});}"></textarea>
                     <button class="pro-mail-reply-send" onclick="proSendReply(${id})">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -12201,70 +12181,34 @@ function proSendReply(convId) {
     syncMessageToSupabase(conv.supabaseConvId, text, conv.buyerId === currentUserId).catch(() => {});
 }
 
-async function proOpenQuoteForm(convId) {
-    const form  = document.getElementById(`proQuoteForm-${convId}`);
-    const numEl = document.getElementById(`proQuoteNum-${convId}`);
-    if (!form) return;
-    form.style.display = 'flex';
-    if (numEl && !numEl.textContent) {
-        numEl.textContent = '…';
-        numEl.textContent = await _slGenerateQuoteNumber();
-    }
-    document.getElementById(`proQuotePrice-${convId}`)?.focus();
-}
-
-function proCloseQuoteForm(convId) {
-    const form = document.getElementById(`proQuoteForm-${convId}`);
-    if (form) form.style.display = 'none';
-}
-
-async function proSendQuote(convId) {
+async function proOpenQuoteFromConv(convId) {
     const conv = conversations.find(c => c.id === convId);
     if (!conv || !sb) return;
-    const quoteNum = document.getElementById(`proQuoteNum-${convId}`)?.textContent?.trim();
-    const price    = parseFloat(document.getElementById(`proQuotePrice-${convId}`)?.value);
-    const notes    = document.getElementById(`proQuoteNotes-${convId}`)?.value.trim() || '';
-    if (!quoteNum || quoteNum === '…' || isNaN(price) || price <= 0) { showToast('Enter a price to send a quote'); return; }
 
-    const partTitle = getConvPartTitle(conv);
-
-    // Create quote record in DB
-    const { data: quoteRow, error: qErr } = await sb.from('quotes').insert({
-        quote_number: quoteNum, user_id: currentUserId, status: 'sent',
+    const qn = await _slGenerateQuoteNumber();
+    const { data: quoteRow, error } = await sb.from('quotes').insert({
+        quote_number: qn, user_id: currentUserId, status: 'draft',
         customer_name: conv.buyerName || conv.with || null,
-        notes: notes || null, freight_cost: 0,
+        freight_cost: 0,
     }).select().single();
-    if (qErr) { showToast('Could not create quote: ' + qErr.message); return; }
+    if (error || !quoteRow) { showToast('Could not create quote'); return; }
 
-    // Add the part as a line item
     if (conv.partId && conv.partId !== 'general') {
+        const partTitle = getConvPartTitle(conv);
+        const part = findPartAnywhere(conv.partId);
         await sb.from('quote_lines').insert({
-            quote_id: quoteRow.id, listing_id: Number(conv.partId),
-            title: partTitle, price, qty: 1,
+            quote_id: quoteRow.id,
+            listing_id: Number(conv.partId),
+            title: partTitle,
+            price: part?.price ?? null,
+            qty: 1,
         }).catch(() => {});
     }
 
-    // Keep Today's Quotes in sync
     if (!_slQuotes.find(q => q.id === quoteRow.id)) _slQuotes.unshift(quoteRow);
     _slRenderQuotesList();
-
-    const quoteData = { type: 'quote', quoteNumber: quoteNum, price, notes, partTitle, listingId: conv.partId };
-    const text = `Quote ${quoteNum}: $${price.toLocaleString('en-AU')}${notes ? ' — ' + notes : ''}`;
-
-    conv.msgs = conv.msgs || [];
-    conv.msgs.push({ id: nextMsgId(conv), sent: true, text, offerCard: quoteData, time: 'Today', clock: nowClock(), timestamp: Date.now() });
-    saveConversations();
-    proCloseQuoteForm(convId);
-    proRenderThreadMsgs(conv);
-
-    const isBuyer = conv.buyerId === currentUserId;
-    sb.from('messages').insert({
-        conversation_id: conv.supabaseConvId, sender_id: currentUserId,
-        sender_name: currentUserName, text, offer_data: quoteData,
-    }).then(() => sb.from('conversations').update({
-        last_message_at: new Date().toISOString(),
-        unread_buyer: !isBuyer, unread_seller: !!isBuyer,
-    }).eq('id', conv.supabaseConvId)).catch(err => console.warn('proSendQuote sync:', err?.message || err));
+    _slQuoteConvContext = { convId };
+    await _slOpenQuoteDetail(quoteRow.id);
 }
 
 function buildQuoteCardHTML(q) {
@@ -15085,6 +15029,7 @@ let _slSelected       = new Map(); // listingId -> { title, price, stock_number 
 let _slResultsMap     = new Map(); // listingId -> result row data (populated when results load)
 let _slQuotes         = [];        // quotes loaded from Supabase
 let _slActiveQuote    = null;      // { quote, lines } currently shown in detail panel
+let _slQuoteConvContext = null;    // set when quote overlay is opened from a DBMC conversation
 let _slQuoteDebounce  = null;
 let _slProOnly        = false;     // when true, OTHER YARDS section filters to pro sellers only
 
@@ -16287,10 +16232,14 @@ function _slRenderQuoteDetail() {
                 </div>
             </div>
             <div class="sl-qd-actions">
+                ${_slQuoteConvContext ? `
+                <div class="sl-qd-actions-row" style="margin-bottom:4px;">
+                    <button class="sl-qd-btn sl-qd-btn-primary" style="flex:1;font-size:13px;padding:11px;" onclick="_slSendQuoteToConv()">Send Quote to Conversation ✉️</button>
+                </div>` : ''}
                 <div class="sl-qd-actions-row sl-qd-actions-row-primary">
-                    <button class="sl-qd-btn sl-qd-btn-save" onclick="_slSaveQuoteChanges(${quote.id})">Save Quote</button>
-                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slEmailQuote(${quote.id})">Email Quote</button>
-                    <button class="sl-qd-btn sl-qd-btn-danger" onclick="_slDeleteQuote(${quote.id})" title="Delete quote">🗑 Delete</button>
+                    <button class="sl-qd-btn sl-qd-btn-save" onclick="_slSaveQuoteChanges(${quote.id})">Save</button>
+                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slEmailQuote(${quote.id})">Email</button>
+                    <button class="sl-qd-btn sl-qd-btn-danger" onclick="_slDeleteQuote(${quote.id})" title="Delete quote">🗑</button>
                 </div>
                 <div class="sl-qd-actions-row">
                     ${st === 'draft'    ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Process Invoice</button>` : ''}
@@ -16306,8 +16255,52 @@ function _slRenderQuoteDetail() {
 
 function _slCloseQuoteDetail() {
     _slActiveQuote = null;
+    _slQuoteConvContext = null;
     const overlay = document.getElementById('slQuoteDetailOverlay');
     if (overlay) overlay.remove();
+}
+
+async function _slSendQuoteToConv() {
+    if (!_slQuoteConvContext || !_slActiveQuote) return;
+    const { convId } = _slQuoteConvContext;
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+
+    const { quote, lines } = _slActiveQuote;
+    const subtotal = lines.reduce((s, l) => s + ((l.price || 0) * (l.qty || 1)), 0);
+    const freight  = parseFloat(quote.freight_cost) || 0;
+    const total    = subtotal + freight;
+    const firstTitle = lines[0]?.title || getConvPartTitle(conv) || 'Quote';
+
+    const quoteData = {
+        type: 'quote', quoteNumber: quote.quote_number,
+        price: total, notes: quote.notes || '', partTitle: firstTitle,
+        listingId: conv.partId,
+    };
+    const text = `Quote ${quote.quote_number}: $${total.toLocaleString('en-AU')}${quote.notes ? ' — ' + quote.notes : ''}`;
+
+    conv.msgs = conv.msgs || [];
+    conv.msgs.push({ id: nextMsgId(conv), sent: true, text, offerCard: quoteData, time: 'Today', clock: nowClock(), timestamp: Date.now() });
+    saveConversations();
+
+    // Mark quote as sent in DB
+    await sb.from('quotes').update({ status: 'sent', updated_at: new Date().toISOString() }).eq('id', quote.id).catch(() => {});
+    const idx = _slQuotes.findIndex(q => q.id === quote.id);
+    if (idx >= 0) _slQuotes[idx].status = 'sent';
+
+    // Sync message to Supabase
+    const isBuyer = conv.buyerId === currentUserId;
+    sb.from('messages').insert({
+        conversation_id: conv.supabaseConvId, sender_id: currentUserId,
+        sender_name: currentUserName, text, offer_data: quoteData,
+    }).then(() => sb.from('conversations').update({
+        last_message_at: new Date().toISOString(),
+        unread_buyer: !isBuyer, unread_seller: !!isBuyer,
+    }).eq('id', conv.supabaseConvId)).catch(err => console.warn('sendQuoteToConv:', err?.message || err));
+
+    proRenderThreadMsgs(conv);
+    _slCloseQuoteDetail();
+    showToast('Quote sent!');
 }
 
 async function _slSaveQuoteField(quoteId, field, value) {
