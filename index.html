@@ -324,7 +324,7 @@
                         <span class="sl-qp-title">Today's Quotes</span>
                     </div>
                     <div class="sl-qp-search">
-                        <input type="text" id="slQuoteSearchInput" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
+                        <input type="text" id="slQuoteSearchInput" autocomplete="off" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
                     </div>
                     <div id="slQuotesList" class="sl-quotes-list"></div>
                     <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
@@ -1013,7 +1013,7 @@
 
         <!-- Search -->
         <div class="sf-search-wrap">
-            <input type="text" id="storefrontSearch" class="sf-search-input" placeholder="Search this store..." oninput="filterStorefront()">
+            <input type="text" id="storefrontSearch" class="sf-search-input" autocomplete="off" placeholder="Search this store..." oninput="filterStorefront()">
         </div>
         <div class="results-grid" id="sellerPartsGrid" style="padding-bottom:40px;"></div>
 
