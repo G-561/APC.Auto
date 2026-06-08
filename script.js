@@ -12193,22 +12193,29 @@ async function proOpenQuoteFromConv(convId) {
     }).select().single();
     if (error || !quoteRow) { showToast('Could not create quote'); return; }
 
+    // Insert line item and capture the returned row so we can show it immediately
+    let lines = [];
     if (conv.partId && conv.partId !== 'general') {
         const partTitle = getConvPartTitle(conv);
         const part = findPartAnywhere(conv.partId);
-        await sb.from('quote_lines').insert({
+        const { data: lineRow } = await sb.from('quote_lines').insert({
             quote_id: quoteRow.id,
             listing_id: Number(conv.partId),
             title: partTitle,
             price: part?.price ?? null,
             qty: 1,
-        }).catch(() => {});
+        }).select().single().catch(() => ({ data: null }));
+        if (lineRow) lines = [lineRow];
     }
 
     if (!_slQuotes.find(q => q.id === quoteRow.id)) _slQuotes.unshift(quoteRow);
     _slRenderQuotesList();
+
+    // Build _slActiveQuote directly from data already in hand — avoids a second DB
+    // fetch that can fail silently before the overlay ever renders
+    _slActiveQuote = { quote: quoteRow, lines };
     _slQuoteConvContext = { convId };
-    await _slOpenQuoteDetail(quoteRow.id);
+    _slRenderQuoteDetail();
 }
 
 function buildQuoteCardHTML(q) {
