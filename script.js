@@ -9694,6 +9694,9 @@ async function handleSignUpProSubmit() {
     if (!name || !businessName || !abnRaw || !email || !password) {
         showAuthError('Please fill in all fields including your Business Name and ABN.'); return;
     }
+    if (!postcode) {
+        showAuthError('Please enter your postcode — it\'s used to show your business to nearby buyers.'); return;
+    }
     const abnDigits = abnRaw.replace(/\s/g, '');
     if (!/^\d{11}$/.test(abnDigits)) {
         showAuthError('Please enter a valid 11-digit ABN (e.g. 51 824 753 556).'); return;
@@ -9735,6 +9738,9 @@ async function handleSignUpTradeSubmit() {
     const password     = document.getElementById('authPasswordTrade')?.value;
     if (!name || !businessName || !abnRaw || !email || !password) {
         showAuthError('Please fill in all fields including your Business Name and ABN.'); return;
+    }
+    if (!postcode) {
+        showAuthError('Please enter your postcode — it\'s used to show your business to nearby buyers.'); return;
     }
     const abnDigits = abnRaw.replace(/\s/g, '');
     if (!/^\d{11}$/.test(abnDigits)) {
