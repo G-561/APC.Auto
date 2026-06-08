@@ -15817,9 +15817,15 @@ function _slRenderResults() {
             _slRenderActionBar(); return;
         }
         const statusColour = { active: '#22c55e', pending: '#f59e0b', sold: '#888', draft: '#aaa' };
-        content.innerHTML =
-            `<div class="sl-section-hdr own"><span class="sl-section-own-pill">STOCK #${escapeHtml(tab.stockNo)}</span>${tab.results.length} part${tab.results.length!==1?'s':''} listed</div>` +
-            tab.results.map(r => {
+        const stockColHdr = `<div class="sl-results-col-hdr">
+            <div class="sl-hdr-cell" style="width:36px;"></div>
+            <div class="sl-hdr-cell" style="width:52px;"></div>
+            <div class="sl-hdr-cell flex">Part</div>
+            <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
+            <div class="sl-hdr-cell" style="width:70px;">Price</div>
+            <div class="sl-hdr-cell" style="width:120px;">Bin / Status</div>
+        </div>`;
+        const stockRows = tab.results.map(r => {
                 const img   = (r.listing_images || []).sort((a,b) => a.position-b.position)[0]?.storage_path || '';
                 const grade = r.condition || '';
                 const gradeClass = grade ? `grade-${grade.charAt(0).toUpperCase()}` : '';
@@ -15837,7 +15843,10 @@ function _slRenderResults() {
                         ${st ? `<span style="color:${statusColour[st]||'#888'};font-weight:700;font-size:10px;text-transform:uppercase;">${escapeHtml(st)}</span>` : ''}
                     </div>
                 </div>`;
-            }).join('');
+        }).join('');
+        content.innerHTML =
+            `<div class="sl-section-hdr own"><span class="sl-section-own-pill">STOCK #${escapeHtml(tab.stockNo)}</span>${tab.results.length} part${tab.results.length!==1?'s':''} listed</div>` +
+            `<div class="sl-results-table">${stockColHdr}${stockRows}</div>`;
         _slRenderActionBar(); return;
     }
 
@@ -15877,15 +15886,34 @@ function _slRenderResults() {
         </div>`;
     };
 
+    const ownColHdr = `<div class="sl-results-col-hdr">
+        <div class="sl-hdr-cell" style="width:36px;"></div>
+        <div class="sl-hdr-cell" style="width:52px;"></div>
+        <div class="sl-hdr-cell flex">Part</div>
+        <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
+        <div class="sl-hdr-cell" style="width:70px;">Price</div>
+        <div class="sl-hdr-cell" style="width:120px;">Stock / Bin</div>
+    </div>`;
+    const otherColHdr = `<div class="sl-results-col-hdr">
+        <div class="sl-hdr-cell" style="width:36px;"></div>
+        <div class="sl-hdr-cell" style="width:52px;"></div>
+        <div class="sl-hdr-cell flex">Part</div>
+        <div class="sl-hdr-cell" style="width:130px;">Yard</div>
+        <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
+        <div class="sl-hdr-cell" style="width:70px;">Price</div>
+        <div class="sl-hdr-cell" style="width:68px;"></div>
+    </div>`;
+
     const proToggle = `<button class="sl-pro-filter-btn${_slProOnly ? ' active' : ''}" onclick="_slToggleProOnly()">${_slProOnly ? '★ Pro only' : '☆ Pro only'}</button>`;
     const otherHdr = allOther.length
         ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length}${_slProOnly && other.length < allOther.length ? ` of ${allOther.length}` : ''} result${other.length!==1?'s':''}${proToggle}</div>`
         : '';
-    const otherBody = other.length ? other.map(r=>rowHTML(r,false)).join('') :
-        (allOther.length ? `<div class="sl-no-results" style="padding:10px 15px;font-size:12px;">No pro sellers in these results</div>` : '');
+    const otherBody = other.length
+        ? `<div class="sl-results-table">${otherColHdr}${other.map(r=>rowHTML(r,false)).join('')}</div>`
+        : (allOther.length ? `<div class="sl-no-results" style="padding:10px 15px;font-size:12px;">No pro sellers in these results</div>` : '');
 
     content.innerHTML =
-        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div>${own.map(r=>rowHTML(r,true)).join('')}` : '') +
+        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div><div class="sl-results-table">${ownColHdr}${own.map(r=>rowHTML(r,true)).join('')}</div>` : '') +
         otherHdr + otherBody;
     _slRenderActionBar();
 }

@@ -312,22 +312,24 @@
                         <div id="slActionBar" class="sl-action-bar" style="display:none;"></div>
                     </div>
                 </div>
-                <div class="sl-searches-panel">
-                    <div class="sl-sp-header">
-                        <span class="sl-sp-title">Today's Searches</span>
-                        <span id="slSearchCount" class="sl-sp-count"></span>
+                <div class="sl-right-col">
+                    <div class="sl-quotes-panel" id="slQuotesPanel">
+                        <div class="sl-qp-header">
+                            <span class="sl-qp-title">Today's Quotes</span>
+                        </div>
+                        <div class="sl-qp-search">
+                            <input type="text" id="slQuoteSearchInput" autocomplete="off" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
+                        </div>
+                        <div id="slQuotesList" class="sl-quotes-list"></div>
+                        <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
                     </div>
-                    <div id="slSearchHistory" class="sl-sp-list"></div>
-                </div>
-                <div class="sl-quotes-panel" id="slQuotesPanel">
-                    <div class="sl-qp-header">
-                        <span class="sl-qp-title">Today's Quotes</span>
+                    <div class="sl-searches-panel">
+                        <div class="sl-sp-header">
+                            <span class="sl-sp-title">Today's Searches</span>
+                            <span id="slSearchCount" class="sl-sp-count"></span>
+                        </div>
+                        <div id="slSearchHistory" class="sl-sp-list"></div>
                     </div>
-                    <div class="sl-qp-search">
-                        <input type="text" id="slQuoteSearchInput" autocomplete="off" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
-                    </div>
-                    <div id="slQuotesList" class="sl-quotes-list"></div>
-                    <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
                 </div>
             </div>
         </div>

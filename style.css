@@ -7596,20 +7596,24 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-section-own-pill { background: #f07020; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 99px; }
 .sl-pro-filter-btn { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; border: 1.5px solid #bbb; background: #fff; color: #888; cursor: pointer; letter-spacing: 0.3px; }
 .sl-pro-filter-btn.active { border-color: #f07020; background: #fff8f2; color: #f07020; }
+/* Results table — spreadsheet grid */
+.sl-results-table { display: flex; flex-direction: column; border-top: 2px solid #d0d0d0; }
+.sl-results-col-hdr { display: flex; align-items: center; background: #f0f0f0; border-bottom: 2px solid #d0d0d0; min-height: 28px; flex-shrink: 0; }
+.sl-results-col-hdr .sl-hdr-cell { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666; padding: 0 10px; border-right: 1px solid #d0d0d0; align-self: stretch; display: flex; align-items: center; flex-shrink: 0; }
+.sl-results-col-hdr .sl-hdr-cell.flex { flex: 1; }
 .sl-row {
     display: flex; align-items: center; gap: 0;
-    border-bottom: 1px solid #eee; background: #fff;
+    border-bottom: 1px solid #ddd; background: #fff;
     min-height: 44px; cursor: pointer;
 }
-.sl-row:hover { background: #fafafa; }
+.sl-row:hover { background: #f5f7ff; }
 .sl-row.own { background: #fffbf7; }
-.sl-row:hover { background: #f9f9f9; }
 .sl-row.own:hover { background: #fff4ec; }
-.sl-cell { display: flex; align-items: center; padding: 6px 10px; border-right: 1px solid #eee; align-self: stretch; flex-shrink: 0; font-size: 12px; }
+.sl-cell { display: flex; align-items: center; padding: 6px 10px; border-right: 1px solid #ddd; align-self: stretch; flex-shrink: 0; font-size: 12px; }
 .sl-cell-thumb { width: 52px; padding: 4px; flex-shrink: 0; }
 .sl-cell-thumb img { width: 44px; height: 36px; object-fit: cover; border-radius: 4px; display: block; }
 .sl-cell-thumb .sl-no-img { width: 44px; height: 36px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-.sl-cell-title { flex: 1 1 auto; font-size: 13px; font-weight: 600; color: #333; min-width: 0; border-right: 1px solid #eee; padding: 6px 12px; }
+.sl-cell-title { flex: 1 1 auto; font-size: 13px; font-weight: 600; color: #333; min-width: 0; border-right: 1px solid #ddd; padding: 6px 12px; }
 .sl-cell-title span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sl-cell-yard { color: #666; font-size: 12px; width: 130px; }
 .sl-cell-grade { width: 44px; justify-content: center; font-weight: 700; font-size: 13px; }
@@ -7625,9 +7629,10 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-loading { padding: 30px; text-align: center; color: #aaa; font-size: 13px; }
 .sl-no-results { padding: 30px; text-align: center; color: #aaa; font-size: 13px; }
 
-/* ─── Stock Lookup: main area + quotes panel ─────────────────────────────── */
+/* ─── Stock Lookup: main area + panels ───────────────────────────────────── */
 .sl-main-area { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; }
 .sl-left-col { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
+.sl-right-col { width: 280px; flex-shrink: 0; border-left: 2px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
 .sl-selector { flex-shrink: 0; border-bottom: 2px solid #ddd; overflow-x: auto; overflow-y: hidden; }
 
 /* Selector checkboxes (col 3 + col 4) */
@@ -7700,8 +7705,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-chat-row-btn { padding: 4px 10px; background: #1a1a2e; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .sl-chat-row-btn:hover { background: #f07020; }
 
-/* Today's Searches panel */
-.sl-searches-panel { width: 210px; flex-shrink: 0; border-left: 2px solid #ddd; background: #fafafa; display: flex; flex-direction: column; overflow: hidden; }
+/* Today's Searches panel — sits in bottom of sl-right-col */
+.sl-searches-panel { flex: 2 1 0%; min-height: 0; border-top: 2px solid #ddd; background: #fafafa; display: flex; flex-direction: column; overflow: hidden; }
 .sl-sp-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #e8e8e8; flex-shrink: 0; }
 .sl-sp-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
 .sl-sp-count { font-size: 11px; font-weight: 700; color: #aaa; }
@@ -7717,7 +7722,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-sp-found { background: #dcfce7; color: #15803d; }
 .sl-sp-none { background: #fee2e2; color: #dc2626; }
 
-.sl-quotes-panel { width: 280px; flex-shrink: 0; border-left: 2px solid #ddd; background: #fafafa; display: flex; flex-direction: column; overflow: hidden; }
+/* Today's Quotes panel — sits in top of sl-right-col */
+.sl-quotes-panel { flex: 3 1 0%; min-height: 0; background: #fafafa; display: flex; flex-direction: column; overflow: hidden; }
 .sl-qp-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #fff; border-bottom: 1px solid #eee; }
 .sl-qp-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #333; }
 .sl-qp-new-btn { background: #f07020; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
