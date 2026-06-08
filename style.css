@@ -7632,7 +7632,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* ─── Stock Lookup: main area + panels ───────────────────────────────────── */
 .sl-main-area { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; }
 .sl-left-col { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
-.sl-right-col { width: 280px; flex-shrink: 0; border-left: 2px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
+.sl-right-col { width: 360px; flex-shrink: 0; border-left: 2px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
 .sl-selector { flex-shrink: 0; border-bottom: 2px solid #ddd; overflow-x: auto; overflow-y: hidden; }
 
 /* Selector checkboxes (col 3 + col 4) */
@@ -7776,8 +7776,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-qd-btn-danger:hover { background: #fee2e2; }
 
 /* Add-to-quote modal */
-.sl-quote-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3200; display: flex; align-items: center; justify-content: center; }
-.sl-quote-modal { background: #fff; border-radius: 16px; width: 400px; max-width: 90vw; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.sl-quote-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3800; display: flex; align-items: center; justify-content: center; }
+.sl-quote-modal { background: #fff; border-radius: 16px; width: 520px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .sl-qm-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid #eee; }
 .sl-qm-title { font-size: 14px; font-weight: 800; color: #333; }
 .sl-qm-close { background: none; border: none; font-size: 18px; color: #aaa; cursor: pointer; padding: 4px; line-height: 1; }
