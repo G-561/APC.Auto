@@ -82,7 +82,7 @@
 
         <div class="search-col">
         <div class="search-group">
-            <input type="text" id="mainSearchInput" placeholder="Search parts for sale..." onfocus="closeDashboard()" oninput="activeFilters.search=this.value.trim();renderMainGrid();updateFilterChip();">
+            <input type="text" id="mainSearchInput" autocomplete="off" placeholder="Search parts for sale..." onfocus="closeDashboard()" oninput="activeFilters.search=this.value.trim();renderMainGrid();updateFilterChip();">
             <button class="btn-search-filters" onclick="toggleDrawer('filterDrawer')" aria-label="Open filters">FILTER</button>
         </div>
         <div id="filterStatusChip" class="filter-status-chip" style="display:none;"></div>
@@ -186,7 +186,7 @@
         <!-- Col 1: Folder sidebar -->
         <div class="pro-mail-sidebar">
             <div class="pro-mail-compose">
-                <input type="text" id="proInboxSearch" class="pro-mail-search" placeholder="🔍  Search enquiries…" oninput="proFilterConvs(this.value)">
+                <input type="text" id="proInboxSearch" class="pro-mail-search" autocomplete="off" placeholder="🔍  Search enquiries…" oninput="proFilterConvs(this.value)">
             </div>
             <nav class="pro-mail-folders">
                 <div class="pro-mail-folder active" id="proFolderSelling" onclick="proSetFolder('selling')">
@@ -245,7 +245,7 @@
                 </div>
             </div>
             <div class="pro-lst-toolbar-right">
-                <input type="text" id="proLstSearch" class="dash-search-input" placeholder="Search by title, category, stock number…" oninput="filterDashListings()">
+                <input type="text" id="proLstSearch" class="dash-search-input" autocomplete="off" placeholder="Search by title, category, stock number…" oninput="filterDashListings()">
                 <select id="proLstCatFilter" class="dash-search-select" onchange="filterDashListings()">
                     <option value="">All Categories</option>
                     <option value="body">Body &amp; Exterior</option>
@@ -1274,7 +1274,7 @@
             <div class="input-group" style="margin-bottom:12px;">
                 <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
                 <div class="location-picker-wrap" data-mode="signup">
-                    <input class="loc-postcode-input" id="authPostcodePersonal" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                    <input class="loc-postcode-input" id="authPostcodePersonal" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
                     <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
                 </div>
             </div>
@@ -1297,7 +1297,7 @@
             <div class="input-group" style="margin-bottom:12px;">
                 <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
                 <div class="location-picker-wrap" data-mode="signup">
-                    <input class="loc-postcode-input" id="authPostcodePro" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                    <input class="loc-postcode-input" id="authPostcodePro" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
                     <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
                 </div>
             </div>
@@ -1334,7 +1334,7 @@
             <div class="input-group" style="margin-bottom:12px;">
                 <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
                 <div class="location-picker-wrap" data-mode="signup">
-                    <input class="loc-postcode-input" id="authPostcodeTrade" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                    <input class="loc-postcode-input" id="authPostcodeTrade" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
                     <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
                 </div>
             </div>
@@ -1611,7 +1611,7 @@
                 <div class="settings-row settings-row-location">
                     <span class="settings-row-label">Location</span>
                     <div class="location-picker-wrap">
-                        <input class="settings-inline-input loc-postcode-input" type="text" inputmode="numeric" maxlength="4" placeholder="Postcode" oninput="onPostcodeInput(this)">
+                        <input class="settings-inline-input loc-postcode-input" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
                         <select class="settings-inline-input loc-suburb-select" style="display:none" onchange="onSuburbSelect(this)"></select>
                         <div class="location-chip" style="display:none">
                             <span class="location-chip-text"></span>
@@ -1913,7 +1913,7 @@
     <div class="drawer-content" style="padding: 15px 0 0; background: #f4f4f4;">
         <div class="input-group" style="margin-bottom: 12px; padding: 0 15px;">
             <div style="position: relative;">
-                <input id="myPartsSearchInput" type="text" placeholder="Search my inventory..." oninput="renderMyParts()" style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #ddd; outline: none; box-sizing: border-box; font-size: 14px;">
+                <input id="myPartsSearchInput" type="text" autocomplete="off" placeholder="Search my inventory..." oninput="renderMyParts()" style="width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #ddd; outline: none; box-sizing: border-box; font-size: 14px;">
             </div>
         </div>
         <div id="mlAwayBanner" style="display:none;" class="ml-away-banner" onclick="onMenuOpenSettings()">
@@ -1944,7 +1944,7 @@
         <div id="workshopBrowseSection" style="display:none;">
             <div class="ws-search-bar">
                 <div class="search-group ws-search-input">
-                    <input id="workshopSearchInput" type="text" placeholder="Search by name or vehicle…" oninput="renderWorkshopBrowseView()">
+                    <input id="workshopSearchInput" type="text" autocomplete="off" placeholder="Search by name or vehicle…" oninput="renderWorkshopBrowseView()">
                 </div>
                 <div class="ws-locator-postcode-row">
                     <div class="location-picker-wrap" data-mode="ws-locator">
@@ -2641,7 +2641,7 @@
                     <button class="inbox-role-tab" id="inboxRoleTabSelling" onclick="setInboxRoleTab('selling')">Selling <span class="inbox-role-badge" id="inboxRoleBadgeSelling" style="display:none"></span></button>
                 </div>
                 <div class="inbox-conv-search">
-                    <input type="text" id="inboxSearchInput" placeholder="Search by name or part…" oninput="filterInboxConvs(this.value)">
+                    <input type="text" id="inboxSearchInput" autocomplete="off" placeholder="Search by name or part…" oninput="filterInboxConvs(this.value)">
                 </div>
                 <div id="inboxConvList" class="inbox-conv-list"></div>
             </div>
