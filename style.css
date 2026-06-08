@@ -1989,13 +1989,13 @@ header {
     display: none;
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.45);
-    z-index: 3199;
+    z-index: 3769;
 }
 #wsOverlayBackdrop.active { display: block; }
 @media (max-width: 899px) {
     #wsOverlayBackdrop.active { display: none; }
 }
-#workshopDetailOverlay { z-index: 3200; }
+#workshopDetailOverlay { z-index: 3770; }
 @media (min-width: 900px) {
     #workshopDetailOverlay {
         top: 50% !important;
