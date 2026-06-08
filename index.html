@@ -416,17 +416,7 @@
         <!-- ── LABELS TAB ─────────────────────────────────────── -->
         <div id="whLabelsTab" class="wh-tab-panel">
             <div class="wh-panel-inner">
-                <!-- Worker access QR -->
-                <div class="wh-section-label">WORKER ACCESS</div>
-                <div class="wh-worker-qr-card">
-                    <div id="whWorkerQr" class="wh-worker-qr-wrap"></div>
-                    <div class="wh-worker-qr-info">
-                        <div class="wh-worker-qr-title">Put-Away Scanner</div>
-                        <div class="wh-worker-qr-desc">Workers scan this QR with their phone to open the put-away scanner directly — no menu navigation needed.</div>
-                    </div>
-                </div>
-
-                <div class="wh-section-label" style="margin-top:24px;">BATCH GENERATOR</div>
+                <div class="wh-section-label">BATCH GENERATOR</div>
                 <div class="wh-batch-row">
                     <div class="wh-batch-field">
                         <div class="wh-batch-field-label">Prefix</div>
@@ -465,6 +455,16 @@
 
         <!-- ── PUT-AWAY TAB ───────────────────────────────────── -->
         <div id="whScannerTab" class="wh-tab-panel" style="display:none; flex-direction:column;">
+            <div class="wh-panel-inner" style="flex-shrink:0;">
+                <div class="wh-section-label">WORKER ACCESS</div>
+                <div class="wh-worker-qr-card">
+                    <div id="whWorkerQr" class="wh-worker-qr-wrap"></div>
+                    <div class="wh-worker-qr-info">
+                        <div class="wh-worker-qr-title">Put-Away Scanner</div>
+                        <div class="wh-worker-qr-desc">Workers scan this QR with their phone to open the put-away scanner directly — no menu navigation needed.</div>
+                    </div>
+                </div>
+            </div>
             <div class="wh-camera-wrap">
                 <video id="whCameraVideo" autoplay playsinline muted class="wh-camera-video"></video>
                 <canvas id="whCameraCanvas" style="display:none;"></canvas>

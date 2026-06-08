@@ -16945,7 +16945,7 @@ function whRenderWorkerQR() {
     const base = (location.protocol === 'file:' || location.hostname === 'localhost')
         ? 'https://autopartsconnection.com.au/'
         : `${location.origin}${location.pathname}`;
-    new QRCode(wrap, { text: `${base}?putaway=1`, width: 90, height: 90, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(wrap, { text: `${base}?putaway=1`, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 }
 
 function closeWarehouseDrawer() {
