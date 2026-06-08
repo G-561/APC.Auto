@@ -8068,7 +8068,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
    WAREHOUSE DRAWER
    ================================================================ */
 .wh-tab-bar { display: flex; gap: 2px; background: rgba(255,255,255,0.12); border-radius: 8px; padding: 3px; }
-.wh-tab { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.wh-tab { background: none; border: none; color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; }
 .wh-tab--active { background: white; color: #1a1a2e; }
 .wh-tab-panel { display: flex; flex-direction: column; flex: 1; overflow-y: auto; }
 .wh-panel-inner { padding: 20px; }
