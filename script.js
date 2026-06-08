@@ -17512,7 +17512,7 @@ function _showListingSharePrompt(listing) {
     el.innerHTML = `
         <div class="lsp-backdrop" onclick="document.getElementById('listingSharePrompt')?.remove()"></div>
         <div class="lsp-sheet">
-            <div class="lsp-handle"></div>
+            <button class="lsp-close" onclick="document.getElementById('listingSharePrompt')?.remove()">×</button>
             <div class="lsp-heading">Your listing is live!</div>
             <div class="lsp-sub">Share it to reach more buyers</div>
             <div class="lsp-grid${hasNative ? ' has-native' : ''}">
@@ -17534,15 +17534,16 @@ function _showListingSharePrompt(listing) {
                     Copy Link
                 </button>
             </div>
-            <button class="lsp-dismiss" onclick="document.getElementById('listingSharePrompt')?.remove()">No thanks</button>
         </div>`;
     document.body.appendChild(el);
-    // Slide up animation
+    // Fade + lift animation
     const sheet = el.querySelector('.lsp-sheet');
-    sheet.style.transform = 'translateY(100%)';
+    sheet.style.opacity = '0';
+    sheet.style.transform = 'translateY(16px)';
     requestAnimationFrame(() => {
-        sheet.style.transition = 'transform 0.28s cubic-bezier(0.22,1,0.36,1)';
-        sheet.style.transform  = '';
+        sheet.style.transition = 'opacity 0.22s ease, transform 0.25s cubic-bezier(0.22,1,0.36,1)';
+        sheet.style.opacity   = '1';
+        sheet.style.transform = 'translateY(0)';
     });
 }
 
