@@ -17433,7 +17433,7 @@ function _vscBuildPartRows(parts) {
         const sc = { active:'vsc-part-active', pending:'vsc-part-pending', sold:'vsc-part-sold' }[p.status] || '';
         const sl = { active:'Active', pending:'Pending', sold:'Sold' }[p.status] || (p.status || 'Active');
         return `<tr class="vsc-part-row" onclick="_vscViewPart('${p.id}')">
-            <td class="vsc-part-name">${escapeHtml(p.title)}&nbsp;<span class="vsc-view-link">↗</span></td>
+            <td class="vsc-part-name">${escapeHtml(p.title)}</td>
             <td class="vsc-part-sn">${escapeHtml(p.stock_number || '—')}</td>
             <td class="vsc-part-price">${fmt(p.price)}</td>
             <td><span class="vsc-status-chip ${sc} vsc-status-tap" onclick="_vscStatusPicker(event,${p.id},'${p.status||'active'}')">${sl} ▾</span></td>
