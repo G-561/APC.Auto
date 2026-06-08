@@ -1129,7 +1129,7 @@ async function loadIncompleteTrade() {
     const tbody = document.getElementById('incompleteTradeBody');
     if (!tbody) return;
     const users = await safeSelect('profiles',
-        'id, display_name, business_name, tier, is_pro, gifted_pro, blocked, location, bio, created_at',
+        'id, display_name, business_name, tier, is_pro, gifted_pro, blocked, location, bio, postcode, created_at',
         q => q.eq('tier', 'trade')
               .or('bio.is.null,bio.eq.,location.is.null,location.eq.')
               .order('created_at', { ascending: false })
@@ -1144,15 +1144,59 @@ async function loadIncompleteTrade() {
         const missing = [];
         if (!u.bio)      missing.push('Bio');
         if (!u.location) missing.push('Location');
-        const blockedTag = u.blocked ? ` <span style="color:#ef4444;font-size:10px;font-weight:700;">BLOCKED</span>` : '';
-        return `<tr id="urow-${u.id}">
-            <td><strong>${esc(u.display_name||'Unknown')}</strong>${blockedTag}</td>
+        const canAutoLoc = !u.location && u.postcode;
+        const btns = [
+            `<button class="dismiss-btn" style="color:#F7941D;border-color:#F7941D;" onclick="nudgeTradeUser('${u.id}')">Nudge</button>`,
+            canAutoLoc ? `<button class="dismiss-btn" style="color:#007aff;border-color:#007aff;" onclick="autoFillLocation('${u.id}','${esc(u.postcode)}')">Auto-fill Location</button>` : '',
+        ].filter(Boolean).join('');
+        return `<tr id="itrow-${u.id}">
+            <td><strong>${esc(u.display_name||'Unknown')}</strong></td>
             <td><span style="color:#f59e0b;font-size:12px;font-weight:700;">${esc(missing.join(', ') || '—')}</span></td>
-            <td class="td-muted">${esc(u.location||'—')}</td>
+            <td class="td-muted">${esc(u.location || (u.postcode ? u.postcode : '—'))}</td>
             <td class="td-muted">${fmtDate(u.created_at)}</td>
-            <td>${_userActionBtns(u)}</td>
+            <td><div class="action-btns">${btns}</div></td>
         </tr>`;
     }).join('');
+}
+
+async function nudgeTradeUser(userId) {
+    // Clear workshop_data so the onboarding reminder triggers again on their next login
+    const { error } = await sb.from('profiles').update({ workshop_data: null }).eq('id', userId);
+    if (error) { alert('Failed: ' + error.message); return; }
+    showAdminToast('Nudge sent — onboarding prompts will show on their next login.');
+    document.getElementById(`itrow-${userId}`)?.remove();
+    const remaining = document.querySelectorAll('[id^="itrow-"]').length;
+    const countEl = document.getElementById('incompleteTradeCount');
+    if (countEl) countEl.textContent = remaining ? `${remaining} users` : '';
+    if (!remaining) setVal('incompleteTradeBody', '<tr><td colspan="5" class="td-muted">All Trade profiles are complete</td></tr>');
+}
+
+// Derive an Australian suburb/state string from a postcode (best-effort, major ranges)
+function _postcodeToLocation(pc) {
+    const n = parseInt(pc, 10);
+    if (isNaN(n)) return null;
+    if (n >= 1000 && n <= 1999) return `Sydney NSW ${pc}`;
+    if (n >= 2000 && n <= 2599) return `NSW ${pc}`;
+    if (n >= 2600 && n <= 2618) return `Canberra ACT ${pc}`;
+    if (n >= 2619 && n <= 2899) return `NSW ${pc}`;
+    if (n >= 2900 && n <= 2920) return `Canberra ACT ${pc}`;
+    if (n >= 3000 && n <= 3999) return `VIC ${pc}`;
+    if (n >= 4000 && n <= 4999) return `QLD ${pc}`;
+    if (n >= 5000 && n <= 5999) return `SA ${pc}`;
+    if (n >= 6000 && n <= 6999) return `WA ${pc}`;
+    if (n >= 7000 && n <= 7999) return `TAS ${pc}`;
+    if (n >= 800  && n <= 899)  return `NT ${pc}`;
+    if (n >= 900  && n <= 999)  return `NT ${pc}`;
+    return null;
+}
+
+async function autoFillLocation(userId, postcode) {
+    const location = _postcodeToLocation(postcode);
+    if (!location) { alert(`Can't derive a location from postcode ${postcode}.`); return; }
+    const { error } = await sb.from('profiles').update({ location }).eq('id', userId);
+    if (error) { alert('Failed: ' + error.message); return; }
+    showAdminToast(`Location set to "${location}".`);
+    loadIncompleteTrade();
 }
 
 async function loadDemandGap() {
