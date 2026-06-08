@@ -8112,10 +8112,13 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 
 @media (min-width: 900px) {
     #warehouseDrawer { left: calc(max(0px, 50vw - 800px) + 240px) !important; right: calc(max(0px, 50vw - 800px) + 220px) !important; width: auto !important; height: auto !important; bottom: 16px !important; border-radius: 16px !important; box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important; border: none !important; overflow: hidden; }
-    .wh-camera-wrap { max-height: 360px; }
+    .wh-camera-wrap { display: none !important; }
+    .wh-scan-info { display: none !important; }
+    .wh-desktop-scan-note { display: block !important; }
     .wh-label-grid { grid-template-columns: repeat(5, 1fr); }
     .wh-panel-inner { max-width: 700px; }
 }
+.wh-desktop-scan-note { display: none; font-size: 12px; color: #aaa; text-align: center; padding: 16px 20px; line-height: 1.6; }
 .wh-worker-qr-card { display: flex; align-items: center; gap: 16px; background: #f8f8f8; border: 1px solid #eee; border-radius: 12px; padding: 14px; margin-bottom: 20px; }
 .wh-worker-qr-wrap { flex-shrink: 0; line-height: 0; }
 .wh-worker-qr-info { flex: 1; min-width: 0; }

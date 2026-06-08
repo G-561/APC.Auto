@@ -16981,7 +16981,7 @@ function whSetTab(tab) {
         btnLabels.classList.remove('wh-tab--active');
         btnScanner.classList.add('wh-tab--active');
         whResetScan();
-        whStartCamera();
+        if (window.innerWidth < 900) whStartCamera();
     }
 }
 
