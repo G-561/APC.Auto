@@ -10957,14 +10957,27 @@ function renderWorkshopBrowseView() {
     const filterApproved = chk('workshopFilterApproved');
     const query = (document.getElementById('workshopSearchInput')?.value || '').trim().toLowerCase();
 
+    // Compute real km distances from user's selected postcode to each workshop
+    const locWrap    = document.querySelector('.location-picker-wrap[data-mode="ws-locator"]');
+    const userPc     = (locWrap?.dataset.selectedPostcode || '').trim();
+    const coordDb    = typeof AU_POSTCODE_COORDS !== 'undefined' ? AU_POSTCODE_COORDS : null;
+    const userCoords = (coordDb && userPc) ? coordDb[userPc] : null;
+    const distKmMap  = new Map();
+    if (userCoords) {
+        workshopDatabase.forEach(w => {
+            const wc = w.postcode && coordDb ? coordDb[w.postcode] : null;
+            if (wc) distKmMap.set(w.id, haversineKm(userCoords[0], userCoords[1], wc[0], wc[1]));
+        });
+    }
+
     const matches = workshopDatabase.filter(w => {
         if (filterApproved && !w.approvedClub) return false;
         if (workshopRadiusKm !== null) {
-            const dist = parseFloat(w.distance);
-            if (isNaN(dist) || dist > workshopRadiusKm) return false;
+            const distKm = distKmMap.get(w.id);
+            if (distKm === undefined || distKm > workshopRadiusKm) return false;
         }
         if (query) {
-            const haystack = [w.name, w.loc, ...w.vehicleTypes, ...(w.serviceKeys || [])].join(' ').toLowerCase();
+            const haystack = [w.name, w.location, ...w.vehicleTypes, ...(w.serviceKeys || [])].join(' ').toLowerCase();
             if (!haystack.includes(query)) return false;
         }
         if (!anyFilter) return true;
@@ -10973,6 +10986,11 @@ function renderWorkshopBrowseView() {
         if (filterWrecking && (w.serviceKeys || []).includes('wrecking')) return true;
         return false;
     });
+
+    // Sort by distance when user has set a postcode
+    if (userCoords) {
+        matches.sort((a, b) => (distKmMap.get(a.id) ?? Infinity) - (distKmMap.get(b.id) ?? Infinity));
+    }
 
     if (!matches.length) {
         sponsoredList.innerHTML = `<div class="workshop-empty-state">
@@ -10984,9 +11002,14 @@ function renderWorkshopBrowseView() {
         return;
     }
 
-    sponsoredList.innerHTML = matches.map(buildSponsoredWorkshopCardHTML).join('');
+    sponsoredList.innerHTML = matches.map(w => {
+        const km = distKmMap.get(w.id);
+        const distLabel = km !== undefined ? `${Math.round(km)} km away` : (w.location || '');
+        return buildSponsoredWorkshopCardHTML(w, distLabel);
+    }).join('');
 }
-function buildSponsoredWorkshopCardHTML(workshop) {
+function buildSponsoredWorkshopCardHTML(workshop, distLabel) {
+    const displayDist = distLabel !== undefined ? distLabel : (workshop.location || '');
     const stars = workshop.rating ? `<span class="workshop-rating">★ ${workshop.rating}</span>` : '';
     const approvedBadge = workshop.approvedClub
         ? `<span class="card-approved-badge">${workshop.approvedClub} Approved</span>`
@@ -10995,7 +11018,7 @@ function buildSponsoredWorkshopCardHTML(workshop) {
         <div class="workshop-card workshop-sponsor-card" onclick="openWorkshopDetail('${escapeHtml(workshop.id)}')" style="cursor:pointer;">
             <div class="workshop-card-header">
                 <div class="workshop-card-name">${escapeHtml(workshop.name)} ${approvedBadge}</div>
-                <div class="workshop-card-distance">${escapeHtml(workshop.distance)}</div>
+                <div class="workshop-card-distance">${escapeHtml(displayDist)}</div>
             </div>
             <div class="workshop-card-specialty">${escapeHtml(workshop.specialty)}</div>
             ${stars ? `<div class="workshop-card-footer">${stars}</div>` : ''}
