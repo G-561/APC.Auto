@@ -6154,7 +6154,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
         }
     } else {
         const parentOpen = [...document.querySelectorAll('.drawer.active')].some(d => d.id !== 'detailOverlay');
-        if (parentOpen && detailEl) detailEl.style.zIndex = '3250'; // float above inbox/chat (z-index 3200)
+        if (parentOpen && detailEl) detailEl.style.zIndex = '3755'; // float above inbox/chat (z-index 3750)
         toggleDrawer('detailOverlay', parentOpen);
     }
 }
