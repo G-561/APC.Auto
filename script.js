@@ -9051,6 +9051,29 @@ function buildVehicleEmpty(ico, text, cta) {
 
 // --- TOAST: lightweight global feedback chip ---
 let _toastTimer;
+function showConfirm(message, sub, confirmLabel, onConfirm) {
+    const existing = document.getElementById('apcConfirmOverlay');
+    if (existing) existing.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'apc-confirm-overlay';
+    overlay.id = 'apcConfirmOverlay';
+    overlay.innerHTML = `
+        <div class="apc-confirm-card">
+            <div class="apc-confirm-msg">${escapeHtml(message)}</div>
+            ${sub ? `<div class="apc-confirm-sub">${escapeHtml(sub)}</div>` : ''}
+            <div class="apc-confirm-btns">
+                <button class="apc-confirm-cancel" onclick="document.getElementById('apcConfirmOverlay').remove()">Cancel</button>
+                <button class="apc-confirm-ok" id="apcConfirmOk">${escapeHtml(confirmLabel || 'Delete')}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    document.getElementById('apcConfirmOk').addEventListener('click', () => {
+        overlay.remove();
+        onConfirm();
+    });
+}
+
 function showToast(msg) {
     let toast = document.getElementById('appToast');
     if (!toast) {
@@ -16424,15 +16447,16 @@ async function _slSaveQuoteChanges(quoteId) {
     _slCloseQuoteDetail();
 }
 
-async function _slDeleteQuote(quoteId) {
-    if (!confirm('Delete this quote? This cannot be undone.')) return;
-    if (!sb) return;
-    await sb.from('quote_lines').delete().eq('quote_id', quoteId);
-    await sb.from('quotes').delete().eq('id', quoteId);
-    _slQuotes = _slQuotes.filter(q => q.id !== quoteId);
-    _slCloseQuoteDetail();
-    _slRenderQuotesList();
-    showToast('Quote deleted');
+function _slDeleteQuote(quoteId) {
+    showConfirm('Delete this quote?', 'This cannot be undone.', 'Delete', async () => {
+        if (!sb) return;
+        await sb.from('quote_lines').delete().eq('quote_id', quoteId);
+        await sb.from('quotes').delete().eq('id', quoteId);
+        _slQuotes = _slQuotes.filter(q => q.id !== quoteId);
+        _slCloseQuoteDetail();
+        _slRenderQuotesList();
+        showToast('Quote deleted');
+    });
 }
 
 function _slEmailQuote(quoteId) {

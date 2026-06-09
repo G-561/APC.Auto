@@ -7775,6 +7775,17 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-qd-btn-danger { background: #fff0f0; color: #ef4444; border: 1px solid #fca5a5; flex: 0 0 auto; padding: 8px 10px; }
 .sl-qd-btn-danger:hover { background: #fee2e2; }
 
+/* Confirm dialog */
+.apc-confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9000; display: flex; align-items: center; justify-content: center; }
+.apc-confirm-card { background: #fff; border-radius: 16px; padding: 28px 24px 20px; width: 320px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; }
+.apc-confirm-msg { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 6px; }
+.apc-confirm-sub { font-size: 13px; color: #888; margin-bottom: 22px; }
+.apc-confirm-btns { display: flex; gap: 10px; }
+.apc-confirm-cancel { flex: 1; padding: 11px; border: none; border-radius: 8px; background: #f4f4f4; color: #666; font-size: 14px; font-weight: 600; cursor: pointer; }
+.apc-confirm-cancel:hover { background: #e8e8e8; }
+.apc-confirm-ok { flex: 1; padding: 11px; border: none; border-radius: 8px; background: #ef4444; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
+.apc-confirm-ok:hover { background: #dc2626; }
+
 /* Add-to-quote modal */
 .sl-quote-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3800; display: flex; align-items: center; justify-content: center; }
 .sl-quote-modal { background: #fff; border-radius: 16px; width: 520px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
