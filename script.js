@@ -12198,14 +12198,14 @@ async function proOpenQuoteFromConv(convId) {
     if (conv.partId && conv.partId !== 'general') {
         const partTitle = getConvPartTitle(conv);
         const part = findPartAnywhere(conv.partId);
-        const { data: lineRow } = await sb.from('quote_lines').insert({
+        const { data: lineData } = await sb.from('quote_lines').insert({
             quote_id: quoteRow.id,
             listing_id: Number(conv.partId),
             title: partTitle,
             price: part?.price ?? null,
             qty: 1,
-        }).select().single().catch(() => ({ data: null }));
-        if (lineRow) lines = [lineRow];
+        }).select();
+        if (lineData?.[0]) lines = [lineData[0]];
     }
 
     if (!_slQuotes.find(q => q.id === quoteRow.id)) _slQuotes.unshift(quoteRow);
