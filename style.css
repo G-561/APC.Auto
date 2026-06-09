@@ -5533,13 +5533,17 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     margin-bottom: 14px;
 }
 .dash-second-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.6fr 1.7fr;
     gap: 14px;
     margin-bottom: 14px;
-    align-items: flex-start;
+    align-items: start;
 }
-.dash-second-row #dashDemandCard  { flex: 1; }
-.dash-second-row #dashWantedRequestsCard { flex: 1.4; }
+.dash-left-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
 .dash-chart-main, .dash-chart-cat, .dash-activity-col { min-height: 260px; }
 
 /* Generic card */
