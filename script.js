@@ -2795,6 +2795,82 @@ function buildOfferCardHTML(o, sent, convId, msgIdx) {
     </div>`;
 }
 
+function buildRatePromptCard(offerCard, convId, msgIdx) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return '';
+    const isBuyer  = conv.buyerId === currentUserId;
+    const listingId = offerCard.listingId;
+    const submitted = localStorage.getItem(`apc.rated.${listingId}.${currentUserId}`) === '1';
+    const otherName = isBuyer ? escapeHtml(conv.sellerName || offerCard.sellerName || 'Seller')
+                               : escapeHtml(conv.buyerName  || offerCard.buyerName  || 'Buyer');
+    if (submitted) {
+        return `<div class="rate-prompt-card rate-prompt-submitted">
+            <div class="rate-prompt-thanks">✓ Rating submitted</div>
+            <div class="rate-prompt-thanks-sub">Thanks for your feedback!</div>
+        </div>`;
+    }
+    const cid = `${convId}_${msgIdx}`;
+    return `<div class="rate-prompt-card" id="rpc-${cid}">
+        <div class="rate-prompt-title">How was ${otherName}?</div>
+        <div class="rate-prompt-label">LEAVE A RATING</div>
+        <div class="rate-prompt-stars" data-stars="0" id="rps-${cid}">
+            ${[1,2,3,4,5].map(n => `<span onclick="ratePromptSetStars(${convId},${msgIdx},${n})">★</span>`).join('')}
+        </div>
+        <textarea class="rate-prompt-note" maxlength="200" placeholder="Share your experience (optional)…"
+            id="rpn-${cid}"
+            oninput="document.getElementById('rpct-${cid}').textContent=this.value.length+' / 200'"></textarea>
+        <div class="rate-prompt-counter" id="rpct-${cid}">0 / 200</div>
+        <button class="rate-prompt-submit" id="rpsb-${cid}" onclick="submitRatingFromThread(${convId},${msgIdx})">Submit Rating</button>
+    </div>`;
+}
+
+function ratePromptSetStars(convId, msgIdx, n) {
+    const cid = `${convId}_${msgIdx}`;
+    const el  = document.getElementById(`rps-${cid}`);
+    if (!el) return;
+    el.dataset.stars = n;
+    el.querySelectorAll('span').forEach((s, i) => { s.style.color = i < n ? '#f59e0b' : '#ccc'; });
+}
+
+async function submitRatingFromThread(convId, msgIdx) {
+    const conv = conversations.find(c => c.id === convId);
+    if (!conv) return;
+    const msg = conv.msgs[msgIdx];
+    if (!msg?.offerCard) return;
+    const oc    = msg.offerCard;
+    const cid   = `${convId}_${msgIdx}`;
+    const stars = Number(document.getElementById(`rps-${cid}`)?.dataset.stars || 0);
+    const note  = document.getElementById(`rpn-${cid}`)?.value.trim() || null;
+    const btn   = document.getElementById(`rpsb-${cid}`);
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+    const isBuyer = conv.buyerId === currentUserId;
+    if (sb) {
+        try {
+            if (isBuyer) {
+                await sb.from('seller_ratings').insert({
+                    listing_id: oc.listingId || null,
+                    rater_id:   currentUserId,
+                    seller_id:  conv.sellerId || null,
+                    stars:      stars || null,
+                    note,
+                });
+            }
+            // Seller-rates-buyer: stored locally on the listing for now
+            if (!isBuyer) {
+                const listing = userListings.find(l => l.supabaseId == oc.listingId || l.id == oc.listingId);
+                if (listing) { listing.buyerRating = { stars, note, ratedAt: Date.now() }; saveUserListings(); }
+            }
+        } catch(e) {}
+    }
+    localStorage.setItem(`apc.rated.${oc.listingId}.${currentUserId}`, '1');
+    showToast('Rating submitted — thank you!');
+    // Re-render whichever thread is open
+    const openConv = conversations.find(c => c.id === activeConvId);
+    if (openConv?.id === convId) renderInboxMsgs(openConv);
+    if (_proActiveConvId === convId) proRenderThreadMsgs(conv);
+}
+
 function renderInboxMsgs(conv) {
     const box = document.getElementById('inboxMsgList');
     if (!box) return;
@@ -2807,6 +2883,9 @@ function renderInboxMsgs(conv) {
     box.innerHTML = soldBanner + conv.msgs.map((m, idx) => {
         let divider = '';
         if (m.time !== lastDay) { lastDay = m.time; divider = `<div class="inbox-date-divider">${m.time}</div>`; }
+        if (m.offerCard?.type === 'rate_prompt') {
+            return divider + buildRatePromptCard(m.offerCard, conv.id, idx);
+        }
         const isOffer  = !!m.offerCard;
         const content  = isOffer
             ? buildOfferCardHTML(m.offerCard, m.sent, conv.id, idx)
@@ -3067,6 +3146,7 @@ function markSoldFromInbox() {
         `Mark "${listing.title}" as sold? It will be removed from active listings.`,
         'Mark Sold',
         () => {
+            const soldConvId = activeConvId;
             listing.status   = 'sold';
             listing.soldDate = Date.now();
             saveUserListings();
@@ -3076,6 +3156,7 @@ function markSoldFromInbox() {
             if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
             showToast('Listing marked as sold!');
             syncListingStatusToSupabase(listing, 'sold');
+            _postSoldRatePrompts(listing, soldConvId);
         }
     );
 }
@@ -11723,6 +11804,7 @@ function markSold(partId) {
             renderDashboard();
             showToast('Listing marked as sold');
             syncListingStatusToSupabase(listing, 'sold');
+            _postSoldRatePrompts(listing);
         }
     );
 }
@@ -11738,6 +11820,44 @@ function relistPart(partId) {
     renderDashboard();
     showToast('Listing relisted as active');
     syncListingStatusToSupabase(listing, 'active');
+}
+
+async function _postSoldRatePrompts(listing, targetConvId) {
+    const listingId = listing.supabaseId || listing.id;
+    const convs = targetConvId
+        ? conversations.filter(c => c.id === targetConvId)
+        : conversations.filter(c => c.partId === listing.supabaseId || c.partId === listing.id);
+    for (const conv of convs) {
+        if (!conv.buyerId || conv.buyerId === currentUserId) continue; // skip if no real buyer or seller talking to themselves
+        const card = {
+            type:         'rate_prompt',
+            listingId,
+            listingTitle: listing.title || '',
+            buyerName:    conv.buyerName  || conv.with || 'Buyer',
+            sellerName:   conv.sellerName || currentUserName || 'Seller',
+        };
+        const msg = { id: nextMsgId(conv), sent: false, text: '', offerCard: card, time: 'Today', clock: nowClock(), timestamp: Date.now() };
+        conv.msgs = conv.msgs || [];
+        conv.msgs.push(msg);
+        if (sb && conv.supabaseConvId) {
+            try {
+                await sb.from('messages').insert({
+                    conversation_id: conv.supabaseConvId,
+                    sender_id:       currentUserId,
+                    sender_name:     currentUserName,
+                    text:            '',
+                    offer_data:      card,
+                });
+            } catch(e) {}
+        }
+    }
+    saveConversations();
+    const openConv = conversations.find(c => c.id === activeConvId);
+    if (openConv && convs.find(c => c.id === openConv.id)) renderInboxMsgs(openConv);
+    if (_proActiveConvId) {
+        const proConv = convs.find(c => c.id === _proActiveConvId);
+        if (proConv) proRenderThreadMsgs(proConv);
+    }
 }
 
 // --- PRO DASHBOARD ---
@@ -12178,7 +12298,8 @@ function proSetListingStatus(status, partId) {
         syncListingStatusToSupabase(listing, status === 'active' ? 'active' : status);
     };
     if (status === 'sold') {
-        if (!confirm('Mark this listing as sold?')) return;
+        showConfirm('Mark this listing as sold?', null, 'Mark Sold', () => { doSet(); _postSoldRatePrompts(listing, _proActiveConvId || undefined); });
+        return;
     }
     doSet();
 }
@@ -12187,7 +12308,10 @@ function proRenderThreadMsgs(conv) {
     const container = document.getElementById('proThreadMsgs');
     if (!container || !conv.msgs) return;
     const isBuyer = conv.buyerId === currentUserId;
-    container.innerHTML = conv.msgs.map(m => {
+    container.innerHTML = conv.msgs.map((m, idx) => {
+        if (m.offerCard?.type === 'rate_prompt') {
+            return buildRatePromptCard(m.offerCard, conv.id, idx);
+        }
         const isSent = m.sent;
         const initial = isSent
             ? (currentUserName || '?')[0].toUpperCase()
