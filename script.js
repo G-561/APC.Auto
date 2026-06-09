@@ -12209,10 +12209,6 @@ async function proOpenQuoteFromConv(convId) {
     }
 
     if (!_slQuotes.find(q => q.id === quoteRow.id)) _slQuotes.unshift(quoteRow);
-
-    // Switch to SL page — quote detail overlays render reliably there
-    proShowView('proStockView', 'proNavStock');
-    _slRenderQuotesList();
     _slActiveQuote = { quote: quoteRow, lines };
     _slQuoteConvContext = { convId };
     _slRenderQuoteDetail();
@@ -16331,7 +16327,7 @@ async function _slSendQuoteToConv() {
     saveConversations();
 
     // Mark quote as sent in DB
-    await sb.from('quotes').update({ status: 'sent', updated_at: new Date().toISOString() }).eq('id', quote.id).catch(() => {});
+    try { await sb.from('quotes').update({ status: 'sent', updated_at: new Date().toISOString() }).eq('id', quote.id); } catch(e) {}
     const idx = _slQuotes.findIndex(q => q.id === quote.id);
     if (idx >= 0) _slQuotes[idx].status = 'sent';
 
@@ -16339,7 +16335,7 @@ async function _slSendQuoteToConv() {
     const isBuyer = conv.buyerId === currentUserId;
     sb.from('messages').insert({
         conversation_id: conv.supabaseConvId, sender_id: currentUserId,
-        sender_name: currentUserName, text, offer_data: quoteData,
+        sender_name: currentUserName, text,
     }).then(() => sb.from('conversations').update({
         last_message_at: new Date().toISOString(),
         unread_buyer: !isBuyer, unread_seller: !!isBuyer,
@@ -16348,7 +16344,6 @@ async function _slSendQuoteToConv() {
     proRenderThreadMsgs(conv);
     _slCloseQuoteDetail();
     showToast('Quote sent!');
-    proShowView('proEnquiriesView', 'proNavMessages');
 }
 
 async function _slSaveQuoteField(quoteId, field, value) {
