@@ -2848,24 +2848,60 @@ async function submitRatingFromThread(convId, msgIdx) {
     if (sb) {
         try {
             if (isBuyer) {
-                await sb.from('seller_ratings').insert({
+                const sellerId = conv.sellerId || null;
+                const { error } = await sb.from('seller_ratings').insert({
                     listing_id: oc.listingId || null,
                     rater_id:   currentUserId,
-                    seller_id:  conv.sellerId || null,
+                    seller_id:  sellerId,
                     stars:      stars || null,
                     note,
                 });
+                if (error) throw error;
+                // Immediately update the local cache so grid cards refresh without a full reload
+                if (sellerId) {
+                    const cur = _sellerRatingCache[sellerId];
+                    if (cur) {
+                        const n   = cur.count + 1;
+                        const avg = Math.round(((cur.avg * cur.count) + (stars || 0)) / n * 10) / 10;
+                        _sellerRatingCache[sellerId] = { avg, count: n };
+                    } else {
+                        _sellerRatingCache[sellerId] = { avg: stars || 0, count: 1 };
+                    }
+                    renderMainGrid();
+                    // Refresh storefront rating display if currently open for this seller
+                    const sfDrawer = document.getElementById('storefrontDrawer');
+                    const sfGrid   = document.getElementById('sellerPartsGrid');
+                    if (sfDrawer?.classList.contains('active') && sfGrid?.dataset.userId === sellerId) {
+                        sb.from('seller_ratings').select('stars, note, created_at, listing_id')
+                          .eq('seller_id', sellerId).order('created_at', { ascending: false }).limit(100)
+                          .then(({ data }) => {
+                              if (!data) return;
+                              _sfRatings = data;
+                              const ratingEl  = document.getElementById('sfRatingStat');
+                              const divEl     = document.getElementById('sfRatingDivider');
+                              if (!ratingEl) return;
+                              if (!data.length) { ratingEl.style.display = 'none'; if (divEl) divEl.style.display = 'none'; return; }
+                              const avg2 = data.reduce((s, r) => s + (r.stars || 0), 0) / data.length;
+                              ratingEl.textContent  = `★ ${avg2.toFixed(1)} (${data.length})`;
+                              ratingEl.style.display = '';
+                              if (divEl) divEl.style.display = '';
+                          });
+                    }
+                }
             }
-            // Seller-rates-buyer: stored locally on the listing for now
             if (!isBuyer) {
+                // Seller rates buyer — stored locally on the listing for now
                 const listing = userListings.find(l => l.supabaseId == oc.listingId || l.id == oc.listingId);
                 if (listing) { listing.buyerRating = { stars, note, ratedAt: Date.now() }; saveUserListings(); }
             }
-        } catch(e) {}
+        } catch(e) {
+            showToast('Could not save rating — please try again');
+            if (btn) { btn.disabled = false; btn.textContent = 'Submit Rating'; }
+            return;
+        }
     }
     localStorage.setItem(`apc.rated.${oc.listingId}.${currentUserId}`, '1');
     showToast('Rating submitted — thank you!');
-    // Re-render whichever thread is open
     const openConv = conversations.find(c => c.id === activeConvId);
     if (openConv?.id === convId) renderInboxMsgs(openConv);
     if (_proActiveConvId === convId) proRenderThreadMsgs(conv);
