@@ -2090,6 +2090,8 @@ async function loadConversationsFromSupabase(userId) {
                 existing.msgs = msgs;
                 existing.with = otherName;
                 existing.unread = isUnread;
+                existing.buyerName  = r.buyer_name  || existing.buyerName  || '';
+                existing.sellerName = r.seller_name || existing.sellerName || '';
                 if (r.listing_id) existing.partId = r.listing_id;
                 if (r.ref_listing_id) existing.refListingId = r.ref_listing_id;
             } else {
@@ -2100,6 +2102,8 @@ async function loadConversationsFromSupabase(userId) {
                     buyerId: r.buyer_id,
                     sellerId: r.seller_id,
                     with: otherName,
+                    buyerName:  r.buyer_name  || '',
+                    sellerName: r.seller_name || '',
                     isPro: false,
                     unread: isUnread,
                     partId: r.listing_id || part?.id,
@@ -12170,7 +12174,7 @@ function proRenderThreadMsgs(conv) {
     container.innerHTML = conv.msgs.map(m => {
         const isSent = m.sent;
         const initial = isSent
-            ? (isBuyer ? (conv.buyerName||'Y')[0] : (conv.sellerName||'Y')[0]).toUpperCase()
+            ? (currentUserName || '?')[0].toUpperCase()
             : (isBuyer ? (conv.sellerName||'S')[0] : (conv.buyerName||'B')[0]).toUpperCase();
         const content = m.offerCard?.type === 'quote'
             ? buildQuoteCardHTML(m.offerCard)
