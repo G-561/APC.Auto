@@ -16730,6 +16730,65 @@ async function loadDashGraphData() {
     }
 }
 
+let _dashFeedbackRatings = [];
+
+async function renderDashFeedbackCard() {
+    const card = document.getElementById('dashFeedbackCard');
+    if (!card) return;
+    const soldListings = userListings.filter(p => p.status === 'sold');
+    const toLeave      = soldListings.filter(l => !l.buyerRating).length;
+
+    card.style.display = '';
+    card.innerHTML = `<div class="dash-card-hdr"><span class="dash-card-title">Seller Feedback</span></div>
+        <div style="padding:4px 0 8px;font-size:12px;color:#bbb;">Loading…</div>`;
+
+    if (!sb || !currentUserId) return;
+    let ratings = [];
+    try {
+        const { data } = await sb.from('seller_ratings')
+            .select('stars, note, created_at, listing_id')
+            .eq('seller_id', currentUserId)
+            .order('created_at', { ascending: false });
+        ratings = data || [];
+    } catch(e) {}
+    _dashFeedbackRatings = ratings;
+
+    const received = ratings.length;
+    const avg      = received ? ratings.reduce((s, r) => s + (r.stars || 0), 0) / received : 0;
+    const pending  = Math.max(0, soldListings.length - received);
+
+    const receivedVal = received
+        ? `<span class="dash-fb-stars">★ ${avg.toFixed(1)}</span><span class="dash-fb-count">${received} rating${received !== 1 ? 's' : ''}</span>`
+        : `<span class="dash-fb-none">None yet</span>`;
+
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Seller Feedback</span>
+            ${received ? `<button class="dash-card-action" onclick="_dashOpenRatings()">View all →</button>` : ''}
+        </div>
+        <div class="dash-fb-rows">
+            <div class="dash-fb-row">
+                <span class="dash-fb-ico">★</span>
+                <span class="dash-fb-label">Received</span>
+                <span class="dash-fb-val">${receivedVal}</span>
+            </div>
+            <div class="dash-fb-row">
+                <span class="dash-fb-ico">⏳</span>
+                <span class="dash-fb-label">Awaiting from buyers</span>
+                <span class="dash-fb-val dash-fb-num ${pending > 0 ? 'warn' : 'ok'}">${pending}</span>
+            </div>
+            <div class="dash-fb-row">
+                <span class="dash-fb-ico">✍</span>
+                <span class="dash-fb-label">You haven't rated yet</span>
+                <span class="dash-fb-val dash-fb-num ${toLeave > 0 ? 'orange' : 'ok'}">${toLeave}${toLeave > 0 ? `<button class="dash-fb-link" onclick="proOpenMyListings('sold')">View sales</button>` : ''}</span>
+            </div>
+        </div>`;
+}
+
+function _dashOpenRatings() {
+    openSellerRatings(_dashFeedbackRatings);
+}
+
 function renderDashboard() {
     // Safety: if signed in but userListings empty, may be a post-sign-in race — reload
     if (userIsSignedIn && currentUserId && !userListings.length) {
@@ -16762,6 +16821,7 @@ function renderDashboard() {
     renderDashJobs();
     renderDashWanted();
     renderDashWantedRequests();
+    renderDashFeedbackCard();
 }
 
 function renderDashboardCharts(myListings) {
