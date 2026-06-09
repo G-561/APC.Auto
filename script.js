@@ -6825,11 +6825,11 @@ function openSellerRatings(ratings = _sfRatings) {
 
     const sheet = document.createElement('div');
     sheet.id = 'sfRatingsSheet';
-    sheet.style.cssText = 'position:fixed;inset:0;z-index:3400;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:rgba(0,0,0,0.45);';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);padding:20px;box-sizing:border-box;';
     sheet.onclick = (e) => { if (e.target === sheet) sheet.remove(); };
 
     const panel = document.createElement('div');
-    panel.style.cssText = 'background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:680px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -4px 30px rgba(0,0,0,0.15);';
+    panel.style.cssText = 'background:#fff;border-radius:20px;width:100%;max-width:520px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.22);';
 
     // Header
     const hdr = document.createElement('div');
