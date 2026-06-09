@@ -2450,6 +2450,8 @@ function subscribeToRealtimeMessages() {
                         buyerId: convRow.buyer_id,
                         sellerId: convRow.seller_id,
                         with: otherName,
+                        buyerName:  convRow.buyer_name  || '',
+                        sellerName: convRow.seller_name || '',
                         isPro: false,
                         unread: false,
                         partId: convRow.listing_id || part?.id,
