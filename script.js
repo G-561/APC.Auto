@@ -12209,10 +12209,10 @@ async function proOpenQuoteFromConv(convId) {
     }
 
     if (!_slQuotes.find(q => q.id === quoteRow.id)) _slQuotes.unshift(quoteRow);
-    _slRenderQuotesList();
 
-    // Build _slActiveQuote directly from data already in hand — avoids a second DB
-    // fetch that can fail silently before the overlay ever renders
+    // Switch to SL page — quote detail overlays render reliably there
+    proShowView('proStockView', 'proNavStock');
+    _slRenderQuotesList();
     _slActiveQuote = { quote: quoteRow, lines };
     _slQuoteConvContext = { convId };
     _slRenderQuoteDetail();
@@ -16086,10 +16086,15 @@ function _slOpenAddToQuote() {
     const drafts = _slQuotes.filter(q => q.status === 'draft' || q.status === 'sent');
     const existingHtml = drafts.length ? `
         <div class="sl-qm-subtitle" style="margin-bottom:6px;">Add to existing quote</div>
-        ${drafts.map(q => `<div class="sl-qm-quote-row" onclick="_slAddToExistingQuote(${q.id})">
+        <input class="sl-qm-input" placeholder="🔍 Search by name or quote #" autocomplete="off" style="margin-bottom:6px;"
+            oninput="_slFilterExistingQuotes(this.value)">
+        <div id="slQmExistingList">
+        ${drafts.map(q => `<div class="sl-qm-quote-row" onclick="_slAddToExistingQuote(${q.id})"
+            data-search="${escapeHtml((q.quote_number + ' ' + (q.customer_name || '')).toLowerCase())}">
             <span class="sl-qm-qnum">${escapeHtml(q.quote_number)}</span>
             ${q.customer_name ? `<span class="sl-qm-qmeta">${escapeHtml(q.customer_name)}</span>` : ''}
         </div>`).join('')}
+        </div>
         <div style="margin:12px 0 8px;border-top:1px solid #eee;padding-top:12px;">
             <div class="sl-qm-subtitle">Create new quote</div>
         </div>` : '';
@@ -16135,6 +16140,13 @@ function _slOpenAddToQuote() {
 function _slCloseQuoteModal() {
     const overlay = document.getElementById('slQuoteModalOverlay');
     if (overlay) overlay.remove();
+}
+
+function _slFilterExistingQuotes(term) {
+    const t = term.toLowerCase();
+    document.querySelectorAll('#slQmExistingList .sl-qm-quote-row').forEach(r => {
+        r.style.display = !t || (r.dataset.search || '').includes(t) ? '' : 'none';
+    });
 }
 
 async function _slAddToExistingQuote(quoteId) {
@@ -16336,6 +16348,7 @@ async function _slSendQuoteToConv() {
     proRenderThreadMsgs(conv);
     _slCloseQuoteDetail();
     showToast('Quote sent!');
+    proShowView('proEnquiriesView', 'proNavMessages');
 }
 
 async function _slSaveQuoteField(quoteId, field, value) {
