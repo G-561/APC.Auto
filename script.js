@@ -12180,8 +12180,8 @@ function proRenderThreadMsgs(conv) {
             ? buildQuoteCardHTML(m.offerCard)
             : m.offerCard
             ? `<div style="font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.2);border-radius:8px;">Offer: $${m.offerCard.offerPrice}</div>`
-            : m.photoUrl
-            ? `<img src="${escapeHtml(m.photoUrl)}" style="max-width:200px;border-radius:8px;" alt="photo">`
+            : (m.photoUrl || m.photo)
+            ? `<img src="${escapeHtml(m.photoUrl || m.photo)}" style="max-width:200px;border-radius:8px;" alt="photo">`
             : escapeHtml(m.text || '');
         return `<div class="pro-mail-msg${isSent ? ' sent' : ''}">
             <div class="pro-mail-msg-avatar">${initial}</div>
