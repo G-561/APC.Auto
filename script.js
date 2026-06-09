@@ -4743,7 +4743,9 @@ function renderMyParts() {
             const overlay = document.createElement('div');
             overlay.className = 'my-card-actions-overlay';
             overlay.onclick = (e) => e.stopPropagation();
-            overlay.innerHTML = `${soldDateStr}<button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
+            overlay.innerHTML = `${soldDateStr}
+                ${!part.buyerRating ? `<button class="my-card-action-btn" onclick="showRateBuyerDialog(${part.id})">RATE</button>` : ''}
+                <button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
                 <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`;
             card.appendChild(overlay);
         } else {
@@ -9359,6 +9361,93 @@ function buildRateSellerCard(notif) {
     card.appendChild(top);
     card.appendChild(btnRow);
     return card;
+}
+
+function showRateBuyerDialog(listingId) {
+    const listing = userListings.find(l => l.id === listingId);
+    if (!listing) return;
+
+    const existing = document.getElementById('apcRateBuyerDialog');
+    if (existing) existing.remove();
+
+    let selectedStars = 0;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'apcRateBuyerDialog';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+
+    box.innerHTML = `<div style="font-weight:800;font-size:17px;color:#111;margin-bottom:4px;">Rate your buyer</div>
+        <div style="font-size:12px;color:#888;margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</div>`;
+
+    const starsLabel = document.createElement('div');
+    starsLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
+    starsLabel.textContent = 'HOW WAS THE BUYER?';
+
+    const starsRow = document.createElement('div');
+    starsRow.style.cssText = 'display:flex;gap:6px;margin-bottom:18px;';
+    const renderStars = (n) => {
+        selectedStars = n;
+        starsRow.querySelectorAll('span').forEach((s, i) => { s.style.color = i < n ? '#f59e0b' : '#ddd'; });
+    };
+    for (let i = 1; i <= 5; i++) {
+        const s = document.createElement('span');
+        s.textContent = '★';
+        s.style.cssText = 'font-size:28px;cursor:pointer;color:#ddd;transition:color 0.1s;';
+        s.onclick = () => renderStars(i);
+        starsRow.appendChild(s);
+    }
+
+    const noteLabel = document.createElement('div');
+    noteLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
+    noteLabel.textContent = 'ADD A NOTE (optional)';
+
+    const noteInput = document.createElement('textarea');
+    noteInput.maxLength = 200;
+    noteInput.rows = 2;
+    noteInput.placeholder = 'e.g. Paid quickly, great communication…';
+    noteInput.style.cssText = 'width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;resize:none;box-sizing:border-box;line-height:1.4;margin-bottom:4px;';
+
+    const noteCount = document.createElement('div');
+    noteCount.style.cssText = 'text-align:right;font-size:11px;color:#bbb;margin-bottom:18px;';
+    noteCount.textContent = '0 / 200';
+    noteInput.oninput = () => { noteCount.textContent = `${noteInput.value.length} / 200`; };
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;';
+
+    const skipBtn = document.createElement('button');
+    skipBtn.textContent = 'Skip';
+    skipBtn.style.cssText = 'flex:1;padding:11px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:#555;';
+    skipBtn.onclick = () => overlay.remove();
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Submit Rating';
+    saveBtn.style.cssText = 'flex:2;padding:11px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;';
+    saveBtn.onclick = () => {
+        const note = noteInput.value.trim() || null;
+        listing.buyerRating = { stars: selectedStars || null, note, ratedAt: Date.now() };
+        saveUserListings();
+        overlay.remove();
+        renderMyParts();
+        renderDashListings(_dashCurrentTab || 'sold');
+        renderDashFeedbackCard();
+        showToast('Rating saved!');
+    };
+
+    box.appendChild(starsLabel);
+    box.appendChild(starsRow);
+    box.appendChild(noteLabel);
+    box.appendChild(noteInput);
+    box.appendChild(noteCount);
+    btnRow.appendChild(skipBtn);
+    btnRow.appendChild(saveBtn);
+    box.appendChild(btnRow);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 }
 
 async function showSellerRatingDialog(notif) {
@@ -17046,7 +17135,10 @@ function renderDashListings(tab, btn, ctx) {
             <td class="dash-td-price">$${s.price}</td>
             <td></td>
             <td class="dash-td-date">${dashFmtDate(s.date)}</td>
-            <td><button class="dash-action-btn" onclick="relistPart(${s.id})">Relist</button></td>
+            <td>
+                ${!userListings.find(l => l.id === s.id)?.buyerRating ? `<button class="dash-action-btn dash-btn-primary" onclick="showRateBuyerDialog(${s.id})">Rate Buyer</button>` : `<span class="dash-rated-chip">★ Rated</span>`}
+                <button class="dash-action-btn" onclick="relistPart(${s.id})">Relist</button>
+            </td>
         </tr>`).join('');
     }
 
