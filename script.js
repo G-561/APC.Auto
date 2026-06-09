@@ -6885,7 +6885,7 @@ function openStorefront(partId) {
         if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
         const sfEl  = document.getElementById('storefrontDrawer');
         const backBar = document.getElementById('storefrontBackBar');
-        if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
+        if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3800' : '';
         if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
         openDrawer('storefrontDrawer');
     }
@@ -6911,7 +6911,7 @@ function openStorefront(partId) {
             if (sfMsgBtn) sfMsgBtn.style.display = 'none';
             const sfEl = document.getElementById('storefrontDrawer');
             const backBar = document.getElementById('storefrontBackBar');
-            if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
+            if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3800' : '';
             if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
             openDrawer('storefrontDrawer');
         } else {
@@ -6955,7 +6955,7 @@ function openStorefront(partId) {
                 if (sfMsgBtn) sfMsgBtn.style.display = isOwn ? 'none' : '';
                 const sfEl = document.getElementById('storefrontDrawer');
                 const backBar = document.getElementById('storefrontBackBar');
-                if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3200' : '';
+                if (sfEl)    sfEl.style.zIndex    = fromListingDetail ? '3800' : '';
                 if (backBar) backBar.style.display = fromListingDetail ? '' : 'none';
                 openDrawer('storefrontDrawer');
             } else {
