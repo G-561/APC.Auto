@@ -11907,7 +11907,23 @@ function proOpenMyListings(tab) {
     const tabBtns = document.querySelectorAll('#proLstTabs .dash-tab');
     const tabIdx  = ['active','pending','sold'].indexOf(openTab);
     tabBtns.forEach((b, i) => b.classList.toggle('active', i === tabIdx));
+    _updateProLstTabCounts();
     renderDashListings(openTab, null, 'pro');
+}
+
+function _updateProLstTabCounts() {
+    const tabs = document.querySelectorAll('#proLstTabs .dash-tab');
+    if (!tabs.length) return;
+    const sellerName = getCurrentSellerName();
+    const activeCount  = userListings.filter(p => p.status !== 'sold' && p.status !== 'removed').length;
+    const pendingCount = offersDb.filter(o => { const p = getPartById(o.partId); return p && p.seller === sellerName && o.status === 'pending'; }).length;
+    const soldCount    = userListings.filter(p => p.status === 'sold').length;
+    const labels = ['active','pending','sold'];
+    const counts = [activeCount, pendingCount, soldCount];
+    tabs.forEach((b, i) => {
+        const label = labels[i].charAt(0).toUpperCase() + labels[i].slice(1);
+        b.textContent = counts[i] ? `${label} (${counts[i]})` : label;
+    });
 }
 
 function proOpenEnquiries() {
@@ -16721,6 +16737,7 @@ function renderDashListings(tab, btn, ctx) {
         btn.classList.add('active');
     }
 
+    if (isPro) _updateProLstTabCounts();
     const pfx  = isPro ? 'proLst' : 'dashListings';
     const q    = (document.getElementById(`${pfx}Search`)?.value || '').trim().toLowerCase();
     const cat  = (document.getElementById(`${pfx}CatFilter`)?.value || '');
