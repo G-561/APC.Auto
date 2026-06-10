@@ -4053,11 +4053,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     color: rgba(255,255,255,0.7);
     letter-spacing: 0.2px;
 }
-.my-card-action-btn--ghost {
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.35);
-}
-.my-card-action-btn--ghost:hover { background: rgba(255,255,255,0.28); }
 .my-card-action-btn {
     flex: 1;
     background: var(--apc-orange);
@@ -4109,6 +4104,29 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     transition: background 0.15s;
 }
 .my-card-x-float:hover { background: rgba(239,68,68,0.85); }
+
+/* My Listings — status pill (top-left of card) */
+.ml-card-status-pill {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 3;
+    font-size: 10px !important;
+    padding: 4px 9px !important;
+}
+/* Sold pill = red in My Listings (MC uses grey for sold) */
+.ml-card-status-pill.isp-status-sold { color: #ef4444 !important; border-color: #fca5a5 !important; background: #fef2f2 !important; }
+
+/* My Listings — status picker dropdown */
+.ml-card-picker {
+    top: 30px;
+    left: 6px;
+    right: auto;
+    z-index: 100;
+}
+.ml-isp-active.active  { background: #eafaf1; color: #28a745; }
+.ml-isp-pending.active { background: var(--apc-orange-light); color: var(--apc-orange); }
+.ml-isp-sold.active    { background: #fef2f2; color: #ef4444; }
 
 /* MANAGE LISTING — status pills + rate buyer (edit mode only) */
 .manage-section {

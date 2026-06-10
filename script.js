@@ -4741,30 +4741,21 @@ function renderMyParts() {
             chk.className = 'ml-select-chk';
             chk.textContent = isSelected ? '✓' : '';
             card.appendChild(chk);
-        } else if (isSold) {
-            card.classList.add('my-card--sold');
-            const soldDateStr = part.soldDate
-                ? `<span class="my-overlay-sold-date">Sold ${new Date(part.soldDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span>`
-                : '';
-            const overlay = document.createElement('div');
-            overlay.className = 'my-card-actions-overlay';
-            overlay.onclick = (e) => e.stopPropagation();
-            overlay.innerHTML = `${soldDateStr}
-                ${!part.buyerRating ? `<button class="my-card-action-btn" onclick="showRateBuyerDialog(${part.id})">RATE</button>` : ''}
-                <button class="my-card-action-btn" onclick="relistPart(${part.id})">RELIST</button>
-                <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`;
-            card.appendChild(overlay);
         } else {
-            const isPending = part.status === 'pending';
-            const overlay = document.createElement('div');
-            overlay.className = 'my-card-actions-overlay';
-            overlay.onclick = (e) => e.stopPropagation();
-            overlay.innerHTML = `
-                <span class="my-overlay-status-label">${isPending ? 'PENDING' : 'ACTIVE'}</span>
-                <button class="my-card-action-btn my-card-action-btn--ghost" onclick="setListingStatusFromMyParts(${part.id},'${isPending ? 'active' : 'pending'}')">${isPending ? 'ACTIVE' : 'PENDING'}</button>
-                <button class="my-card-action-btn" onclick="setListingStatusFromMyParts(${part.id},'sold')">SOLD</button>
-                <button class="my-card-delete-btn" onclick="confirmListingAction(${part.id})">×</button>`;
-            card.appendChild(overlay);
+            if (isSold) card.classList.add('my-card--sold');
+
+            const s = isSold ? 'sold' : (part.status === 'pending' ? 'pending' : 'active');
+            const pill = document.createElement('button');
+            pill.className = `inbox-status-btn ml-card-status-pill isp-status-${s}`;
+            pill.textContent = '● ' + s.toUpperCase() + ' ▾';
+            pill.onclick = (e) => { e.stopPropagation(); toggleMlCardStatusPicker(e, part.id); };
+            card.appendChild(pill);
+
+            const xBtn = document.createElement('button');
+            xBtn.className = 'my-card-x-float';
+            xBtn.textContent = '×';
+            xBtn.onclick = (e) => { e.stopPropagation(); confirmListingAction(part.id); };
+            card.appendChild(xBtn);
         }
 
         grid.appendChild(card);
@@ -12024,7 +12015,51 @@ function markSold(partId) {
     );
 }
 
+function toggleMlCardStatusPicker(e, partId) {
+    document.querySelectorAll('.ml-card-picker').forEach(p => p.remove());
+    const pill = e.currentTarget;
+    const card = pill.parentElement;
+    const listing = userListings.find(l => l.id === partId);
+    if (!listing) return;
+    const current = listing.status || 'active';
+
+    const picker = document.createElement('div');
+    picker.className = 'inbox-status-picker ml-card-picker';
+    picker.onclick = (ev) => ev.stopPropagation();
+    picker.innerHTML = `<div class="isp-title">SET STATUS</div>`;
+
+    [
+        { s: 'active',  label: '● Active',  cls: 'ml-isp-active'  },
+        { s: 'pending', label: '● Pending', cls: 'ml-isp-pending' },
+        { s: 'sold',    label: '● Sold',    cls: 'ml-isp-sold'    },
+    ].forEach(({ s, label, cls }) => {
+        const btn = document.createElement('button');
+        btn.className = `isp-opt ${cls}${s === current ? ' active' : ''}`;
+        btn.textContent = label;
+        btn.onclick = () => setListingStatusFromMyParts(partId, s);
+        picker.appendChild(btn);
+    });
+
+    if (current === 'sold' && !listing.buyerRating) {
+        const divider = document.createElement('div');
+        divider.style.cssText = 'border-top:1px solid #eee;margin:6px 0;';
+        picker.appendChild(divider);
+        const rateBtn = document.createElement('button');
+        rateBtn.className = 'isp-opt';
+        rateBtn.style.color = '#f59e0b';
+        rateBtn.textContent = '★ Rate Buyer';
+        rateBtn.onclick = () => { picker.remove(); showRateBuyerDialog(partId); };
+        picker.appendChild(rateBtn);
+    }
+
+    card.appendChild(picker);
+    setTimeout(() => {
+        document.addEventListener('click', function h() { picker.remove(); document.removeEventListener('click', h); }, { once: true });
+    }, 0);
+}
+
 function setListingStatusFromMyParts(id, newStatus) {
+    document.querySelectorAll('.ml-card-picker').forEach(p => p.remove());
     if (newStatus === 'sold') { markSold(id); return; }
     const listing = userListings.find(l => l.id === id);
     if (!listing) return;
