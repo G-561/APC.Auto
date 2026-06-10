@@ -4748,7 +4748,7 @@ function renderMyParts() {
             const pill = document.createElement('button');
             pill.className = `inbox-status-btn ml-card-status-pill isp-status-${s}`;
             pill.textContent = '● ' + s.toUpperCase() + ' ▾';
-            pill.onclick = (e) => { e.stopPropagation(); toggleMlCardStatusPicker(e, part.id); };
+            pill.onclick = (e) => { e.stopPropagation(); toggleMlCardStatusPicker(pill, part.id); };
             card.appendChild(pill);
 
             const xBtn = document.createElement('button');
@@ -12015,16 +12015,17 @@ function markSold(partId) {
     );
 }
 
-function toggleMlCardStatusPicker(e, partId) {
+function toggleMlCardStatusPicker(pillEl, partId) {
     document.querySelectorAll('.ml-card-picker').forEach(p => p.remove());
-    const pill = e.currentTarget;
-    const card = pill.parentElement;
     const listing = userListings.find(l => l.id === partId);
     if (!listing) return;
     const current = listing.status || 'active';
 
+    const rect = pillEl.getBoundingClientRect();
     const picker = document.createElement('div');
     picker.className = 'inbox-status-picker ml-card-picker';
+    // Use fixed positioning so overflow:hidden on the card doesn't clip it
+    picker.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;z-index:9999;`;
     picker.onclick = (ev) => ev.stopPropagation();
     picker.innerHTML = `<div class="isp-title">SET STATUS</div>`;
 
@@ -12052,7 +12053,7 @@ function toggleMlCardStatusPicker(e, partId) {
         picker.appendChild(rateBtn);
     }
 
-    card.appendChild(picker);
+    document.body.appendChild(picker);
     setTimeout(() => {
         document.addEventListener('click', function h() { picker.remove(); document.removeEventListener('click', h); }, { once: true });
     }, 0);

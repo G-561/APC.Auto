@@ -4117,13 +4117,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* Sold pill = red in My Listings (MC uses grey for sold) */
 .ml-card-status-pill.isp-status-sold { color: #ef4444 !important; border-color: #fca5a5 !important; background: #fef2f2 !important; }
 
-/* My Listings — status picker dropdown */
-.ml-card-picker {
-    top: 30px;
-    left: 6px;
-    right: auto;
-    z-index: 100;
-}
+/* My Listings — status picker dropdown (positioned via JS fixed coords) */
+.ml-card-picker { right: auto; }
 .ml-isp-active.active  { background: #eafaf1; color: #28a745; }
 .ml-isp-pending.active { background: var(--apc-orange-light); color: var(--apc-orange); }
 .ml-isp-sold.active    { background: #fef2f2; color: #ef4444; }
