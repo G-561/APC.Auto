@@ -2090,6 +2090,8 @@ async function loadConversationsFromSupabase(userId) {
                 existing.msgs = msgs;
                 existing.with = otherName;
                 existing.unread = isUnread;
+                existing.buyerId    = r.buyer_id    || existing.buyerId    || null;
+                existing.sellerId   = r.seller_id   || existing.sellerId   || null;
                 existing.buyerName  = r.buyer_name  || existing.buyerName  || '';
                 existing.sellerName = r.seller_name || existing.sellerName || '';
                 if (r.listing_id) existing.partId = r.listing_id;
