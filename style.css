@@ -4045,13 +4045,19 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     gap: 6px;
     padding: 6px 8px;
 }
-.my-overlay-sold-date {
+.my-overlay-sold-date,
+.my-overlay-status-label {
     flex: 1;
     font-size: 10px;
     font-weight: 700;
     color: rgba(255,255,255,0.7);
     letter-spacing: 0.2px;
 }
+.my-card-action-btn--ghost {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+}
+.my-card-action-btn--ghost:hover { background: rgba(255,255,255,0.28); }
 .my-card-action-btn {
     flex: 1;
     background: var(--apc-orange);
