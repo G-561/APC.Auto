@@ -14708,13 +14708,11 @@ async function notifyWantedBuyer(btn) {
     btn.textContent = 'Sending…';
 
     const { error } = await sb.from('notifications').insert([{
-        user_id:        userId,
-        type:           'listing_match',
-        title:          'A seller may have what you\'re looking for',
-        body:           `Check out: "${listingTitle}"`,
-        listing_id:     listingId || null,
-        wanted_part_id: wantedId,
-        read:           false
+        user_id: userId,
+        type:    'listing_match',
+        title:   'A seller may have what you\'re looking for',
+        body:    `Check out: "${listingTitle}"`,
+        read:    false
     }]);
 
     if (error) {
