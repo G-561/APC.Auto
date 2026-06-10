@@ -4604,7 +4604,7 @@ function confirmListingAction(id) {
     } else if (isPending) {
         btnHTML = `
             <button id="_laBtnActive"  style="${btnStyle('#22c55e')}">MARK AS ACTIVE</button>
-            <button id="_laBtnSold"    style="${btnStyle('#f07020')}">MARK AS SOLD</button>
+            <button id="_laBtnSold"    style="${btnStyle('#f59e0b')}">MARK AS SOLD</button>
             <button id="_laBtnDelete"  style="${btnStyle('#ef4444')}">DELETE LISTING</button>`;
     } else {
         btnHTML = `
