@@ -3197,6 +3197,7 @@ function markSoldFromInbox() {
             showToast('Listing marked as sold!');
             syncListingStatusToSupabase(listing, 'sold');
             _postSoldRatePrompts(listing, soldConvId);
+            if (!listing.buyerRating) setTimeout(() => showRateBuyerDialog(listing.id), 400);
         }
     );
 }
@@ -11934,6 +11935,7 @@ function markSold(partId) {
             showToast('Listing marked as sold');
             syncListingStatusToSupabase(listing, 'sold');
             _postSoldRatePrompts(listing);
+            if (!listing.buyerRating) setTimeout(() => showRateBuyerDialog(listing.id), 400);
         }
     );
 }
@@ -12427,7 +12429,11 @@ function proSetListingStatus(status, partId) {
         syncListingStatusToSupabase(listing, status === 'active' ? 'active' : status);
     };
     if (status === 'sold') {
-        showConfirm('Mark this listing as sold?', null, 'Mark Sold', () => { doSet(); _postSoldRatePrompts(listing, _proActiveConvId || undefined); });
+        showConfirm('Mark this listing as sold?', null, 'Mark Sold', () => {
+            doSet();
+            _postSoldRatePrompts(listing, _proActiveConvId || undefined);
+            if (!listing.buyerRating) setTimeout(() => showRateBuyerDialog(listing.id), 400);
+        });
         return;
     }
     doSet();
