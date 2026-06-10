@@ -4589,9 +4589,34 @@ function confirmListingAction(id) {
     const existing = document.getElementById('apcConfirmDialog');
     if (existing) existing.remove();
 
+    const isSold    = part.status === 'sold';
+    const isPending = part.status === 'pending';
+
+    const btnStyle  = (bg) => `padding:12px 20px;border:none;border-radius:8px;background:${bg};color:#fff;font-weight:800;font-size:12px;letter-spacing:0.4px;cursor:pointer;`;
+    const cancelStyle = 'padding:10px 20px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:12px;cursor:pointer;color:#555;';
+
+    let btnHTML = '';
+    if (isSold) {
+        btnHTML = `
+            <button id="_laBtnRelist" style="${btnStyle('#22c55e')}">RELIST AS ACTIVE</button>
+            ${!part.buyerRating ? `<button id="_laBtnRate" style="${btnStyle('#f59e0b')}">★ RATE BUYER</button>` : ''}
+            <button id="_laBtnDelete" style="${btnStyle('#ef4444')}">DELETE LISTING</button>`;
+    } else if (isPending) {
+        btnHTML = `
+            <button id="_laBtnActive"  style="${btnStyle('#22c55e')}">MARK AS ACTIVE</button>
+            <button id="_laBtnSold"    style="${btnStyle('#f07020')}">MARK AS SOLD</button>
+            <button id="_laBtnDelete"  style="${btnStyle('#ef4444')}">DELETE LISTING</button>`;
+    } else {
+        btnHTML = `
+            <button id="_laBtnSold"    style="${btnStyle('#22c55e')}">MARK AS SOLD</button>
+            <button id="_laBtnPending" style="${btnStyle('#f59e0b')}">MARK AS PENDING</button>
+            <button id="_laBtnDelete"  style="${btnStyle('#ef4444')}">DELETE LISTING</button>`;
+    }
+
     const overlay = document.createElement('div');
     overlay.id = 'apcConfirmDialog';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
     const box = document.createElement('div');
     box.style.cssText = 'background:#fff;border-radius:16px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
@@ -4599,17 +4624,41 @@ function confirmListingAction(id) {
         <div style="font-weight:800;font-size:17px;margin-bottom:8px;color:#111;">Update Listing</div>
         <div style="font-size:13px;color:#666;margin-bottom:22px;line-height:1.4;">${escapeHtml(part.title)}</div>
         <div style="display:flex;flex-direction:column;gap:10px;">
-            <button id="_laBtnSold"   style="padding:12px 20px;border:none;border-radius:8px;background:#22c55e;color:#fff;font-weight:800;font-size:12px;letter-spacing:0.4px;cursor:pointer;">MARK AS SOLD</button>
-            <button id="_laBtnDelete" style="padding:12px 20px;border:none;border-radius:8px;background:#ef4444;color:#fff;font-weight:800;font-size:12px;letter-spacing:0.4px;cursor:pointer;">DELETE LISTING</button>
-            <button id="_laBtnCancel" style="padding:10px 20px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:12px;cursor:pointer;color:#555;">Cancel</button>
+            ${btnHTML}
+            <button id="_laBtnCancel" style="${cancelStyle}">Cancel</button>
         </div>`;
 
     overlay.appendChild(box);
     document.body.appendChild(overlay);
-    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
-    document.getElementById('_laBtnSold').onclick   = () => { overlay.remove(); setListingStatus(id, 'sold'); showBuyerFeedbackDialog(id); };
-    document.getElementById('_laBtnDelete').onclick = () => { overlay.remove(); deleteListing(id); };
-    document.getElementById('_laBtnCancel').onclick = () => overlay.remove();
+
+    const doSold = () => {
+        overlay.remove();
+        part.status   = 'sold';
+        part.soldDate = Date.now();
+        saveUserListings();
+        renderMainGrid();
+        renderMyParts();
+        if (document.getElementById('dashboardView')?.style.display !== 'none') renderDashboard();
+        showToast('Listing marked as sold');
+        syncListingStatusToSupabase(part, 'sold');
+        _postSoldRatePrompts(part);
+        if (!part.buyerRating) setTimeout(() => showRateBuyerDialog(part.id), 400);
+    };
+
+    document.getElementById('_laBtnDelete').onclick  = () => { overlay.remove(); deleteListing(id); };
+    document.getElementById('_laBtnCancel').onclick  = () => overlay.remove();
+
+    if (isSold) {
+        document.getElementById('_laBtnRelist').onclick  = () => { overlay.remove(); setListingStatus(id, 'active'); };
+        const rateBtn = document.getElementById('_laBtnRate');
+        if (rateBtn) rateBtn.onclick = () => { overlay.remove(); showRateBuyerDialog(id); };
+    } else if (isPending) {
+        document.getElementById('_laBtnActive').onclick  = () => { overlay.remove(); setListingStatus(id, 'active'); };
+        document.getElementById('_laBtnSold').onclick    = doSold;
+    } else {
+        document.getElementById('_laBtnSold').onclick    = doSold;
+        document.getElementById('_laBtnPending').onclick = () => { overlay.remove(); setListingStatus(id, 'pending'); };
+    }
 }
 
 async function deleteListing(id) {
@@ -4743,14 +4792,6 @@ function renderMyParts() {
             card.appendChild(chk);
         } else {
             if (isSold) card.classList.add('my-card--sold');
-
-            const s = isSold ? 'sold' : (part.status === 'pending' ? 'pending' : 'active');
-            const pill = document.createElement('button');
-            pill.className = `inbox-status-btn ml-card-status-pill isp-status-${s}`;
-            pill.textContent = '● ' + s.toUpperCase() + ' ▾';
-            pill.onclick = (e) => { e.stopPropagation(); toggleMlCardStatusPicker(pill, part.id); };
-            card.appendChild(pill);
-
             const xBtn = document.createElement('button');
             xBtn.className = 'my-card-x-float';
             xBtn.textContent = '×';
@@ -12015,62 +12056,6 @@ function markSold(partId) {
     );
 }
 
-function toggleMlCardStatusPicker(pillEl, partId) {
-    document.querySelectorAll('.ml-card-picker').forEach(p => p.remove());
-    const listing = userListings.find(l => l.id === partId);
-    if (!listing) return;
-    const current = listing.status || 'active';
-
-    const rect = pillEl.getBoundingClientRect();
-    const picker = document.createElement('div');
-    picker.className = 'inbox-status-picker ml-card-picker';
-    // Use fixed positioning so overflow:hidden on the card doesn't clip it
-    picker.style.cssText = `position:fixed;top:${rect.bottom + 4}px;left:${rect.left}px;z-index:9999;`;
-    picker.onclick = (ev) => ev.stopPropagation();
-    picker.innerHTML = `<div class="isp-title">SET STATUS</div>`;
-
-    [
-        { s: 'active',  label: '● Active',  cls: 'ml-isp-active'  },
-        { s: 'pending', label: '● Pending', cls: 'ml-isp-pending' },
-        { s: 'sold',    label: '● Sold',    cls: 'ml-isp-sold'    },
-    ].forEach(({ s, label, cls }) => {
-        const btn = document.createElement('button');
-        btn.className = `isp-opt ${cls}${s === current ? ' active' : ''}`;
-        btn.textContent = label;
-        btn.onclick = () => setListingStatusFromMyParts(partId, s);
-        picker.appendChild(btn);
-    });
-
-    if (current === 'sold' && !listing.buyerRating) {
-        const divider = document.createElement('div');
-        divider.style.cssText = 'border-top:1px solid #eee;margin:6px 0;';
-        picker.appendChild(divider);
-        const rateBtn = document.createElement('button');
-        rateBtn.className = 'isp-opt';
-        rateBtn.style.color = '#f59e0b';
-        rateBtn.textContent = '★ Rate Buyer';
-        rateBtn.onclick = () => { picker.remove(); showRateBuyerDialog(partId); };
-        picker.appendChild(rateBtn);
-    }
-
-    document.body.appendChild(picker);
-    setTimeout(() => {
-        document.addEventListener('click', function h() { picker.remove(); document.removeEventListener('click', h); }, { once: true });
-    }, 0);
-}
-
-function setListingStatusFromMyParts(id, newStatus) {
-    document.querySelectorAll('.ml-card-picker').forEach(p => p.remove());
-    if (newStatus === 'sold') { markSold(id); return; }
-    const listing = userListings.find(l => l.id === id);
-    if (!listing) return;
-    listing.status = newStatus === 'active' ? undefined : newStatus;
-    saveUserListings();
-    renderMyParts();
-    renderMainGrid();
-    syncListingStatusToSupabase(listing, newStatus);
-    showToast(newStatus === 'pending' ? 'Listing marked as pending' : 'Listing relisted as active');
-}
 
 function relistPart(partId) {
     const listing = userListings.find(l => l.id === partId);
