@@ -3187,6 +3187,7 @@ function markSoldFromInbox() {
         'Mark Sold',
         () => {
             const soldConvId = activeConvId;
+            const soldConv   = conversations.find(c => c.id === soldConvId);
             listing.status   = 'sold';
             listing.soldDate = Date.now();
             saveUserListings();
@@ -3197,7 +3198,7 @@ function markSoldFromInbox() {
             showToast('Listing marked as sold!');
             syncListingStatusToSupabase(listing, 'sold');
             _postSoldRatePrompts(listing, soldConvId);
-            if (!listing.buyerRating) setTimeout(() => showRateBuyerDialog(listing.id), 400);
+            if (!listing.buyerRating) setTimeout(() => showRateBuyerDialog(listing.id, soldConv?.buyerName || soldConv?.with, soldConv?.buyerId), 400);
         }
     );
 }
@@ -9373,13 +9374,33 @@ function buildRateSellerCard(notif) {
     return card;
 }
 
-function showRateBuyerDialog(listingId) {
+function showRateBuyerDialog(listingId, preselectedBuyerName, preselectedBuyerId) {
     const listing = userListings.find(l => l.id === listingId);
     if (!listing) return;
 
     const existing = document.getElementById('apcRateBuyerDialog');
     if (existing) existing.remove();
 
+    // Collect unique enquirers from conversations about this listing
+    const seenNames = new Set();
+    const enquirers = []; // { name, buyerId }
+    conversations
+        .filter(c => c.partId === listing.supabaseId || c.partId === listing.id)
+        .forEach(c => {
+            const name = c.buyerName || c.with || '';
+            if (name && !seenNames.has(name)) {
+                seenNames.add(name);
+                enquirers.push({ name, buyerId: c.buyerId || null });
+            }
+        });
+
+    // If a buyer was pre-supplied (e.g. called from inbox), ensure they're in the list
+    if (preselectedBuyerName && !seenNames.has(preselectedBuyerName)) {
+        enquirers.unshift({ name: preselectedBuyerName, buyerId: preselectedBuyerId || null });
+    }
+
+    let selectedBuyerName = preselectedBuyerName || (enquirers.length === 1 ? enquirers[0].name : null);
+    let selectedBuyerId   = preselectedBuyerId   || (enquirers.length === 1 ? enquirers[0].buyerId : null);
     let selectedStars = 0;
 
     const overlay = document.createElement('div');
@@ -9388,11 +9409,63 @@ function showRateBuyerDialog(listingId) {
     overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
     const box = document.createElement('div');
-    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);';
+    box.style.cssText = 'background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);max-height:90vh;overflow-y:auto;';
 
     box.innerHTML = `<div style="font-weight:800;font-size:17px;color:#111;margin-bottom:4px;">Rate your buyer</div>
         <div style="font-size:12px;color:#888;margin-bottom:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</div>`;
 
+    // ── Buyer picker ────────────────────────────────────────────
+    const buyerLabel = document.createElement('div');
+    buyerLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
+    buyerLabel.textContent = 'WHO WAS THE BUYER?';
+
+    const pickerWrap = document.createElement('div');
+    pickerWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;';
+
+    const otherInput = document.createElement('input');
+    otherInput.type = 'text';
+    otherInput.placeholder = 'Enter buyer name';
+    otherInput.style.cssText = 'width:100%;border:1.5px solid #ddd;border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;box-sizing:border-box;margin-top:6px;display:none;';
+    otherInput.oninput = () => { selectedBuyerName = otherInput.value.trim() || null; selectedBuyerId = null; };
+
+    const chipStyle = (sel) => `padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.12s,color 0.12s;border:1.5px solid ${sel ? 'var(--apc-orange)' : '#ddd'};background:${sel ? 'var(--apc-orange)' : '#fff'};color:${sel ? '#fff' : '#555'};`;
+
+    const selectChip = (chip, enq) => {
+        pickerWrap.querySelectorAll('button').forEach(b => {
+            b.style.cssText = chipStyle(false);
+        });
+        chip.style.cssText = chipStyle(true);
+        selectedBuyerName = enq ? enq.name : null;
+        selectedBuyerId   = enq ? enq.buyerId : null;
+        otherInput.style.display = enq ? 'none' : '';
+        if (!enq) { otherInput.value = ''; otherInput.focus(); }
+    };
+
+    enquirers.forEach(enq => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.textContent = enq.name;
+        const isPresel = enq.name === selectedBuyerName;
+        chip.style.cssText = chipStyle(isPresel);
+        chip.onclick = () => selectChip(chip, enq);
+        pickerWrap.appendChild(chip);
+    });
+
+    // "Someone else" chip only if there are known enquirers
+    if (enquirers.length > 0) {
+        const otherChip = document.createElement('button');
+        otherChip.type = 'button';
+        otherChip.textContent = 'Other…';
+        otherChip.style.cssText = chipStyle(false);
+        otherChip.onclick = () => selectChip(otherChip, null);
+        pickerWrap.appendChild(otherChip);
+    } else {
+        // No conversations at all — just show the text input directly
+        otherInput.style.display = '';
+        otherInput.placeholder = 'e.g. John D.';
+    }
+
+    // ── Stars ───────────────────────────────────────────────────
     const starsLabel = document.createElement('div');
     starsLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
     starsLabel.textContent = 'HOW WAS THE BUYER?';
@@ -9411,6 +9484,7 @@ function showRateBuyerDialog(listingId) {
         starsRow.appendChild(s);
     }
 
+    // ── Note ────────────────────────────────────────────────────
     const noteLabel = document.createElement('div');
     noteLabel.style.cssText = 'font-size:12px;font-weight:700;color:#888;margin-bottom:8px;letter-spacing:0.3px;';
     noteLabel.textContent = 'ADD A NOTE (optional)';
@@ -9426,6 +9500,7 @@ function showRateBuyerDialog(listingId) {
     noteCount.textContent = '0 / 200';
     noteInput.oninput = () => { noteCount.textContent = `${noteInput.value.length} / 200`; };
 
+    // ── Buttons ─────────────────────────────────────────────────
     const btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:10px;';
 
@@ -9438,8 +9513,9 @@ function showRateBuyerDialog(listingId) {
     saveBtn.textContent = 'Submit Rating';
     saveBtn.style.cssText = 'flex:2;padding:11px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;';
     saveBtn.onclick = () => {
+        const name = selectedBuyerName || otherInput.value.trim() || null;
         const note = noteInput.value.trim() || null;
-        listing.buyerRating = { stars: selectedStars || null, note, ratedAt: Date.now() };
+        listing.buyerRating = { stars: selectedStars || null, buyerName: name, buyerId: selectedBuyerId || null, note, ratedAt: Date.now() };
         saveUserListings();
         overlay.remove();
         renderMyParts();
@@ -9448,6 +9524,9 @@ function showRateBuyerDialog(listingId) {
         showToast('Rating saved!');
     };
 
+    box.appendChild(buyerLabel);
+    box.appendChild(pickerWrap);
+    pickerWrap.appendChild(otherInput);
     box.appendChild(starsLabel);
     box.appendChild(starsRow);
     box.appendChild(noteLabel);
@@ -12449,7 +12528,10 @@ function proSetListingStatus(status, partId) {
         showConfirm('Mark this listing as sold?', null, 'Mark Sold', () => {
             doSet();
             _postSoldRatePrompts(listing, _proActiveConvId || undefined);
-            if (!listing.buyerRating) setTimeout(() => showRateBuyerDialog(listing.id), 400);
+            if (!listing.buyerRating) {
+                const proConv = conversations.find(c => c.id === _proActiveConvId);
+                setTimeout(() => showRateBuyerDialog(listing.id, proConv?.buyerName || proConv?.with, proConv?.buyerId), 400);
+            }
         });
         return;
     }
