@@ -4365,12 +4365,14 @@ async function confirmNotifyBuyers() {
     const btn = document.getElementById('notifyConfirmBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
 
+    const lid = Number(listingId) || null;
     const rows = checked.map(cb => ({
-        user_id: cb.dataset.userId,
-        type:    'listing_match',
-        title:   'New listing matching your wanted request',
-        body:    `A seller has listed "${listingTitle}" — check if it's what you need.`,
-        read:    false
+        user_id:    cb.dataset.userId,
+        type:       'listing_match',
+        title:      'New listing matching your wanted request',
+        body:       `A seller has listed "${listingTitle}" — check if it's what you need.`,
+        listing_id: lid,
+        read:       false
     }));
 
     const { error } = await sb.from('notifications').insert(rows);
@@ -14708,11 +14710,13 @@ async function notifyWantedBuyer(btn) {
     btn.textContent = 'Sending…';
 
     const { error } = await sb.from('notifications').insert([{
-        user_id: userId,
-        type:    'listing_match',
-        title:   'A seller may have what you\'re looking for',
-        body:    `Check out: "${listingTitle}"`,
-        read:    false
+        user_id:        userId,
+        type:           'listing_match',
+        title:          'A seller may have what you\'re looking for',
+        body:           `Check out: "${listingTitle}"`,
+        listing_id:     Number(listingId) || null,
+        wanted_part_id: Number(wantedId) || null,
+        read:           false
     }]);
 
     if (error) {
