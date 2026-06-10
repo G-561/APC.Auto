@@ -4366,12 +4366,11 @@ async function confirmNotifyBuyers() {
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
 
     const rows = checked.map(cb => ({
-        user_id:    cb.dataset.userId,
-        type:       'listing_match',
-        title:      'New listing matching your wanted request',
-        body:       `A seller has listed "${listingTitle}" — check if it's what you need.`,
-        listing_id: listingId || null,
-        read:       false
+        user_id: cb.dataset.userId,
+        type:    'listing_match',
+        title:   'New listing matching your wanted request',
+        body:    `A seller has listed "${listingTitle}" — check if it's what you need.`,
+        read:    false
     }));
 
     const { error } = await sb.from('notifications').insert(rows);
