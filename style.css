@@ -132,8 +132,10 @@ header {
     background: rgba(0,0,0,0.5);
     z-index: 9000;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
     opacity: 0;
     transition: opacity 0.25s ease;
 }
@@ -142,11 +144,11 @@ header {
     background: #fff;
     width: 100%;
     max-width: 560px;
-    border-radius: 20px 20px 0 0;
-    padding: 24px 20px 32px;
+    border-radius: 20px;
+    padding: 24px 20px 28px;
     max-height: 82vh;
     overflow-y: auto;
-    transform: translateY(40px);
+    transform: translateY(20px);
     transition: transform 0.28s ease;
 }
 .notify-modal.active .notify-modal-inner { transform: translateY(0); }
