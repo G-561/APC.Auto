@@ -4112,6 +4112,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     transition: background 0.15s;
 }
 .my-card-x-float:hover { background: rgba(239,68,68,0.85); }
+.ml-saves-badge { font-size: 10px; font-weight: 700; color: #bbb; margin-left: auto; }
+.ml-saves-badge--active { color: var(--apc-orange); }
 
 
 /* MANAGE LISTING — status pills + rate buyer (edit mode only) */

@@ -4893,6 +4893,14 @@ function renderMyParts() {
         const card = temp.firstElementChild;
         if (!card) return;
 
+        const priceRow = card.querySelector('.price-row');
+        if (priceRow) {
+            const badge = document.createElement('span');
+            badge.className = 'ml-saves-badge' + (part.saves > 0 ? ' ml-saves-badge--active' : '');
+            badge.textContent = `♥︎ ${part.saves || 0}`;
+            priceRow.appendChild(badge);
+        }
+
         if (_myListingsSelectMode) {
             const isSelected = _myListingsSelected.has(part.id);
             card.dataset.selectId = part.id;
