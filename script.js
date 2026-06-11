@@ -2089,7 +2089,9 @@ async function loadConversationsFromSupabase(userId) {
             if (existing) {
                 existing.msgs = msgs;
                 existing.with = otherName;
-                existing.unread = isUnread;
+                // Don't restore unread from Supabase if already locally cleared — avoids race where
+                // the reload completes before our own unread_buyer/seller update has committed.
+                existing.unread = existing.unread && isUnread;
                 existing.buyerId    = r.buyer_id    || existing.buyerId    || null;
                 existing.sellerId   = r.seller_id   || existing.sellerId   || null;
                 existing.buyerName  = r.buyer_name  || existing.buyerName  || '';
@@ -2968,6 +2970,8 @@ function msgRowTouchEnd(e, row) {
 function closeInboxThread() {
     document.getElementById('inboxConvCol').classList.remove('slide-away');
     document.getElementById('inboxThreadCol').classList.remove('slide-in');
+    renderInboxConvList(document.getElementById('inboxSearchInput')?.value || '');
+    updateInboxBadge();
 }
 
 function closeInboxOrThread() {
