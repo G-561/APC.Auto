@@ -4172,8 +4172,10 @@ function buildCardHTML(part, eager = false) {
                 </div>
                 <div class="item-title">${escapeHtml(part.title)}</div>
                 ${fitsLine}
-                <div class="item-loc">${locationHTML}</div>
-                ${ratingHTML}
+                <div class="item-loc-row">
+                    <div class="item-loc">${locationHTML}</div>
+                    ${ratingHTML}
+                </div>
             </div>
             ${savedDot}
         </div>`;
