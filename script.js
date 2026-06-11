@@ -4153,7 +4153,9 @@ function buildCardHTML(part, eager = false) {
 
     return `
         <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
-            <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
+            <div class="item-img-wrap">
+                <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
+            </div>
             ${pendingBanner}
             <div class="item-info">
                 <div class="price-row">
