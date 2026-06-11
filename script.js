@@ -2938,7 +2938,7 @@ function renderInboxMsgs(conv) {
         const colClass = isOffer ? 'inbox-msg-col offer-col' : 'inbox-msg-col';
         const bubClass = isOffer ? 'inbox-msg-bubble offer-bubble' : 'inbox-msg-bubble';
         return `${divider}
-            <div class="inbox-msg-row ${m.sent?'sent':'received'}" ontouchstart="msgRowTouchStart(event)" ontouchend="msgRowTouchEnd(event,this)">
+            <div class="inbox-msg-row ${m.sent?'sent':'received'}" data-conv-id="${conv.id}" data-msg-idx="${idx}" ontouchstart="msgRowTouchStart(event,this)" ontouchmove="msgRowTouchMove(event)" ontouchend="msgRowTouchEnd(event,this)">
                 ${!m.sent ? delBtn : ''}
                 <div class="inbox-msg-avatar">${initial}</div>
                 <div class="${colClass}">
@@ -2952,10 +2952,36 @@ function renderInboxMsgs(conv) {
 }
 
 let _msgTouchStartX = 0;
-function msgRowTouchStart(e) {
+let _msgTouchStartY = 0;
+let _msgLongPressTimer = null;
+let _msgLongPressFired = false;
+let _msgCopyText = '';
+
+function msgRowTouchStart(e, row) {
     _msgTouchStartX = e.touches[0].clientX;
+    _msgTouchStartY = e.touches[0].clientY;
+    _msgLongPressFired = false;
+    clearTimeout(_msgLongPressTimer);
+    _msgLongPressTimer = setTimeout(() => {
+        const convId = parseInt(row.dataset.convId);
+        const msgIdx = parseInt(row.dataset.msgIdx);
+        const conv = conversations.find(c => c.id === convId);
+        const msg = conv?.msgs[msgIdx];
+        if (msg?.text && !msg.offerCard && !msg.photo) {
+            _msgLongPressFired = true;
+            if (navigator.vibrate) navigator.vibrate(30);
+            showMsgCopyMenu(msg.text, _msgTouchStartY);
+        }
+    }, 500);
+}
+function msgRowTouchMove(e) {
+    const dx = Math.abs(e.touches[0].clientX - _msgTouchStartX);
+    const dy = Math.abs(e.touches[0].clientY - _msgTouchStartY);
+    if (dx > 10 || dy > 10) { clearTimeout(_msgLongPressTimer); }
 }
 function msgRowTouchEnd(e, row) {
+    clearTimeout(_msgLongPressTimer);
+    if (_msgLongPressFired) return;
     const dx = e.changedTouches[0].clientX - _msgTouchStartX;
     const list = document.getElementById('inboxMsgList');
     if (Math.abs(dx) < 15) {
@@ -2964,6 +2990,31 @@ function msgRowTouchEnd(e, row) {
         if (list) list.classList.add('times-visible');
     } else if (dx > 40) {
         if (list) list.classList.remove('times-visible');
+    }
+}
+
+function showMsgCopyMenu(text, clientY) {
+    dismissMsgCopyMenu();
+    _msgCopyText = text;
+    const menu = document.createElement('div');
+    menu.id = 'msgCopyMenu';
+    menu.className = 'msg-copy-menu';
+    menu.style.top = Math.max(60, clientY - 60) + 'px';
+    menu.innerHTML = `<button class="msg-copy-btn" onclick="copyMsgText()">Copy</button>`;
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('touchstart', dismissMsgCopyMenu, { once: true, passive: true }), 100);
+}
+function dismissMsgCopyMenu() {
+    const m = document.getElementById('msgCopyMenu');
+    if (m) m.remove();
+}
+async function copyMsgText() {
+    dismissMsgCopyMenu();
+    try {
+        await navigator.clipboard.writeText(_msgCopyText);
+        showToast('Copied');
+    } catch {
+        showToast('Copy not available on this browser');
     }
 }
 

@@ -6173,6 +6173,34 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .inbox-msg-row:hover .inbox-msg-del { opacity: 1; }
 .inbox-msg-row.del-visible .inbox-msg-del { opacity: 1; }
 
+.msg-copy-menu {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: #1a1a2e;
+    border-radius: 10px;
+    padding: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+    animation: fadeInUp 0.15s ease;
+}
+.msg-copy-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 28px;
+    cursor: pointer;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+}
+.msg-copy-btn:active { background: rgba(255,255,255,0.12); }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 .inbox-reply-bar { padding: 10px 12px; border-top: 1px solid #eee; display: flex; align-items: flex-end; gap: 8px; background: white; flex-shrink: 0; }
 
 /* OFFER CARD — inside inbox thread */
