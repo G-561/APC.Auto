@@ -2684,6 +2684,10 @@
                         <button class="inbox-view-btn" onclick="viewConvListing()">View Listing</button>
                     </div>
                     <div id="inboxMsgList" class="inbox-msg-list"></div>
+                    <div id="inboxEditBar" class="inbox-edit-bar" style="display:none;">
+                        <span class="inbox-edit-label">✏ Editing</span>
+                        <button class="inbox-edit-cancel" onclick="cancelMsgEdit()">Cancel</button>
+                    </div>
                     <div class="inbox-reply-bar">
                         <input type="file" id="inboxPhotoInput" accept="image/*" style="display:none;" onchange="sendInboxPhoto(event)">
                         <button class="inbox-photo-btn" onclick="document.getElementById('inboxPhotoInput').click()" title="Send photo">

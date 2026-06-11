@@ -2943,7 +2943,7 @@ function renderInboxMsgs(conv) {
                 <div class="inbox-msg-avatar">${initial}</div>
                 <div class="${colClass}">
                     <div class="${bubClass}">${content}</div>
-                    <div class="inbox-msg-time">${m.clock}</div>
+                    <div class="inbox-msg-time">${m.clock}${m.edited ? ' · edited' : ''}</div>
                 </div>
                 ${m.sent ? delBtn : ''}
             </div>`;
@@ -2970,7 +2970,7 @@ function msgRowTouchStart(e, row) {
         if (msg?.text && !msg.offerCard && !msg.photo) {
             _msgLongPressFired = true;
             if (navigator.vibrate) navigator.vibrate(30);
-            showMsgCopyMenu(msg.text, _msgTouchStartY);
+            showMsgCopyMenu(msg.text, _msgTouchStartY, !!msg.sent, convId, msgIdx);
         }
     }, 500);
 }
@@ -2993,14 +2993,20 @@ function msgRowTouchEnd(e, row) {
     }
 }
 
-function showMsgCopyMenu(text, clientY) {
+let _editingConvId  = null;
+let _editingMsgIdx  = null;
+
+function showMsgCopyMenu(text, clientY, isSent, convId, msgIdx) {
     dismissMsgCopyMenu();
     _msgCopyText = text;
     const menu = document.createElement('div');
     menu.id = 'msgCopyMenu';
     menu.className = 'msg-copy-menu';
     menu.style.top = Math.max(60, clientY - 60) + 'px';
-    menu.innerHTML = `<button class="msg-copy-btn" onclick="copyMsgText()">Copy</button>`;
+    const editBtn = isSent
+        ? `<button class="msg-copy-btn" onclick="startMsgEdit(${convId},${msgIdx})">Edit</button><div class="msg-copy-sep"></div>`
+        : '';
+    menu.innerHTML = `${editBtn}<button class="msg-copy-btn" onclick="copyMsgText()">Copy</button>`;
     document.body.appendChild(menu);
     setTimeout(() => document.addEventListener('touchstart', dismissMsgCopyMenu, { once: true, passive: true }), 100);
 }
@@ -3016,6 +3022,28 @@ async function copyMsgText() {
     } catch {
         showToast('Copy not available on this browser');
     }
+}
+
+function startMsgEdit(convId, msgIdx) {
+    dismissMsgCopyMenu();
+    const conv = conversations.find(c => c.id === convId);
+    const msg  = conv?.msgs[msgIdx];
+    if (!msg || !msg.sent || msg.offerCard || msg.photo) return;
+    _editingConvId = convId;
+    _editingMsgIdx = msgIdx;
+    const input  = document.getElementById('inboxReplyInput');
+    const editBar = document.getElementById('inboxEditBar');
+    if (input)   { input.value = msg.text; inboxAutoResize(input); input.focus(); }
+    if (editBar) editBar.style.display = 'flex';
+}
+
+function cancelMsgEdit() {
+    _editingConvId = null;
+    _editingMsgIdx = null;
+    const input   = document.getElementById('inboxReplyInput');
+    const editBar = document.getElementById('inboxEditBar');
+    if (input)   { input.value = ''; inboxAutoResize(input); }
+    if (editBar) editBar.style.display = 'none';
 }
 
 function closeInboxThread() {
@@ -3045,6 +3073,25 @@ async function sendInboxMessage() {
     if (!text || activeConvId === null) return;
     const conv = conversations.find(c => c.id === activeConvId);
     if (!conv) return;
+
+    // Edit mode — update existing message
+    if (_editingConvId !== null) {
+        const msg = conv.msgs[_editingMsgIdx];
+        if (msg) {
+            msg.text   = text;
+            msg.edited = true;
+        }
+        cancelMsgEdit();
+        saveConversations();
+        renderInboxMsgs(conv);
+        if (currentUserId && msg?.supabaseMsgId && sb) {
+            sb.from('messages').update({ text }).eq('id', msg.supabaseMsgId).then(({ error }) => {
+                if (error) console.warn('Edit message:', error.message);
+            });
+        }
+        return;
+    }
+
     conv.msgs.push({ id: nextMsgId(conv), sent: true, text, time: 'Today', clock: nowClock() });
     input.value = ''; input.style.height = 'auto';
     saveConversations();
