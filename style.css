@@ -3892,9 +3892,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .heat-badge { position: absolute; top: 8px; right: 8px; background: #FF3B30; color: white; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; z-index: 10; }
 
 /* IMAGE CAROUSEL — fixed scroll-snap property names */
-#imageCarousel { 
-    display: flex; 
-    overflow-x: auto; 
+#imageCarousel {
+    display: flex;
+    overflow-x: auto;
     scroll-snap-type: x mandatory;          /* fixed: was snap-type */
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
@@ -3906,6 +3906,15 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     aspect-ratio: 1/1;
     object-fit: contain;
     background: #f4f4f4;
+}
+@keyframes apc-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+#imageCarousel.carousel-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: apc-shimmer 1.4s ease-in-out infinite;
 }
 
 /* CAROUSEL DOT INDICATORS */

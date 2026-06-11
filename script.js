@@ -5923,6 +5923,9 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     if (carousel) {
         carousel.innerHTML = '';
         const images = part.images || [];
+        if (images.length > 0) {
+            carousel.classList.add('carousel-loading');
+        }
         // Only the visible first image loads immediately; subsequent images load as they scroll near view.
         // rootMargin '0px 100% 0px 0px' starts loading the next image one full carousel-width before it's reached.
         let _carouselObserver = null;
@@ -5939,11 +5942,15 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
         }
         images.forEach((src, i) => {
             const img = document.createElement('img');
-            img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;';
+            img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;' + (i === 0 ? 'opacity:0; transition:opacity 0.2s;' : '');
             img.alt = part.title;
             img.onclick = () => openDetailImageViewer(src, images, i);
-            if (i <= 1) {
-                img.src = src; // first two images load immediately so the first swipe never waits
+            if (i === 0) {
+                img.onload = () => { img.style.opacity = '1'; carousel.classList.remove('carousel-loading'); };
+                img.onerror = () => { img.style.opacity = '1'; carousel.classList.remove('carousel-loading'); };
+                img.src = src;
+            } else if (i === 1) {
+                img.src = src; // second image loads immediately so first swipe never waits
             } else {
                 img.dataset.src = src;
                 if (_carouselObserver) _carouselObserver.observe(img);
@@ -17463,6 +17470,30 @@ document.addEventListener('DOMContentLoaded', () => {
             goHome();
         });
     }
+
+    // Preload listing images on touchstart (mobile) and mouseover (desktop) so they're
+    // already in-flight before the detail overlay opens — cuts perceived load time significantly.
+    let _preloadId = null;
+    function _preloadListingImages(partId) {
+        if (_preloadId === partId) return;
+        _preloadId = partId;
+        const part = findPartAnywhere(partId);
+        if (part) (part.images || []).slice(0, 3).forEach(url => { new Image().src = url; });
+    }
+    function _extractPreloadId(el) {
+        const card = el.closest && el.closest('.item-card[onclick]');
+        if (!card) return null;
+        const m = (card.getAttribute('onclick') || '').match(/openItemDetail\('?([^')]+)'?\)/);
+        return m ? m[1] : null;
+    }
+    document.addEventListener('touchstart', e => {
+        const id = _extractPreloadId(e.target);
+        if (id) _preloadListingImages(id);
+    }, { passive: true });
+    document.addEventListener('mouseover', e => {
+        const id = _extractPreloadId(e.target);
+        if (id) _preloadListingImages(id);
+    });
 
     // Wire up the filter "Update Results" button
     const filterBtn = document.querySelector('#filterDrawer .btn-full-action');
