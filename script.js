@@ -9291,7 +9291,8 @@ function onOpenInbox() {
     document.getElementById('inboxThreadEmpty').style.display = '';
     refreshInboxContextPanel(null, null);
     toggleDrawer('inboxDrawer');
-    switchInboxTab('chats');
+    const hasUnreadNotifs = myNotifications.some(n => !n.read);
+    switchInboxTab(hasUnreadNotifs ? 'notifications' : 'chats');
     // Always refresh from Supabase when inbox opens — catches messages missed during realtime gaps
     if (currentUserId) loadConversationsFromSupabase(currentUserId);
     // On desktop split-pane, auto-select the most recent conversation in the active role tab
@@ -9308,7 +9309,7 @@ function onOpenInbox() {
 function updateInboxBadge() {
     const unreadConvs  = conversations.filter(c => c.unread).length;
     const unreadNotifs = inboxItems.filter(i => i.unread).length
-                       + myNotifications.filter(n => !n.read && n.type === 'rate_seller').length;
+                       + myNotifications.filter(n => !n.read).length;
     const total = unreadConvs + unreadNotifs;
     const text  = total > 99 ? '99+' : String(total);
     const show  = total > 0;
@@ -9343,21 +9344,71 @@ function renderInboxContent() {
     if (!content) return;
     content.innerHTML = '';
 
-    // Rate-seller prompts from Supabase — always shown at top of notifications tab
-    const rateNotifs = myNotifications.filter(n => !n.read && n.type === 'rate_seller');
-    rateNotifs.forEach(n => content.appendChild(buildRateSellerCard(n)));
+    const rateNotifs  = myNotifications.filter(n => !n.read && n.type === 'rate_seller');
+    const matchNotifs = myNotifications.filter(n => !n.read && n.type === 'listing_match');
+    rateNotifs.forEach(n  => content.appendChild(buildRateSellerCard(n)));
+    matchNotifs.forEach(n => content.appendChild(buildListingMatchCard(n)));
 
     let filtered = inboxItems;
     if (currentInboxTab !== 'all') {
         filtered = inboxItems.filter(n => n.type === currentInboxTab);
     }
 
-    if (!rateNotifs.length && !filtered.length) {
+    if (!rateNotifs.length && !matchNotifs.length && !filtered.length) {
         content.innerHTML = '<div style="text-align:center; padding:40px; color:#888; font-weight:700;">No notifications.</div>';
         return;
     }
 
     filtered.forEach(item => content.appendChild(buildInboxItemNode(item)));
+}
+
+function buildListingMatchCard(notif) {
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1.5px solid #eee;border-radius:12px;padding:14px 16px;margin-bottom:10px;';
+
+    const top = document.createElement('div');
+    top.style.cssText = 'display:flex;align-items:flex-start;gap:10px;';
+
+    const icon = document.createElement('div');
+    icon.textContent = '🔔';
+    icon.style.cssText = 'font-size:20px;flex-shrink:0;margin-top:1px;';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:800;font-size:13px;color:#111;margin-bottom:3px;';
+    title.textContent = notif.title || 'New listing match';
+
+    const body = document.createElement('div');
+    body.style.cssText = 'font-size:12px;color:#666;line-height:1.4;';
+    body.textContent = notif.body || '';
+
+    info.appendChild(title);
+    info.appendChild(body);
+    top.appendChild(icon);
+    top.appendChild(info);
+    card.appendChild(top);
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;margin-top:12px;';
+
+    if (notif.listing_id) {
+        const viewBtn = document.createElement('button');
+        viewBtn.textContent = 'View Listing';
+        viewBtn.style.cssText = 'flex:1;padding:9px;border:none;border-radius:8px;background:var(--apc-orange);color:#fff;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.3px;';
+        viewBtn.onclick = () => viewNotifListing(notif.id, notif.listing_id);
+        btnRow.appendChild(viewBtn);
+    }
+
+    const dismissBtn = document.createElement('button');
+    dismissBtn.textContent = 'Dismiss';
+    dismissBtn.style.cssText = 'padding:9px 14px;border:1.5px solid #ddd;border-radius:8px;background:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;color:#888;';
+    dismissBtn.onclick = () => { dismissNotification(notif.id); renderInboxContent(); updateInboxBadge(); };
+    btnRow.appendChild(dismissBtn);
+
+    card.appendChild(btnRow);
+    return card;
 }
 
 function buildRateSellerCard(notif) {
