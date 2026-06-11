@@ -2786,7 +2786,7 @@ function buildOfferCardHTML(o, sent, convId, msgIdx) {
                 : ''));
     return `<div class="offer-card">
         <div class="offer-card-header">
-            <img src="${escapeHtml(o.partImg)}" class="offer-card-img" alt="">
+            <img src="${escapeHtml(thumbUrl(o.partImg, 200))}" class="offer-card-img" alt="">
             <div>
                 <div class="offer-card-part-title">${escapeHtml(o.partTitle)}</div>
                 <div class="offer-card-listed">Listed: $${o.listedPrice}</div>
@@ -4123,6 +4123,14 @@ function escapeHtml(text) {
         .replace(/'/g, '&#39;');
 }
 
+// Returns a Supabase image-transform URL for thumbnails.
+// Non-Supabase URLs (external images) are returned unchanged.
+function thumbUrl(url, width = 400) {
+    if (!url || !url.includes('/storage/v1/object/public/')) return url;
+    return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/')
+           + '?width=' + width + '&quality=75';
+}
+
 function buildCardHTML(part, eager = false) {
     // Only part.id goes into the onclick — never unsanitised user content
     const fittingLabel = part.fit
@@ -4154,7 +4162,7 @@ function buildCardHTML(part, eager = false) {
     return `
         <div class="item-card" onclick="openItemDetail('${part.supabaseId || part.id}')">
             <div class="item-img-wrap">
-                <img class="item-img" src="${part.images[0]}" alt="${part.title}" loading="${eager ? 'eager' : 'lazy'}">
+                <img class="item-img" src="${escapeHtml(thumbUrl(part.images[0]))}" alt="${escapeHtml(part.title)}" loading="${eager ? 'eager' : 'lazy'}">
             </div>
             ${pendingBanner}
             <div class="item-info">
@@ -5934,8 +5942,8 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;';
             img.alt = part.title;
             img.onclick = () => openDetailImageViewer(src, images, i);
-            if (i === 0) {
-                img.src = src;
+            if (i <= 1) {
+                img.src = src; // first two images load immediately so the first swipe never waits
             } else {
                 img.dataset.src = src;
                 if (_carouselObserver) _carouselObserver.observe(img);
@@ -6260,9 +6268,9 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
 
     function buildStrip(parts) {
         return parts.map(p => {
-            const img = (p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png';
+            const img = thumbUrl((p.images && p.images[0]) ? p.images[0] : 'images/placeholder.png', 200);
             return `<div class="detail-mini-card" onclick="openItemDetail('${p.supabaseId || p.id}')">
-                <img class="detail-mini-img" src="${img}" alt="${escapeHtml(p.title)}">
+                <img class="detail-mini-img" src="${escapeHtml(img)}" alt="${escapeHtml(p.title)}">
                 <div class="detail-mini-info">
                     <div class="detail-mini-title">${escapeHtml(p.title)}</div>
                     <div class="detail-mini-price">$${p.price}</div>
@@ -8382,7 +8390,7 @@ function renderSavedParts() {
         return `
         <div class="stale-row">
             <div class="stale-img-wrap">
-                <img src="${part.images[0]}" alt="" class="rv-drawer-img stale-img">
+                <img src="${escapeHtml(thumbUrl(part.images[0]))}" alt="" class="rv-drawer-img stale-img">
                 <div class="stale-badge">${badge}</div>
             </div>
             <div class="rv-drawer-info">
@@ -9088,7 +9096,7 @@ function showCheckListingsModal(matches, partName) {
 
     const top3 = matches.slice(0, 3);
     cards.innerHTML = top3.map(p => {
-        const thumb = (p.images && p.images[0]) ? `<img class="check-listing-thumb" src="${p.images[0]}" alt="">` : `<div class="check-listing-thumb"></div>`;
+        const thumb = (p.images && p.images[0]) ? `<img class="check-listing-thumb" src="${escapeHtml(thumbUrl(p.images[0], 200))}" alt="">` : `<div class="check-listing-thumb"></div>`;
         const price = p.price != null ? `$${Number(p.price).toLocaleString()}` : 'POA';
         const cond  = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[p.condition] || '';
         const meta  = [p.loc, cond].filter(Boolean).join(' · ');
@@ -17261,7 +17269,7 @@ function renderDashListings(tab, btn, ctx) {
         const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
         hasMore = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
-            <td><img class="dash-thumb" src="${(p.images && p.images[0]) || 'images/placeholder.png'}" alt="" onclick="openItemDetail('${p.supabaseId || p.id}')" style="cursor:pointer;" title="View listing"></td>
+            <td><img class="dash-thumb" src="${escapeHtml(thumbUrl((p.images && p.images[0]) || 'images/placeholder.png', 200))}" alt="" onclick="openItemDetail('${p.supabaseId || p.id}')" style="cursor:pointer;" title="View listing"></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
