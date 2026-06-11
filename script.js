@@ -2394,6 +2394,7 @@ function renderNotificationBadge() {
 async function markNotificationRead(notifId) {
     myNotifications = myNotifications.map(n => n.id === notifId ? { ...n, read: true } : n);
     renderNotificationBadge();
+    updateInboxBadge();
     if (sb) await sb.from('notifications').update({ read: true }).eq('id', notifId);
 }
 
@@ -9347,7 +9348,7 @@ function renderInboxContent() {
     content.innerHTML = '';
 
     const rateNotifs  = myNotifications.filter(n => !n.read && n.type === 'rate_seller');
-    const matchNotifs = myNotifications.filter(n => !n.read && n.type === 'listing_match');
+    const matchNotifs = myNotifications.filter(n => n.type === 'listing_match');
     rateNotifs.forEach(n  => content.appendChild(buildRateSellerCard(n)));
     matchNotifs.forEach(n => content.appendChild(buildListingMatchCard(n)));
 
