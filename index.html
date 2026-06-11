@@ -973,12 +973,14 @@
                 <span id="sfSellerName" class="sf-bar-name"></span>
                 <span class="sf-bar-divider"></span>
                 <span class="sf-bar-stat"><span id="sfStatListings" class="sf-bar-num">0</span> Listings</span>
+                <span class="sf-bar-divider"></span>
+                <span class="sf-bar-stat"><span id="sfStatSaves" class="sf-bar-num">0</span> saves</span>
                 <span id="sfRatingDivider" class="sf-bar-divider" style="display:none;"></span>
                 <span id="sfRatingStat" class="sf-bar-stat sf-rating-stat" onclick="openSellerRatings()" style="display:none;"></span>
                 <span class="sf-bar-spacer"></span>
                 <button class="sf-msg-btn" id="sfMsgBtn" onclick="handleGeneralEnquiry()">Message Seller</button>
                 <button id="sfSaveStoreBtn" class="sf-heart-btn" onclick="toggleSaveStore(currentStorefrontSeller, document.getElementById('sfBusinessName')?.textContent, document.getElementById('sfProBadge')?.style.display !== 'none')" title="Save this store">
-                    <span class="sf-heart-icon">&#x2661;</span><span id="sfStatSaves" class="sf-bar-num sf-saves-count">0</span>
+                    <span class="sf-heart-icon">&#x2661;</span>
                 </button>
             </div>
             <!-- Row 3: location (if set) -->

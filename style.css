@@ -944,9 +944,7 @@ header {
     transition: transform 0.15s;
 }
 .sf-heart-btn.sf-save-btn-active .sf-heart-icon { transform: scale(1.1); }
-.sf-saves-count {
-    font-size: 13px; font-weight: 700; color: inherit;
-}
+
 
 /* Hero banner */
 .sf-hero {
