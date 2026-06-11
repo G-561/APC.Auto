@@ -8317,7 +8317,7 @@ function renderSavedStores(container) {
             </div>`;
         return;
     }
-    container.innerHTML = savedStores.map(store => {
+    container.innerHTML = savedStores.map((store, idx) => {
         const listingCount = [...partDatabase, ...userListings].filter(p => p.seller === store.sellerName && p.status !== 'sold' && p.status !== 'removed').length;
         return `
         <div class="saved-store-card">
@@ -8328,13 +8328,16 @@ function renderSavedStores(container) {
                 <div class="saved-store-count">${listingCount} active listing${listingCount !== 1 ? 's' : ''}</div>
             </div>
             <div class="saved-store-actions">
-                <button class="saved-store-visit-btn" onclick="openStoreFromSaved('${escapeHtml(store.sellerName)}')">Visit ›</button>
-                <button class="saved-store-unsave-btn" onclick="toggleSaveStore('${escapeHtml(store.sellerName)}','${escapeHtml(store.businessName || '')}',${store.isPro})">×</button>
+                <button class="saved-store-visit-btn" onclick="openStoreFromSaved(${idx})">Visit ›</button>
+                <button class="saved-store-unsave-btn" onclick="removeSavedStore(${idx})">×</button>
             </div>
         </div>`;
     }).join('');
 }
-function openStoreFromSaved(sellerName) {
+function openStoreFromSaved(idx) {
+    const store = savedStores[idx];
+    if (!store) return;
+    const sellerName = store.sellerName;
     closeSavedPartsDrawer();
     const part = [...partDatabase, ...userListings].find(p => p.seller === sellerName && p.sellerId);
     if (part?.sellerId) {
@@ -8342,11 +8345,17 @@ function openStoreFromSaved(sellerName) {
         return;
     }
     if (!sb) { showToast('Could not open store'); return; }
-    sb.from('profiles').select('id').eq('display_name', sellerName).single()
+    sb.from('profiles').select('id').eq('display_name', sellerName).maybeSingle()
         .then(({ data }) => {
             if (data?.id) openStorefrontByUserId(data.id);
             else showToast('Could not find this seller');
         });
+}
+function removeSavedStore(idx) {
+    savedStores.splice(idx, 1);
+    persistSavedStores();
+    syncStoreSaveButton();
+    if (document.getElementById('savedPartsDrawer')?.classList.contains('active') && savedPartsTab === 'stores') renderSavedParts();
 }
 
 function loadSavedParts() {
