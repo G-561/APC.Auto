@@ -5926,20 +5926,6 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
         if (images.length > 0) {
             carousel.classList.add('carousel-loading');
         }
-        // Only the visible first image loads immediately; subsequent images load as they scroll near view.
-        // rootMargin '0px 100% 0px 0px' starts loading the next image one full carousel-width before it's reached.
-        let _carouselObserver = null;
-        if (images.length > 1 && 'IntersectionObserver' in window) {
-            _carouselObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && entry.target.dataset.src) {
-                        entry.target.src = entry.target.dataset.src;
-                        delete entry.target.dataset.src;
-                        _carouselObserver.unobserve(entry.target);
-                    }
-                });
-            }, { root: carousel, rootMargin: '0px 100% 0px 0px', threshold: 0 });
-        }
         images.forEach((src, i) => {
             const img = document.createElement('img');
             img.style.cssText = 'min-width:100%; scroll-snap-align:start; aspect-ratio:1/1; object-fit:contain; background:#f4f4f4; cursor: zoom-in;' + (i === 0 ? 'opacity:0; transition:opacity 0.2s;' : '');
@@ -5948,14 +5934,8 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             if (i === 0) {
                 img.onload = () => { img.style.opacity = '1'; carousel.classList.remove('carousel-loading'); };
                 img.onerror = () => { img.style.opacity = '1'; carousel.classList.remove('carousel-loading'); };
-                img.src = src;
-            } else if (i === 1) {
-                img.src = src; // second image loads immediately so first swipe never waits
-            } else {
-                img.dataset.src = src;
-                if (_carouselObserver) _carouselObserver.observe(img);
-                else img.src = src;
             }
+            img.src = src; // load all carousel images immediately — small set (3-6 imgs), avoids iOS scroll-snap + lazy-load glitch
             carousel.appendChild(img);
         });
         // Reset to first image — deferred one frame so mobile browsers don't restore old scroll position
