@@ -8674,6 +8674,8 @@ function renderWantedList() {
 async function viewNotifListing(notifId, listingId) {
     if (notifId) await markNotificationRead(notifId);
     if (!listingId) return;
+    // Close inbox so the detail overlay (lower z-index) isn't hidden behind it
+    toggleDrawer('inboxDrawer', false);
     // Check local cache first
     const cached = [...partDatabase, ...userListings].find(p => p.supabaseId === listingId);
     if (cached) { openItemDetail(cached.supabaseId || cached.id); return; }
