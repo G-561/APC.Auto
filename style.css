@@ -1674,22 +1674,12 @@ header {
     margin: 0 0 4px 0;
 }
 
-.item-loc-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-}
 .item-loc {
     font-size: 9px;
     color: #888;
     font-weight: 700;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
-.item-rating { font-size: 10px; font-weight: 700; color: #f07020; white-space: nowrap; flex-shrink: 0; }
+.item-rating { font-size: 10px; font-weight: 700; color: #f07020; margin-top: 3px; }
 .item-rating-count { color: #aaa; font-weight: 500; }
 .item-fits {
     font-size: 9px;
