@@ -12019,7 +12019,10 @@ function updateCarouselActiveDot() {
 
 // --- QR LABEL ---
 
+let _labelPartId = null;
+
 function printPartLabel(partId) {
+    _labelPartId = partId;
     const part = getPartById(partId);
     if (!part) return;
 
@@ -12051,6 +12054,115 @@ function closeLabelModal() {
     document.getElementById('labelModalBackdrop').style.display = 'none';
     document.getElementById('labelModal').style.display = 'none';
     document.body.style.overflow = '';
+}
+
+function downloadLabelPNG() {
+    const part = getPartById(_labelPartId) || findPartAnywhere(_labelPartId);
+    if (!part) return;
+
+    const apcId = part.apcId || ('APC-' + part.id);
+    const condLabel = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[part.condition] || part.condition || '';
+    const qrText = [apcId, part.title, part.stockNumber ? 'Stock: ' + part.stockNumber : '', condLabel].filter(Boolean).join('\n');
+
+    // Generate QR at high resolution for crisp printing
+    const QR_SIZE = 300;
+    const qrTemp = document.createElement('div');
+    qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(qrTemp);
+    if (window.QRCode) new QRCode(qrTemp, { text: qrText, width: QR_SIZE, height: QR_SIZE, correctLevel: QRCode.CorrectLevel.M });
+
+    setTimeout(() => {
+        const qrEl = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
+        document.body.removeChild(qrTemp);
+
+        // 100mm × 62mm label at 300 DPI — matches QL-810W continuous tape
+        const W = 1181, H = 732;
+        const PAD = 24;
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        // Background + border
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = '#222222';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(3, 3, W - 6, H - 6);
+
+        // Orange header bar
+        const HDR_H = 80;
+        ctx.fillStyle = '#f07020';
+        ctx.fillRect(3, 3, W - 6, HDR_H);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 38px Arial';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('AUTO PARTS CONNECTION', PAD + 8, 3 + HDR_H / 2);
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 26px Arial';
+        ctx.fillText(apcId, W - PAD, 3 + HDR_H / 2);
+        ctx.textAlign = 'left';
+
+        // Content area — leave right column for QR
+        const QR_X = W - QR_SIZE - PAD;
+        const QR_Y = HDR_H + PAD;
+        const TEXT_MAX_W = QR_X - PAD * 2;
+
+        // Part title
+        ctx.fillStyle = '#111111';
+        ctx.font = 'bold 46px Arial';
+        ctx.textBaseline = 'top';
+        // Word-wrap title to two lines max
+        const words = (part.title || '').split(' ');
+        let line1 = '', line2 = '';
+        for (const w of words) {
+            const test = line1 ? line1 + ' ' + w : w;
+            if (ctx.measureText(test).width <= TEXT_MAX_W) { line1 = test; }
+            else if (!line2) { line2 = w; }
+            else { const t2 = line2 + ' ' + w; if (ctx.measureText(t2).width <= TEXT_MAX_W) line2 = t2; }
+        }
+        ctx.fillText(line1, PAD, HDR_H + PAD);
+        if (line2) ctx.fillText(line2, PAD, HDR_H + PAD + 54);
+
+        // Detail rows
+        ctx.font = '28px Arial';
+        let y = HDR_H + PAD + (line2 ? 126 : 76);
+        const ROW = 42;
+        const drawRow = (label, value) => {
+            if (!value) return;
+            ctx.fillStyle = '#888888'; ctx.fillText(label, PAD, y);
+            ctx.fillStyle = '#222222'; ctx.fillText(String(value).slice(0, 40), PAD + 190, y);
+            y += ROW;
+        };
+        drawRow('Condition:', condLabel);
+        if (part.fits?.[0]) {
+            const f = part.fits[0];
+            drawRow('Fits:', [f.make, f.model, f.variant, part.year].filter(Boolean).join(' '));
+        }
+        drawRow('Bin:', part.warehouseBin);
+        drawRow('Stock #:', part.stockNumber);
+
+        // Price
+        ctx.fillStyle = '#f07020';
+        ctx.font = 'bold 72px Arial';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('$' + part.price, PAD, H - PAD);
+
+        // QR code
+        if (qrEl) {
+            ctx.drawImage(qrEl, QR_X, QR_Y, QR_SIZE, QR_SIZE);
+            ctx.fillStyle = '#888888';
+            ctx.font = '20px Arial';
+            ctx.textBaseline = 'top';
+            ctx.textAlign = 'center';
+            ctx.fillText(apcId, QR_X + QR_SIZE / 2, QR_Y + QR_SIZE + 6);
+            ctx.textAlign = 'left';
+        }
+
+        const link = document.createElement('a');
+        link.download = `APC-Label-${apcId}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }, 150);
 }
 
 // --- OFFER SHEET ---
