@@ -17861,6 +17861,10 @@ function whSetTab(tab, workerMode = false) {
     const scannerTab = document.getElementById('whScannerTab');
     const btnLabels  = document.getElementById('whTabLabels');
     const btnScanner = document.getElementById('whTabScanner');
+    // Workers (deep-linked via ?putaway=1) only get the scanner — hide the tab bar
+    // so they can't wander into the owner-only Labels generator.
+    const tabBar = document.querySelector('#warehouseDrawer .wh-tab-bar');
+    if (tabBar) tabBar.style.display = workerMode ? 'none' : '';
     if (tab === 'labels') {
         labelsTab.style.display  = '';
         scannerTab.style.display = 'none';
