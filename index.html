@@ -1693,6 +1693,33 @@
                 </div>
             </div>
 
+            <!-- AUTO-REPLY -->
+            <div class="settings-section-label">Messaging</div>
+            <div class="settings-section">
+                <div class="settings-row">
+                    <div>
+                        <div class="settings-row-label">Auto-reply when away</div>
+                        <div class="settings-row-sub">Automatically reply to new enquiries while you're unavailable</div>
+                    </div>
+                    <label class="settings-toggle"><input type="checkbox" id="settingAutoReply" onchange="saveAutoReplyToggle(this.checked)"><span class="settings-toggle-track"></span></label>
+                </div>
+                <div id="autoReplyMsgSection" style="display:none;">
+                    <div class="ar-templates">
+                        <button class="ar-template-btn" onclick="setAutoReplyTemplate(0)">Public holiday</button>
+                        <button class="ar-template-btn" onclick="setAutoReplyTemplate(1)">Out of office</button>
+                        <button class="ar-template-btn" onclick="setAutoReplyTemplate(2)">Back Monday</button>
+                        <button class="ar-template-btn" onclick="setAutoReplyTemplate(3)">24hr reply</button>
+                    </div>
+                    <div class="ar-compose">
+                        <textarea id="autoReplyMsgInput" class="ar-msg-input" maxlength="300" placeholder="Type your auto-reply message..." oninput="autoReplyMsgChanged()"></textarea>
+                        <div class="ar-footer">
+                            <span id="autoReplyCharCount" class="ar-char-count">0 / 300</span>
+                            <button class="ar-save-btn" onclick="saveAutoReplyMessage()">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- HELP & LEGAL -->
             <div class="settings-section-label">Help &amp; Legal</div>
             <div class="settings-section">

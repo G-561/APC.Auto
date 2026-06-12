@@ -393,7 +393,9 @@ function getDefaultSettings() {
         notifyPriceDrops:     true,
         notifyNewListings:    true,
         privacyPublicProfile: true,
-        warehouseManagement:  false
+        warehouseManagement:  false,
+        autoReplyEnabled:     false,
+        autoReplyMessage:     ''
     };
 }
 function saveUserSettings() {
@@ -1325,6 +1327,50 @@ async function saveSettingsToggle(key, value) {
         renderMainGrid();
     }
 }
+const AUTO_REPLY_TEMPLATES = [
+    'Thanks for your enquiry — we\'re closed for the public holiday and will reply as soon as we\'re back.',
+    'Thanks for your message — I\'m currently out of the office and will respond as soon as possible.',
+    'Thanks for reaching out — I\'m away on weekends but will get back to you first thing Monday.',
+    'Thanks for your enquiry — we aim to reply within 24 hours.',
+];
+
+async function saveAutoReplyToggle(enabled) {
+    userSettings.autoReplyEnabled = enabled;
+    saveUserSettings();
+    const section = document.getElementById('autoReplyMsgSection');
+    if (section) section.style.display = enabled ? '' : 'none';
+    if (!currentUserId || !sb) return;
+    const { error } = await sb.from('profiles').update({ auto_reply_enabled: enabled }).eq('id', currentUserId);
+    if (error) showToast('Error saving: ' + error.message);
+    else showToast(enabled ? 'Auto-reply enabled' : 'Auto-reply disabled');
+}
+
+async function saveAutoReplyMessage() {
+    const input = document.getElementById('autoReplyMsgInput');
+    if (!input) return;
+    const msg = input.value.trim();
+    userSettings.autoReplyMessage = msg;
+    saveUserSettings();
+    if (!currentUserId || !sb) return;
+    const { error } = await sb.from('profiles').update({ auto_reply_message: msg || null }).eq('id', currentUserId);
+    if (error) showToast('Error saving: ' + error.message);
+    else showToast('Auto-reply message saved');
+}
+
+function setAutoReplyTemplate(idx) {
+    const input = document.getElementById('autoReplyMsgInput');
+    const count = document.getElementById('autoReplyCharCount');
+    if (!input) return;
+    input.value = AUTO_REPLY_TEMPLATES[idx] || '';
+    if (count) count.textContent = `${input.value.length} / 300`;
+}
+
+function autoReplyMsgChanged() {
+    const input = document.getElementById('autoReplyMsgInput');
+    const count = document.getElementById('autoReplyCharCount');
+    if (input && count) count.textContent = `${input.value.length} / 300`;
+}
+
 function closeSettingsDrawer() {
     const el = document.getElementById('settingsDrawer');
     if (el) el.classList.remove('active');
@@ -1383,6 +1429,15 @@ function renderSettingsDrawer() {
         const el = document.getElementById(elId);
         if (el) el.checked = userSettings[key];
     });
+
+    const arToggle = document.getElementById('settingAutoReply');
+    const arSection = document.getElementById('autoReplyMsgSection');
+    const arInput = document.getElementById('autoReplyMsgInput');
+    const arCount = document.getElementById('autoReplyCharCount');
+    if (arToggle) arToggle.checked = !!userSettings.autoReplyEnabled;
+    if (arSection) arSection.style.display = userSettings.autoReplyEnabled ? '' : 'none';
+    if (arInput) arInput.value = userSettings.autoReplyMessage || '';
+    if (arCount) { const len = (userSettings.autoReplyMessage || '').length; arCount.textContent = `${len} / 300`; }
 }
 
 const BANNER_COLOURS = [
@@ -2049,7 +2104,7 @@ async function loadConversationsFromSupabase(userId) {
     try {
         const { data: rows, error } = await sb
             .from('conversations')
-            .select('*, messages(id, sender_id, sender_name, text, photo_url, offer_data, created_at)')
+            .select('*, messages(id, sender_id, sender_name, text, photo_url, offer_data, is_auto_reply, created_at)')
             .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
             .order('last_message_at', { ascending: false, nullsFirst: false });
 
@@ -2074,6 +2129,7 @@ async function loadConversationsFromSupabase(userId) {
                     ...(m.offer_data ? { offerCard: m.offer_data }   : {}),
                     time: formatMsgDate(m.created_at),
                     clock: formatMsgTime(m.created_at),
+                    ...(m.is_auto_reply ? { isAutoReply: true } : {}),
                 }));
 
             // If flagged unread but the last message was sent by this user, they've clearly read it — auto-clear
@@ -2471,8 +2527,9 @@ function subscribeToRealtimeMessages() {
                     supabaseMsgId: msg.id,
                     sent: false,
                     text: msg.text || '',
-                    ...(msg.photo_url  ? { photo: msg.photo_url }     : {}),
-                    ...(msg.offer_data ? { offerCard: msg.offer_data } : {}),
+                    ...(msg.photo_url   ? { photo: msg.photo_url }      : {}),
+                    ...(msg.offer_data  ? { offerCard: msg.offer_data }  : {}),
+                    ...(msg.is_auto_reply ? { isAutoReply: true }        : {}),
                     time: formatMsgDate(msg.created_at || new Date().toISOString()),
                     clock: formatMsgTime(msg.created_at || new Date().toISOString()),
                 });
@@ -2943,7 +3000,7 @@ function renderInboxMsgs(conv) {
                 <div class="inbox-msg-avatar">${initial}</div>
                 <div class="${colClass}">
                     <div class="${bubClass}">${content}</div>
-                    <div class="inbox-msg-time">${m.clock}${m.edited ? ' · edited' : ''}</div>
+                    <div class="inbox-msg-time">${m.isAutoReply ? '<span class="msg-auto-reply-label">Auto-reply</span> · ' : ''}${m.clock}${m.edited ? ' · edited' : ''}</div>
                 </div>
                 ${m.sent ? delBtn : ''}
             </div>`;
@@ -2967,7 +3024,7 @@ function msgRowTouchStart(e, row) {
         const msgIdx = parseInt(row.dataset.msgIdx);
         const conv = conversations.find(c => c.id === convId);
         const msg = conv?.msgs[msgIdx];
-        if (msg?.text && !msg.offerCard && !msg.photo) {
+        if (msg?.text && !msg.offerCard && !msg.photo && !msg.isAutoReply) {
             _msgLongPressFired = true;
             if (navigator.vibrate) navigator.vibrate(30);
             showMsgCopyMenu(msg.text, _msgTouchStartY, !!msg.sent, convId, msgIdx);
@@ -7750,6 +7807,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         userSettings.bannerColor    = profile.banner_color    || '';
                         userSettings.postcode       = profile.postcode        || '';
                         userSettings.privacyPublicProfile = profile.is_public !== false;
+                        userSettings.autoReplyEnabled     = !!profile.auto_reply_enabled;
+                        userSettings.autoReplyMessage     = profile.auto_reply_message || '';
                         saveUserSettings(); populateLocationPickers(); renderProfilePicPreview(); renderBannerPreview();
                         // Restore workshop/repairer profile from Supabase (authoritative for Trade/Pro)
                         if (profile.workshop_data) {
