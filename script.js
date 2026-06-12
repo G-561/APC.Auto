@@ -6001,21 +6001,21 @@ function printSellLabel(listing) {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
-  .sell-label { border: 0.5mm solid #222; border-radius: 2mm; padding: 2mm; }
-  .sell-header { background: #cc0000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1.2mm 2mm; border-radius: 1mm; margin-bottom: 2mm; }
+  .sell-label { border: 0.5mm solid #222; border-radius: 2mm; padding: 1.5mm; }
+  .sell-header { background: #cc0000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1mm 2mm; border-radius: 1mm; margin-bottom: 1.5mm; }
   .sell-brand { font-size: 4mm; font-weight: 900; letter-spacing: 0.1mm; white-space: nowrap; }
   .sell-date { font-size: 2.8mm; opacity: 0.85; white-space: nowrap; }
-  .sell-body { display: flex; gap: 2mm; align-items: flex-start; }
+  .sell-body { display: flex; gap: 2mm; align-items: flex-start; margin-bottom: 1.5mm; }
   .sell-left { flex: 1; min-width: 0; }
-  .sell-title { font-size: 3.8mm; font-weight: 800; line-height: 1.25; margin-bottom: 1.5mm; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .sell-title { font-size: 3.5mm; font-weight: 800; line-height: 1.25; margin-bottom: 1mm; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  td { font-size: 3mm; padding: 0.4mm 1mm 0.4mm 0; vertical-align: top; line-height: 1.3; }
+  td { font-size: 3mm; padding: 0.3mm 1mm 0.3mm 0; vertical-align: top; line-height: 1.3; }
   td:first-child { color: #666; width: 14mm; white-space: nowrap; }
-  .sell-price-row { margin-top: 1.5mm; border-top: 0.5mm solid #222; padding-top: 1.5mm; display: flex; align-items: baseline; gap: 2mm; }
+  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
+  .sell-qr-id { font-size: 2.5mm; color: #555; text-align: center; word-break: break-all; width: 32mm; }
+  .sell-price-row { border-top: 0.5mm solid #222; padding-top: 1.5mm; display: flex; align-items: baseline; gap: 2mm; }
   .sell-price { font-size: 7mm; font-weight: 900; }
   .sell-price-label { font-size: 2.8mm; color: #555; }
-  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
-  .sell-qr-id { font-size: 2.5mm; color: #555; text-align: center; word-break: break-all; width: 36mm; }
   @media print { @page { size: auto; margin: 2mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head><body>
@@ -6034,15 +6034,15 @@ function printSellLabel(listing) {
         ${year}${bin}
         ${listing.stockNumber ? `<tr><td>Stock #</td><td>${escapeHtml(listing.stockNumber)}</td></tr>` : ''}
       </table>
-      <div class="sell-price-row">
-        <span class="sell-price">$${listing.price}</span>
-        <span class="sell-price-label">Listed price</span>
-      </div>
     </div>
     <div class="sell-right">
       ${qrHtml}
       <div class="sell-qr-id">${apcId}</div>
     </div>
+  </div>
+  <div class="sell-price-row">
+    <span class="sell-price">$${listing.price}</span>
+    <span class="sell-price-label">Listed price</span>
   </div>
 </div>
 <script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
