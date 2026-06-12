@@ -5756,6 +5756,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-part-name { font-weight: 700; color: #1a1a1a; }
 .dash-part-sub  { font-size: 11px; color: #999; margin-top: 3px; }
 .dash-td-price  { font-weight: 800; color: var(--apc-orange); white-space: nowrap; }
+.dash-td-loc    { white-space: nowrap; }
+.dash-td-loc--empty { color: #ccc; }
+.dash-bin-chip  { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 5px; padding: 2px 7px; font-size: 11px; font-weight: 700; color: #555; letter-spacing: 0.3px; }
 .dash-td-saves  { color: #999; font-weight: 600; white-space: nowrap; }
 .dash-td-date   { color: #bbb; font-size: 12px; white-space: nowrap; }
 .dash-action-btn {

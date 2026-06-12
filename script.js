@@ -17537,6 +17537,7 @@ function renderDashListings(tab, btn, ctx) {
             <td><img class="dash-thumb" src="${escapeHtml(thumbUrl((p.images && p.images[0]) || 'images/placeholder.png', 200))}" alt="" onclick="openItemDetail('${p.supabaseId || p.id}')" style="cursor:pointer;" title="View listing"></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
+            <td class="dash-td-loc">${p.warehouseBin ? `<span class="dash-bin-chip">${escapeHtml(p.warehouseBin)}</span>` : '<span class="dash-td-loc--empty">—</span>'}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
@@ -17607,7 +17608,7 @@ function renderDashListings(tab, btn, ctx) {
     }
 
     const hdrs = tab === 'active'
-        ? ['', 'Part', 'Price', 'Saves', 'Listed', 'Actions']
+        ? ['', 'Part', 'Price', 'Location', 'Saves', 'Listed', 'Actions']
         : tab === 'pending'
         ? ['', 'Part', 'Offer vs Listed', 'Date', 'Actions']
         : ['', 'Part', 'Sale Price', '', 'Sale Date', 'Actions'];
