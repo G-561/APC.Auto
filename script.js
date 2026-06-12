@@ -17549,7 +17549,7 @@ function renderDashListings(tab, btn, ctx) {
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
-                ${p.warehouseBin ? `<button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>` : ''}
+                <button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>
                 ${p.status === 'pending' ? `<button class="dash-action-btn dash-btn-warning" onclick="clearListingPending(${p.id})">Remove Pending</button>` : ''}
                 <button class="dash-action-btn" onclick="openEditListing(${p.supabaseId ?? p.id});">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="markSold(${p.id})">Mark Sold</button>
