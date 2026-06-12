@@ -17910,6 +17910,11 @@ function whRenderLabelPreview(codes) {
         label.className = 'wh-label-card-code';
         label.textContent = code;
         card.appendChild(label);
+        const dlBtn = document.createElement('button');
+        dlBtn.className = 'wh-label-dl-btn';
+        dlBtn.textContent = '⬇ PNG';
+        dlBtn.onclick = () => whDownloadLabelPNG(code);
+        card.appendChild(dlBtn);
         grid.appendChild(card);
         if (window.QRCode) {
             new QRCode(qrWrap, { text: code, width: 72, height: 72, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
@@ -17946,6 +17951,54 @@ function whPrintLabels() {
   setTimeout(() => window.print(), 800);
 <\/script></body></html>`);
     win.document.close();
+}
+
+function whDownloadLabelPNG(code) {
+    const QR_SIZE = 320;
+    const qrTemp = document.createElement('div');
+    qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(qrTemp);
+    if (window.QRCode) new QRCode(qrTemp, { text: code, width: QR_SIZE, height: QR_SIZE, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+
+    setTimeout(() => {
+        const qrEl = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
+        document.body.removeChild(qrTemp);
+
+        // 50mm × 50mm at 300 DPI — fits QL square die-cut labels
+        const S = 590;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = S;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, S, S);
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 5;
+        ctx.strokeRect(3, 3, S - 6, S - 6);
+
+        // Orange top bar
+        ctx.fillStyle = '#f07020';
+        ctx.fillRect(3, 3, S - 6, 44);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px Arial';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.fillText('AUTO PARTS CONNECTION', S / 2, 25);
+
+        // QR code
+        if (qrEl) ctx.drawImage(qrEl, (S - QR_SIZE) / 2, 52, QR_SIZE, QR_SIZE);
+
+        // Location code text
+        ctx.fillStyle = '#1a1a1a';
+        ctx.font = 'bold 36px Arial';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(code, S / 2, S - 10);
+
+        const link = document.createElement('a');
+        link.download = `APC-Location-${code.replace(/[^a-zA-Z0-9-_]/g, '_')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }, 150);
 }
 
 // ── Put-Away Scanner ──────────────────────────────────────────────

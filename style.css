@@ -8219,6 +8219,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-label-card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: white; }
 .wh-label-card-code { font-size: 13px; font-weight: 900; color: #1a1a2e; letter-spacing: 0.5px; text-align: center; }
 .wh-label-qr { line-height: 0; }
+.wh-label-dl-btn { font-size: 11px; font-weight: 700; color: var(--apc-orange); background: none; border: 1px solid var(--apc-orange); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
+.wh-label-dl-btn:active { background: rgba(240,112,32,0.1); }
 
 /* Put-Away scanner */
 .wh-camera-wrap { position: relative; width: 100%; background: #000; overflow: hidden; flex-shrink: 0; aspect-ratio: 4/3; max-height: 300px; }
