@@ -6220,6 +6220,16 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             detailOdoEl.style.display = 'none';
         }
     }
+    const detailBinEl = document.getElementById('detailWarehouseBin');
+    if (detailBinEl) {
+        const isOwn = userIsSignedIn && currentUserId && part.sellerId === currentUserId;
+        if (isOwn && part.warehouseBin) {
+            detailBinEl.textContent = '📍 Bin: ' + part.warehouseBin;
+            detailBinEl.style.display = 'block';
+        } else {
+            detailBinEl.style.display = 'none';
+        }
+    }
     const detailMetaEl = document.getElementById('detailMeta');
     if (detailMetaEl) {
         safeText(document.getElementById('detailPosted'), part.date ? timeAgo(part.date) : '');
@@ -16995,15 +17005,20 @@ function _slRenderQuoteDetail() {
                 <div class="sl-qm-section">
                     <div class="sl-qm-label">Parts (${lines.length})</div>
                     <div class="sl-qm-parts-list">
-                        ${lines.length ? lines.map(l => `
+                        ${lines.length ? lines.map(l => {
+                            const lineBin = userListings.find(u => (u.supabaseId || u.id) == l.listing_id)?.warehouseBin
+                                || _slResultsMap.get(l.listing_id)?.warehouse_bin || '';
+                            return `
                             <div class="sl-qd-line">
                                 <span class="sl-qd-line-title" title="${escapeHtml(l.title)}">${escapeHtml(l.title)}</span>
-                                ${l.stock_number ? `<span style="font-size:10px;color:#aaa;flex-shrink:0;">${escapeHtml(l.stock_number)}</span>` : ''}
+                                ${l.stock_number ? `<span class="sl-qd-line-meta">${escapeHtml(l.stock_number)}</span>` : ''}
+                                ${lineBin ? `<span class="sl-qd-line-bin">📍 ${escapeHtml(lineBin)}</span>` : ''}
                                 <input class="sl-qd-line-price-input" type="number" min="0" step="0.01"
                                     value="${l.price != null ? l.price : ''}" placeholder="—"
                                     onblur="_slSaveLinePrice(${l.id},${quote.id},this.value)">
                                 <button class="sl-qd-line-del" onclick="_slDeleteQuoteLine(${l.id},${quote.id})" title="Remove">×</button>
-                            </div>`).join('') :
+                            </div>`;
+                        }).join('') :
                             '<div style="color:#bbb;font-size:12px;padding:8px 0;">No parts on this quote</div>'}
                     </div>
                 </div>

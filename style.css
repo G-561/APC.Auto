@@ -7840,6 +7840,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-qd-line { display: flex; align-items: center; gap: 5px; padding: 5px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
 .sl-qd-line-title { flex: 1; color: #333; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sl-qd-line-price { color: #f07020; font-weight: 700; flex-shrink: 0; font-size: 12px; }
+.sl-qd-line-meta { font-size: 10px; color: #aaa; flex-shrink: 0; }
+.sl-qd-line-bin  { font-size: 10px; color: #888; font-weight: 700; flex-shrink: 0; background: #f4f4f4; border-radius: 4px; padding: 1px 5px; }
 .sl-qd-line-del { background: none; border: none; color: #ccc; font-size: 15px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; }
 .sl-qd-line-del:hover { color: #ef4444; }
 .sl-qd-line-price-input { width: 68px; flex-shrink: 0; border: 1px solid #eee; border-radius: 4px; padding: 3px 6px; font-size: 12px; font-weight: 700; color: #f07020; text-align: right; background: #fff; }
