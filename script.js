@@ -11881,7 +11881,7 @@ function renderAccountState() {
 
     if (_pendingPutAway && isPro) {
         _pendingPutAway = false;
-        setTimeout(() => { openWarehouseDrawer(); whSetTab('scanner'); }, 400);
+        setTimeout(() => { openWarehouseDrawer(); whSetTab('scanner', true); }, 400);
     }
 
     // Header height changes when the pro toggle appears/disappears, so re-sync the grid offset.
@@ -17840,7 +17840,7 @@ function whClearLabels() {
     if (manual)  manual.value        = '';
 }
 
-function whSetTab(tab) {
+function whSetTab(tab, workerMode = false) {
     const labelsTab  = document.getElementById('whLabelsTab');
     const scannerTab = document.getElementById('whScannerTab');
     const btnLabels  = document.getElementById('whTabLabels');
@@ -17856,6 +17856,8 @@ function whSetTab(tab) {
         scannerTab.style.display = 'flex';
         btnLabels.classList.remove('wh-tab--active');
         btnScanner.classList.add('wh-tab--active');
+        const panelInner = scannerTab.querySelector('.wh-panel-inner');
+        if (panelInner) panelInner.style.display = workerMode ? 'none' : '';
         whResetScan();
         if (window.innerWidth < 900) whStartCamera();
     }
