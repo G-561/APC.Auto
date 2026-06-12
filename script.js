@@ -6001,7 +6001,7 @@ function printSellLabel(listing) {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
-  .sell-label { border: 0.5mm solid #222; border-radius: 2mm; padding: 1.5mm; }
+  .sell-label { border: 0.5mm solid #222; border-radius: 2mm; padding: 1.5mm; page-break-inside: avoid; break-inside: avoid; }
   .sell-header { background: #cc0000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1mm 2mm; border-radius: 1mm; margin-bottom: 1.5mm; }
   .sell-brand { font-size: 4mm; font-weight: 900; letter-spacing: 0.1mm; white-space: nowrap; }
   .sell-date { font-size: 2.8mm; opacity: 0.85; white-space: nowrap; }
