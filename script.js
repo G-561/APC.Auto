@@ -17942,8 +17942,8 @@ function whPrintLabels() {
   }
   .wl-label:last-child{page-break-after:avoid;}
   .wl-brand{font-size:3.5mm;font-weight:900;color:#f07020;letter-spacing:0.3px;text-align:center;}
-  .wl-qr{width:82%;max-width:100%;}
-  .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;}
+  .wl-qr{width:82%;max-width:100%;margin:0 auto;}
+  .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;margin:0 auto;}
   .wl-code{font-size:7mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;}
   @media print{
     @page{size:auto;margin:2mm;}
