@@ -5994,7 +5994,7 @@ function printSellLabel(listing) {
         else if (qrImg) qrSrc = qrImg.src;
         document.body.removeChild(qrTemp);
 
-        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:28mm;height:28mm;display:block;" />` : '';
+        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:36mm;height:36mm;display:block;" />` : '';
 
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>APC Label — ${apcId}</title>
@@ -6012,10 +6012,7 @@ function printSellLabel(listing) {
   td { font-size: 3mm; padding: 0.3mm 1mm 0.3mm 0; vertical-align: top; line-height: 1.3; }
   td:first-child { color: #666; width: 14mm; white-space: nowrap; }
   .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
-  .sell-qr-id { font-size: 2.5mm; color: #555; text-align: center; word-break: break-all; width: 28mm; }
-  .sell-price-row { border-top: 0.5mm solid #222; padding-top: 1.5mm; display: flex; align-items: baseline; gap: 2mm; }
-  .sell-price { font-size: 7mm; font-weight: 900; }
-  .sell-price-label { font-size: 2.8mm; color: #555; }
+  .sell-qr-id { font-size: 2.5mm; color: #555; text-align: center; word-break: break-all; width: 36mm; }
   @media print { @page { size: auto; margin: 2mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head><body>
@@ -6039,10 +6036,6 @@ function printSellLabel(listing) {
       ${qrHtml}
       <div class="sell-qr-id">${apcId}</div>
     </div>
-  </div>
-  <div class="sell-price-row">
-    <span class="sell-price">$${listing.price}</span>
-    <span class="sell-price-label">Listed price</span>
   </div>
 </div>
 <script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
@@ -12067,8 +12060,8 @@ function downloadLabelPNG() {
         : `${location.origin}${location.pathname}`;
     const qrUrl = `${baseUrl}?item=${part.supabaseId || part.id}`;
 
-    // Generate QR at 330px (28mm @ 300dpi)
-    const QR_SIZE = 330;
+    // Generate QR at 425px (36mm @ 300dpi)
+    const QR_SIZE = 425;
     const qrTemp = document.createElement('div');
     qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(qrTemp);
@@ -12109,8 +12102,7 @@ function downloadLabelPNG() {
         const QR_X = W - PAD - QR_SIZE;
         const QR_Y = HDR_H + PAD + 8;
         const LEFT_W = QR_X - PAD - 16;
-        const PRICE_SECTION_H = 100; // reserved at bottom for price
-        const BODY_BOTTOM = H - PAD - PRICE_SECTION_H;
+        const BODY_BOTTOM = H - PAD;
 
         // Title — word-wrap up to 3 lines
         ctx.fillStyle = '#111111';
@@ -12154,21 +12146,6 @@ function downloadLabelPNG() {
             ctx.fillText(apcId, QR_X + QR_SIZE / 2, QR_Y + QR_SIZE + 8);
             ctx.textAlign = 'left';
         }
-
-        // Price footer
-        const PRICE_Y = H - PAD - 83;
-        ctx.strokeStyle = '#333333';
-        ctx.lineWidth = 6;
-        ctx.beginPath(); ctx.moveTo(PAD, PRICE_Y - 14); ctx.lineTo(W - PAD, PRICE_Y - 14); ctx.stroke();
-        ctx.fillStyle = '#111111';
-        ctx.font = 'bold 83px Arial';
-        ctx.textBaseline = 'top';
-        ctx.fillText('$' + part.price, PAD, PRICE_Y);
-        const pw = ctx.measureText('$' + part.price).width;
-        ctx.fillStyle = '#888888';
-        ctx.font = '33px Arial';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Listed price', PAD + pw + 20, PRICE_Y + 42);
 
         const link = document.createElement('a');
         link.download = `APC-Label-${apcId}.png`;
