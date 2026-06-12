@@ -17941,7 +17941,7 @@ function whPrintLabels() {
     padding:3mm;gap:2mm;page-break-after:always;
   }
   .wl-label:last-child{page-break-after:avoid;}
-  .wl-brand{font-size:3.5mm;font-weight:900;color:#f07020;letter-spacing:0.3px;text-align:center;}
+  .wl-brand{font-size:3.5mm;font-weight:900;color:#cc0000;letter-spacing:0.3px;text-align:center;}
   .wl-qr{width:82%;max-width:100%;margin:0 auto;}
   .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;margin:0 auto;}
   .wl-code{font-size:7mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;}
@@ -17984,8 +17984,8 @@ function whDownloadLabelPNG(code) {
         ctx.lineWidth = 5;
         ctx.strokeRect(3, 3, S - 6, S - 6);
 
-        // Orange top bar
-        ctx.fillStyle = '#f07020';
+        // Red top bar (Brother labels print red/black only)
+        ctx.fillStyle = '#cc0000';
         ctx.fillRect(3, 3, S - 6, 44);
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 22px Arial';
