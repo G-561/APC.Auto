@@ -5984,7 +5984,7 @@ function printSellLabel(listing) {
     document.body.appendChild(qrTemp);
 
     if (window.QRCode) {
-        new QRCode(qrTemp, { text: listingUrl, width: 90, height: 90, correctLevel: QRCode.CorrectLevel.M });
+        new QRCode(qrTemp, { text: listingUrl, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
     }
 
     setTimeout(() => {
@@ -5994,30 +5994,29 @@ function printSellLabel(listing) {
         else if (qrImg) qrSrc = qrImg.src;
         document.body.removeChild(qrTemp);
 
-        const qrHtml = qrSrc ? `<img src="${qrSrc}" width="90" height="90" />` : '';
+        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:32mm;height:32mm;display:block;" />` : '';
 
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>APC Label — ${apcId}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
-  .sell-label { border: 2px solid #222; border-radius: 6px; padding: 10px 12px; width: 100%; }
-  .sell-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #222; padding-bottom: 8px; margin-bottom: 8px; }
-  .sell-brand { font-size: 18px; font-weight: 900; color: #f7941d; letter-spacing: -0.5px; }
-  .sell-date { font-size: 10px; color: #aaa; text-align: right; }
-  .sell-body { display: flex; gap: 12px; align-items: flex-start; }
+  .sell-label { border: 0.5mm solid #222; border-radius: 2mm; padding: 2.5mm; width: 100%; }
+  .sell-header { background: #cc0000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1.5mm 2mm; border-radius: 1mm; margin-bottom: 2mm; }
+  .sell-brand { font-size: 4.5mm; font-weight: 900; letter-spacing: -0.1mm; white-space: nowrap; }
+  .sell-date { font-size: 3mm; opacity: 0.85; text-align: right; white-space: nowrap; }
+  .sell-title { font-size: 5.5mm; font-weight: 800; line-height: 1.25; margin-bottom: 2mm; }
+  .sell-body { display: flex; gap: 2mm; align-items: flex-start; }
   .sell-left { flex: 1; min-width: 0; }
-  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .sell-title { font-size: 13px; font-weight: 800; margin-bottom: 7px; line-height: 1.3; }
-  table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  td { padding: 2px 6px 2px 0; vertical-align: top; }
-  td:first-child { color: #555; width: 65px; white-space: nowrap; }
-  .sell-price-row { margin-top: 7px; border-top: 2px solid #222; padding-top: 7px; display: flex; align-items: baseline; gap: 6px; }
-  .sell-price { font-size: 20px; font-weight: 900; }
-  .sell-price-label { font-size: 11px; color: #555; }
-  .sell-qr-id { font-size: 9px; color: #555; text-align: center; margin-top: 2px; word-break: break-all; max-width: 90px; }
-  .sell-url { font-size: 8px; color: #888; margin-top: 5px; word-break: break-all; }
-  @page { size: A6 landscape; margin: 8mm; }
+  table { width: 100%; border-collapse: collapse; }
+  td { font-size: 3.2mm; padding: 0.6mm 1.5mm 0.6mm 0; vertical-align: top; line-height: 1.3; }
+  td:first-child { color: #666; width: 16mm; white-space: nowrap; }
+  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
+  .sell-qr-id { font-size: 2.8mm; color: #555; text-align: center; word-break: break-all; width: 32mm; }
+  .sell-price-row { margin-top: 2.5mm; border-top: 0.5mm solid #222; padding-top: 2mm; display: flex; align-items: baseline; gap: 2mm; }
+  .sell-price { font-size: 8mm; font-weight: 900; }
+  .sell-price-label { font-size: 3mm; color: #555; }
+  @media print { @page { size: auto; margin: 2mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head><body>
 <div class="sell-label">
@@ -6025,9 +6024,9 @@ function printSellLabel(listing) {
     <div class="sell-brand">AUTO PARTS CONNECTION</div>
     <div class="sell-date">${date}</div>
   </div>
+  <div class="sell-title">${escapeHtml(listing.title || '')}</div>
   <div class="sell-body">
     <div class="sell-left">
-      <div class="sell-title">${escapeHtml(listing.title || '')}</div>
       <table>
         <tr><td>Item No.</td><td><strong>${apcId}</strong></td></tr>
         <tr><td>Condition</td><td>${condition}</td></tr>
@@ -6039,7 +6038,6 @@ function printSellLabel(listing) {
         <span class="sell-price">$${listing.price}</span>
         <span class="sell-price-label">Listed price</span>
       </div>
-      <div class="sell-url">${listingUrl}</div>
     </div>
     <div class="sell-right">
       ${qrHtml}
