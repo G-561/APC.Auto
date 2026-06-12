@@ -5994,7 +5994,7 @@ function printSellLabel(listing) {
         else if (qrImg) qrSrc = qrImg.src;
         document.body.removeChild(qrTemp);
 
-        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:36mm;height:36mm;display:block;" />` : '';
+        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:28mm;height:28mm;display:block;" />` : '';
 
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>APC Label — ${apcId}</title>
@@ -6005,14 +6005,14 @@ function printSellLabel(listing) {
   .sell-header { background: #cc0000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1mm 2mm; border-radius: 1mm; margin-bottom: 1.5mm; }
   .sell-brand { font-size: 4mm; font-weight: 900; letter-spacing: 0.1mm; white-space: nowrap; }
   .sell-date { font-size: 2.8mm; opacity: 0.85; white-space: nowrap; }
-  .sell-body { display: flex; gap: 2mm; align-items: flex-start; margin-bottom: 1.5mm; }
+  .sell-body { display: flex; gap: 2mm; align-items: flex-start; margin-bottom: 1mm; }
   .sell-left { flex: 1; min-width: 0; }
   .sell-title { font-size: 3.5mm; font-weight: 800; line-height: 1.25; margin-bottom: 1mm; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
   td { font-size: 3mm; padding: 0.3mm 1mm 0.3mm 0; vertical-align: top; line-height: 1.3; }
   td:first-child { color: #666; width: 14mm; white-space: nowrap; }
   .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
-  .sell-qr-id { font-size: 2.5mm; color: #555; text-align: center; word-break: break-all; width: 32mm; }
+  .sell-qr-id { font-size: 2.5mm; color: #555; text-align: center; word-break: break-all; width: 28mm; }
   .sell-price-row { border-top: 0.5mm solid #222; padding-top: 1.5mm; display: flex; align-items: baseline; gap: 2mm; }
   .sell-price { font-size: 7mm; font-weight: 900; }
   .sell-price-label { font-size: 2.8mm; color: #555; }
