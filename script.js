@@ -6011,8 +6011,8 @@ function printSellLabel(listing) {
   table { width: 100%; border-collapse: collapse; }
   td { font-size: 3.3mm; font-weight: 700; padding: 0.3mm 1mm 0.3mm 0; vertical-align: top; line-height: 1.3; color: #111; }
   td:first-child { font-weight: 400; color: #444; width: 14mm; white-space: nowrap; }
-  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1mm; }
-  .sell-qr-id { font-size: 3mm; font-weight: 700; color: #111; text-align: center; word-break: break-all; width: 36mm; }
+  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 3mm; }
+  .sell-qr-id { font-size: 4mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 36mm; }
   @media print { @page { size: auto; margin: 2mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head><body>
