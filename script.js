@@ -11891,7 +11891,7 @@ function renderAccountState() {
 
     if (_pendingPutAway && isPro) {
         _pendingPutAway = false;
-        setTimeout(() => { openWarehouseDrawer(); whSetTab('scanner', true); }, 400);
+        setTimeout(() => { openWarehouseDrawer(); whSetTab('scanner'); }, 400);
     }
 
     // Header height changes when the pro toggle appears/disappears, so re-sync the grid offset.
@@ -17826,7 +17826,8 @@ function openWarehouseDrawer() {
     if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
     _pauseEdw();
     toggleDrawer('warehouseDrawer', true);
-    whSetTab('labels');
+    // Labels generator is desktop-only (printing); mobile gets the scanner.
+    whSetTab(window.innerWidth < 900 ? 'scanner' : 'labels');
     whRenderWorkerQR();
 }
 
@@ -17856,15 +17857,11 @@ function whClearLabels() {
     if (manual)  manual.value        = '';
 }
 
-function whSetTab(tab, workerMode = false) {
+function whSetTab(tab) {
     const labelsTab  = document.getElementById('whLabelsTab');
     const scannerTab = document.getElementById('whScannerTab');
     const btnLabels  = document.getElementById('whTabLabels');
     const btnScanner = document.getElementById('whTabScanner');
-    // Workers (deep-linked via ?putaway=1) only get the scanner — hide the tab bar
-    // so they can't wander into the owner-only Labels generator.
-    const tabBar = document.querySelector('#warehouseDrawer .wh-tab-bar');
-    if (tabBar) tabBar.style.display = workerMode ? 'none' : '';
     if (tab === 'labels') {
         labelsTab.style.display  = '';
         scannerTab.style.display = 'none';
@@ -17876,8 +17873,6 @@ function whSetTab(tab, workerMode = false) {
         scannerTab.style.display = 'flex';
         btnLabels.classList.remove('wh-tab--active');
         btnScanner.classList.add('wh-tab--active');
-        const panelInner = scannerTab.querySelector('.wh-panel-inner');
-        if (panelInner) panelInner.style.display = workerMode ? 'none' : '';
         whResetScan();
         if (window.innerWidth < 900) whStartCamera();
     }
