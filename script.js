@@ -3000,7 +3000,7 @@ function renderInboxMsgs(conv) {
                 <div class="inbox-msg-avatar">${initial}</div>
                 <div class="${colClass}">
                     <div class="${bubClass}">${content}</div>
-                    <div class="inbox-msg-time">${m.isAutoReply ? '<span class="msg-auto-reply-label">Auto-reply</span> · ' : ''}${m.clock}${m.edited ? ' · edited' : ''}</div>
+                    <div class="inbox-msg-time${m.isAutoReply ? ' inbox-msg-time--ar' : ''}">${m.isAutoReply ? '<span class="msg-auto-reply-label">Auto-reply</span> · ' : ''}${m.clock}${m.edited ? ' · edited' : ''}</div>
                 </div>
                 ${m.sent ? delBtn : ''}
             </div>`;

@@ -6181,6 +6181,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .inbox-msg-time { font-size: 10px; color: #bbb; margin-top: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.2s ease, opacity 0.2s ease, margin-top 0.2s ease; }
 #inboxMsgList.times-visible .inbox-msg-time { max-height: 20px; opacity: 1; margin-top: 3px; }
 .msg-auto-reply-label { color: var(--apc-orange); font-weight: 700; }
+.inbox-msg-time--ar { max-height: 20px !important; opacity: 1 !important; margin-top: 3px !important; }
 .inbox-msg-del { opacity: 0; background: none; border: none; font-size: 16px; color: #ccc; cursor: pointer; padding: 0 2px; align-self: center; transition: opacity 0.15s, color 0.15s; flex-shrink: 0; }
 .inbox-msg-del:hover { color: #FF3B30; }
 .inbox-msg-row:hover .inbox-msg-del { opacity: 1; }
