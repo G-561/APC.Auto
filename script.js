@@ -17925,28 +17925,36 @@ function whRenderLabelPreview(codes) {
 
 function whPrintLabels() {
     if (!_whLabelCodes.length) return;
-    const qrSize = 140;
     const labelHtml = _whLabelCodes.map(code => {
         const qrId = 'pqr_' + Math.random().toString(36).slice(2);
-        return `<div class="wl-label" id="cont_${qrId}"><div id="${qrId}"></div><div class="wl-code">${escapeHtml(code)}</div></div>`;
+        return `<div class="wl-label"><div class="wl-brand">AUTO PARTS CONNECTION</div><div class="wl-qr" id="${qrId}"></div><div class="wl-code">${escapeHtml(code)}</div></div>`;
     }).join('');
     const win = window.open('', '_blank');
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>APC Warehouse Labels</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:system-ui,sans-serif;background:#fff;}
-  .wl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10mm;max-width:210mm;margin:auto;}
-  .wl-label{border:1px solid #ccc;border-radius:6px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:5px;break-inside:avoid;}
-  .wl-code{font-size:13px;font-weight:900;letter-spacing:0.3px;text-align:center;color:#1a1a1a;}
-  @media print{@page{margin:8mm;size:A4;}body{-webkit-print-color-adjust:exact;}}
+  body{font-family:Arial,sans-serif;background:#fff;}
+  .wl-label{
+    width:100%;min-height:96vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:3mm;gap:2mm;page-break-after:always;
+  }
+  .wl-label:last-child{page-break-after:avoid;}
+  .wl-brand{font-size:3.5mm;font-weight:900;color:#f07020;letter-spacing:0.3px;text-align:center;}
+  .wl-qr{width:82%;max-width:100%;}
+  .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;}
+  .wl-code{font-size:7mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;}
+  @media print{
+    @page{size:auto;margin:2mm;}
+    body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
 </style></head><body>
-<div class="wl-grid">${labelHtml}</div>
+${labelHtml}
 <script>
-  document.querySelectorAll('.wl-label').forEach(cont => {
-    const qrEl = cont.querySelector('[id^="pqr_"]');
-    const code = cont.querySelector('.wl-code').textContent;
-    new QRCode(qrEl, {text:code,width:${qrSize},height:${qrSize},colorDark:'#1a1a1a',colorLight:'#ffffff'});
+  document.querySelectorAll('.wl-qr').forEach(el => {
+    new QRCode(el, {text:el.id,width:400,height:400,colorDark:'#1a1a1a',colorLight:'#ffffff'});
+    el.removeAttribute('id');
   });
   setTimeout(() => window.print(), 800);
 <\/script></body></html>`);
