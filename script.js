@@ -5984,9 +5984,9 @@ function openLabelPrintTab(item) {
     const brandRaw = bizName ? `APC · ${bizName}` : 'AUTO PARTS CONNECTION';
     const brandFontMm = brandRaw.length > 26 ? 4 : 5;
     const headerText = escapeHtml(brandRaw);
-    const bin  = item.warehouseBin ? `<tr><td>Bin</td><td><strong>${escapeHtml(item.warehouseBin)}</strong></td></tr>` : '';
-    const year = item.year ? `<tr><td>Year</td><td>${escapeHtml(String(item.year))}</td></tr>` : '';
-    const stock = item.stockNumber ? `<tr><td>Stock #</td><td>${escapeHtml(item.stockNumber)}</td></tr>` : '';
+    const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
+    const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
+    const stock = item.stockNumber ? `<div class="sell-row"><span class="lbl">Stock #:</span> <span class="val">${escapeHtml(item.stockNumber)}</span></div>` : '';
     const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
         ? 'https://autopartsconnection.com.au/'
         : `${location.origin}${location.pathname}`;
@@ -6022,8 +6022,11 @@ function openLabelPrintTab(item) {
   .sell-body { flex: 1; display: flex; gap: 3mm; align-items: flex-start; min-height: 0; }
   .sell-left { flex: 1; min-width: 0; }
   .sell-title { font-size: 4.3mm; font-weight: 900; line-height: 1.15; margin-bottom: 1.5mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; }
-  td { font-size: 4.1mm; font-weight: 700; padding: 0.35mm 1mm 0.35mm 0; vertical-align: top; line-height: 1.15; color: #111; }
+  .sell-rows { display: flex; flex-direction: column; gap: 0.6mm; }
+  .sell-row { font-size: 4.1mm; line-height: 1.15; color: #111; }
+  .sell-row .lbl { color: #666; font-weight: 400; }
+  .sell-row .val { font-weight: 700; }
+  .sell-row .val-strong { font-weight: 900; }
   td:first-child { font-weight: 400; color: #444; width: 19mm; white-space: nowrap; }
   .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1.5mm; }
   .sell-qr-id { font-size: 3.6mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 38mm; }
@@ -6038,12 +6041,12 @@ function openLabelPrintTab(item) {
   <div class="sell-body">
     <div class="sell-left">
       <div class="sell-title">${escapeHtml(item.title || '')}</div>
-      <table>
-        <tr><td>Item No.</td><td><strong>${apcId}</strong></td></tr>
-        <tr><td>Condition</td><td>${condition}</td></tr>
-        <tr><td>Fits</td><td>${fits}</td></tr>
+      <div class="sell-rows">
+        <div class="sell-row"><span class="lbl">Item No:</span> <span class="val val-strong">${apcId}</span></div>
+        <div class="sell-row"><span class="lbl">Condition:</span> <span class="val">${condition}</span></div>
+        <div class="sell-row"><span class="lbl">Fits:</span> <span class="val">${fits}</span></div>
         ${year}${bin}${stock}
-      </table>
+      </div>
     </div>
     <div class="sell-right">
       ${qrHtml}
