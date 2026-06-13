@@ -5982,7 +5982,8 @@ function openLabelPrintTab(item) {
     // Business name is the header on its own; APC attribution sits in the footer ("Powered by APC").
     const bizName = (userSettings.businessName || '').trim();
     const brandRaw = bizName || 'AUTO PARTS CONNECTION';
-    const brandFontMm = brandRaw.length > 32 ? 4 : 5;
+    // Match the sizing from when "APC · " prefixed the name: name >20 chars renders at 4mm.
+    const brandFontMm = brandRaw.length > 20 ? 4 : 5;
     const headerText = escapeHtml(brandRaw);
     const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
     const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
