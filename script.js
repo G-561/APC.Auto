@@ -5977,12 +5977,12 @@ function openLabelPrintTab(item) {
     const fits = escapeHtml((item.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal');
     const conditionMap = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' };
     const condition = escapeHtml(conditionMap[item.condition] || item.condition || '');
-    const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const createdDate = new Date(item.date || Date.now()).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
     const apcId = escapeHtml(item.apcId || ('APC-' + item.id));
     // Seller's own business name (set at signup) leads the header, kept under the APC brand.
     const bizName = (userSettings.businessName || '').trim();
     const brandRaw = bizName ? `APC · ${bizName}` : 'AUTO PARTS CONNECTION';
-    const brandFontMm = brandRaw.length > 26 ? 4 : 5;
+    const brandFontMm = brandRaw.length > 32 ? 4 : 5;
     const headerText = escapeHtml(brandRaw);
     const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
     const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
@@ -6016,11 +6016,11 @@ function openLabelPrintTab(item) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
   .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm 2.5mm 2.5mm 4mm; display: flex; flex-direction: column; }
-  .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 2mm; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
+  .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
   .sell-brand { flex: 1; min-width: 0; font-weight: 900; letter-spacing: 0.1mm; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sell-date { flex-shrink: 0; font-size: 3.2mm; font-weight: 700; white-space: nowrap; }
-  .sell-body { flex: 1; display: flex; gap: 3mm; align-items: flex-start; min-height: 0; }
-  .sell-left { flex: 1; min-width: 0; }
+  .sell-body { flex: 1; display: flex; gap: 3mm; min-height: 0; }
+  .sell-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sell-created { margin-top: auto; padding-top: 1.5mm; font-size: 3mm; color: #888; }
   .sell-title { font-size: 4.3mm; font-weight: 900; line-height: 1.15; margin-bottom: 1.5mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .sell-rows { display: flex; flex-direction: column; gap: 0.6mm; }
   .sell-row { font-size: 4.1mm; line-height: 1.15; color: #111; }
@@ -6036,7 +6036,6 @@ function openLabelPrintTab(item) {
 <div class="sell-label">
   <div class="sell-header">
     <div class="sell-brand" style="font-size:${brandFontMm}mm">${headerText}</div>
-    <div class="sell-date">${date}</div>
   </div>
   <div class="sell-body">
     <div class="sell-left">
@@ -6046,6 +6045,7 @@ function openLabelPrintTab(item) {
         <div class="sell-row"><span class="lbl">Fits:</span> <span class="val">${fits}</span></div>
         ${year}${bin}${stock}
       </div>
+      <div class="sell-created">Created ${createdDate}</div>
     </div>
     <div class="sell-right">
       ${qrHtml}
