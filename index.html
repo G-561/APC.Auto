@@ -461,6 +461,10 @@
         <!-- ── LOOKUP TAB ─────────────────────────────────────── -->
         <div id="whLookupTab" class="wh-tab-panel" style="display:none;">
             <div class="wh-panel-inner">
+                <div id="whLookupAlerts" class="wh-lk-alerts" style="display:none;">
+                    <button id="whAlertPutaway" class="wh-lk-alert" style="display:none;" onclick="whShowQueue('putaway')"></button>
+                    <button id="whAlertPull" class="wh-lk-alert wh-lk-alert--pull" style="display:none;" onclick="whShowQueue('pull')"></button>
+                </div>
                 <div class="wh-lookup-modes">
                     <button id="whLkModeLocation" class="wh-lk-mode wh-lk-mode--active" onclick="whSetLookupMode('location')">By Location</button>
                     <button id="whLkModePart" class="wh-lk-mode" onclick="whSetLookupMode('part')">By Part</button>

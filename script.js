@@ -17772,6 +17772,7 @@ function whSetTab(tab) {
         whResetScan();
         if (window.innerWidth < 900) whStartCamera();
     } else if (tab === 'lookup') {
+        whLoadLookupAlerts();
         const input = document.getElementById('whLookupInput');
         if (input) setTimeout(() => input.focus(), 50);
     }
@@ -17841,6 +17842,8 @@ function whOpenListing(id) {
 let _whLookupMode = 'location';
 
 function whLookupSearch() {
+    document.getElementById('whAlertPutaway')?.classList.remove('wh-lk-alert--active');
+    document.getElementById('whAlertPull')?.classList.remove('wh-lk-alert--active');
     if (_whLookupMode === 'part') whLookupPart();
     else whLookupLocation();
 }
@@ -17882,11 +17885,11 @@ async function whLookupPart() {
     whRenderPartResults(data || [], q);
 }
 
-function whRenderPartResults(rows, q) {
+function whRenderPartResults(rows, q, opts = {}) {
     const out = document.getElementById('whLookupResults');
     if (!out) return;
     if (!rows.length) {
-        out.innerHTML = `<div class="wh-lookup-empty">No parts match <strong>${escapeHtml(q)}</strong>.</div>`;
+        out.innerHTML = `<div class="wh-lookup-empty">${opts.emptyMsg || `No parts match <strong>${escapeHtml(q)}</strong>.`}</div>`;
         return;
     }
     const condLabel = { new_oem: 'New·OEM', new_aftermarket: 'New·Aftermkt', used: 'Used', refurbished: 'Refurb', parts_only: 'Parts', excellent: 'Excellent', good: 'Good', fair: 'Fair', damaged: 'Damaged' };
@@ -17896,7 +17899,8 @@ function whRenderPartResults(rows, q) {
         return `<span class="wh-lk-badge" style="background:${col}22;color:${col};">${escapeHtml(lbl)}</span>`;
     };
     const located = rows.filter(r => r.warehouse_bin).length;
-    let html = `<div class="wh-lk-summary"><strong>${rows.length}</strong> part${rows.length !== 1 ? 's' : ''} match · ${located} located</div><div class="wh-lk-partlist">`;
+    const summary = opts.summary || `<strong>${rows.length}</strong> part${rows.length !== 1 ? 's' : ''} match · ${located} located`;
+    let html = `<div class="wh-lk-summary">${summary}</div><div class="wh-lk-partlist">`;
     rows.forEach(r => {
         const apc  = escapeHtml(r.apc_id || ('APC-' + r.id));
         const meta = [apc, '$' + escapeHtml(String(r.price ?? '')), escapeHtml(condLabel[r.condition] || r.condition || ''), r.stock_number ? '#' + escapeHtml(r.stock_number) : ''].filter(Boolean).join(' · ');
@@ -17910,6 +17914,61 @@ function whRenderPartResults(rows, q) {
     });
     html += `</div>`;
     out.innerHTML = html;
+}
+
+// Cleanup queues — proactive "to-do" chips. Needs put-away = active with no
+// bin; To pull = sold but still holding a bin (go free the space).
+async function whLoadLookupAlerts() {
+    if (!sb || !currentUserId) return;
+    const wrap = document.getElementById('whLookupAlerts');
+    const paEl = document.getElementById('whAlertPutaway');
+    const plEl = document.getElementById('whAlertPull');
+    const [pa, pl] = await Promise.all([
+        sb.from('listings').select('id', { count: 'exact', head: true })
+            .eq('seller_id', currentUserId).eq('status', 'active').is('warehouse_bin', null),
+        sb.from('listings').select('id', { count: 'exact', head: true })
+            .eq('seller_id', currentUserId).eq('status', 'sold').not('warehouse_bin', 'is', null),
+    ]);
+    const paN = pa.count || 0, plN = pl.count || 0;
+    if (paEl) {
+        paEl.innerHTML = `📦 <span class="wh-lk-alert-n">${paN}</span> need put-away`;
+        paEl.style.display = paN ? '' : 'none';
+        paEl.classList.remove('wh-lk-alert--active');
+    }
+    if (plEl) {
+        plEl.innerHTML = `📤 <span class="wh-lk-alert-n">${plN}</span> to pull`;
+        plEl.style.display = plN ? '' : 'none';
+        plEl.classList.remove('wh-lk-alert--active');
+    }
+    if (wrap) wrap.style.display = (paN || plN) ? 'flex' : 'none';
+}
+
+async function whShowQueue(type) {
+    const out = document.getElementById('whLookupResults');
+    if (!out || !sb || !currentUserId) return;
+    document.getElementById('whAlertPutaway')?.classList.toggle('wh-lk-alert--active', type === 'putaway');
+    document.getElementById('whAlertPull')?.classList.toggle('wh-lk-alert--active', type === 'pull');
+    out.innerHTML = '<div class="wh-lookup-empty">Loading…</div>';
+    let query = sb.from('listings')
+        .select('id, title, apc_id, price, condition, status, stock_number, warehouse_bin')
+        .eq('seller_id', currentUserId);
+    query = (type === 'putaway')
+        ? query.eq('status', 'active').is('warehouse_bin', null).order('title')
+        : query.eq('status', 'sold').not('warehouse_bin', 'is', null).order('warehouse_bin');
+    const { data, error } = await query.limit(500);
+    if (error) { out.innerHTML = `<div class="wh-lookup-empty">Error: ${escapeHtml(error.message)}</div>`; return; }
+    const n = (data || []).length;
+    if (type === 'putaway') {
+        whRenderPartResults(data || [], '', {
+            emptyMsg: '✓ All active stock is shelved — nothing to put away.',
+            summary: `<strong>${n}</strong> part${n !== 1 ? 's' : ''} need putting away`,
+        });
+    } else {
+        whRenderPartResults(data || [], '', {
+            emptyMsg: '✓ Nothing to pull — no sold stock still on a shelf.',
+            summary: `<strong>${n}</strong> sold part${n !== 1 ? 's' : ''} still on the shelf — pull to free the bin`,
+        });
+    }
 }
 
 // ── Label Generator ───────────────────────────────────────────────

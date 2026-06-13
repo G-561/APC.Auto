@@ -8158,6 +8158,11 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-lk-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .wh-lk-binchip { font-size: 11px; font-weight: 800; color: var(--apc-orange); background: #fff3e8; border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
 .wh-lk-binchip--none { color: #aaa; background: #f0f0f0; }
+.wh-lk-alerts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.wh-lk-alert { display: inline-flex; align-items: center; gap: 6px; background: #fff8ee; border: 1px solid #ffe0bf; color: #9a5b16; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px; cursor: pointer; }
+.wh-lk-alert--pull { background: #eef3ff; border-color: #cdd9fb; color: #3a4f86; }
+.wh-lk-alert--active { box-shadow: 0 0 0 2px rgba(240,112,32,0.35); }
+.wh-lk-alert-n { font-weight: 900; }
 
 /* Put-Away scanner */
 .wh-camera-wrap { position: relative; width: 100%; background: #000; overflow: hidden; flex-shrink: 0; aspect-ratio: 4/3; max-height: 300px; }
