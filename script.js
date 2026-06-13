@@ -5988,33 +5988,21 @@ function fitLabelTextMm(text, maxWidthMm = 87, maxMm = 5, minMm = 3) {
 // its own tab. Box is height-clamped + overflow:hidden so it can never spill to
 // a second sheet.
 function openLabelPrintTab(item) {
-    const fits = escapeHtml((item.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal');
-    const conditionMap = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' };
-    const condition = escapeHtml(conditionMap[item.condition] || item.condition || '');
-    const createdDate = new Date(item.date || Date.now()).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
     const apcId = escapeHtml(item.apcId || ('APC-' + item.id));
-    // Business name is the header on its own; APC attribution sits in the footer ("Powered by APC").
     const bizName = (userSettings.businessName || '').trim();
     const brandRaw = bizName || 'AUTO PARTS CONNECTION';
-    // Auto-size to fit the header width (caps at 5mm, shrinks to as low as 3mm).
     const brandFontMm = fitLabelTextMm(brandRaw);
     const headerText = escapeHtml(brandRaw);
-    const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
-    const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
-    const stock = item.stockNumber ? `<div class="sell-row"><span class="lbl">Stock #:</span> <span class="val">${escapeHtml(item.stockNumber)}</span></div>` : '';
     const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
         ? 'https://autopartsconnection.com.au/'
         : `${location.origin}${location.pathname}`;
     const listingUrl = `${baseUrl}?item=${item.supabaseId || item.id}`;
 
-    // Generate QR code in a hidden temp element, grab the data URL, then open print tab
+    // Generate QR in a hidden temp element, grab the data URL, then open print tab
     const qrTemp = document.createElement('div');
     qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(qrTemp);
-
-    if (window.QRCode) {
-        new QRCode(qrTemp, { text: listingUrl, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
-    }
+    if (window.QRCode) new QRCode(qrTemp, { text: listingUrl, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
 
     setTimeout(() => {
         const qrImg = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
@@ -6024,13 +6012,26 @@ function openLabelPrintTab(item) {
         document.body.removeChild(qrTemp);
 
         const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:38mm;height:38mm;display:block;" />` : '';
-
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>APC Label — ${apcId}</title>
-<style>
+<style>${LABEL_PRINT_CSS}</style>
+</head><body>
+${_buildSellLabelMarkup(item, headerText, brandFontMm, qrHtml)}
+<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
+</body></html>`;
+        const tab = window.open('', '_blank');
+        if (tab) { tab.document.open(); tab.document.write(html); tab.document.close(); }
+        else showToast('Allow pop-ups to print labels');
+    }, 150);
+}
+
+// Shared label CSS + markup so the single (My Listings / sell) and the EDW batch
+// print paths stay byte-identical. page-break/qr-slot rules only affect the batch.
+const LABEL_PRINT_CSS = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
-  .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm 2.5mm 2.5mm 4mm; display: flex; flex-direction: column; }
+  .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm 2.5mm 2.5mm 4mm; display: flex; flex-direction: column; page-break-after: always; }
+  .sell-label:last-child { page-break-after: avoid; }
   .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
   .sell-brand { flex: 1; min-width: 0; font-weight: 900; letter-spacing: 0.1mm; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sell-body { flex: 1; display: flex; gap: 3mm; min-height: 0; }
@@ -6045,13 +6046,23 @@ function openLabelPrintTab(item) {
   .sell-row .lbl { color: #666; font-weight: 400; }
   .sell-row .val { font-weight: 700; }
   .sell-row .val-strong { font-weight: 900; }
-  td:first-child { font-weight: 400; color: #444; width: 19mm; white-space: nowrap; }
   .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1.5mm; }
+  .sell-qr-slot { width: 38mm; height: 38mm; }
+  .sell-qr-slot canvas, .sell-qr-slot img { display: block; width: 38mm !important; height: 38mm !important; }
   .sell-qr-id { font-size: 3.6mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 38mm; }
   @media print { @page { size: 100mm 62mm; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-</style>
-</head><body>
-<div class="sell-label">
+`;
+
+function _buildSellLabelMarkup(item, headerText, brandFontMm, qrHtml) {
+    const conditionMap = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only', excellent: 'Excellent', good: 'Good', fair: 'Fair', damaged: 'Damaged' };
+    const condition = escapeHtml(conditionMap[item.condition] || item.condition || '');
+    const fits = escapeHtml((item.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal');
+    const apcId = escapeHtml(item.apcId || ('APC-' + item.id));
+    const createdDate = new Date(item.date || Date.now()).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+    const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
+    const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
+    const stock = item.stockNumber ? `<div class="sell-row"><span class="lbl">Stock #:</span> <span class="val">${escapeHtml(item.stockNumber)}</span></div>` : '';
+    return `<div class="sell-label">
   <div class="sell-header">
     <div class="sell-brand" style="font-size:${brandFontMm}mm">${headerText}</div>
   </div>
@@ -6073,14 +6084,35 @@ function openLabelPrintTab(item) {
       <div class="sell-qr-id">${apcId}</div>
     </div>
   </div>
-</div>
-<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
-</body></html>`;
+</div>`;
+}
 
-        const tab = window.open('', '_blank');
-        if (tab) { tab.document.open(); tab.document.write(html); tab.document.close(); }
-        else showToast('Allow pop-ups to print labels');
-    }, 150);
+// Batch print: one print job, one label per page (QR drawn in the print tab).
+function printEdwLabelsBatch(items) {
+    if (!items || !items.length) return;
+    const bizName = (userSettings.businessName || '').trim();
+    const brandRaw = bizName || 'AUTO PARTS CONNECTION';
+    const brandFontMm = fitLabelTextMm(brandRaw);
+    const headerText = escapeHtml(brandRaw);
+    const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
+        ? 'https://autopartsconnection.com.au/'
+        : `${location.origin}${location.pathname}`;
+    const labelsHtml = items.map(item => {
+        const url = `${baseUrl}?item=${item.supabaseId || item.id}`;
+        return _buildSellLabelMarkup(item, headerText, brandFontMm, `<div class="sell-qr-slot" data-qr="${escapeHtml(url)}"></div>`);
+    }).join('\n');
+    const win = window.open('', '_blank');
+    if (!win) { showToast('Allow pop-ups to print labels'); return; }
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>APC Labels (${items.length})</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+<style>${LABEL_PRINT_CSS}</style>
+</head><body>
+${labelsHtml}
+<script>
+  document.querySelectorAll('.sell-qr-slot').forEach(el => { new QRCode(el, { text: el.getAttribute('data-qr'), width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M }); });
+  setTimeout(() => window.print(), 700);
+<\/script></body></html>`);
+    win.document.close();
 }
 
 // --- DYNAMIC ITEM DETAIL ---
@@ -13061,6 +13093,7 @@ let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, phot
 let _edwStep          = 0;
 let _edwJobId         = null; // dismantling_jobs.id for the current stock card
 let _edwCommitted     = false; // true once the job is sent/published — close without the "unsaved" prompt
+let _edwPendingLabels = []; // labels queued from the last publish — printed via the success-screen button
 let _edwStock         = [];   // loaded list of in_stock/stripping jobs
 let _edwStockFilter   = '';
 let _edwSelectedZone  = 0;
@@ -14304,6 +14337,7 @@ function _renderEdwStep3() {
                     <span class="edw-price-lbl">Price $</span>
                     <input class="edw-price-input" type="number" min="0" step="1" placeholder="0.00"
                         value="${item.price || ''}" oninput="_edwItems['${key}'].price = this.value">
+                    <button class="edw-label-toggle ${item.printLabel === false ? 'off' : ''}" onclick="_edwToggleLabel('${key}', this)" title="Print a label for this part">&#127991; Label</button>
                     <button class="edw-remove-btn" onclick="_edwRemoveItem('${key}')">Remove</button>
                 </div>
             </div>
@@ -14318,8 +14352,10 @@ function _renderEdwStep3() {
         <div class="edw-review-list">${cards}</div>
     `;
 
+    const labelCount = Object.values(_edwItems).filter(it => it.printLabel !== false).length;
     footer.innerHTML = `
         <div class="edw-footer-meta">${Object.keys(_edwItems).length} parts</div>
+        <button id="edwLabelCount" class="edw-label-count" onclick="_edwToggleAllLabels()" title="Tap to toggle all labels">&#127991; ${labelCount}</button>
         <button class="edw-btn-secondary" onclick="_edwStep=2;_renderEdw()">← Back</button>
         <button class="edw-btn-secondary" onclick="_edwPrintStrippingList()">Print List</button>
         <button class="edw-btn-secondary" onclick="_edwSendToWorkers()">Send to Workers</button>
@@ -14329,6 +14365,27 @@ function _renderEdwStep3() {
 
 function _edwRemoveItem(key) {
     delete _edwItems[key];
+    _renderEdwStep3();
+}
+
+function _edwToggleLabel(key, btn) {
+    if (!_edwItems[key]) return;
+    _edwItems[key].printLabel = _edwItems[key].printLabel === false; // flip off->on, else on->off
+    if (btn) btn.classList.toggle('off', _edwItems[key].printLabel === false);
+    _edwUpdateLabelCount();
+}
+
+function _edwUpdateLabelCount() {
+    const n = Object.values(_edwItems).filter(it => it.printLabel !== false).length;
+    const el = document.getElementById('edwLabelCount');
+    if (el) el.innerHTML = `&#127991; ${n}`;
+}
+
+function _edwToggleAllLabels() {
+    const items = Object.values(_edwItems);
+    if (!items.length) return;
+    const anyOn = items.some(it => it.printLabel !== false);
+    items.forEach(it => it.printLabel = !anyOn);
     _renderEdwStep3();
 }
 
@@ -14455,6 +14512,7 @@ async function _edwPublish() {
             .map(p => p.base64 ? Promise.resolve(p.base64) : _fileToBase64(p.file))
     );
 
+    const labelItems = [];
     let published = 0;
     let partSeq = 1;
     for (const [key, item] of items) {
@@ -14464,11 +14522,13 @@ async function _edwPublish() {
         const part  = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
         const title = `${part} to suit ${vehicleTitle}`;
         const price = item.price ? Number(item.price) : 0;
+        const apcId = generateApcId();
+        const stockNo = v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null;
 
         const { data: listing } = await sb.from('listings').insert({
             seller_id: currentUserId,
             seller_name: getPublicSellerName(),
-            apc_id: generateApcId(),
+            apc_id: apcId,
             title,
             price,
             category: zone.apcCategory,
@@ -14478,7 +14538,7 @@ async function _edwPublish() {
             fits_year: Number(v.year),
             variant: v.variant || null,
             chassis_vin: v.vin || null,
-            stock_number: v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null,
+            stock_number: stockNo,
             location: userSettings.location || null,
             postcode: userSettings.postcode || null,
             dismantling_job_id: jobId || null,
@@ -14515,6 +14575,12 @@ async function _edwPublish() {
                     price, listing_id: listing.id, status: 'published',
                 });
             }
+            if (item.printLabel !== false) labelItems.push({
+                id: listing.id, supabaseId: listing.id, title, apcId,
+                condition: gradeToCondition[item.grade] || 'good',
+                fits: [{ make: v.make, model: v.model }],
+                year: v.year, stockNumber: stockNo, warehouseBin: null,
+            });
             published++;
             partSeq++;
         }
@@ -14524,6 +14590,7 @@ async function _edwPublish() {
     renderMyParts();
     renderMainGrid();
     _edwCommitted = true; // listings saved — closing from here shouldn't warn
+    _edwPendingLabels = labelItems;
 
     const body = document.getElementById('edwBody');
     if (body) body.innerHTML = `
@@ -14531,7 +14598,8 @@ async function _edwPublish() {
             <div class="edw-success-ico">✓</div>
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
-            <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
+            ${labelItems.length ? `<button class="edw-btn-primary" style="margin-top:24px;" onclick="printEdwLabelsBatch(_edwPendingLabels)">&#128424; Print ${labelItems.length} label${labelItems.length !== 1 ? 's' : ''}</button>
+            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>` : `<button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>`}
             <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwCommitted=false;_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;

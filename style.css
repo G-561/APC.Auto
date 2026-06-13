@@ -7204,6 +7204,17 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 600;
     cursor: pointer; white-space: nowrap; padding: 0;
 }
+.edw-label-toggle {
+    background: #fff3e8; border: 1px solid var(--apc-orange); color: var(--apc-orange);
+    font-size: 12px; font-weight: 700; border-radius: 6px; padding: 5px 9px;
+    cursor: pointer; white-space: nowrap;
+}
+.edw-label-toggle.off { background: #f2f2f2; border-color: #ddd; color: #aaa; }
+.edw-label-count {
+    background: #fff3e8; border: 1px solid var(--apc-orange); color: var(--apc-orange);
+    font-size: 12px; font-weight: 800; border-radius: 8px; padding: 6px 11px;
+    cursor: pointer; white-space: nowrap;
+}
 
 /* Success screen */
 .edw-success { text-align: center; padding: 60px 20px; }
