@@ -13755,6 +13755,7 @@ async function _edwSaveVehicle(jobId) {
         transmission_type: get('transmission_type'), transmission_code: get('transmission_code'),
         paint_code: get('paint_code'), build_date: get('build_date'),
     };
+    const oldStock = _edwStockCardData?.job?.stock_number || null;
     const { error } = await sb.from('dismantling_jobs').update(updates).eq('id', jobId);
     if (error) { showToast('Save failed: ' + error.message); return; }
     Object.assign(_edwStockCardData.job, updates);
@@ -13763,8 +13764,35 @@ async function _edwSaveVehicle(jobId) {
     const label = `${updates.year||''} ${updates.make||''} ${updates.model||''}${updates.series?' '+updates.series:''}`.trim();
     const titleEl = document.querySelector('#edwStockCardOverlay span[style*="font-size:15px"]');
     if (titleEl) titleEl.textContent = label;
-    showToast('Vehicle updated');
+
+    let savedMsg = 'Vehicle updated';
+    if ((updates.stock_number || null) !== oldStock) {
+        const n = await _backfillJobStockNumbers(jobId, updates.stock_number);
+        const { data: freshParts } = await sb.from('listings')
+            .select('id, title, price, status, stock_number, warehouse_bin, condition')
+            .eq('dismantling_job_id', jobId).eq('seller_id', currentUserId).order('title');
+        _edwStockCardData.parts = freshParts || [];
+        if (n) savedMsg = `Stock # applied to ${n} part${n !== 1 ? 's' : ''}`;
+    }
+    showToast(savedMsg);
     _edwStockCardTab('vehicle');
+}
+
+// When a stock card's stock number is added/changed after parts were published,
+// re-derive each linked part's stock_number (STOCK-001, -002 … by creation order).
+async function _backfillJobStockNumbers(jobId, stockNumber) {
+    if (!sb || !currentUserId || !jobId) return 0;
+    const { data: parts } = await sb.from('listings')
+        .select('id').eq('dismantling_job_id', jobId).eq('seller_id', currentUserId).order('id');
+    if (!parts || !parts.length) return 0;
+    let seq = 1;
+    for (const p of parts) {
+        const sn = stockNumber ? `${stockNumber}-${String(seq).padStart(3, '0')}` : null;
+        await sb.from('listings').update({ stock_number: sn }).eq('id', p.id).eq('seller_id', currentUserId);
+        seq++;
+    }
+    await loadUserListingsFromSupabase(currentUserId);
+    return parts.length;
 }
 
 function _edwStartWalkaround(jobId) {
@@ -18477,6 +18505,7 @@ async function _vscSaveVehicle() {
         transmission_type: get('transmission_type'), transmission_code: get('transmission_code'),
         paint_code: get('paint_code'), build_date: get('build_date'),
     };
+    const oldStock = _vscCurrentJob?.stock_number || null;
     const saveBtn = document.querySelector('#vscVehicleCard button[onclick="_vscSaveVehicle()"]');
     if (saveBtn) saveBtn.textContent = 'Saving…';
     const { error } = await sb.from('dismantling_jobs').update(updates).eq('id', _vscCurrentJobId);
@@ -18486,6 +18515,12 @@ async function _vscSaveVehicle() {
     if (typeof _edwStock !== 'undefined') {
         const stub = _edwStock.find(j => j.id === _vscCurrentJobId);
         if (stub) Object.assign(stub, updates);
+    }
+    if ((updates.stock_number || null) !== oldStock) {
+        const n = await _backfillJobStockNumbers(_vscCurrentJobId, updates.stock_number);
+        showToast(n ? `Stock # applied to ${n} part${n !== 1 ? 's' : ''}` : 'Vehicle details saved');
+        _edwLoadAndOpen(_vscCurrentJobId); // reload so the parts list shows the new numbers
+        return;
     }
     showToast('Vehicle details saved');
     _vscCancelEditVehicle(); // returns to read view
