@@ -6015,7 +6015,7 @@ function openLabelPrintTab(item) {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
-  .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm; display: flex; flex-direction: column; }
+  .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm 2.5mm 2.5mm 4mm; display: flex; flex-direction: column; }
   .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 2mm; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
   .sell-brand { flex: 1; min-width: 0; font-weight: 900; letter-spacing: 0.1mm; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sell-date { flex-shrink: 0; font-size: 3.2mm; font-weight: 700; white-space: nowrap; }
@@ -17819,7 +17819,7 @@ function whPrintLabels() {
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:Arial,sans-serif;background:#fff;}
   .wl-label{
-    width:100mm;height:61.5mm;overflow:hidden;padding:2.5mm;
+    width:100mm;height:61.5mm;overflow:hidden;padding:2.5mm 2.5mm 2.5mm 4mm;
     display:flex;flex-direction:column;page-break-after:always;
   }
   .wl-label:last-child{page-break-after:avoid;}
