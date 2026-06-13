@@ -139,6 +139,26 @@ location.reload();
 
 ## Sessions completed
 
+### 13 June 2026 — Label system rework, Warehouse Lookup, EDW batch labels, stock-number back-fill
+
+> Note: much Supabase-era work between Session 10 and here is unlogged in this file (app is now FULLY LIVE on Supabase — UUID migration, audits, EDW, etc.). Full timeline lives in Claude memory `project_session_state.md`.
+
+**QR labels — fully reworked for the Brother QL-810W on a black-on-white DK roll (sidesteps the QL red/black driver bug; old Download-PNG workaround removed).** Single source of truth: `LABEL_PRINT_CSS` + `_buildSellLabelMarkup(item, headerText, brandFontMm, qrHtml)` drive every part label.
+- **Part label:** landscape 100×62mm, monochrome. Header = seller's `business_name` alone, auto-fit to width via `fitLabelTextMm()` (measures real Arial-900 on a canvas; cap 5mm / floor 3mm, so wide names like "SCOTT RUSSELL SPORTS CARS" never truncate). Inline "Condition / Fits / Year / Stock #" rows. Footer bottom-left: "Created <created_at>" + "Powered by APC". QR encodes `?item=<listing id>`; APC ID under the QR. Left padding 4mm (QL crops the edge otherwise). Hardware-verified ("perfection").
+- `openLabelPrintTab(item)` = single label (My Listings "Label" + print-on-sell). `printEdwLabelsBatch(items)` = batch (one job, one label/page, QR drawn in the print tab).
+- **Rack/location labels** (`whPrintLabels`): stacked — QR 36mm centred on top, bin code one line full-width beneath (auto-fit). NO header. QR encodes the real bin code (put-away scanner reads it). Verified ("nailed it").
+
+**Warehouse "Lookup" tab** (desktop; 3rd tab in the warehouse drawer; `whSetTab` now handles labels/scanner/lookup).
+- By Location (`whLookupLocation`): full bin or rack/level prefix → parts grouped by bin.
+- By Part (`whLookupPart`): title/APC ID → each part's 📍 bin chip (or "No bin"). Mode via `_whLookupMode`.
+- Cleanup chips at top (`whLoadLookupAlerts` / `whShowQueue`): 📦 need put-away (active, `warehouse_bin` NULL) + 📤 to pull (sold, has bin).
+
+**EDW batch labels.** Per-part 🏷 toggle on the boss review screen (`_renderEdwStep3`, `_edwItems[key].printLabel`, default on) + footer 🏷 count (tap = toggle all, `_edwToggleAllLabels`). On publish, queued labels → "Print N labels" button on the success screen (`printEdwLabelsBatch(_edwPendingLabels)`). NOT yet mirrored to `_jrPublish` (worker-job review).
+
+**EDW close-warning fix.** `_edwCommitted` flag — success screens (job sent / parts published) close without the false "unsaved work" prompt; cleared on close + "Back to Stock".
+
+**Stock-number back-fill.** `_backfillJobStockNumbers(jobId, stockNumber)` — editing a stock card's Stock # later re-derives all linked parts' `stock_number` (STOCK-001, -002 … by listing-id order) and refreshes the parts list. Wired into both editors: `_edwSaveVehicle` + `_vscSaveVehicle`.
+
 ### Session 10 (6 May 2026) — Message centre wired in, item preview panel, workshops mobile fix
 
 - **Message centre — full two-panel inbox:** replaced `inboxDrawer` with two-panel layout. Chats tab (conversation list + thread) + Notifications tab (existing match/alert items). Desktop: 270px conv list + flex thread column. Mobile: full-width slide animation (list → thread).
@@ -206,6 +226,12 @@ location.reload();
 
 ## What's next
 
+**▶ Immediate — resume 13 June 2026 (Gary testing tonight, catch up tomorrow):**
+1. **Stocktake / audit mode** (NEXT BUILD) — scan/pick a rack → show the EXPECTED list (listings with that `warehouse_bin`) → scan each part physically present to tick it off → report MISSING (expected, not scanned) vs MISFILED (scanned, assigned elsewhere). Mobile-first (walking the racks); build around the put-away scanner (`whScanLoop` / `whHandleQR`) + the Lookup query. Foundation already built (Location lookup, find-a-part, cleanup queues).
+2. **Mirror EDW batch labels to `_jrPublish`** (worker-job review screen — same per-part toggles).
+3. Mobile at-the-rack Lookup; relocate/move a part to a new bin; surface bin on a sale ("Sold → R1.B2, go pick it"); optional `?v=` cache-buster on script.js (Gary tests on live and gets bitten by browser cache — hard-refresh needed each push).
+
+**Older backlog (from Session 10, mostly historical):**
 1. **Message centre — polish** — delete entire conversation, unread/read toggle, empty state when no conversations.
 2. **Edit vehicle** — tap a garage card to open Add Vehicle drawer pre-populated; save updates by ID.
 3. **Primary vehicle toggle** — flag one vehicle as primary; default in Add-to-Wanted prefill.
@@ -218,9 +244,11 @@ location.reload();
 
 ## Last commit / push
 
-Session 10 — push from Git Bash:
+Latest: **13 June 2026 — `e65c1f7`** "Stock card: back-fill stock number onto already-published parts" (on `main`, live on GitHub Pages). Today's work spans commits `2602688` → `e65c1f7` (labels, Warehouse Lookup + cleanup queues, EDW batch labels, EDW close fix, stock-number back-fill).
+
+Standard push from Git Bash:
 ```
-git add index.html style.css script.js SESSION-NOTES.md
-git commit -m "Session 10 — Message centre wired in, item preview panel, workshops mobile fix"
+git add -A
+git commit -m "…"
 git push
 ```
