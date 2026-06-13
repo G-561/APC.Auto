@@ -8151,6 +8151,13 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-lk-row-meta { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wh-lk-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
 .wh-lookup-empty { font-size: 13px; color: #888; text-align: center; padding: 24px 16px; }
+.wh-lookup-modes { display: flex; gap: 2px; background: rgba(0,0,0,0.06); border-radius: 8px; padding: 3px; margin-bottom: 14px; }
+.wh-lk-mode { flex: 1; background: none; border: none; color: #888; font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+.wh-lk-mode--active { background: #fff; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.wh-lk-partlist { border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+.wh-lk-row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.wh-lk-binchip { font-size: 11px; font-weight: 800; color: var(--apc-orange); background: #fff3e8; border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+.wh-lk-binchip--none { color: #aaa; background: #f0f0f0; }
 
 /* Put-Away scanner */
 .wh-camera-wrap { position: relative; width: 100%; background: #000; overflow: hidden; flex-shrink: 0; aspect-ratio: 4/3; max-height: 300px; }

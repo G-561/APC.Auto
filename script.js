@@ -17838,6 +17838,80 @@ function whOpenListing(id) {
     openItemDetail(id);
 }
 
+let _whLookupMode = 'location';
+
+function whLookupSearch() {
+    if (_whLookupMode === 'part') whLookupPart();
+    else whLookupLocation();
+}
+
+function whSetLookupMode(mode) {
+    _whLookupMode = mode;
+    document.getElementById('whLkModeLocation')?.classList.toggle('wh-lk-mode--active', mode === 'location');
+    document.getElementById('whLkModePart')?.classList.toggle('wh-lk-mode--active', mode === 'part');
+    const input = document.getElementById('whLookupInput');
+    const hint  = document.getElementById('whLookupHint');
+    if (mode === 'part') {
+        if (input) input.placeholder = 'Part name or APC ID — e.g. alternator or APC1340…';
+        if (hint)  hint.textContent  = 'Find where a part lives — searches title and APC ID, and shows each part’s bin.';
+    } else {
+        if (input) input.placeholder = 'Rack or bin — e.g. R1 or R1.B2.L2.P1';
+        if (hint)  hint.textContent  = 'Type a full bin (R1.B2.L2.P1) for one shelf, or a rack/level (R1, R1.B2) to see everything under it.';
+    }
+    const out = document.getElementById('whLookupResults');
+    if (input && input.value.trim()) whLookupSearch();
+    else if (out) out.innerHTML = '';
+    input?.focus();
+}
+
+async function whLookupPart() {
+    const input = document.getElementById('whLookupInput');
+    const out   = document.getElementById('whLookupResults');
+    if (!input || !out) return;
+    const q = (input.value || '').trim();
+    const safe = q.replace(/[^A-Za-z0-9 .\-]/g, ' ').trim(); // keep the .or() filter safe
+    if (!safe) { out.innerHTML = ''; return; }
+    if (!sb || !currentUserId) { out.innerHTML = '<div class="wh-lookup-empty">Sign in required</div>'; return; }
+    out.innerHTML = '<div class="wh-lookup-empty">Searching…</div>';
+    const { data, error } = await sb.from('listings')
+        .select('id, title, apc_id, price, condition, status, stock_number, warehouse_bin')
+        .eq('seller_id', currentUserId)
+        .or(`apc_id.ilike.%${safe}%,title.ilike.%${safe}%`)
+        .order('status').order('title').limit(100);
+    if (error) { out.innerHTML = `<div class="wh-lookup-empty">Error: ${escapeHtml(error.message)}</div>`; return; }
+    whRenderPartResults(data || [], q);
+}
+
+function whRenderPartResults(rows, q) {
+    const out = document.getElementById('whLookupResults');
+    if (!out) return;
+    if (!rows.length) {
+        out.innerHTML = `<div class="wh-lookup-empty">No parts match <strong>${escapeHtml(q)}</strong>.</div>`;
+        return;
+    }
+    const condLabel = { new_oem: 'New·OEM', new_aftermarket: 'New·Aftermkt', used: 'Used', refurbished: 'Refurb', parts_only: 'Parts', excellent: 'Excellent', good: 'Good', fair: 'Fair', damaged: 'Damaged' };
+    const badge = (s) => {
+        const m = { active: ['Active', '#22c55e'], pending: ['Pending', '#f59e0b'], sold: ['Sold', '#ef4444'] };
+        const [lbl, col] = m[s] || [s || '—', '#888'];
+        return `<span class="wh-lk-badge" style="background:${col}22;color:${col};">${escapeHtml(lbl)}</span>`;
+    };
+    const located = rows.filter(r => r.warehouse_bin).length;
+    let html = `<div class="wh-lk-summary"><strong>${rows.length}</strong> part${rows.length !== 1 ? 's' : ''} match · ${located} located</div><div class="wh-lk-partlist">`;
+    rows.forEach(r => {
+        const apc  = escapeHtml(r.apc_id || ('APC-' + r.id));
+        const meta = [apc, '$' + escapeHtml(String(r.price ?? '')), escapeHtml(condLabel[r.condition] || r.condition || ''), r.stock_number ? '#' + escapeHtml(r.stock_number) : ''].filter(Boolean).join(' · ');
+        const bin  = r.warehouse_bin
+            ? `<span class="wh-lk-binchip">📍 ${escapeHtml(r.warehouse_bin)}</span>`
+            : `<span class="wh-lk-binchip wh-lk-binchip--none">No bin</span>`;
+        html += `<div class="wh-lk-row" onclick="whOpenListing('${r.id}')">` +
+            `<div class="wh-lk-row-main"><div class="wh-lk-row-title">${escapeHtml(r.title || 'Untitled')}</div>` +
+            `<div class="wh-lk-row-meta">${meta}</div></div>` +
+            `<div class="wh-lk-row-right">${bin}${badge(r.status)}</div></div>`;
+    });
+    html += `</div>`;
+    out.innerHTML = html;
+}
+
 // ── Label Generator ───────────────────────────────────────────────
 
 function whGenerateBatch() {

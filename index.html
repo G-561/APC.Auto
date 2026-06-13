@@ -461,12 +461,15 @@
         <!-- ── LOOKUP TAB ─────────────────────────────────────── -->
         <div id="whLookupTab" class="wh-tab-panel" style="display:none;">
             <div class="wh-panel-inner">
-                <div class="wh-section-label">FIND STOCK BY LOCATION</div>
-                <div class="wh-lookup-search">
-                    <input id="whLookupInput" class="wh-input" placeholder="Rack or bin — e.g. R1 or R1.B2.L2.P1" onkeydown="if(event.key==='Enter')whLookupLocation()">
-                    <button class="wh-btn" onclick="whLookupLocation()">Search</button>
+                <div class="wh-lookup-modes">
+                    <button id="whLkModeLocation" class="wh-lk-mode wh-lk-mode--active" onclick="whSetLookupMode('location')">By Location</button>
+                    <button id="whLkModePart" class="wh-lk-mode" onclick="whSetLookupMode('part')">By Part</button>
                 </div>
-                <div class="wh-lookup-hint">Type a full bin (R1.B2.L2.P1) for one shelf, or a rack/level (R1, R1.B2) to see everything under it.</div>
+                <div class="wh-lookup-search">
+                    <input id="whLookupInput" class="wh-input" placeholder="Rack or bin — e.g. R1 or R1.B2.L2.P1" onkeydown="if(event.key==='Enter')whLookupSearch()">
+                    <button class="wh-btn" onclick="whLookupSearch()">Search</button>
+                </div>
+                <div id="whLookupHint" class="wh-lookup-hint">Type a full bin (R1.B2.L2.P1) for one shelf, or a rack/level (R1, R1.B2) to see everything under it.</div>
                 <div id="whLookupResults" class="wh-lookup-results"></div>
             </div>
         </div>
