@@ -5969,6 +5969,20 @@ function printSellLabel(listing) {
     openLabelPrintTab(listing);
 }
 
+// Largest header font (mm) that fits text on one line within maxWidthMm,
+// measured in the actual Arial 900 weight so wide names ("...CARS") don't clip.
+function fitLabelHeaderMm(text, maxWidthMm = 87, maxMm = 5, minMm = 3) {
+    const ctx = document.createElement('canvas').getContext('2d');
+    const PX = 3.7795; // CSS px per mm @ 96dpi
+    const t = (text || '').toUpperCase();
+    const ls = Math.max(0, t.length - 1) * 0.1 * PX; // letter-spacing: 0.1mm
+    for (let mm = maxMm; mm > minMm; mm -= 0.1) {
+        ctx.font = `900 ${mm * PX}px Arial`;
+        if (ctx.measureText(t).width + ls <= maxWidthMm * PX) return Math.round(mm * 10) / 10;
+    }
+    return minMm;
+}
+
 // Landscape 100mm×62mm QR part label for the Brother QL-810W. Shared by the
 // print-on-sell toggle and the dashboard "Label" button — prints straight from
 // its own tab. Box is height-clamped + overflow:hidden so it can never spill to
@@ -5982,8 +5996,8 @@ function openLabelPrintTab(item) {
     // Business name is the header on its own; APC attribution sits in the footer ("Powered by APC").
     const bizName = (userSettings.businessName || '').trim();
     const brandRaw = bizName || 'AUTO PARTS CONNECTION';
-    // Match the sizing from when "APC · " prefixed the name: name >20 chars renders at 4mm.
-    const brandFontMm = brandRaw.length > 20 ? 4 : 5;
+    // Auto-size to fit the header width (caps at 5mm, shrinks to as low as 3mm).
+    const brandFontMm = fitLabelHeaderMm(brandRaw);
     const headerText = escapeHtml(brandRaw);
     const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
     const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
