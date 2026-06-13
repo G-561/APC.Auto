@@ -6042,7 +6042,6 @@ function openLabelPrintTab(item) {
     <div class="sell-left">
       <div class="sell-title">${escapeHtml(item.title || '')}</div>
       <div class="sell-rows">
-        <div class="sell-row"><span class="lbl">Item No:</span> <span class="val val-strong">${apcId}</span></div>
         <div class="sell-row"><span class="lbl">Condition:</span> <span class="val">${condition}</span></div>
         <div class="sell-row"><span class="lbl">Fits:</span> <span class="val">${fits}</span></div>
         ${year}${bin}${stock}
