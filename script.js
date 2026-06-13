@@ -13060,6 +13060,7 @@ let _edwVehicle       = {};
 let _edwItems         = {};   // key: "zI:aI:pI" → { grade, notes, price, photos: [] }
 let _edwStep          = 0;
 let _edwJobId         = null; // dismantling_jobs.id for the current stock card
+let _edwCommitted     = false; // true once the job is sent/published — close without the "unsaved" prompt
 let _edwStock         = [];   // loaded list of in_stock/stripping jobs
 let _edwStockFilter   = '';
 let _edwSelectedZone  = 0;
@@ -13133,7 +13134,8 @@ function openEdw() {
 }
 
 function closeEdw() {
-    if (_edwHasActiveSession() && !confirm('End this EDW session? Unsaved work will be lost.')) return;
+    if (!_edwCommitted && _edwHasActiveSession() && !confirm('End this EDW session? Unsaved work will be lost.')) return;
+    _edwCommitted = false;
     _edwVehicle = {}; _edwItems = {}; _edwStep = 0; _edwJobId = null;
     _edwStock = []; _edwStockFilter = ''; _edwVehiclePhotos = [];
     const drawer = document.getElementById('edwDrawer');
@@ -14521,6 +14523,7 @@ async function _edwPublish() {
     await loadUserListingsFromSupabase(currentUserId);
     renderMyParts();
     renderMainGrid();
+    _edwCommitted = true; // listings saved — closing from here shouldn't warn
 
     const body = document.getElementById('edwBody');
     if (body) body.innerHTML = `
@@ -14529,7 +14532,7 @@ async function _edwPublish() {
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
             <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
-            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
+            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwCommitted=false;_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;
     if (footer) footer.innerHTML = `
@@ -14596,6 +14599,7 @@ function _renderEdwJobSent(jobToken, count) {
     const body   = document.getElementById('edwBody');
     const footer = document.getElementById('edwFooter');
     if (!body || !footer) return;
+    _edwCommitted = true; // job is saved — closing from here shouldn't warn
 
     const url   = `${location.origin}${location.pathname}?job=${jobToken}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
@@ -15660,6 +15664,7 @@ async function _jrPublish(jobId) {
     await sb.from('dismantling_jobs').update({ status: 'published' }).eq('id', jobId);
     await loadUserListingsFromSupabase(currentUserId);
     renderMyParts(); renderMainGrid();
+    _edwCommitted = true; // listings saved — closing from here shouldn't warn
 
     const body = document.getElementById('edwBody');
     if (body) body.innerHTML = `
@@ -15668,7 +15673,7 @@ async function _jrPublish(jobId) {
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
             <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
-            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
+            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwCommitted=false;_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;
     if (footer) footer.innerHTML = `<button class="edw-btn-secondary" onclick="closeEdw()">Close</button>`;
