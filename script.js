@@ -17824,12 +17824,8 @@ function whRenderLabelPreview(codes) {
 
 function whPrintLabels() {
     if (!_whLabelCodes.length) return;
-    const bizName = (userSettings.businessName || '').trim();
-    const brandRaw = bizName ? `APC · ${bizName}` : 'AUTO PARTS CONNECTION';
-    const brandFontMm = brandRaw.length > 32 ? 3.6 : 4.5;
-    const headerText = escapeHtml(brandRaw);
     const labelHtml = _whLabelCodes.map(code =>
-        `<div class="wl-label"><div class="wl-header" style="font-size:${brandFontMm}mm">${headerText}</div><div class="wl-body"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code">${escapeHtml(code)}</div></div></div>`
+        `<div class="wl-label"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code">${escapeHtml(code)}</div></div>`
     ).join('');
     const win = window.open('', '_blank');
     if (!win) { showToast('Allow pop-ups to print labels'); return; }
@@ -17839,15 +17835,13 @@ function whPrintLabels() {
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:Arial,sans-serif;background:#fff;}
   .wl-label{
-    width:100mm;height:61.5mm;overflow:hidden;padding:2.5mm 2.5mm 2.5mm 4mm;
-    display:flex;flex-direction:column;page-break-after:always;
+    width:100mm;height:61.5mm;overflow:hidden;padding:3mm 3mm 3mm 4mm;
+    display:flex;align-items:center;gap:5mm;page-break-after:always;
   }
   .wl-label:last-child{page-break-after:avoid;}
-  .wl-header{background:#1a1a1a;color:#fff;text-align:center;font-weight:900;letter-spacing:0.3px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1.5mm;border-radius:1mm;margin-bottom:2.5mm;}
-  .wl-body{flex:1;display:flex;align-items:center;gap:4mm;min-height:0;}
-  .wl-qr{width:44mm;flex-shrink:0;}
+  .wl-qr{width:50mm;flex-shrink:0;}
   .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;}
-  .wl-code{flex:1;font-size:13mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;line-height:1.05;}
+  .wl-code{flex:1;font-size:16mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;line-height:1.05;}
   @media print{
     @page{size:100mm 62mm;margin:0;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -17856,7 +17850,7 @@ function whPrintLabels() {
 ${labelHtml}
 <script>
   document.querySelectorAll('.wl-qr').forEach(el => {
-    new QRCode(el, {text:el.getAttribute('data-code'),width:400,height:400,colorDark:'#1a1a1a',colorLight:'#ffffff'});
+    new QRCode(el, {text:el.getAttribute('data-code'),width:500,height:500,colorDark:'#1a1a1a',colorLight:'#ffffff'});
   });
   setTimeout(() => window.print(), 800);
 <\/script></body></html>`);
