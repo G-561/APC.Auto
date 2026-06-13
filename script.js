@@ -17801,8 +17801,12 @@ function whRenderLabelPreview(codes) {
 
 function whPrintLabels() {
     if (!_whLabelCodes.length) return;
+    const bizName = (userSettings.businessName || '').trim();
+    const brandRaw = bizName ? `APC · ${bizName}` : 'AUTO PARTS CONNECTION';
+    const brandFontMm = brandRaw.length > 32 ? 3.6 : 4.5;
+    const headerText = escapeHtml(brandRaw);
     const labelHtml = _whLabelCodes.map(code =>
-        `<div class="wl-label"><div class="wl-header">AUTO PARTS CONNECTION</div><div class="wl-body"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code">${escapeHtml(code)}</div></div></div>`
+        `<div class="wl-label"><div class="wl-header" style="font-size:${brandFontMm}mm">${headerText}</div><div class="wl-body"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code">${escapeHtml(code)}</div></div></div>`
     ).join('');
     const win = window.open('', '_blank');
     if (!win) { showToast('Allow pop-ups to print labels'); return; }
@@ -17816,7 +17820,7 @@ function whPrintLabels() {
     display:flex;flex-direction:column;page-break-after:always;
   }
   .wl-label:last-child{page-break-after:avoid;}
-  .wl-header{background:#1a1a1a;color:#fff;text-align:center;font-size:4.5mm;font-weight:900;letter-spacing:0.3px;padding:1.5mm;border-radius:1mm;margin-bottom:2.5mm;}
+  .wl-header{background:#1a1a1a;color:#fff;text-align:center;font-weight:900;letter-spacing:0.3px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1.5mm;border-radius:1mm;margin-bottom:2.5mm;}
   .wl-body{flex:1;display:flex;align-items:center;gap:4mm;min-height:0;}
   .wl-qr{width:44mm;flex-shrink:0;}
   .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;}
