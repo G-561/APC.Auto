@@ -5979,6 +5979,11 @@ function openLabelPrintTab(item) {
     const condition = escapeHtml(conditionMap[item.condition] || item.condition || '');
     const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const apcId = escapeHtml(item.apcId || ('APC-' + item.id));
+    // Seller's own business name (set at signup) leads the header, kept under the APC brand.
+    const bizName = (userSettings.businessName || '').trim();
+    const brandRaw = bizName ? `APC · ${bizName}` : 'AUTO PARTS CONNECTION';
+    const brandFontMm = brandRaw.length > 26 ? 4 : 5;
+    const headerText = escapeHtml(brandRaw);
     const bin  = item.warehouseBin ? `<tr><td>Bin</td><td><strong>${escapeHtml(item.warehouseBin)}</strong></td></tr>` : '';
     const year = item.year ? `<tr><td>Year</td><td>${escapeHtml(String(item.year))}</td></tr>` : '';
     const stock = item.stockNumber ? `<tr><td>Stock #</td><td>${escapeHtml(item.stockNumber)}</td></tr>` : '';
@@ -6011,9 +6016,9 @@ function openLabelPrintTab(item) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
   .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm; display: flex; flex-direction: column; }
-  .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
-  .sell-brand { font-size: 5mm; font-weight: 900; letter-spacing: 0.1mm; white-space: nowrap; }
-  .sell-date { font-size: 3.2mm; font-weight: 700; white-space: nowrap; }
+  .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 2mm; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
+  .sell-brand { flex: 1; min-width: 0; font-weight: 900; letter-spacing: 0.1mm; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sell-date { flex-shrink: 0; font-size: 3.2mm; font-weight: 700; white-space: nowrap; }
   .sell-body { flex: 1; display: flex; gap: 3mm; align-items: flex-start; min-height: 0; }
   .sell-left { flex: 1; min-width: 0; }
   .sell-title { font-size: 5.6mm; font-weight: 900; line-height: 1.15; margin-bottom: 2mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -6027,7 +6032,7 @@ function openLabelPrintTab(item) {
 </head><body>
 <div class="sell-label">
   <div class="sell-header">
-    <div class="sell-brand">AUTO PARTS CONNECTION</div>
+    <div class="sell-brand" style="font-size:${brandFontMm}mm">${headerText}</div>
     <div class="sell-date">${date}</div>
   </div>
   <div class="sell-body">
