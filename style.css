@@ -5965,60 +5965,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 }
 
 /* ===== QR LABEL MODAL ===== */
-.label-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 4000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.label-modal-inner {
-    background: white;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 360px;
-    padding: 24px 20px 20px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
-}
-.label-modal-hdr {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-}
-.label-modal-title { font-size: 17px; font-weight: 900; }
-.label-modal-close {
-    background: none; border: none; font-size: 28px;
-    color: #aaa; cursor: pointer; line-height: 1; padding: 0;
-}
-.label-print-area {
-    border: 2px dashed #ddd;
-    border-radius: 12px;
-    padding: 20px 16px;
-    text-align: center;
-    background: white;
-}
-.label-brand-line { margin-bottom: 10px; }
-.label-logo { height: 26px; object-fit: contain; }
-.label-qr { display: flex; justify-content: center; margin: 8px 0; }
-.label-qr img, .label-qr canvas { border-radius: 6px; }
-.label-part-name {
-    font-size: 12px; font-weight: 700; color: #222;
-    margin-top: 10px; line-height: 1.3; max-width: 220px;
-    margin-left: auto; margin-right: auto;
-}
-.label-bin-ref {
-    font-size: 20px; font-weight: 900;
-    color: var(--apc-orange); margin: 6px 0 4px;
-    letter-spacing: 1px;
-}
-.label-price { font-size: 13px; color: #666; font-weight: 600; }
-.label-apc-id { font-size: 10px; color: #aaa; font-weight: 500; letter-spacing: 0.5px; margin-top: 6px; }
-.label-png-btn { display: block; width: 100%; margin-top: 10px; padding: 12px; background: none; border: 2px solid var(--apc-orange); border-radius: 8px; color: var(--apc-orange); font-size: 13px; font-weight: 700; cursor: pointer; }
-.label-png-btn:active { background: rgba(240,112,32,0.08); }
-
 /* ── INBOX MESSAGE CENTRE ─────────────────────── */
 #inboxDrawer .drawer-content.inbox-drawer-content {
     padding: 0; overflow: hidden; display: flex; flex-direction: column;
@@ -6654,44 +6600,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-btn-label { background: #fff3e0; color: var(--apc-orange); border-color: var(--apc-orange); }
 .dash-btn-label:hover { background: var(--apc-orange); color: white; }
 
-/* Sell label print area — hidden on screen */
-#sellLabelPrintArea { display: none; }
-#sellLabelPrintArea .sell-label { border: 2px solid #222; border-radius: 6px; padding: 10px 12px; font-family: Arial, sans-serif; }
-#sellLabelPrintArea .sell-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #222; padding-bottom: 8px; margin-bottom: 8px; }
-#sellLabelPrintArea .sell-brand { font-size: 18px; font-weight: 900; color: #f7941d; letter-spacing: -0.5px; }
-#sellLabelPrintArea .sell-date { font-size: 10px; color: #aaa; text-align: right; }
-#sellLabelPrintArea .sell-body { display: flex; gap: 12px; align-items: flex-start; }
-#sellLabelPrintArea .sell-left { flex: 1; min-width: 0; }
-#sellLabelPrintArea .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-#sellLabelPrintArea .sell-title { font-size: 13px; font-weight: 800; margin-bottom: 7px; line-height: 1.3; }
-#sellLabelPrintArea table { width: 100%; border-collapse: collapse; font-size: 11px; }
-#sellLabelPrintArea td { padding: 2px 6px 2px 0; vertical-align: top; }
-#sellLabelPrintArea td:first-child { color: #555; width: 65px; white-space: nowrap; }
-#sellLabelPrintArea .sell-price-row { margin-top: 7px; border-top: 2px solid #222; padding-top: 7px; display: flex; align-items: baseline; gap: 6px; }
-#sellLabelPrintArea .sell-price { font-size: 20px; font-weight: 900; }
-#sellLabelPrintArea .sell-price-label { font-size: 11px; color: #555; }
-#sellLabelPrintArea .sell-qr-id { font-size: 9px; color: #555; text-align: center; margin-top: 2px; word-break: break-all; max-width: 90px; }
-
-/* Print — QR label modal (default) */
-@media print {
-    body:not(.printing-sell-label) * { visibility: hidden; }
-    body:not(.printing-sell-label) #labelPrintArea,
-    body:not(.printing-sell-label) #labelPrintArea * { visibility: visible; }
-    body:not(.printing-sell-label) #labelPrintArea {
-        position: fixed;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        padding: 30px;
-    }
-    body:not(.printing-sell-label) .label-bin-ref { font-size: 26px; }
-
-    /* Print — sell label (A6 landscape, one copy) */
-    body.printing-sell-label > * { display: none !important; }
-    body.printing-sell-label #sellLabelPrintArea { display: block !important; }
-    @page { size: A6 landscape; margin: 8mm; }
-}
 
 /* HELP & SUPPORT DRAWER */
 .help-drawer-content {
@@ -8224,8 +8132,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-label-card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; background: white; }
 .wh-label-card-code { font-size: 13px; font-weight: 900; color: #1a1a2e; letter-spacing: 0.5px; text-align: center; }
 .wh-label-qr { line-height: 0; }
-.wh-label-dl-btn { font-size: 11px; font-weight: 700; color: var(--apc-orange); background: none; border: 1px solid var(--apc-orange); border-radius: 6px; padding: 3px 8px; cursor: pointer; }
-.wh-label-dl-btn:active { background: rgba(240,112,32,0.1); }
 
 /* Put-Away scanner */
 .wh-camera-wrap { position: relative; width: 100%; background: #000; overflow: hidden; flex-shrink: 0; aspect-ratio: 4/3; max-height: 300px; }

@@ -2889,27 +2889,6 @@
 </div>
 
 <!-- QR LABEL PRINT MODAL -->
-<div id="labelModalBackdrop" onclick="closeLabelModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:3999;"></div>
-<div id="labelModal" class="label-modal" style="display:none;">
-    <div class="label-modal-inner">
-        <div class="label-modal-hdr">
-            <span class="label-modal-title">QR Label</span>
-            <button class="label-modal-close" onclick="closeLabelModal()">&#215;</button>
-        </div>
-        <div id="labelPrintArea" class="label-print-area">
-            <div class="label-brand-line">
-                <img src="images/APC.logo.png" class="label-logo" alt="APC">
-            </div>
-            <div id="labelQrCode" class="label-qr"></div>
-            <div id="labelApcId" class="label-apc-id"></div>
-            <div id="labelPartName" class="label-part-name"></div>
-            <div id="labelBinRef" class="label-bin-ref"></div>
-            <div id="labelPrice" class="label-price"></div>
-        </div>
-        <button class="btn-full-action" onclick="window.print()" style="margin-top:16px;">&#128438; PRINT LABEL</button>
-        <button class="label-png-btn" onclick="downloadLabelPNG()">&#8675; Download PNG &mdash; Brother / P-Touch</button>
-    </div>
-</div>
 
 <!-- HELP & SUPPORT DRAWER -->
 <div id="helpDrawer" class="drawer">
@@ -3032,8 +3011,6 @@
     <div style="font-weight:800; font-size:16px; color:#1a7a3e; margin-bottom:6px;">Part listed successfully</div>
     <div style="font-size:13px; color:#888;">Manage in My Listings</div>
 </div>
-
-<div id="sellLabelPrintArea"></div>
 
 <!-- SELL — VEHICLE PICKER MODAL -->
 <div id="sellVehiclePickerModal" class="vp-overlay" style="display:none;" onclick="vpOverlayClick(event)">

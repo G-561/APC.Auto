@@ -5966,17 +5966,26 @@ async function submitSellListing() {
 }
 
 function printSellLabel(listing) {
-    const fits = escapeHtml((listing.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal');
+    openLabelPrintTab(listing);
+}
+
+// Landscape 100mm×62mm QR part label for the Brother QL-810W. Shared by the
+// print-on-sell toggle and the dashboard "Label" button — prints straight from
+// its own tab. Box is height-clamped + overflow:hidden so it can never spill to
+// a second sheet.
+function openLabelPrintTab(item) {
+    const fits = escapeHtml((item.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal');
     const conditionMap = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' };
-    const condition = escapeHtml(conditionMap[listing.condition] || listing.condition || '');
+    const condition = escapeHtml(conditionMap[item.condition] || item.condition || '');
     const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const apcId = escapeHtml(listing.apcId || ('APC-' + listing.id));
-    const bin  = listing.warehouseBin ? `<tr><td>Bin</td><td><strong>${escapeHtml(listing.warehouseBin)}</strong></td></tr>` : '';
-    const year = listing.year ? `<tr><td>Year</td><td>${escapeHtml(String(listing.year))}</td></tr>` : '';
+    const apcId = escapeHtml(item.apcId || ('APC-' + item.id));
+    const bin  = item.warehouseBin ? `<tr><td>Bin</td><td><strong>${escapeHtml(item.warehouseBin)}</strong></td></tr>` : '';
+    const year = item.year ? `<tr><td>Year</td><td>${escapeHtml(String(item.year))}</td></tr>` : '';
+    const stock = item.stockNumber ? `<tr><td>Stock #</td><td>${escapeHtml(item.stockNumber)}</td></tr>` : '';
     const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
-        ? 'https://g-561.github.io/APC.Auto/'
+        ? 'https://autopartsconnection.com.au/'
         : `${location.origin}${location.pathname}`;
-    const listingUrl = `${baseUrl}?item=${listing.id}`;
+    const listingUrl = `${baseUrl}?item=${item.supabaseId || item.id}`;
 
     // Generate QR code in a hidden temp element, grab the data URL, then open print tab
     const qrTemp = document.createElement('div');
@@ -5984,7 +5993,7 @@ function printSellLabel(listing) {
     document.body.appendChild(qrTemp);
 
     if (window.QRCode) {
-        new QRCode(qrTemp, { text: listingUrl, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+        new QRCode(qrTemp, { text: listingUrl, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
     }
 
     setTimeout(() => {
@@ -5994,26 +6003,26 @@ function printSellLabel(listing) {
         else if (qrImg) qrSrc = qrImg.src;
         document.body.removeChild(qrTemp);
 
-        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:36mm;height:36mm;display:block;" />` : '';
+        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:38mm;height:38mm;display:block;" />` : '';
 
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>APC Label — ${apcId}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #fff; }
-  .sell-label { border: 0.5mm solid #222; border-radius: 2mm; padding: 1.5mm; page-break-inside: avoid; break-inside: avoid; }
-  .sell-header { background: #cc0000; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1mm 2mm; border-radius: 1mm; margin-bottom: 1.5mm; }
-  .sell-brand { font-size: 4.2mm; font-weight: 900; letter-spacing: 0.1mm; white-space: nowrap; }
-  .sell-date { font-size: 3mm; font-weight: 700; white-space: nowrap; }
-  .sell-body { display: flex; gap: 2mm; align-items: flex-start; margin-bottom: 1mm; }
+  .sell-label { width: 100mm; height: 61.5mm; overflow: hidden; padding: 2.5mm; display: flex; flex-direction: column; }
+  .sell-header { background: #1a1a1a; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 1.5mm 2.5mm; border-radius: 1mm; margin-bottom: 2.5mm; }
+  .sell-brand { font-size: 5mm; font-weight: 900; letter-spacing: 0.1mm; white-space: nowrap; }
+  .sell-date { font-size: 3.2mm; font-weight: 700; white-space: nowrap; }
+  .sell-body { flex: 1; display: flex; gap: 3mm; align-items: flex-start; min-height: 0; }
   .sell-left { flex: 1; min-width: 0; }
-  .sell-title { font-size: 4mm; font-weight: 900; line-height: 1.25; margin-bottom: 1mm; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .sell-title { font-size: 5.6mm; font-weight: 900; line-height: 1.15; margin-bottom: 2mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  td { font-size: 3.3mm; font-weight: 700; padding: 0.3mm 1mm 0.3mm 0; vertical-align: top; line-height: 1.3; color: #111; }
-  td:first-child { font-weight: 400; color: #444; width: 14mm; white-space: nowrap; }
-  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 3mm; }
-  .sell-qr-id { font-size: 4mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 36mm; }
-  @media print { @page { size: auto; margin: 2mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  td { font-size: 4.1mm; font-weight: 700; padding: 0.5mm 1mm 0.5mm 0; vertical-align: top; line-height: 1.2; color: #111; }
+  td:first-child { font-weight: 400; color: #444; width: 19mm; white-space: nowrap; }
+  .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1.5mm; }
+  .sell-qr-id { font-size: 3.6mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 38mm; }
+  @media print { @page { size: 100mm 62mm; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head><body>
 <div class="sell-label">
@@ -6023,13 +6032,12 @@ function printSellLabel(listing) {
   </div>
   <div class="sell-body">
     <div class="sell-left">
-      <div class="sell-title">${escapeHtml(listing.title || '')}</div>
+      <div class="sell-title">${escapeHtml(item.title || '')}</div>
       <table>
         <tr><td>Item No.</td><td><strong>${apcId}</strong></td></tr>
         <tr><td>Condition</td><td>${condition}</td></tr>
         <tr><td>Fits</td><td>${fits}</td></tr>
-        ${year}${bin}
-        ${listing.stockNumber ? `<tr><td>Stock #</td><td>${escapeHtml(listing.stockNumber)}</td></tr>` : ''}
+        ${year}${bin}${stock}
       </table>
     </div>
     <div class="sell-right">
@@ -12020,148 +12028,10 @@ function updateCarouselActiveDot() {
 
 // --- QR LABEL ---
 
-let _labelPartId = null;
-
 function printPartLabel(partId) {
-    _labelPartId = partId;
-    const part = getPartById(partId);
-    if (!part) return;
-
-    const nameEl   = document.getElementById('labelPartName');
-    const binEl    = document.getElementById('labelBinRef');
-    const priceEl  = document.getElementById('labelPrice');
-    const qrEl     = document.getElementById('labelQrCode');
-    const apcIdEl  = document.getElementById('labelApcId');
-
-    if (nameEl)  nameEl.textContent  = part.title;
-    if (binEl)   binEl.textContent   = part.warehouseBin || '';
-    if (priceEl) priceEl.textContent = '$' + part.price;
-    if (apcIdEl) apcIdEl.textContent = part.apcId || '';
-
-    if (qrEl) {
-        qrEl.innerHTML = '';
-        const apcId  = part.apcId || ('APC-' + part.id);
-        const condLabel = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[part.condition] || part.condition || '';
-        const qrText = [apcId, part.title, part.stockNumber ? 'Stock: ' + part.stockNumber : '', condLabel].filter(Boolean).join('\n');
-        new QRCode(qrEl, { text: qrText, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
-    }
-
-    document.getElementById('labelModalBackdrop').style.display = 'block';
-    document.getElementById('labelModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
-
-function closeLabelModal() {
-    document.getElementById('labelModalBackdrop').style.display = 'none';
-    document.getElementById('labelModal').style.display = 'none';
-    document.body.style.overflow = '';
-}
-
-function downloadLabelPNG() {
-    const part = getPartById(_labelPartId) || findPartAnywhere(_labelPartId);
-    if (!part) return;
-
-    const apcId = part.apcId || ('APC-' + part.id);
-    const condLabel = { new_oem: 'New — OEM', new_aftermarket: 'New — Aftermarket', used: 'Used', refurbished: 'Refurbished', parts_only: 'Parts Only' }[part.condition] || part.condition || '';
-    const fits = (part.fits || []).map(f => [f.make, f.model].filter(Boolean).join(' ')).join(', ') || 'Universal';
-    const date = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-    const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
-        ? 'https://g-561.github.io/APC.Auto/'
-        : `${location.origin}${location.pathname}`;
-    const qrUrl = `${baseUrl}?item=${part.supabaseId || part.id}`;
-
-    // Generate QR at 425px (36mm @ 300dpi)
-    const QR_SIZE = 425;
-    const qrTemp = document.createElement('div');
-    qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
-    document.body.appendChild(qrTemp);
-    if (window.QRCode) new QRCode(qrTemp, { text: qrUrl, width: QR_SIZE, height: QR_SIZE, correctLevel: QRCode.CorrectLevel.M });
-
-    setTimeout(() => {
-        const qrEl = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
-        document.body.removeChild(qrTemp);
-
-        // 100mm × 62mm landscape at 300 DPI
-        const W = 1181, H = 732, PAD = 18, R = 24;
-        const canvas = document.createElement('canvas');
-        canvas.width = W; canvas.height = H;
-        const ctx = canvas.getContext('2d');
-
-        // Background + rounded border
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = '#222222';
-        ctx.lineWidth = 6;
-        ctx.beginPath(); ctx.roundRect(3, 3, W - 6, H - 6, R); ctx.stroke();
-
-        // Red header bar (~7mm)
-        const HDR_H = 83;
-        ctx.fillStyle = '#cc0000';
-        ctx.beginPath(); ctx.roundRect(3, 3, W - 6, HDR_H, [R, R, 0, 0]); ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.textBaseline = 'middle';
-        ctx.font = 'bold 47px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('AUTO PARTS CONNECTION', PAD + 8, 3 + HDR_H / 2);
-        ctx.font = '33px Arial';
-        ctx.textAlign = 'right';
-        ctx.fillText(date, W - PAD - 8, 3 + HDR_H / 2);
-        ctx.textAlign = 'left';
-
-        // Columns
-        const QR_X = W - PAD - QR_SIZE;
-        const QR_Y = HDR_H + PAD + 8;
-        const LEFT_W = QR_X - PAD - 16;
-        const BODY_BOTTOM = H - PAD;
-
-        // Title — word-wrap up to 3 lines
-        ctx.fillStyle = '#111111';
-        ctx.font = 'bold 41px Arial';
-        ctx.textBaseline = 'top';
-        const titleWords = (part.title || '').split(' ');
-        const titleLines = [];
-        let cur = '';
-        for (const w of titleWords) {
-            const test = cur ? cur + ' ' + w : w;
-            if (ctx.measureText(test).width <= LEFT_W) { cur = test; }
-            else { if (cur) titleLines.push(cur); cur = w; if (titleLines.length === 2) { titleLines.push(cur); cur = ''; break; } }
-        }
-        if (cur) titleLines.push(cur);
-        let ty = HDR_H + PAD + 8;
-        for (const ln of titleLines.slice(0, 3)) { ctx.fillText(ln, PAD, ty); ty += 52; }
-        ty += 10;
-
-        // Table rows
-        const drawRow = (lbl, val) => {
-            if (!val || ty >= BODY_BOTTOM) return;
-            ctx.font = '35px Arial';
-            ctx.fillStyle = '#666666'; ctx.fillText(lbl, PAD, ty);
-            ctx.fillStyle = '#222222'; ctx.fillText(String(val), PAD + 165, ty);
-            ty += 44;
-        };
-        drawRow('Item No.', apcId);
-        drawRow('Condition', condLabel);
-        drawRow('Fits', fits);
-        if (part.year) drawRow('Year', String(part.year));
-        if (part.warehouseBin) drawRow('Bin', part.warehouseBin);
-        if (part.stockNumber) drawRow('Stock #', part.stockNumber);
-
-        // QR + APC ID below
-        if (qrEl) {
-            ctx.drawImage(qrEl, QR_X, QR_Y, QR_SIZE, QR_SIZE);
-            ctx.fillStyle = '#555555';
-            ctx.font = '28px Arial';
-            ctx.textBaseline = 'top';
-            ctx.textAlign = 'center';
-            ctx.fillText(apcId, QR_X + QR_SIZE / 2, QR_Y + QR_SIZE + 8);
-            ctx.textAlign = 'left';
-        }
-
-        const link = document.createElement('a');
-        link.download = `APC-Label-${apcId}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }, 150);
+    const part = getPartById(partId) || findPartAnywhere(partId);
+    if (!part) { showToast('Listing not found'); return; }
+    openLabelPrintTab(part);
 }
 
 // --- OFFER SHEET ---
@@ -17916,11 +17786,6 @@ function whRenderLabelPreview(codes) {
         label.className = 'wh-label-card-code';
         label.textContent = code;
         card.appendChild(label);
-        const dlBtn = document.createElement('button');
-        dlBtn.className = 'wh-label-dl-btn';
-        dlBtn.textContent = '⬇ PNG';
-        dlBtn.onclick = () => whDownloadLabelPNG(code);
-        card.appendChild(dlBtn);
         grid.appendChild(card);
         if (window.QRCode) {
             new QRCode(qrWrap, { text: code, width: 72, height: 72, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
@@ -17931,88 +17796,39 @@ function whRenderLabelPreview(codes) {
 
 function whPrintLabels() {
     if (!_whLabelCodes.length) return;
-    const labelHtml = _whLabelCodes.map(code => {
-        const qrId = 'pqr_' + Math.random().toString(36).slice(2);
-        return `<div class="wl-label"><div class="wl-brand">AUTO PARTS CONNECTION</div><div class="wl-qr" id="${qrId}"></div><div class="wl-code">${escapeHtml(code)}</div></div>`;
-    }).join('');
+    const labelHtml = _whLabelCodes.map(code =>
+        `<div class="wl-label"><div class="wl-header">AUTO PARTS CONNECTION</div><div class="wl-body"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code">${escapeHtml(code)}</div></div></div>`
+    ).join('');
     const win = window.open('', '_blank');
+    if (!win) { showToast('Allow pop-ups to print labels'); return; }
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>APC Warehouse Labels</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:Arial,sans-serif;background:#fff;}
   .wl-label{
-    width:100%;min-height:96vh;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:3mm;gap:2mm;page-break-after:always;
+    width:100mm;height:61.5mm;overflow:hidden;padding:2.5mm;
+    display:flex;flex-direction:column;page-break-after:always;
   }
   .wl-label:last-child{page-break-after:avoid;}
-  .wl-brand{font-size:3.5mm;font-weight:900;color:#cc0000;letter-spacing:0.3px;text-align:center;}
-  .wl-qr{width:82%;max-width:100%;margin:0 auto;}
-  .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;margin:0 auto;}
-  .wl-code{font-size:7mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;}
+  .wl-header{background:#1a1a1a;color:#fff;text-align:center;font-size:4.5mm;font-weight:900;letter-spacing:0.3px;padding:1.5mm;border-radius:1mm;margin-bottom:2.5mm;}
+  .wl-body{flex:1;display:flex;align-items:center;gap:4mm;min-height:0;}
+  .wl-qr{width:44mm;flex-shrink:0;}
+  .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;}
+  .wl-code{flex:1;font-size:13mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;line-height:1.05;}
   @media print{
-    @page{size:auto;margin:2mm;}
+    @page{size:100mm 62mm;margin:0;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
 </style></head><body>
 ${labelHtml}
 <script>
   document.querySelectorAll('.wl-qr').forEach(el => {
-    new QRCode(el, {text:el.id,width:400,height:400,colorDark:'#1a1a1a',colorLight:'#ffffff'});
-    el.removeAttribute('id');
+    new QRCode(el, {text:el.getAttribute('data-code'),width:400,height:400,colorDark:'#1a1a1a',colorLight:'#ffffff'});
   });
   setTimeout(() => window.print(), 800);
 <\/script></body></html>`);
     win.document.close();
-}
-
-function whDownloadLabelPNG(code) {
-    const QR_SIZE = 320;
-    const qrTemp = document.createElement('div');
-    qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
-    document.body.appendChild(qrTemp);
-    if (window.QRCode) new QRCode(qrTemp, { text: code, width: QR_SIZE, height: QR_SIZE, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-
-    setTimeout(() => {
-        const qrEl = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
-        document.body.removeChild(qrTemp);
-
-        // 50mm × 50mm at 300 DPI — fits QL square die-cut labels
-        const S = 590;
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = S;
-        const ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, S, S);
-        ctx.strokeStyle = '#1a1a1a';
-        ctx.lineWidth = 5;
-        ctx.strokeRect(3, 3, S - 6, S - 6);
-
-        // Red top bar (Brother labels print red/black only)
-        ctx.fillStyle = '#cc0000';
-        ctx.fillRect(3, 3, S - 6, 44);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px Arial';
-        ctx.textBaseline = 'middle';
-        ctx.textAlign = 'center';
-        ctx.fillText('AUTO PARTS CONNECTION', S / 2, 25);
-
-        // QR code
-        if (qrEl) ctx.drawImage(qrEl, (S - QR_SIZE) / 2, 52, QR_SIZE, QR_SIZE);
-
-        // Location code text
-        ctx.fillStyle = '#1a1a1a';
-        ctx.font = 'bold 36px Arial';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(code, S / 2, S - 10);
-
-        const link = document.createElement('a');
-        link.download = `APC-Location-${code.replace(/[^a-zA-Z0-9-_]/g, '_')}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }, 150);
 }
 
 // ── Put-Away Scanner ──────────────────────────────────────────────
