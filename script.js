@@ -6021,9 +6021,9 @@ function openLabelPrintTab(item) {
   .sell-date { flex-shrink: 0; font-size: 3.2mm; font-weight: 700; white-space: nowrap; }
   .sell-body { flex: 1; display: flex; gap: 3mm; align-items: flex-start; min-height: 0; }
   .sell-left { flex: 1; min-width: 0; }
-  .sell-title { font-size: 5.6mm; font-weight: 900; line-height: 1.15; margin-bottom: 2mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sell-title { font-size: 4.3mm; font-weight: 900; line-height: 1.15; margin-bottom: 1.5mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  td { font-size: 4.1mm; font-weight: 700; padding: 0.5mm 1mm 0.5mm 0; vertical-align: top; line-height: 1.2; color: #111; }
+  td { font-size: 4.1mm; font-weight: 700; padding: 0.35mm 1mm 0.35mm 0; vertical-align: top; line-height: 1.15; color: #111; }
   td:first-child { font-weight: 400; color: #444; width: 19mm; white-space: nowrap; }
   .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1.5mm; }
   .sell-qr-id { font-size: 3.6mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 38mm; }
