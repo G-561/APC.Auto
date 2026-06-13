@@ -5969,9 +5969,9 @@ function printSellLabel(listing) {
     openLabelPrintTab(listing);
 }
 
-// Largest header font (mm) that fits text on one line within maxWidthMm,
-// measured in the actual Arial 900 weight so wide names ("...CARS") don't clip.
-function fitLabelHeaderMm(text, maxWidthMm = 87, maxMm = 5, minMm = 3) {
+// Largest font (mm) that fits text on one line within maxWidthMm, measured in
+// the actual Arial 900 weight so wide strings ("...CARS", long bin codes) don't clip.
+function fitLabelTextMm(text, maxWidthMm = 87, maxMm = 5, minMm = 3) {
     const ctx = document.createElement('canvas').getContext('2d');
     const PX = 3.7795; // CSS px per mm @ 96dpi
     const t = (text || '').toUpperCase();
@@ -5997,7 +5997,7 @@ function openLabelPrintTab(item) {
     const bizName = (userSettings.businessName || '').trim();
     const brandRaw = bizName || 'AUTO PARTS CONNECTION';
     // Auto-size to fit the header width (caps at 5mm, shrinks to as low as 3mm).
-    const brandFontMm = fitLabelHeaderMm(brandRaw);
+    const brandFontMm = fitLabelTextMm(brandRaw);
     const headerText = escapeHtml(brandRaw);
     const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
     const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
@@ -17824,9 +17824,10 @@ function whRenderLabelPreview(codes) {
 
 function whPrintLabels() {
     if (!_whLabelCodes.length) return;
-    const labelHtml = _whLabelCodes.map(code =>
-        `<div class="wl-label"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code">${escapeHtml(code)}</div></div>`
-    ).join('');
+    const labelHtml = _whLabelCodes.map(code => {
+        const fm = fitLabelTextMm(code, 90, 17, 9); // big single-line code, full width
+        return `<div class="wl-label"><div class="wl-qr" data-code="${escapeHtml(code)}"></div><div class="wl-code" style="font-size:${fm}mm">${escapeHtml(code)}</div></div>`;
+    }).join('');
     const win = window.open('', '_blank');
     if (!win) { showToast('Allow pop-ups to print labels'); return; }
     win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>APC Warehouse Labels</title>
@@ -17835,13 +17836,13 @@ function whPrintLabels() {
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:Arial,sans-serif;background:#fff;}
   .wl-label{
-    width:100mm;height:61.5mm;overflow:hidden;padding:3mm 3mm 3mm 4mm;
-    display:flex;align-items:center;gap:5mm;page-break-after:always;
+    width:100mm;height:61.5mm;overflow:hidden;padding:3mm 4mm;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5mm;page-break-after:always;
   }
   .wl-label:last-child{page-break-after:avoid;}
-  .wl-qr{width:50mm;flex-shrink:0;}
+  .wl-qr{width:36mm;flex-shrink:0;}
   .wl-qr canvas,.wl-qr img{display:block;width:100%!important;height:auto!important;}
-  .wl-code{flex:1;font-size:16mm;font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;word-break:break-all;line-height:1.05;}
+  .wl-code{font-weight:900;letter-spacing:0.5px;text-align:center;color:#1a1a1a;line-height:1.0;word-break:break-all;max-width:100%;}
   @media print{
     @page{size:100mm 62mm;margin:0;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -17850,7 +17851,7 @@ function whPrintLabels() {
 ${labelHtml}
 <script>
   document.querySelectorAll('.wl-qr').forEach(el => {
-    new QRCode(el, {text:el.getAttribute('data-code'),width:500,height:500,colorDark:'#1a1a1a',colorLight:'#ffffff'});
+    new QRCode(el, {text:el.getAttribute('data-code'),width:450,height:450,colorDark:'#1a1a1a',colorLight:'#ffffff'});
   });
   setTimeout(() => window.print(), 800);
 <\/script></body></html>`);
