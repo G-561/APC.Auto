@@ -411,6 +411,7 @@
             <div class="wh-tab-bar">
                 <button class="wh-tab wh-tab--active" id="whTabLabels" onclick="whSetTab('labels')">Labels</button>
                 <button class="wh-tab" id="whTabScanner" onclick="whSetTab('scanner')">Put-Away</button>
+                <button class="wh-tab" id="whTabLookup" onclick="whSetTab('lookup')">Lookup</button>
             </div>
         </div>
         <div class="dh-close" onclick="closeWarehouseDrawer()">×</div>
@@ -454,6 +455,19 @@
                         <button onclick="whClearLabels()" style="background:none; border:1.5px solid #ddd; border-radius:8px; padding:0 16px; font-size:13px; font-weight:700; color:#888; cursor:pointer; white-space:nowrap;">Clear</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ── LOOKUP TAB ─────────────────────────────────────── -->
+        <div id="whLookupTab" class="wh-tab-panel" style="display:none;">
+            <div class="wh-panel-inner">
+                <div class="wh-section-label">FIND STOCK BY LOCATION</div>
+                <div class="wh-lookup-search">
+                    <input id="whLookupInput" class="wh-input" placeholder="Rack or bin — e.g. R1 or R1.B2.L2.P1" onkeydown="if(event.key==='Enter')whLookupLocation()">
+                    <button class="wh-btn" onclick="whLookupLocation()">Search</button>
+                </div>
+                <div class="wh-lookup-hint">Type a full bin (R1.B2.L2.P1) for one shelf, or a rack/level (R1, R1.B2) to see everything under it.</div>
+                <div id="whLookupResults" class="wh-lookup-results"></div>
             </div>
         </div>
 

@@ -8133,6 +8133,25 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-label-card-code { font-size: 13px; font-weight: 900; color: #1a1a2e; letter-spacing: 0.5px; text-align: center; }
 .wh-label-qr { line-height: 0; }
 
+/* Location lookup */
+.wh-lookup-search { display: flex; gap: 8px; }
+.wh-lookup-search .wh-input { flex: 1; }
+.wh-lookup-hint { font-size: 11px; color: #aaa; margin: 8px 0 16px; line-height: 1.5; }
+.wh-lookup-results { display: flex; flex-direction: column; gap: 14px; }
+.wh-lk-summary { font-size: 12px; color: #666; padding: 10px 12px; background: #f8f8f8; border-radius: 8px; }
+.wh-lk-summary strong { color: #1a1a2e; }
+.wh-lk-bin { border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+.wh-lk-bin-hd { display: flex; align-items: center; justify-content: space-between; background: #1a1a2e; color: #fff; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; padding: 7px 12px; }
+.wh-lk-count { background: rgba(255,255,255,0.22); border-radius: 8px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+.wh-lk-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid #f0f0f0; cursor: pointer; }
+.wh-lk-row:first-child { border-top: none; }
+.wh-lk-row:hover { background: #fafafa; }
+.wh-lk-row-main { flex: 1; min-width: 0; }
+.wh-lk-row-title { font-size: 13px; font-weight: 700; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wh-lk-row-meta { font-size: 11px; color: #888; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wh-lk-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 6px; flex-shrink: 0; }
+.wh-lookup-empty { font-size: 13px; color: #888; text-align: center; padding: 24px 16px; }
+
 /* Put-Away scanner */
 .wh-camera-wrap { position: relative; width: 100%; background: #000; overflow: hidden; flex-shrink: 0; aspect-ratio: 4/3; max-height: 300px; }
 .wh-camera-video { width: 100%; height: 100%; object-fit: cover; display: block; }

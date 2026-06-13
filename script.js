@@ -17756,24 +17756,86 @@ function whClearLabels() {
 }
 
 function whSetTab(tab) {
-    const labelsTab  = document.getElementById('whLabelsTab');
-    const scannerTab = document.getElementById('whScannerTab');
-    const btnLabels  = document.getElementById('whTabLabels');
-    const btnScanner = document.getElementById('whTabScanner');
-    if (tab === 'labels') {
-        labelsTab.style.display  = '';
-        scannerTab.style.display = 'none';
-        btnLabels.classList.add('wh-tab--active');
-        btnScanner.classList.remove('wh-tab--active');
-        whStopCamera();
-    } else {
-        labelsTab.style.display  = 'none';
-        scannerTab.style.display = 'flex';
-        btnLabels.classList.remove('wh-tab--active');
-        btnScanner.classList.add('wh-tab--active');
+    const tabs = {
+        labels:  { panel: 'whLabelsTab',  btn: 'whTabLabels',  display: '' },
+        scanner: { panel: 'whScannerTab', btn: 'whTabScanner', display: 'flex' },
+        lookup:  { panel: 'whLookupTab',  btn: 'whTabLookup',  display: '' },
+    };
+    whStopCamera();
+    for (const [name, t] of Object.entries(tabs)) {
+        const panel = document.getElementById(t.panel);
+        const btn   = document.getElementById(t.btn);
+        if (panel) panel.style.display = (name === tab) ? t.display : 'none';
+        if (btn)   btn.classList.toggle('wh-tab--active', name === tab);
+    }
+    if (tab === 'scanner') {
         whResetScan();
         if (window.innerWidth < 900) whStartCamera();
+    } else if (tab === 'lookup') {
+        const input = document.getElementById('whLookupInput');
+        if (input) setTimeout(() => input.focus(), 50);
     }
+}
+
+// ── Location Lookup ───────────────────────────────────────────────
+// "What's in this rack?" — type a full bin for one shelf, or a rack/level
+// prefix to see everything beneath it (R1 → R1.B2.L2.P1, R1.B3…).
+
+async function whLookupLocation() {
+    const input = document.getElementById('whLookupInput');
+    const out   = document.getElementById('whLookupResults');
+    if (!input || !out) return;
+    const code = (input.value || '').trim().toUpperCase().replace(/[^A-Z0-9.\-_]/g, '');
+    if (!code) { out.innerHTML = ''; return; }
+    if (!sb || !currentUserId) { out.innerHTML = '<div class="wh-lookup-empty">Sign in required</div>'; return; }
+    out.innerHTML = '<div class="wh-lookup-empty">Searching…</div>';
+    // Exact bin OR children one level down by '.' or '-' separator (avoids R1 matching R10).
+    const { data, error } = await sb.from('listings')
+        .select('id, title, apc_id, price, condition, status, stock_number, warehouse_bin')
+        .eq('seller_id', currentUserId)
+        .or(`warehouse_bin.ilike.${code},warehouse_bin.ilike.${code}.%,warehouse_bin.ilike.${code}-%`)
+        .order('warehouse_bin').order('status').limit(500);
+    if (error) { out.innerHTML = `<div class="wh-lookup-empty">Error: ${escapeHtml(error.message)}</div>`; return; }
+    whRenderLookupResults(data || [], code);
+}
+
+function whRenderLookupResults(rows, code) {
+    const out = document.getElementById('whLookupResults');
+    if (!out) return;
+    if (!rows.length) {
+        out.innerHTML = `<div class="wh-lookup-empty">No stock assigned to <strong>${escapeHtml(code)}</strong> yet.</div>`;
+        return;
+    }
+    const groups = {};
+    rows.forEach(r => { (groups[r.warehouse_bin] = groups[r.warehouse_bin] || []).push(r); });
+    const bins = Object.keys(groups).sort();
+    const activeCount = rows.filter(r => r.status === 'active').length;
+    const condLabel = { new_oem: 'New·OEM', new_aftermarket: 'New·Aftermkt', used: 'Used', refurbished: 'Refurb', parts_only: 'Parts', excellent: 'Excellent', good: 'Good', fair: 'Fair', damaged: 'Damaged' };
+    const badge = (s) => {
+        const m = { active: ['Active', '#22c55e'], pending: ['Pending', '#f59e0b'], sold: ['Sold', '#ef4444'] };
+        const [lbl, col] = m[s] || [s || '—', '#888'];
+        return `<span class="wh-lk-badge" style="background:${col}22;color:${col};">${escapeHtml(lbl)}</span>`;
+    };
+    let html = `<div class="wh-lk-summary"><strong>${rows.length}</strong> part${rows.length !== 1 ? 's' : ''} under <strong>${escapeHtml(code)}</strong>` +
+        `${bins.length > 1 ? ` · ${bins.length} bins` : ''} · ${activeCount} active</div>`;
+    bins.forEach(bin => {
+        const items = groups[bin];
+        html += `<div class="wh-lk-bin"><div class="wh-lk-bin-hd"><span>${escapeHtml(bin)}</span><span class="wh-lk-count">${items.length}</span></div>`;
+        items.forEach(r => {
+            const apc  = escapeHtml(r.apc_id || ('APC-' + r.id));
+            const meta = [apc, '$' + escapeHtml(String(r.price ?? '')), escapeHtml(condLabel[r.condition] || r.condition || ''), r.stock_number ? '#' + escapeHtml(r.stock_number) : ''].filter(Boolean).join(' · ');
+            html += `<div class="wh-lk-row" onclick="whOpenListing('${r.id}')">` +
+                `<div class="wh-lk-row-main"><div class="wh-lk-row-title">${escapeHtml(r.title || 'Untitled')}</div>` +
+                `<div class="wh-lk-row-meta">${meta}</div></div>${badge(r.status)}</div>`;
+        });
+        html += `</div>`;
+    });
+    out.innerHTML = html;
+}
+
+function whOpenListing(id) {
+    closeWarehouseDrawer();
+    openItemDetail(id);
 }
 
 // ── Label Generator ───────────────────────────────────────────────
