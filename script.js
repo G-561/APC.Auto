@@ -5979,9 +5979,9 @@ function openLabelPrintTab(item) {
     const condition = escapeHtml(conditionMap[item.condition] || item.condition || '');
     const createdDate = new Date(item.date || Date.now()).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
     const apcId = escapeHtml(item.apcId || ('APC-' + item.id));
-    // Seller's own business name (set at signup) leads the header, kept under the APC brand.
+    // Business name is the header on its own; APC attribution sits in the footer ("Powered by APC").
     const bizName = (userSettings.businessName || '').trim();
-    const brandRaw = bizName ? `APC · ${bizName}` : 'AUTO PARTS CONNECTION';
+    const brandRaw = bizName || 'AUTO PARTS CONNECTION';
     const brandFontMm = brandRaw.length > 32 ? 4 : 5;
     const headerText = escapeHtml(brandRaw);
     const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
@@ -6020,7 +6020,10 @@ function openLabelPrintTab(item) {
   .sell-brand { flex: 1; min-width: 0; font-weight: 900; letter-spacing: 0.1mm; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sell-body { flex: 1; display: flex; gap: 3mm; min-height: 0; }
   .sell-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .sell-created { margin-top: auto; padding-top: 1.5mm; font-size: 3mm; color: #888; }
+  .sell-footer { margin-top: auto; padding-top: 1.5mm; }
+  .sell-created { font-size: 3mm; color: #888; }
+  .sell-powered { font-size: 2.8mm; color: #888; margin-top: 0.4mm; }
+  .sell-powered .apc { font-weight: 800; color: #555; letter-spacing: 0.2mm; }
   .sell-title { font-size: 4.3mm; font-weight: 900; line-height: 1.15; margin-bottom: 1.5mm; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .sell-rows { display: flex; flex-direction: column; gap: 0.6mm; }
   .sell-row { font-size: 4.1mm; line-height: 1.15; color: #111; }
@@ -6045,7 +6048,10 @@ function openLabelPrintTab(item) {
         <div class="sell-row"><span class="lbl">Fits:</span> <span class="val">${fits}</span></div>
         ${year}${bin}${stock}
       </div>
-      <div class="sell-created">Created ${createdDate}</div>
+      <div class="sell-footer">
+        <div class="sell-created">Created ${createdDate}</div>
+        <div class="sell-powered">Powered by <span class="apc">APC</span></div>
+      </div>
     </div>
     <div class="sell-right">
       ${qrHtml}
