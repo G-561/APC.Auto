@@ -18216,7 +18216,7 @@ function whStartCamera() {
     if ('BarcodeDetector' in window && !_whBarcodeDetector) {
         try { _whBarcodeDetector = new BarcodeDetector({ formats: ['qr_code'] }); } catch(e) {}
     }
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 } } })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } })
         .then(stream => {
             _whCameraStream = stream;
             video.srcObject = stream;
@@ -18266,7 +18266,7 @@ async function whScanLoop() {
         if (code?.data) { whHandleQR(code.data); return; }
     }
 
-    _whRafId = setTimeout(whScanLoop, 250);
+    _whRafId = setTimeout(whScanLoop, 150);
 }
 
 async function whHandleQR(data) {
@@ -18312,7 +18312,7 @@ async function whHandleQR(data) {
     } else if (_whScanState === 'stk_scanning') {
         const m = data.match(/[?&]item=([^&]+)/);
         if (m) await _stkHandlePartScan(m[1]);
-        _whRafId = setTimeout(whScanLoop, 300);
+        _whRafId = setTimeout(whScanLoop, 120);
     }
 }
 
