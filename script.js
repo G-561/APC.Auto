@@ -6066,7 +6066,7 @@ function openLabelPrintTab(item) {
         else if (qrImg) qrSrc = qrImg.src;
         document.body.removeChild(qrTemp);
 
-        const qrHtml = qrSrc ? `<img src="${qrSrc}" style="width:38mm;height:38mm;display:block;" />` : '';
+        const qrHtml = qrSrc ? `<div class="sell-qr-box"><img src="${qrSrc}" /></div>` : '';
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>APC Label — ${apcId}</title>
 <style>${LABEL_PRINT_CSS}</style>
@@ -6102,8 +6102,8 @@ const LABEL_PRINT_CSS = `
   .sell-row .val { font-weight: 700; }
   .sell-row .val-strong { font-weight: 900; }
   .sell-right { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 1.5mm; }
-  .sell-qr-slot { width: 38mm; height: 38mm; }
-  .sell-qr-slot canvas, .sell-qr-slot img { display: block; width: 38mm !important; height: 38mm !important; }
+  .sell-qr-box { width: 38mm; padding: 3mm; background: #fff; }
+  .sell-qr-box img, .sell-qr-box .sell-qr-slot, .sell-qr-box canvas { display: block; width: 100% !important; height: auto !important; }
   .sell-qr-id { font-size: 3.6mm; font-weight: 900; color: #111; text-align: center; word-break: break-all; width: 38mm; }
   @media print { @page { size: 100mm 62mm; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 `;
@@ -6151,7 +6151,7 @@ function printEdwLabelsBatch(items) {
     const headerText = escapeHtml(brandRaw);
     const labelsHtml = items.map(item => {
         const code = item.apcId || ('APC-' + item.id); // QR = APC ID (sparse, scans easily)
-        return _buildSellLabelMarkup(item, headerText, brandFontMm, `<div class="sell-qr-slot" data-qr="${escapeHtml(code)}"></div>`);
+        return _buildSellLabelMarkup(item, headerText, brandFontMm, `<div class="sell-qr-box"><div class="sell-qr-slot" data-qr="${escapeHtml(code)}"></div></div>`);
     }).join('\n');
     const win = window.open('', '_blank');
     if (!win) { showToast('Allow pop-ups to print labels'); return; }
