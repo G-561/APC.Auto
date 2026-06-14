@@ -5224,18 +5224,17 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     z-index: 3001;
 }
 .pro-hdr-inner {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     height: 100%;
     padding: 0 28px;
-    gap: 0;
 }
 .pro-hdr-left {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-shrink: 0;
-    margin-right: 28px;
+    justify-self: start;
 }
 .pro-hdr-brand {
     display: flex;
@@ -5271,9 +5270,10 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .pro-hdr-nav {
     display: flex;
     align-items: center;
-    gap: 2px;
-    flex: 1;
+    gap: 8px;
+    justify-self: center;
 }
+.pro-hdr-settings { justify-self: end; }
 .pro-hdr-link {
     display: flex;
     align-items: center;
