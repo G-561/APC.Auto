@@ -13779,18 +13779,15 @@ async function _edwSaveVehicle(jobId) {
 }
 
 // When a stock card's stock number is added/changed after parts were published,
-// re-derive each linked part's stock_number (STOCK-001, -002 … by creation order).
+// stamp the shared vehicle stock number onto every linked part (the APC ID is the
+// unique per-part id; the stock number identifies the donor vehicle).
 async function _backfillJobStockNumbers(jobId, stockNumber) {
     if (!sb || !currentUserId || !jobId) return 0;
     const { data: parts } = await sb.from('listings')
-        .select('id').eq('dismantling_job_id', jobId).eq('seller_id', currentUserId).order('id');
+        .select('id').eq('dismantling_job_id', jobId).eq('seller_id', currentUserId);
     if (!parts || !parts.length) return 0;
-    let seq = 1;
-    for (const p of parts) {
-        const sn = stockNumber ? `${stockNumber}-${String(seq).padStart(3, '0')}` : null;
-        await sb.from('listings').update({ stock_number: sn }).eq('id', p.id).eq('seller_id', currentUserId);
-        seq++;
-    }
+    await sb.from('listings').update({ stock_number: stockNumber || null })
+        .eq('dismantling_job_id', jobId).eq('seller_id', currentUserId);
     await loadUserListingsFromSupabase(currentUserId);
     return parts.length;
 }
@@ -14542,7 +14539,6 @@ async function _edwPublish() {
 
     const labelItems = [];
     let published = 0;
-    let partSeq = 1;
     for (const [key, item] of items) {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone  = EDW_TAXONOMY[zI];
@@ -14551,7 +14547,7 @@ async function _edwPublish() {
         const title = `${part} to suit ${vehicleTitle}`;
         const price = item.price ? Number(item.price) : 0;
         const apcId = generateApcId();
-        const stockNo = v.stockNumber ? `${v.stockNumber}-${String(partSeq).padStart(3, '0')}` : null;
+        const stockNo = v.stockNumber || null;
 
         const { data: listing } = await sb.from('listings').insert({
             seller_id: currentUserId,
@@ -14610,7 +14606,6 @@ async function _edwPublish() {
                 year: v.year, stockNumber: stockNo, warehouseBin: null,
             });
             published++;
-            partSeq++;
         }
     }
 
@@ -15736,7 +15731,7 @@ async function _jrPublish(jobId) {
             category, condition: condMap[item.grade] || 'good',
             status: 'active', description: item.notes || `${gradeLabelJR[item.grade] || 'Used'} condition ${item.part_name} removed from a ${vehicleTitle}. Contact us for more details.`,
             fits_year: Number(job.year), chassis_vin: job.vin || null,
-            stock_number: job.stock_number ? `${job.stock_number}-${String(published + 1).padStart(3,'0')}` : null,
+            stock_number: job.stock_number || null,
             location: userSettings.location || null,
             postcode: userSettings.postcode || null,
             dismantling_job_id: jobId || null,
