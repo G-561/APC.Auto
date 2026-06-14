@@ -2944,20 +2944,53 @@ header {
     background: transparent;
     font-family: inherit;
 }
-.loc-suburb-select {
+.loc-suburb-box {
     flex: 1;
     min-width: 120px;
     max-width: 280px;
+    position: relative;
+}
+.loc-suburb-input {
+    width: 100%;
     border: 1px solid #e5e5e5;
     border-radius: 8px;
-    padding: 4px 28px 4px 8px;
+    padding: 5px 8px;
     font-size: 13px;
     color: #333;
     background: #fafafa;
     outline: none;
     font-family: inherit;
-    cursor: pointer;
+    box-sizing: border-box;
 }
+.loc-suburb-input:focus { border-color: var(--apc-orange); background: #fff; }
+.loc-suburb-dd {
+    position: absolute;
+    top: calc(100% + 3px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 60;
+}
+.loc-dd-opt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #333;
+    cursor: pointer;
+    border-bottom: 1px solid #f2f2f2;
+}
+.loc-dd-opt:last-child { border-bottom: none; }
+.loc-dd-opt:hover { background: #fff4ec; }
+.loc-dd-pc { color: #999; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.loc-dd-empty { padding: 10px 12px; font-size: 13px; color: #999; }
 /* Grid-mode variant — sell form, sign-up, workshop, workshop locator */
 /* Two columns side by side: postcode left (88px), suburb select fills right */
 .location-picker-wrap[data-mode="sell"],
@@ -2984,19 +3017,20 @@ header {
     background: #fff;
     box-sizing: border-box;
 }
-.location-picker-wrap[data-mode="sell"] .loc-suburb-select,
-.location-picker-wrap[data-mode="signup"] .loc-suburb-select,
-.location-picker-wrap[data-mode="workshop"] .loc-suburb-select,
-.location-picker-wrap[data-mode="ws-locator"] .loc-suburb-select {
-    display: block !important;
+.location-picker-wrap[data-mode="sell"] .loc-suburb-box,
+.location-picker-wrap[data-mode="signup"] .loc-suburb-box,
+.location-picker-wrap[data-mode="workshop"] .loc-suburb-box,
+.location-picker-wrap[data-mode="ws-locator"] .loc-suburb-box {
     max-width: 100%;
     width: 100%;
+}
+.location-picker-wrap[data-mode="sell"] .loc-suburb-input,
+.location-picker-wrap[data-mode="signup"] .loc-suburb-input,
+.location-picker-wrap[data-mode="workshop"] .loc-suburb-input,
+.location-picker-wrap[data-mode="ws-locator"] .loc-suburb-input {
     padding: 10px 12px;
     font-size: 14px;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
     background: #fff;
-    box-sizing: border-box;
 }
 /* Workshop locator postcode row — sits between search and radius control */
 .ws-locator-postcode-row {

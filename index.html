@@ -1301,7 +1301,7 @@
                 <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
                 <div class="location-picker-wrap" data-mode="signup">
                     <input class="loc-postcode-input" id="authPostcodePersonal" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                    <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                    <div class="loc-suburb-box"><input class="loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                 </div>
             </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPersonal" placeholder="you@example.com"></div>
@@ -1324,7 +1324,7 @@
                 <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
                 <div class="location-picker-wrap" data-mode="signup">
                     <input class="loc-postcode-input" id="authPostcodePro" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                    <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                    <div class="loc-suburb-box"><input class="loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                 </div>
             </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailPro" placeholder="you@example.com"></div>
@@ -1361,7 +1361,7 @@
                 <label>Postcode <span style="font-weight:400;color:#aaa;font-size:11px;">optional — helps show local listings</span></label>
                 <div class="location-picker-wrap" data-mode="signup">
                     <input class="loc-postcode-input" id="authPostcodeTrade" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                    <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                    <div class="loc-suburb-box"><input class="loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                 </div>
             </div>
             <div class="input-group" style="margin-bottom:12px;"><label>Email</label><input type="email" id="authEmailTrade" placeholder="you@example.com"></div>
@@ -1449,7 +1449,7 @@
                         <label>Location</label>
                         <div class="location-picker-wrap" data-mode="sell">
                             <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                            <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                            <div class="loc-suburb-box"><input class="loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                         </div>
                     </div>
                     <input type="hidden" id="sellPostcode">
@@ -1638,7 +1638,7 @@
                     <span class="settings-row-label">Location</span>
                     <div class="location-picker-wrap">
                         <input class="settings-inline-input loc-postcode-input" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                        <select class="settings-inline-input loc-suburb-select" style="display:none" onchange="onSuburbSelect(this)"></select>
+                        <div class="loc-suburb-box"><input class="settings-inline-input loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                         <div class="location-chip" style="display:none">
                             <span class="location-chip-text"></span>
                             <button class="location-chip-clear" onclick="clearLocationPicker(this.closest('.location-picker-wrap'))" title="Clear">×</button>
@@ -2002,7 +2002,7 @@
                 <div class="ws-locator-postcode-row">
                     <div class="location-picker-wrap" data-mode="ws-locator">
                         <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                        <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                        <div class="loc-suburb-box"><input class="loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                     </div>
                 </div>
                 <div class="radius-seg-control ws-radius-control" id="workshopRadiusControl">
@@ -2120,7 +2120,7 @@
                     <label>Suburb, State</label>
                     <div class="location-picker-wrap" data-mode="workshop">
                         <input class="loc-postcode-input" type="text" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="Postcode" oninput="onPostcodeInput(this)">
-                        <select class="loc-suburb-select" onchange="onSuburbSelect(this)"><option value="">Suburb, State</option></select>
+                        <div class="loc-suburb-box"><input class="loc-suburb-input" type="text" autocomplete="off" placeholder="Suburb" oninput="onSuburbInput(this)" onblur="onSuburbBlur(this)"><div class="loc-suburb-dd" style="display:none;"></div></div>
                     </div>
                 </div>
                 <div class="input-group">
