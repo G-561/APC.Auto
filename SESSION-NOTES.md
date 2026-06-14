@@ -139,6 +139,16 @@ location.reload();
 
 ## Sessions completed
 
+### 14–15 June 2026 — Stocktake mode, QR scanning fixes, suburb search, dashboard polish
+
+- **Stocktake mode** (commit a3eef8a) — Put-Away / Stocktake switch on the mobile scanner. Scan a rack → expected checklist (active/pending parts in that bin) + live found/total tally → scan each part to tick off → **Finish** reports MISSING (expected, not scanned) vs MISFILED (scanned, assigned elsewhere) with a one-tap **"Move N to <rack>"** bulk reassign. Mobile-only (scan-info hidden on desktop). Functions: `whSetScanMode`, `whStkReset`, `_stkLoadExpected`, `_stkHandlePartScan`, `_stkRenderChecklist`, `whStkFinish`, `whStkMoveExtras`.
+- **Part-label QR scanning — fixed** (the big one this session). Three changes: QR encodes just the **APC ID** (not the full URL → sparser code); rendered at **560px** (was 300 → was printing fuzzy); wrapped in a **3mm white quiet zone** (QR 38→32mm). The quiet zone was the fix — symptom was "only scans when turned 90°" because the detail text beside the QR fouled the decoder's horizontal scan lines. Scanner now reads **APC IDs only** (`_whPartRef` / `_whFetchPart` by `apc_id`; legacy `?item=` URL path dropped). Camera bumped to 1920×1080; scan loop sped up.
+- **Stock number shared per vehicle** (commit 57c6863) — dropped the `-00N` per-part suffix; all parts off a car share e.g. `2606-01` (the APC ID is the unique per-part id). Fix existing parts by re-saving the stock card. Changed in `_edwPublish`, `_jrPublish`, `_backfillJobStockNumbers`.
+- **Pro dashboard:** Stock # column on My Listings active tab (f1a3325); header nav **centred** via 3-zone grid `1fr auto 1fr` — brand left / nav centre / Settings right (f21b191).
+- **Searchable suburb picker** (af7ee17) — type a suburb OR postcode; same-name suburbs (Greenacres SA vs NSW) listed separately with their postcode; picking auto-fills the postcode; compulsory pick (stray text clears on blur). Replaced the `<select>` with an autocomplete input across all 7 pickers (signup×3 / sell / settings / workshop / ws-locator). **Still to fully test on signup + sell.**
+- Put-away scanner: removed the manual **Capture** button; made **"Scan another part"** a big tap target.
+- **Cache-buster:** the `?v=` on script.js/style.css existed but was never bumped — that was the cause of all the "hard-refresh needed" pain. Now **bumped every push** (currently `script.js?v=143`, `style.css?v=77`).
+
 ### 13 June 2026 — Label system rework, Warehouse Lookup, EDW batch labels, stock-number back-fill
 
 > Note: much Supabase-era work between Session 10 and here is unlogged in this file (app is now FULLY LIVE on Supabase — UUID migration, audits, EDW, etc.). Full timeline lives in Claude memory `project_session_state.md`.
@@ -226,10 +236,14 @@ location.reload();
 
 ## What's next
 
-**▶ Immediate — resume 13 June 2026 (Gary testing tonight, catch up tomorrow):**
-1. **Stocktake / audit mode** (NEXT BUILD) — scan/pick a rack → show the EXPECTED list (listings with that `warehouse_bin`) → scan each part physically present to tick it off → report MISSING (expected, not scanned) vs MISFILED (scanned, assigned elsewhere). Mobile-first (walking the racks); build around the put-away scanner (`whScanLoop` / `whHandleQR`) + the Lookup query. Foundation already built (Location lookup, find-a-part, cleanup queues).
-2. **Mirror EDW batch labels to `_jrPublish`** (worker-job review screen — same per-part toggles).
-3. Mobile at-the-rack Lookup; relocate/move a part to a new bin; surface bin on a sale ("Sold → R1.B2, go pick it"); optional `?v=` cache-buster on script.js (Gary tests on live and gets bitten by browser cache — hard-refresh needed each push).
+**▶ Immediate — resume 15 June 2026 (pick one):**
+1. **Relocate / move** — last core warehouse roadmap item. Scan part, scan new rack → reassign bin (≈ put-away framed as a move).
+2. **Square scan target** — Gary asked for it: a centred square aiming guide on the scanner camera. NOTE it's an *aiming* aid only — the decoder reads the whole frame, not just the target — so it helps the user, not the algorithm.
+3. **Production cleanup** (destructive — needs Gary's explicit go + scope). (a) Wipe his test listings/vehicles/dismantling_jobs/offers/conversations in Supabase — give him FK-ordered SQL to run, don't auto-delete; (b) demo/mock data in `script.js`; (c) repo junk (stray `C:tempdb_*.txt`, loose test images). Confirm: just his account or full reset.
+4. **Mirror EDW batch labels to `_jrPublish`** (worker-job review screen).
+5. Gary's **systematic workflow testing** run — fix what surfaces. Also: finish testing the new **suburb picker** on signup + sell.
+
+Cache: the `?v=` is now bumped every push, so a normal reload delivers changes (script.js?v=143, style.css?v=77).
 
 **Older backlog (from Session 10, mostly historical):**
 1. **Message centre — polish** — delete entire conversation, unread/read toggle, empty state when no conversations.
