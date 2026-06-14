@@ -6057,7 +6057,7 @@ function openLabelPrintTab(item) {
     const qrTemp = document.createElement('div');
     qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(qrTemp);
-    if (window.QRCode) new QRCode(qrTemp, { text: qrText, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
+    if (window.QRCode) new QRCode(qrTemp, { text: qrText, width: 560, height: 560, correctLevel: QRCode.CorrectLevel.M });
 
     setTimeout(() => {
         const qrImg = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
@@ -6161,7 +6161,7 @@ function printEdwLabelsBatch(items) {
 </head><body>
 ${labelsHtml}
 <script>
-  document.querySelectorAll('.sell-qr-slot').forEach(el => { new QRCode(el, { text: el.getAttribute('data-qr'), width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M }); });
+  document.querySelectorAll('.sell-qr-slot').forEach(el => { new QRCode(el, { text: el.getAttribute('data-qr'), width: 560, height: 560, correctLevel: QRCode.CorrectLevel.M }); });
   setTimeout(() => window.print(), 700);
 <\/script></body></html>`);
     win.document.close();
