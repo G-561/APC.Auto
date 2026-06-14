@@ -18264,20 +18264,14 @@ async function whScanLoop() {
     _whRafId = setTimeout(whScanLoop, 150);
 }
 
-// A part QR is either the bare APC ID (new labels — sparse, scans easily) or a
-// legacy listing URL (?item=ID). Rack-location codes match neither.
+// Part labels encode just the APC ID (e.g. APC1340324429). Rack codes never start with APC.
 function _whPartRef(data) {
-    const m = (data || '').match(/[?&]item=([^&]+)/);
-    if (m) return { by: 'id', val: m[1] };
     const t = (data || '').trim();
-    if (/^APC[-\d]/i.test(t)) return { by: 'apc', val: t };
-    return null;
+    return /^APC[-\d]/i.test(t) ? t : null;
 }
-async function _whFetchPart(ref, cols) {
-    if (!sb || !currentUserId || !ref) return null;
-    let q = sb.from('listings').select(cols).eq('seller_id', currentUserId);
-    q = ref.by === 'apc' ? q.eq('apc_id', ref.val) : q.eq('id', ref.val);
-    const { data } = await q.single();
+async function _whFetchPart(apcId, cols) {
+    if (!sb || !currentUserId || !apcId) return null;
+    const { data } = await sb.from('listings').select(cols).eq('seller_id', currentUserId).eq('apc_id', apcId).single();
     return data;
 }
 
@@ -18456,12 +18450,11 @@ function _stkRenderChecklist() {
     _stkRenderExtras();
 }
 
-async function _stkHandlePartScan(ref) {
-    const key = ref.by + ':' + ref.val;
+async function _stkHandlePartScan(apcId) {
     const now = Date.now();
-    if (key === _stkLastId && now - _stkLastTime < 2500) return; // debounce repeats
-    _stkLastId = key; _stkLastTime = now;
-    const match = (e) => ref.by === 'apc' ? String(e.apcId) === String(ref.val) : String(e.id) === String(ref.val);
+    if (apcId === _stkLastId && now - _stkLastTime < 2500) return; // debounce repeats
+    _stkLastId = apcId; _stkLastTime = now;
+    const match = (e) => String(e.apcId) === String(apcId);
     const item = _stkExpected.find(match);
     if (item) {
         if (!item.scanned) { item.scanned = true; if (navigator.vibrate) navigator.vibrate(40); whSetStatus(`✓ ${item.title}`); }
@@ -18469,7 +18462,7 @@ async function _stkHandlePartScan(ref) {
         return;
     }
     if (_stkExtras.find(match)) return;
-    const row = await _whFetchPart(ref, 'id, title, apc_id, status, warehouse_bin');
+    const row = await _whFetchPart(apcId, 'id, title, apc_id, status, warehouse_bin');
     if (!row) { whSetStatus('Part not found or not yours'); return; }
     _stkExtras.push({ id: row.id, title: row.title, apcId: row.apc_id, status: row.status, bin: row.warehouse_bin || '' });
     if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
