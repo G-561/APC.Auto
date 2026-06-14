@@ -18211,37 +18211,6 @@ async function whScanLoop() {
     _whRafId = setTimeout(whScanLoop, 250);
 }
 
-async function whCaptureNow() {
-    if (!_whCameraStream || _whScanState === 'idle' || _whScanState === 'saved') return;
-    const video = document.getElementById('whCameraVideo');
-    if (!video || !video.videoWidth) { whSetStatus('Camera not ready — try again'); return; }
-
-    if (_whBarcodeDetector) {
-        try {
-            const results = await _whBarcodeDetector.detect(video);
-            if (results.length) {
-                clearTimeout(_whRafId); _whRafId = null;
-                whHandleQR(results[0].rawValue); return;
-            }
-        } catch(e) {}
-    }
-
-    const canvas = document.getElementById('whCameraCanvas');
-    if (!canvas) return;
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = (typeof jsQR !== 'undefined') && jsQR(img.data, img.width, img.height, { inversionAttempts: 'attemptBoth' });
-    if (code?.data) {
-        clearTimeout(_whRafId); _whRafId = null;
-        whHandleQR(code.data);
-    } else {
-        whSetStatus('No QR code found — hold steady and try again');
-    }
-}
-
 async function whHandleQR(data) {
     if (_whScanState === 'scan_part') {
         // Part labels encode the listing URL: ?item=ID
@@ -18298,11 +18267,9 @@ function whShowRackCard() {
     const card       = document.getElementById('whRackCard');
     const codeEl     = document.getElementById('whRackCode');
     const saveBtn    = document.getElementById('whSaveBtn');
-    const captureBtn = document.getElementById('whCaptureBtn');
     if (codeEl)      codeEl.textContent       = _whScannedRack;
     if (card)        card.style.display       = 'flex';
     if (saveBtn)     saveBtn.style.display    = '';
-    if (captureBtn)  captureBtn.style.display = 'none';
 }
 
 async function whSaveLocation() {
@@ -18333,13 +18300,11 @@ function whResetScan() {
     const saveBtn    = document.getElementById('whSaveBtn');
     const resetBtn   = document.getElementById('whResetBtn');
     const hint       = document.getElementById('whScanHint');
-    const captureBtn = document.getElementById('whCaptureBtn');
     if (partCard)   { partCard.style.display   = 'none'; }
     if (rackCard)   { rackCard.style.display   = 'none'; }
     if (saveBtn)    { saveBtn.style.display    = 'none'; saveBtn.textContent = 'Save Location'; }
     if (resetBtn)   { resetBtn.style.display   = 'none'; }
     if (hint)       { hint.style.display       = ''; }
-    if (captureBtn) { captureBtn.style.display = ''; }
     whSetStatus('Point camera at a part label');
     whScanLoop();
 }
