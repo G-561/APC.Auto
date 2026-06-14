@@ -8194,7 +8194,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-result-title { font-size: 14px; font-weight: 800; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wh-result-meta { font-size: 11px; color: #888; margin-top: 2px; }
 .wh-result-check { font-size: 18px; color: #22c55e; flex-shrink: 0; }
-.wh-ghost-btn { background: none; border: none; color: var(--apc-orange); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 0; text-align: left; }
+.wh-ghost-btn { display: block; width: 100%; margin-top: 20px; background: rgba(240,112,32,0.08); border: 1.5px solid var(--apc-orange); border-radius: 10px; color: var(--apc-orange); font-size: 16px; font-weight: 800; cursor: pointer; padding: 16px; text-align: center; -webkit-tap-highlight-color: transparent; }
+.wh-ghost-btn:active { background: rgba(240,112,32,0.16); }
 .wh-scan-hint { font-size: 11px; color: #bbb; line-height: 1.5; text-align: center; padding: 4px 0; }
 
 @media (min-width: 900px) {
