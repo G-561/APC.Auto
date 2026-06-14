@@ -6050,16 +6050,14 @@ function openLabelPrintTab(item) {
     const brandRaw = bizName || 'AUTO PARTS CONNECTION';
     const brandFontMm = fitLabelTextMm(brandRaw);
     const headerText = escapeHtml(brandRaw);
-    const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
-        ? 'https://autopartsconnection.com.au/'
-        : `${location.origin}${location.pathname}`;
-    const listingUrl = `${baseUrl}?item=${item.supabaseId || item.id}`;
+    // QR encodes just the APC ID (sparse → easy to scan); the scanner resolves it.
+    const qrText = item.apcId || ('APC-' + item.id);
 
     // Generate QR in a hidden temp element, grab the data URL, then open print tab
     const qrTemp = document.createElement('div');
     qrTemp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
     document.body.appendChild(qrTemp);
-    if (window.QRCode) new QRCode(qrTemp, { text: listingUrl, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
+    if (window.QRCode) new QRCode(qrTemp, { text: qrText, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
 
     setTimeout(() => {
         const qrImg = qrTemp.querySelector('canvas') || qrTemp.querySelector('img');
@@ -6151,12 +6149,9 @@ function printEdwLabelsBatch(items) {
     const brandRaw = bizName || 'AUTO PARTS CONNECTION';
     const brandFontMm = fitLabelTextMm(brandRaw);
     const headerText = escapeHtml(brandRaw);
-    const baseUrl = (location.protocol === 'file:' || location.hostname === 'localhost')
-        ? 'https://autopartsconnection.com.au/'
-        : `${location.origin}${location.pathname}`;
     const labelsHtml = items.map(item => {
-        const url = `${baseUrl}?item=${item.supabaseId || item.id}`;
-        return _buildSellLabelMarkup(item, headerText, brandFontMm, `<div class="sell-qr-slot" data-qr="${escapeHtml(url)}"></div>`);
+        const code = item.apcId || ('APC-' + item.id); // QR = APC ID (sparse, scans easily)
+        return _buildSellLabelMarkup(item, headerText, brandFontMm, `<div class="sell-qr-slot" data-qr="${escapeHtml(code)}"></div>`);
     }).join('\n');
     const win = window.open('', '_blank');
     if (!win) { showToast('Allow pop-ups to print labels'); return; }
@@ -18269,21 +18264,30 @@ async function whScanLoop() {
     _whRafId = setTimeout(whScanLoop, 150);
 }
 
+// A part QR is either the bare APC ID (new labels — sparse, scans easily) or a
+// legacy listing URL (?item=ID). Rack-location codes match neither.
+function _whPartRef(data) {
+    const m = (data || '').match(/[?&]item=([^&]+)/);
+    if (m) return { by: 'id', val: m[1] };
+    const t = (data || '').trim();
+    if (/^APC[-\d]/i.test(t)) return { by: 'apc', val: t };
+    return null;
+}
+async function _whFetchPart(ref, cols) {
+    if (!sb || !currentUserId || !ref) return null;
+    let q = sb.from('listings').select(cols).eq('seller_id', currentUserId);
+    q = ref.by === 'apc' ? q.eq('apc_id', ref.val) : q.eq('id', ref.val);
+    const { data } = await q.single();
+    return data;
+}
+
 async function whHandleQR(data) {
     if (_whScanState === 'scan_part') {
-        // Part labels encode the listing URL: ?item=ID
-        const match = data.match(/[?&]item=([^&]+)/);
-        if (!match) {
-            // Not a listing URL — ignore and keep scanning
-            _whRafId = requestAnimationFrame(whScanLoop);
-            return;
-        }
-        const listingId = match[1];
+        const ref = _whPartRef(data);
+        if (!ref) { _whRafId = requestAnimationFrame(whScanLoop); return; }
         whSetStatus('Fetching part…');
         if (!sb) { showToast('Not signed in'); return; }
-        const { data: row } = await sb.from('listings')
-            .select('id, title, apc_id, listing_images(storage_path, position), listing_vehicles(make, model)')
-            .eq('id', listingId).eq('seller_id', currentUserId).single();
+        const row = await _whFetchPart(ref, 'id, title, apc_id, listing_images(storage_path, position), listing_vehicles(make, model)');
         if (!row) { whSetStatus('Part not found or not yours — try again'); _whRafId = requestAnimationFrame(whScanLoop); return; }
         const thumb  = (row.listing_images || []).sort((a,b) => a.position - b.position)[0]?.storage_path || '';
         const v      = (row.listing_vehicles || [])[0];
@@ -18294,15 +18298,15 @@ async function whHandleQR(data) {
         whSetStatus('Now scan the rack location label');
         _whRafId = requestAnimationFrame(whScanLoop);
     } else if (_whScanState === 'scan_rack') {
-        // Any non-listing-URL QR = rack location
-        if (data.match(/[?&]item=/)) { _whRafId = requestAnimationFrame(whScanLoop); return; }
+        // Any QR that isn't a part = rack location
+        if (_whPartRef(data)) { _whRafId = requestAnimationFrame(whScanLoop); return; }
         _whScannedRack = data.trim();
         whShowRackCard();
         _whScanState = 'saved';
         whSetStatus('Ready to save');
     } else if (_whScanState === 'stk_rack') {
         // Stocktake: first scan the rack to load its expected list.
-        if (data.match(/[?&]item=/)) { _whRafId = setTimeout(whScanLoop, 250); return; }
+        if (_whPartRef(data)) { _whRafId = setTimeout(whScanLoop, 250); return; }
         _stkRack = data.trim();
         whSetStatus('Loading expected list…');
         await _stkLoadExpected();
@@ -18310,8 +18314,8 @@ async function whHandleQR(data) {
         whSetStatus('Scan each part on the shelf');
         _whRafId = setTimeout(whScanLoop, 400);
     } else if (_whScanState === 'stk_scanning') {
-        const m = data.match(/[?&]item=([^&]+)/);
-        if (m) await _stkHandlePartScan(m[1]);
+        const ref = _whPartRef(data);
+        if (ref) await _stkHandlePartScan(ref);
         _whRafId = setTimeout(whScanLoop, 120);
     }
 }
@@ -18452,20 +18456,20 @@ function _stkRenderChecklist() {
     _stkRenderExtras();
 }
 
-async function _stkHandlePartScan(id) {
+async function _stkHandlePartScan(ref) {
+    const key = ref.by + ':' + ref.val;
     const now = Date.now();
-    if (String(id) === String(_stkLastId) && now - _stkLastTime < 2500) return; // debounce repeats
-    _stkLastId = id; _stkLastTime = now;
-    const item = _stkExpected.find(e => String(e.id) === String(id));
+    if (key === _stkLastId && now - _stkLastTime < 2500) return; // debounce repeats
+    _stkLastId = key; _stkLastTime = now;
+    const match = (e) => ref.by === 'apc' ? String(e.apcId) === String(ref.val) : String(e.id) === String(ref.val);
+    const item = _stkExpected.find(match);
     if (item) {
         if (!item.scanned) { item.scanned = true; if (navigator.vibrate) navigator.vibrate(40); whSetStatus(`✓ ${item.title}`); }
         _stkRenderChecklist();
         return;
     }
-    if (_stkExtras.find(e => String(e.id) === String(id))) return;
-    const { data: row } = await sb.from('listings')
-        .select('id, title, apc_id, status, warehouse_bin')
-        .eq('id', id).eq('seller_id', currentUserId).single();
+    if (_stkExtras.find(match)) return;
+    const row = await _whFetchPart(ref, 'id, title, apc_id, status, warehouse_bin');
     if (!row) { whSetStatus('Part not found or not yours'); return; }
     _stkExtras.push({ id: row.id, title: row.title, apcId: row.apc_id, status: row.status, bin: row.warehouse_bin || '' });
     if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
