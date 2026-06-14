@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=76">
+    <link rel="stylesheet" href="style.css?v=77">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -501,25 +501,45 @@
                 <div class="wh-scan-status-bar" id="whScanStatus">Point camera at a part label</div>
             </div>
             <div class="wh-scan-info">
-                <div id="whPartCard" class="wh-result-card" style="display:none;">
-                    <div id="whPartThumb" class="wh-result-thumb"></div>
-                    <div class="wh-result-body">
-                        <div class="wh-result-title" id="whPartTitle"></div>
-                        <div class="wh-result-meta" id="whPartMeta"></div>
-                    </div>
-                    <div class="wh-result-check">✓</div>
+                <div class="wh-scan-modes">
+                    <button id="whModePutaway" class="wh-scan-mode wh-scan-mode--active" onclick="whSetScanMode('putaway')">📥 Put-Away</button>
+                    <button id="whModeStocktake" class="wh-scan-mode" onclick="whSetScanMode('stocktake')">📋 Stocktake</button>
                 </div>
-                <div id="whRackCard" class="wh-result-card wh-result-card--rack" style="display:none;">
-                    <div class="wh-result-thumb wh-result-thumb--rack">📍</div>
-                    <div class="wh-result-body">
-                        <div class="wh-result-title" id="whRackCode"></div>
-                        <div class="wh-result-meta">Rack location scanned</div>
+                <div id="whPutawayUi" class="wh-scan-stack">
+                    <div id="whPartCard" class="wh-result-card" style="display:none;">
+                        <div id="whPartThumb" class="wh-result-thumb"></div>
+                        <div class="wh-result-body">
+                            <div class="wh-result-title" id="whPartTitle"></div>
+                            <div class="wh-result-meta" id="whPartMeta"></div>
+                        </div>
+                        <div class="wh-result-check">✓</div>
                     </div>
-                    <div class="wh-result-check">✓</div>
+                    <div id="whRackCard" class="wh-result-card wh-result-card--rack" style="display:none;">
+                        <div class="wh-result-thumb wh-result-thumb--rack">📍</div>
+                        <div class="wh-result-body">
+                            <div class="wh-result-title" id="whRackCode"></div>
+                            <div class="wh-result-meta">Rack location scanned</div>
+                        </div>
+                        <div class="wh-result-check">✓</div>
+                    </div>
+                    <button id="whSaveBtn" class="btn-full-action" style="display:none; margin:12px 15px 4px;" onclick="whSaveLocation()">Save Location</button>
+                    <button id="whResetBtn" class="wh-ghost-btn" style="display:none;" onclick="whResetScan()">Scan another part →</button>
+                    <div id="whScanHint" class="wh-scan-hint">Scan the QR code on a part label first, then scan the rack location label.</div>
                 </div>
-                <button id="whSaveBtn" class="btn-full-action" style="display:none; margin:12px 15px 4px;" onclick="whSaveLocation()">Save Location</button>
-                <button id="whResetBtn" class="wh-ghost-btn" style="display:none;" onclick="whResetScan()">Scan another part →</button>
-                <div id="whScanHint" class="wh-scan-hint">Scan the QR code on a part label first, then scan the rack location label.</div>
+                <div id="whStkPanel" style="display:none;">
+                    <div id="whStkRackBar" class="wh-stk-rackbar" style="display:none;"></div>
+                    <div id="whStkHint" class="wh-scan-hint">Scan a rack label to start the stocktake.</div>
+                    <div id="whStkList" class="wh-stk-list"></div>
+                    <div id="whStkExtrasWrap" style="display:none;">
+                        <div class="wh-stk-section-label">On the shelf · not assigned to this rack</div>
+                        <div id="whStkExtras" class="wh-stk-list"></div>
+                        <button id="whStkMoveBtn" class="wh-stk-move-btn" style="display:none;" onclick="whStkMoveExtras()"></button>
+                    </div>
+                    <div id="whStkActions" style="display:none;">
+                        <button class="btn-full-action" style="margin:12px 15px 4px;" onclick="whStkFinish()">Finish Stocktake</button>
+                        <button class="wh-ghost-btn" onclick="whStkReset()">Restart</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3019,7 +3039,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=137"></script>
+<script src="script.js?v=138"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

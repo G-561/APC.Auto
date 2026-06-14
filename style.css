@@ -8233,6 +8233,31 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-ghost-btn:active { background: rgba(240,112,32,0.16); }
 .wh-scan-hint { font-size: 11px; color: #bbb; line-height: 1.5; text-align: center; padding: 4px 0; }
 
+/* Scanner mode switch + stocktake */
+.wh-scan-stack { display: flex; flex-direction: column; gap: 8px; }
+.wh-scan-modes { display: flex; gap: 6px; }
+.wh-scan-mode { flex: 1; background: #f0f0f0; border: none; color: #888; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 8px; cursor: pointer; }
+.wh-scan-mode--active { background: var(--apc-orange); color: #fff; }
+.wh-stk-rackbar { display: flex; align-items: center; gap: 8px; background: #fff4ec; border: 1px solid #ffd9bf; color: #9a5b16; font-size: 14px; font-weight: 700; padding: 10px 14px; border-radius: 10px; }
+.wh-stk-rackbar strong { color: #1a1a2e; }
+.wh-stk-tally { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--apc-orange); }
+.wh-stk-list { display: flex; flex-direction: column; }
+.wh-stk-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid #f2f2f2; }
+.wh-stk-row:first-child { border-top: none; }
+.wh-stk-check { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; color: #ccc; }
+.wh-stk-row.is-found .wh-stk-check { color: #22c55e; }
+.wh-stk-row.is-found .wh-stk-row-title { color: #999; text-decoration: line-through; }
+.wh-stk-row.is-missing .wh-stk-check { color: #ef4444; }
+.wh-stk-row.is-extra .wh-stk-check { color: #f59e0b; }
+.wh-stk-row-main { flex: 1; min-width: 0; }
+.wh-stk-row-title { font-size: 13px; font-weight: 700; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wh-stk-row-meta { font-size: 11px; color: #999; margin-top: 1px; }
+.wh-stk-section-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; color: #999; padding: 10px 2px 4px; }
+.wh-stk-stat { font-size: 13px; color: #555; padding: 10px 12px; background: #f8f8f8; border-radius: 8px; }
+.wh-stk-stat strong { color: #1a1a2e; }
+.wh-stk-move-btn { display: block; width: 100%; margin-top: 8px; background: #fff; border: 1.5px solid var(--apc-orange); color: var(--apc-orange); font-size: 13px; font-weight: 800; padding: 11px; border-radius: 8px; cursor: pointer; }
+.wh-stk-move-btn:active { background: #fff4ec; }
+
 @media (min-width: 900px) {
     #warehouseDrawer { left: calc(max(0px, 50vw - 800px) + 240px) !important; right: calc(max(0px, 50vw - 800px) + 220px) !important; width: auto !important; height: auto !important; bottom: 16px !important; border-radius: 16px !important; box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important; border: none !important; overflow: hidden; }
     .wh-camera-wrap { display: none !important; }

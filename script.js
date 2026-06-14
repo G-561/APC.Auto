@@ -17861,12 +17861,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // ================================================================
 
 let _whCameraStream     = null;
-let _whScanState        = 'idle'; // idle | scan_part | scan_rack | saved
+let _whScanState        = 'idle'; // idle | scan_part | scan_rack | saved | stk_rack | stk_scanning
 let _whScannedPart      = null;
 let _whScannedRack      = null;
 let _whLabelCodes       = [];
 let _whRafId            = null;
 let _whBarcodeDetector  = null;
+let _whScanMode         = 'putaway'; // putaway | stocktake
+let _stkRack            = '';
+let _stkExpected        = [];  // [{ id, title, apcId, status, scanned }]
+let _stkExtras          = [];  // parts scanned that aren't assigned to this rack
+let _stkLastId          = null;
+let _stkLastTime        = 0;
 
 function openWarehouseDrawer() {
     if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
@@ -17917,7 +17923,7 @@ function whSetTab(tab) {
         if (btn)   btn.classList.toggle('wh-tab--active', name === tab);
     }
     if (tab === 'scanner') {
-        whResetScan();
+        whSetScanMode('putaway');
         if (window.innerWidth < 900) whStartCamera();
     } else if (tab === 'lookup') {
         whLoadLookupAlerts();
@@ -18216,8 +18222,13 @@ function whStartCamera() {
             video.srcObject = stream;
             video.play();
             video.addEventListener('canplay', () => {
-                _whScanState = 'scan_part';
-                whSetStatus('Point camera at a part label');
+                if (_whScanMode === 'stocktake') {
+                    _whScanState = 'stk_rack';
+                    whSetStatus('Scan a rack label to start');
+                } else {
+                    _whScanState = 'scan_part';
+                    whSetStatus('Point camera at a part label');
+                }
                 whScanLoop();
             }, { once: true });
         })
@@ -18289,6 +18300,19 @@ async function whHandleQR(data) {
         whShowRackCard();
         _whScanState = 'saved';
         whSetStatus('Ready to save');
+    } else if (_whScanState === 'stk_rack') {
+        // Stocktake: first scan the rack to load its expected list.
+        if (data.match(/[?&]item=/)) { _whRafId = setTimeout(whScanLoop, 250); return; }
+        _stkRack = data.trim();
+        whSetStatus('Loading expected list…');
+        await _stkLoadExpected();
+        _whScanState = 'stk_scanning';
+        whSetStatus('Scan each part on the shelf');
+        _whRafId = setTimeout(whScanLoop, 400);
+    } else if (_whScanState === 'stk_scanning') {
+        const m = data.match(/[?&]item=([^&]+)/);
+        if (m) await _stkHandlePartScan(m[1]);
+        _whRafId = setTimeout(whScanLoop, 300);
     }
 }
 
@@ -18359,6 +18383,139 @@ function whResetScan() {
 function whSetStatus(msg) {
     const el = document.getElementById('whScanStatus');
     if (el) el.textContent = msg;
+}
+
+// ── Stocktake (mobile) ────────────────────────────────────────────
+// Scan a rack → load its expected parts → scan each to tick off →
+// report missing (expected, not scanned) vs misfiled (scanned, belongs elsewhere).
+
+function whSetScanMode(mode) {
+    _whScanMode = mode;
+    document.getElementById('whModePutaway')?.classList.toggle('wh-scan-mode--active', mode === 'putaway');
+    document.getElementById('whModeStocktake')?.classList.toggle('wh-scan-mode--active', mode === 'stocktake');
+    const putawayUi = document.getElementById('whPutawayUi');
+    const stkPanel  = document.getElementById('whStkPanel');
+    if (putawayUi) putawayUi.style.display = mode === 'putaway' ? '' : 'none';
+    if (stkPanel)  stkPanel.style.display  = mode === 'stocktake' ? '' : 'none';
+    if (mode === 'stocktake') whStkReset();
+    else whResetScan();
+}
+
+function whStkReset() {
+    _stkRack = ''; _stkExpected = []; _stkExtras = [];
+    _stkLastId = null; _stkLastTime = 0;
+    _whScanState = 'stk_rack';
+    const rackBar = document.getElementById('whStkRackBar');
+    const hint    = document.getElementById('whStkHint');
+    const list    = document.getElementById('whStkList');
+    const extras  = document.getElementById('whStkExtrasWrap');
+    const actions = document.getElementById('whStkActions');
+    if (rackBar) rackBar.style.display = 'none';
+    if (hint)  { hint.style.display = ''; hint.textContent = 'Scan a rack label to start the stocktake.'; }
+    if (list)  list.innerHTML = '';
+    if (extras) extras.style.display = 'none';
+    if (actions) { actions.style.display = 'none'; actions.innerHTML = `<button class="btn-full-action" style="margin:12px 15px 4px;" onclick="whStkFinish()">Finish Stocktake</button><button class="wh-ghost-btn" onclick="whStkReset()">Restart</button>`; }
+    whSetStatus('Scan a rack label to start');
+    whScanLoop();
+}
+
+async function _stkLoadExpected() {
+    if (!sb || !currentUserId || !_stkRack) return;
+    const { data } = await sb.from('listings')
+        .select('id, title, apc_id, status')
+        .eq('seller_id', currentUserId)
+        .ilike('warehouse_bin', _stkRack)
+        .in('status', ['active', 'pending'])
+        .order('title').limit(500);
+    _stkExpected = (data || []).map(r => ({ id: r.id, title: r.title, apcId: r.apc_id, status: r.status, scanned: false }));
+    _stkExtras = [];
+    const rackBar = document.getElementById('whStkRackBar');
+    const hint    = document.getElementById('whStkHint');
+    const actions = document.getElementById('whStkActions');
+    if (rackBar) rackBar.style.display = 'flex';
+    if (hint) hint.style.display = 'none';
+    if (actions) actions.style.display = '';
+    _stkRenderChecklist();
+}
+
+function _stkRenderChecklist() {
+    const found = _stkExpected.filter(e => e.scanned).length;
+    const total = _stkExpected.length;
+    const rackBar = document.getElementById('whStkRackBar');
+    if (rackBar) rackBar.innerHTML = `📍 <strong>${escapeHtml(_stkRack)}</strong><span class="wh-stk-tally">${found}/${total} found</span>`;
+    const list = document.getElementById('whStkList');
+    if (list) {
+        list.innerHTML = total
+            ? _stkExpected.map(e => `<div class="wh-stk-row ${e.scanned ? 'is-found' : ''}"><span class="wh-stk-check">${e.scanned ? '✓' : '○'}</span><div class="wh-stk-row-main"><div class="wh-stk-row-title">${escapeHtml(e.title)}</div><div class="wh-stk-row-meta">${escapeHtml(e.apcId || '')}${e.status === 'pending' ? ' · PENDING' : ''}</div></div></div>`).join('')
+            : '<div class="wh-scan-hint">No active parts assigned to this rack.</div>';
+    }
+    _stkRenderExtras();
+}
+
+async function _stkHandlePartScan(id) {
+    const now = Date.now();
+    if (String(id) === String(_stkLastId) && now - _stkLastTime < 2500) return; // debounce repeats
+    _stkLastId = id; _stkLastTime = now;
+    const item = _stkExpected.find(e => String(e.id) === String(id));
+    if (item) {
+        if (!item.scanned) { item.scanned = true; if (navigator.vibrate) navigator.vibrate(40); whSetStatus(`✓ ${item.title}`); }
+        _stkRenderChecklist();
+        return;
+    }
+    if (_stkExtras.find(e => String(e.id) === String(id))) return;
+    const { data: row } = await sb.from('listings')
+        .select('id, title, apc_id, status, warehouse_bin')
+        .eq('id', id).eq('seller_id', currentUserId).single();
+    if (!row) { whSetStatus('Part not found or not yours'); return; }
+    _stkExtras.push({ id: row.id, title: row.title, apcId: row.apc_id, status: row.status, bin: row.warehouse_bin || '' });
+    if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+    whSetStatus(`⚠ ${row.title} — ${row.warehouse_bin ? 'assigned ' + row.warehouse_bin : 'no bin set'}`);
+    _stkRenderExtras();
+}
+
+function _stkRenderExtras() {
+    const wrap = document.getElementById('whStkExtrasWrap');
+    const list = document.getElementById('whStkExtras');
+    const moveBtn = document.getElementById('whStkMoveBtn');
+    if (!wrap || !list) return;
+    if (!_stkExtras.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    list.innerHTML = _stkExtras.map(e => `<div class="wh-stk-row is-extra"><span class="wh-stk-check">⚠</span><div class="wh-stk-row-main"><div class="wh-stk-row-title">${escapeHtml(e.title)}</div><div class="wh-stk-row-meta">${escapeHtml(e.apcId || '')} · ${e.bin ? 'assigned ' + escapeHtml(e.bin) : 'no bin'}${e.status === 'sold' ? ' · SOLD' : ''}</div></div></div>`).join('');
+    if (moveBtn) { moveBtn.style.display = ''; moveBtn.textContent = `Move ${_stkExtras.length} to ${_stkRack}`; }
+}
+
+async function whStkMoveExtras() {
+    if (!_stkExtras.length || !sb || !currentUserId) return;
+    const ids = _stkExtras.map(e => e.id);
+    const { error } = await sb.from('listings').update({ warehouse_bin: _stkRack }).in('id', ids).eq('seller_id', currentUserId);
+    if (error) { showToast('Error: ' + error.message); return; }
+    ids.forEach(id => { const l = userListings.find(x => x.supabaseId === id || x.id === id); if (l) l.warehouseBin = _stkRack; });
+    showToast(`📍 Moved ${ids.length} part${ids.length !== 1 ? 's' : ''} to ${_stkRack}`);
+    _stkExtras.forEach(e => { if (!_stkExpected.find(x => String(x.id) === String(e.id))) _stkExpected.push({ id: e.id, title: e.title, apcId: e.apcId, status: e.status, scanned: true }); });
+    _stkExtras = [];
+    _stkRenderChecklist();
+}
+
+function whStkFinish() {
+    _whScanState = 'saved'; // stop scanning
+    const found   = _stkExpected.filter(e => e.scanned);
+    const missing = _stkExpected.filter(e => !e.scanned);
+    const list    = document.getElementById('whStkList');
+    const hint    = document.getElementById('whStkHint');
+    const actions = document.getElementById('whStkActions');
+    if (hint) hint.style.display = 'none';
+    if (list) {
+        let html = `<div class="wh-stk-stat"><strong>${found.length}</strong> found · <strong>${missing.length}</strong> missing · <strong>${_stkExtras.length}</strong> misfiled</div>`;
+        if (missing.length) {
+            html += `<div class="wh-stk-section-label">Missing — expected here, not scanned</div>` +
+                missing.map(e => `<div class="wh-stk-row is-missing"><span class="wh-stk-check">✗</span><div class="wh-stk-row-main"><div class="wh-stk-row-title">${escapeHtml(e.title)}</div><div class="wh-stk-row-meta">${escapeHtml(e.apcId || '')}</div></div></div>`).join('');
+        } else if (_stkExpected.length) {
+            html += `<div class="wh-scan-hint">✓ All expected parts accounted for.</div>`;
+        }
+        list.innerHTML = html;
+    }
+    if (actions) actions.innerHTML = `<button class="wh-ghost-btn" onclick="whStkReset()">New stocktake →</button>`;
+    whSetStatus(`Done · ${found.length}/${_stkExpected.length} found`);
 }
 
 // --- TRADE / PRO ONBOARDING ---
