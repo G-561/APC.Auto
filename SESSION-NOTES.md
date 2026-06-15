@@ -139,6 +139,21 @@ location.reload();
 
 ## Sessions completed
 
+### 15 June 2026 (evening) — Stock Lookup: spreadsheet results, KMs, wrong-side fix, State column
+
+All work this session is in the **Stock Lookup** results area (`_slRenderResults` + helpers, ~line 16648). Commits `e307c23` → `8d9a3bc`. Assets now `script.js?v=153`, `style.css?v=82`.
+
+- **Results are now a spreadsheet.** Both **YOUR STOCK** and **OTHER YARDS** share one column template so every column lines up vertically. Unified `rowHTML(r, isOwn)` + `_slResultsHdr(isOwn)`. Columns L→R: ☐ · thumb · **Part · Stock # · KMs · Cond · Bin/State · Price · Yard** · (action). Stock # / Bin are blank on other-yard rows; Yard / action blank on own rows — the blanks are deliberate, they keep the two stacked sub-tables aligned like a spreadsheet.
+- **Click-to-sort headers.** `_slSort = {key, dir}`; `_slSortBy(key)` toggles asc/desc; `_slSortRows(rows)` sorts (blank cells always sort last). Active column highlights orange with ▲/▼ (`.sl-hdr-sort`). One sort applies to **both** sub-tables. Default (no column chosen) keeps the exact-first order from `_slClassifyByEngine`. Match badges (Exact/Possible) stay on the title even when sorted.
+- **KMs everywhere.** `odometer` now fetched in both lookup queries (`cols` + stock-number search). KMs column shows for **all** parts (not just mechanical), own + other yards. Also added a **KMs column to the Pro dashboard My Listings** active tab (`dash-td-kms`) — wrecker sees donor kms at a glance.
+- **Wrong-side parts excluded (not "possible").** `_slClassifyByEngine` now hard-excludes the **opposite** Left/Right side instead of tagging it "possible" — a left door never fits a right-door search. Word-boundaried (`\bright\b` so "upright" doesn't match). Engines/gearboxes/steering keep the "possible" tag as before. (Front/Rear was already handled upstream by the position-aware part identity.)
+- **State column = Bin column reused as Location.** Own rows show rack/`warehouse_bin`; other-yard rows show **State** derived from postcode via `_slStateOf(r)` (uses `AU_POSTCODES`, falls back to parsing the `location` text). The Bin header **relabels to "State"** for the other-yards section (per-section label via `_slResultsHdr(isOwn)`). State is public; bin stays owner-only.
+- **Per-state filter.** `_slStateFilter` + `_slSetStateFilter(v)`; a `<select class="sl-state-filter">` dropdown sits in the OTHER YARDS bar next to the Pro-only toggle (both pills, right-aligned via `margin-left:auto`). Combines with Pro-only; auto-resets if the picked state isn't in the current results. Sorting the State column groups by state (`_slSortRows` `'bin'` key falls back to `_slStateOf`). Query now also selects `postcode, location`.
+- **Header/column alignment fix.** Header spacer cells (checkbox / thumb / action) used 10px padding while the data rows use 8px / 4px → every column drifted a few px. Fixed by giving the header spacers the same padding (`padding:0 8px` / `0 4px`); content-box preserved so no cell content shrank. Stock-search KMs header width 72→76 to match `.sl-cell-kms`.
+- **CSS added/changed:** `.sl-cell-stock/.sl-cell-bin/.sl-cell-kms`, `.sl-cell-chat` pinned to 72px, `.sl-hdr-sort` (+`.active`), `.sl-state-filter`, `.sl-cell-grade` 44→56, `.dash-td-kms`.
+
+**Gotcha for testing:** Stock Lookup splits rows by `seller_id` — the signed-in account = "Your Stock", everyone else = "Other Yards". The **OTHER YARDS section (and its Pro-only toggle + State dropdown) only render when a search returns other sellers' listings.** Gary is creating a **2nd Pro account** with the same listings to exercise cross-yard behaviour. State derives from postcode, so test listings need a postcode set — ideally put the two accounts in **different states** so the dropdown has something to filter.
+
 ### 14–15 June 2026 — Stocktake mode, QR scanning fixes, suburb search, dashboard polish
 
 - **Stocktake mode** (commit a3eef8a) — Put-Away / Stocktake switch on the mobile scanner. Scan a rack → expected checklist (active/pending parts in that bin) + live found/total tally → scan each part to tick off → **Finish** reports MISSING (expected, not scanned) vs MISFILED (scanned, assigned elsewhere) with a one-tap **"Move N to <rack>"** bulk reassign. Mobile-only (scan-info hidden on desktop). Functions: `whSetScanMode`, `whStkReset`, `_stkLoadExpected`, `_stkHandlePartScan`, `_stkRenderChecklist`, `whStkFinish`, `whStkMoveExtras`.
@@ -243,7 +258,14 @@ location.reload();
 4. **Mirror EDW batch labels to `_jrPublish`** (worker-job review screen).
 5. Gary's **systematic workflow testing** run — fix what surfaces. Also: finish testing the new **suburb picker** on signup + sell.
 
-Cache: the `?v=` is now bumped every push, so a normal reload delivers changes (script.js?v=143, style.css?v=77).
+Cache: the `?v=` is now bumped every push, so a normal reload delivers changes (currently script.js?v=153, style.css?v=82).
+
+**Stock Lookup follow-ups (parked, from 15 June evening):**
+1. **Cross-yard test** — review results once Gary's 2nd Pro account has listings (other-yards section, State column, dropdown). Adjust dropdown placement if it feels cramped with real rows.
+2. **Merge sections (optional)** — could fold YOUR STOCK + OTHER YARDS into one sortable list with a Yard column. Kept them split for now (own stock highlighted on top, Pro-only filter lives there).
+3. **Stock-number search spreadsheet** — the `isStockSearch` sub-view still uses its own Bin/Status column and isn't sortable; bring it into the same treatment if wanted.
+4. **Structured part-keys** (bigger project, also in memory) — `part_key` column populated by EDW + a sell-form part-picker so non-EDW listings are bulletproof in lookup instead of matched from titles.
+5. **Vehicle DB deep audit** (pre-launch, in memory) — engine variants / year ranges / series accuracy, popular brands first (e.g. the missing 2.5L 2010 Mazda 3 engine).
 
 **Older backlog (from Session 10, mostly historical):**
 1. **Message centre — polish** — delete entire conversation, unread/read toggle, empty state when no conversations.
@@ -258,7 +280,7 @@ Cache: the `?v=` is now bumped every push, so a normal reload delivers changes (
 
 ## Last commit / push
 
-Latest: **13 June 2026 — `e65c1f7`** "Stock card: back-fill stock number onto already-published parts" (on `main`, live on GitHub Pages). Today's work spans commits `2602688` → `e65c1f7` (labels, Warehouse Lookup + cleanup queues, EDW batch labels, EDW close fix, stock-number back-fill).
+Latest: **15 June 2026 (evening) — `8d9a3bc`** "Stock Lookup: fix header/column alignment" (on `main`, live on GitHub Pages). This evening's work spans commits `e307c23` → `8d9a3bc` (KMs columns, wrong-side exclusion, spreadsheet results + click-to-sort, State column + per-state filter, header alignment).
 
 Standard push from Git Bash:
 ```
