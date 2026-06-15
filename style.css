@@ -5792,6 +5792,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-td-price  { font-weight: 800; color: var(--apc-orange); white-space: nowrap; }
 .dash-td-loc    { white-space: nowrap; }
 .dash-td-stock  { white-space: nowrap; font-size: 12px; font-weight: 600; color: #555; }
+.dash-td-kms    { white-space: nowrap; font-size: 12px; font-weight: 600; color: #555; }
 .dash-td-loc--empty { color: #ccc; }
 .dash-bin-chip  { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 5px; padding: 2px 7px; font-size: 11px; font-weight: 700; color: #555; letter-spacing: 0.3px; }
 .dash-td-saves  { color: #999; font-weight: 600; white-space: nowrap; }
@@ -7659,6 +7660,10 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-cell-grade.grade-D { color: #ef4444; }
 .sl-cell-price { width: 70px; font-weight: 700; color: #f07020; font-size: 13px; }
 .sl-cell-meta { color: #888; font-size: 11px; width: 120px; flex-direction: column; align-items: flex-start; gap: 1px; }
+.sl-cell-stock, .sl-cell-bin, .sl-cell-kms { color: #555; font-size: 11px; white-space: nowrap; overflow: hidden; }
+.sl-cell-stock { width: 88px; font-weight: 600; }
+.sl-cell-bin   { width: 76px; }
+.sl-cell-kms   { width: 76px; }
 .sl-cell-btn { width: 60px; justify-content: center; }
 .sl-cell-btn button { background: #f07020; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
 .sl-cell-btn button:hover { background: #d95f10; }

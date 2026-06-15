@@ -15941,7 +15941,7 @@ async function _slSearchByStock(stockNo) {
 
     const { data, error } = await sb
         .from('listings')
-        .select(`id, title, price, condition, status, stock_number, warehouse_bin, apc_id,
+        .select(`id, title, price, condition, status, stock_number, warehouse_bin, odometer, apc_id,
                  listing_images(storage_path, position)`)
         .eq('seller_id', currentUserId)
         .ilike('stock_number', stockNo)
@@ -16509,7 +16509,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         return q;
     };
 
-    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin,
+    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer,
                   listing_images(storage_path, position)`;
 
     // Fetch vehicle-matching listing IDs first — used for both own and other-yard filtering
@@ -16657,6 +16657,7 @@ function _slRenderResults() {
             <div class="sl-hdr-cell flex">Part</div>
             <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
             <div class="sl-hdr-cell" style="width:70px;">Price</div>
+            <div class="sl-hdr-cell" style="width:72px;">KMs</div>
             <div class="sl-hdr-cell" style="width:120px;">Bin / Status</div>
         </div>`;
         const stockRows = tab.results.map(r => {
@@ -16672,6 +16673,7 @@ function _slRenderResults() {
                     <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
                     <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
                     <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
+                    <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
                     <div class="sl-cell sl-cell-meta">
                         ${bin ? `<span>${bin}</span>` : ''}
                         ${st ? `<span style="color:${statusColour[st]||'#888'};font-weight:700;font-size:10px;text-transform:uppercase;">${escapeHtml(st)}</span>` : ''}
@@ -16698,8 +16700,6 @@ function _slRenderResults() {
         const grade  = r.condition || '';
         const gradeClass = grade ? `grade-${grade.charAt(0).toUpperCase()}` : '';
         const yard   = escapeHtml(r.profiles?.display_name || 'Wrecker');
-        const stock  = r.stock_number ? `Stock: ${escapeHtml(r.stock_number)}` : '';
-        const bin    = r.warehouse_bin ? `Bin: ${escapeHtml(r.warehouse_bin)}` : '';
         const chk    = _slSelected.has(r.id) ? ' checked' : '';
         const chatBtn = !isOwn && r.seller_id
             ? `<div class="sl-cell sl-cell-chat"><button class="sl-chat-row-btn"
@@ -16717,7 +16717,9 @@ function _slRenderResults() {
             ${!isOwn ? `<div class="sl-cell sl-cell-yard">${yard}</div>` : ''}
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
-            ${isOwn ? `<div class="sl-cell sl-cell-meta">${stock ? `<span>${stock}</span>` : ''}${bin ? `<span>${bin}</span>` : ''}</div>` : ''}
+            ${isOwn ? `<div class="sl-cell sl-cell-stock">${escapeHtml(r.stock_number || '')}</div>
+            <div class="sl-cell sl-cell-bin">${escapeHtml(r.warehouse_bin || '')}</div>
+            <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>` : ''}
             ${chatBtn}
         </div>`;
     };
@@ -16728,7 +16730,9 @@ function _slRenderResults() {
         <div class="sl-hdr-cell flex">Part</div>
         <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
         <div class="sl-hdr-cell" style="width:70px;">Price</div>
-        <div class="sl-hdr-cell" style="width:120px;">Stock / Bin</div>
+        <div class="sl-hdr-cell" style="width:88px;">Stock #</div>
+        <div class="sl-hdr-cell" style="width:76px;">Bin</div>
+        <div class="sl-hdr-cell" style="width:76px;">KMs</div>
     </div>`;
     const otherColHdr = `<div class="sl-results-col-hdr">
         <div class="sl-hdr-cell" style="width:36px;"></div>
@@ -17626,6 +17630,7 @@ function renderDashListings(tab, btn, ctx) {
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-stock">${p.stockNumber ? escapeHtml(p.stockNumber) : '<span class="dash-td-loc--empty">—</span>'}</td>
             <td class="dash-td-loc">${p.warehouseBin ? `<span class="dash-bin-chip">${escapeHtml(p.warehouseBin)}</span>` : '<span class="dash-td-loc--empty">—</span>'}</td>
+            <td class="dash-td-kms">${p.odometer ? Number(p.odometer).toLocaleString('en-AU') : '<span class="dash-td-loc--empty">—</span>'}</td>
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
@@ -17696,7 +17701,7 @@ function renderDashListings(tab, btn, ctx) {
     }
 
     const hdrs = tab === 'active'
-        ? ['', 'Part', 'Price', 'Stock #', 'Location', 'Saves', 'Listed', 'Actions']
+        ? ['', 'Part', 'Price', 'Stock #', 'Location', 'KMs', 'Saves', 'Listed', 'Actions']
         : tab === 'pending'
         ? ['', 'Part', 'Offer vs Listed', 'Date', 'Actions']
         : ['', 'Part', 'Sale Price', '', 'Sale Date', 'Actions'];
