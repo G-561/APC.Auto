@@ -16462,19 +16462,33 @@ function _slTogglePartCheck(base, qualifier, checked) {
 // Engine-variant matching. With an engine-code qualifier, a listing is an EXACT
 // match if its title names that code, a POSSIBLE match if it names no engine code
 // (could be any engine), and excluded if it names a *different* code. Exact sorts
-// first. Non-engine qualifiers (e.g. Left/Right) just require the term in the title.
+// first. Sided qualifiers (Left/Right) exclude the opposite side outright — a
+// wrong-side panel never fits, so it is never offered as "possible".
 function _slClassifyByEngine(results, qualifier) {
     if (!qualifier) return results;
     const { make, model, series } = _slVehicle;
     const codes = (VEHICLE_ENGINES?.[make]?.[model + (series ? ' ' + series : '')]
                 || VEHICLE_ENGINES?.[make]?.[model] || []).map(c => String(c).toLowerCase());
     const qLow = qualifier.toLowerCase();
+
+    // Left/Right is a hard side constraint: drop listings that name the opposite
+    // side. Word-boundaried so "right" doesn't match "upright". Engine/gearbox-type
+    // generics are untouched and still flow through the "possible" logic below.
+    const sideMatch = qLow.match(/\b(left|right)\b/);
+    const sideRe = sideMatch && new RegExp(`\\b${sideMatch[1]}\\b`);
+    const oppRe  = sideMatch && new RegExp(`\\b${sideMatch[1] === 'left' ? 'right' : 'left'}\\b`);
+    const wrongSide = t => oppRe && oppRe.test(t) && !sideRe.test(t);
+
     if (!codes.length) {
-        return results.filter(r => (r.title || '').toLowerCase().includes(qLow));
+        return results.filter(r => {
+            const t = (r.title || '').toLowerCase();
+            return !wrongSide(t) && t.includes(qLow);
+        });
     }
     const out = [];
     for (const r of results) {
         const t = (r.title || '').toLowerCase();
+        if (wrongSide(t))                   continue; // opposite side — never fits
         if (t.includes(qLow))               out.push({ ...r, _match: 'exact' });
         else if (codes.some(c => t.includes(c))) continue; // names a different engine
         else                                out.push({ ...r, _match: 'possible' });
