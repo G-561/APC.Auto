@@ -15837,6 +15837,7 @@ let _slQuoteConvContext = null;    // set when quote overlay is opened from a DB
 let _slQuoteDebounce  = null;
 let _slProOnly        = false;     // when true, OTHER YARDS section filters to pro sellers only
 let _slSort           = { key: null, dir: 1 }; // results sort: column key + direction (spreadsheet headers)
+let _slStateFilter    = null;      // OTHER YARDS: filter listings to one state (derived from postcode)
 
 function openStockLookup() {
     proOpenStockLookup();
@@ -16524,7 +16525,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         return q;
     };
 
-    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer,
+    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer, postcode, location,
                   listing_images(storage_path, position)`;
 
     // Fetch vehicle-matching listing IDs first — used for both own and other-yard filtering
@@ -16703,7 +16704,10 @@ function _slRenderResults() {
 
     const own   = tab.results.filter(r => r.seller_id === currentUserId);
     const allOther = tab.results.filter(r => r.seller_id !== currentUserId);
-    const other = _slProOnly ? allOther.filter(r => r.profiles?.is_pro) : allOther;
+    const proOther = _slProOnly ? allOther.filter(r => r.profiles?.is_pro) : allOther;
+    const otherStates = [...new Set(proOther.map(_slStateOf).filter(Boolean))].sort();
+    if (_slStateFilter && !otherStates.includes(_slStateFilter)) _slStateFilter = null;
+    const other = _slStateFilter ? proOther.filter(r => _slStateOf(r) === _slStateFilter) : proOther;
 
     if (!own.length && !allOther.length) {
         content.innerHTML = `<div class="sl-no-results">No results found for <strong>${escapeHtml(tab.partName)}</strong> — ${escapeHtml(_slVehicle.year)} ${escapeHtml(_slVehicle.make)} ${escapeHtml(_slVehicle.model)}</div>`;
@@ -16731,7 +16735,7 @@ function _slRenderResults() {
             <div class="sl-cell sl-cell-stock">${isOwn ? escapeHtml(r.stock_number || '') : ''}</div>
             <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
-            <div class="sl-cell sl-cell-bin">${isOwn ? escapeHtml(r.warehouse_bin || '') : ''}</div>
+            <div class="sl-cell sl-cell-bin">${isOwn ? escapeHtml(r.warehouse_bin || '') : escapeHtml(_slStateOf(r))}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
             <div class="sl-cell sl-cell-yard">${isOwn ? '' : escapeHtml(r.profiles?.display_name || 'Wrecker')}</div>
             <div class="sl-cell sl-cell-chat">${chatBtn}</div>
@@ -16739,15 +16743,22 @@ function _slRenderResults() {
     };
 
     const proToggle = `<button class="sl-pro-filter-btn${_slProOnly ? ' active' : ''}" onclick="_slToggleProOnly()">${_slProOnly ? '★ Pro only' : '☆ Pro only'}</button>`;
+    const stateFilter = otherStates.length
+        ? `<select class="sl-state-filter" onchange="_slSetStateFilter(this.value)">
+            <option value="">All States</option>
+            ${otherStates.map(s => `<option value="${s}"${_slStateFilter === s ? ' selected' : ''}>${s}</option>`).join('')}
+        </select>`
+        : '';
+    const otherFiltered = _slProOnly || _slStateFilter;
     const otherHdr = allOther.length
-        ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length}${_slProOnly && other.length < allOther.length ? ` of ${allOther.length}` : ''} result${other.length!==1?'s':''}${proToggle}</div>`
+        ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length}${otherFiltered && other.length < allOther.length ? ` of ${allOther.length}` : ''} result${other.length!==1?'s':''}${stateFilter}${proToggle}</div>`
         : '';
     const otherBody = other.length
-        ? `<div class="sl-results-table">${_slResultsHdr()}${_slSortRows(other).map(r=>rowHTML(r,false)).join('')}</div>`
-        : (allOther.length ? `<div class="sl-no-results" style="padding:10px 15px;font-size:12px;">No pro sellers in these results</div>` : '');
+        ? `<div class="sl-results-table">${_slResultsHdr(false)}${_slSortRows(other).map(r=>rowHTML(r,false)).join('')}</div>`
+        : (allOther.length ? `<div class="sl-no-results" style="padding:10px 15px;font-size:12px;">No other-yard results match this filter</div>` : '');
 
     content.innerHTML =
-        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div><div class="sl-results-table">${_slResultsHdr()}${_slSortRows(own).map(r=>rowHTML(r,true)).join('')}</div>` : '') +
+        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div><div class="sl-results-table">${_slResultsHdr(true)}${_slSortRows(own).map(r=>rowHTML(r,true)).join('')}</div>` : '') +
         otherHdr + otherBody;
     _slRenderActionBar();
 }
@@ -16758,8 +16769,9 @@ function _slToggleProOnly() {
 }
 
 // Shared spreadsheet header — clickable columns drive _slSort. Same template for
-// both YOUR STOCK and OTHER YARDS so every column lines up vertically.
-function _slResultsHdr() {
+// both YOUR STOCK and OTHER YARDS so every column lines up vertically. The Bin slot
+// is relabelled "State" for other yards (their rack/bin is private; State is public).
+function _slResultsHdr(isOwn) {
     const arrow = k => _slSort.key === k ? (_slSort.dir > 0 ? ' ▲' : ' ▼') : '';
     const cell  = (k, label, w) => `<div class="sl-hdr-cell sl-hdr-sort${_slSort.key === k ? ' active' : ''}" style="width:${w}px;" onclick="_slSortBy('${k}')">${label}${arrow(k)}</div>`;
     return `<div class="sl-results-col-hdr">
@@ -16769,11 +16781,27 @@ function _slResultsHdr() {
         ${cell('stock', 'Stock #', 88)}
         ${cell('kms',   'KMs',     76)}
         ${cell('grade', 'Cond',    56)}
-        ${cell('bin',   'Bin',     76)}
+        ${cell('bin',   isOwn ? 'Bin' : 'State', 76)}
         ${cell('price', 'Price',   70)}
         ${cell('yard',  'Yard',   130)}
         <div class="sl-hdr-cell" style="width:72px;"></div>
     </div>`;
+}
+
+// State for a listing — derived from its postcode (AU_POSTCODES), with a text
+// fallback. Used for the other-yards State column and the state filter.
+function _slStateOf(r) {
+    const pc = r && r.postcode != null ? String(r.postcode) : '';
+    if (pc && typeof AU_POSTCODES !== 'undefined' && AU_POSTCODES[pc]) {
+        return AU_POSTCODES[pc][0]?.[1] || '';
+    }
+    const m = (r?.location || '').match(/\b(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/i);
+    return m ? m[1].toUpperCase() : '';
+}
+
+function _slSetStateFilter(v) {
+    _slStateFilter = v || null;
+    _slRenderResults();
 }
 
 function _slSortRows(rows) {
@@ -16784,7 +16812,7 @@ function _slSortRows(rows) {
             case 'kms':   return r.odometer != null ? Number(r.odometer) : null;
             case 'price': return r.price != null ? Number(r.price) : null;
             case 'stock': return (r.stock_number || '').toLowerCase();
-            case 'bin':   return (r.warehouse_bin || '').toLowerCase();
+            case 'bin':   return (r.warehouse_bin || _slStateOf(r) || '').toLowerCase();
             case 'grade': return (r.condition || '').toLowerCase();
             case 'yard':  return (r.profiles?.display_name || '').toLowerCase();
             case 'title': return (r.title || '').toLowerCase();

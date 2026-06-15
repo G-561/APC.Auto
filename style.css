@@ -7631,6 +7631,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 }
 .sl-section-hdr.own { color: #f07020; background: #fff8f2; border-color: #ffe5cc; }
 .sl-section-own-pill { background: #f07020; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 99px; }
+.sl-state-filter { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; border: 1.5px solid #bbb; background: #fff; color: #555; cursor: pointer; letter-spacing: 0.3px; outline: none; }
+.sl-state-filter:focus { border-color: #f07020; color: #f07020; }
 .sl-pro-filter-btn { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; border: 1.5px solid #bbb; background: #fff; color: #888; cursor: pointer; letter-spacing: 0.3px; }
 .sl-pro-filter-btn.active { border-color: #f07020; background: #fff8f2; color: #f07020; }
 /* Results table — spreadsheet grid */
