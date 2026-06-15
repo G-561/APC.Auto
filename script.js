@@ -16718,8 +16718,8 @@ function _slRenderResults() {
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
             ${isOwn ? `<div class="sl-cell sl-cell-stock">${escapeHtml(r.stock_number || '')}</div>
-            <div class="sl-cell sl-cell-bin">${escapeHtml(r.warehouse_bin || '')}</div>
-            <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>` : ''}
+            <div class="sl-cell sl-cell-bin">${escapeHtml(r.warehouse_bin || '')}</div>` : ''}
+            <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
             ${chatBtn}
         </div>`;
     };
@@ -16741,6 +16741,7 @@ function _slRenderResults() {
         <div class="sl-hdr-cell" style="width:130px;">Yard</div>
         <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
         <div class="sl-hdr-cell" style="width:70px;">Price</div>
+        <div class="sl-hdr-cell" style="width:76px;">KMs</div>
         <div class="sl-hdr-cell" style="width:68px;"></div>
     </div>`;
 
