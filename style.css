@@ -7682,6 +7682,12 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-cell-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f07020; cursor: pointer; }
 .sl-row.selected { background: #fff8f2; }
 .sl-row.selected.own { background: #fff0e0; }
+/* Engine-variant match tint: exact = green, possible = the selector's orange (#fff4ec) */
+.sl-row.sl-row--exact { background: #ecf9f0; }
+.sl-row.sl-row--possible { background: #fff4ec; }
+.sl-match { display: inline-block; margin-right: 7px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; padding: 1px 6px; border-radius: 4px; vertical-align: 1px; }
+.sl-match--exact { background: #d4f3df; color: #15803d; }
+.sl-match--possible { background: #ffe3cc; color: #f07020; }
 
 /* Action bar */
 .sl-action-bar { flex-shrink: 0; background: #1a1a2e; color: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 14px; }

@@ -16455,6 +16455,30 @@ function _slTogglePartCheck(base, qualifier, checked) {
     }
 }
 
+// Engine-variant matching. With an engine-code qualifier, a listing is an EXACT
+// match if its title names that code, a POSSIBLE match if it names no engine code
+// (could be any engine), and excluded if it names a *different* code. Exact sorts
+// first. Non-engine qualifiers (e.g. Left/Right) just require the term in the title.
+function _slClassifyByEngine(results, qualifier) {
+    if (!qualifier) return results;
+    const { make, model, series } = _slVehicle;
+    const codes = (VEHICLE_ENGINES?.[make]?.[model + (series ? ' ' + series : '')]
+                || VEHICLE_ENGINES?.[make]?.[model] || []).map(c => String(c).toLowerCase());
+    const qLow = qualifier.toLowerCase();
+    if (!codes.length) {
+        return results.filter(r => (r.title || '').toLowerCase().includes(qLow));
+    }
+    const out = [];
+    for (const r of results) {
+        const t = (r.title || '').toLowerCase();
+        if (t.includes(qLow))               out.push({ ...r, _match: 'exact' });
+        else if (codes.some(c => t.includes(c))) continue; // names a different engine
+        else                                out.push({ ...r, _match: 'possible' });
+    }
+    out.sort((a, b) => (a._match === 'exact' ? 0 : 1) - (b._match === 'exact' ? 0 : 1));
+    return out;
+}
+
 async function _slSearch(partBase, qualifier, tabIdx) {
     if (!sb) return;
     // Capture demand: include vehicle context so the report shows "Toyota HiAce Taillight Left"
@@ -16496,9 +16520,9 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     let ownQ = sb.from('listings').select(cols)
         .eq('seller_id', currentUserId).eq('status', 'active')
         .ilike('title', `%${partBase}%`).order('created_at', { ascending: false }).limit(60);
-    if (qualifier) ownQ = ownQ.ilike('title', `%${qualifier}%`);
     // Always restrict to the selected vehicle's listings — an empty match must
     // return nothing, never fall back to matching the part name alone.
+    // (Qualifier/engine-code matching is done in JS so generics can be "possible".)
     if (make && model) ownQ = ownQ.in('id', vehicleIds);
     ownQ = applyYearFilter(ownQ);
 
@@ -16509,7 +16533,6 @@ async function _slSearch(partBase, qualifier, tabIdx) {
             .in('id', vehicleIds).neq('seller_id', currentUserId)
             .eq('status', 'active').ilike('title', `%${partBase}%`)
             .order('created_at', { ascending: false }).limit(60);
-        if (qualifier) otherQ = otherQ.ilike('title', `%${qualifier}%`);
         otherQ = applyYearFilter(otherQ);
         promises.push(otherQ);
     }
@@ -16529,10 +16552,11 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         }
     }
 
-    const results = [
+    let results = [
         ...ownResults.map(r => ({ ...r, profiles: null })),
         ...otherResults.map(r => ({ ...r, profiles: profileMap[r.seller_id] || null })),
     ];
+    results = _slClassifyByEngine(results, qualifier);
     results.forEach(r => _slResultsMap.set(r.id, r));
 
     if (_slTabs[tabIdx]) {
@@ -16678,12 +16702,14 @@ function _slRenderResults() {
                   data-lid="${r.id}" data-sid="${r.seller_id}"
                   data-title="${escapeHtml(r.title)}" data-seller="${escapeHtml(r.profiles?.display_name || 'Wrecker')}"
                   onclick="event.stopPropagation();_slOpenChatBtn(this)">Chat</button></div>` : '';
-        return `<div class="sl-row${isOwn ? ' own' : ''}${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
+        const matchClass = r._match ? ` sl-row--${r._match}` : '';
+        const matchBadge = r._match ? `<span class="sl-match sl-match--${r._match}">${r._match === 'exact' ? 'Exact' : 'Possible'}</span>` : '';
+        return `<div class="sl-row${isOwn ? ' own' : ''}${matchClass}${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
             <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
             <div class="sl-cell sl-cell-thumb">
                 ${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}
             </div>
-            <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
+            <div class="sl-cell-title"><span>${matchBadge}${escapeHtml(r.title)}</span></div>
             ${!isOwn ? `<div class="sl-cell sl-cell-yard">${yard}</div>` : ''}
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
