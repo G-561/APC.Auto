@@ -15836,6 +15836,7 @@ let _slActiveQuote    = null;      // { quote, lines } currently shown in detail
 let _slQuoteConvContext = null;    // set when quote overlay is opened from a DBMC conversation
 let _slQuoteDebounce  = null;
 let _slProOnly        = false;     // when true, OTHER YARDS section filters to pro sellers only
+let _slSort           = { key: null, dir: 1 }; // results sort: column key + direction (spreadsheet headers)
 
 function openStockLookup() {
     proOpenStockLookup();
@@ -16669,7 +16670,7 @@ function _slRenderResults() {
             <div class="sl-hdr-cell" style="width:36px;"></div>
             <div class="sl-hdr-cell" style="width:52px;"></div>
             <div class="sl-hdr-cell flex">Part</div>
-            <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
+            <div class="sl-hdr-cell" style="width:56px;">Gr.</div>
             <div class="sl-hdr-cell" style="width:70px;">Price</div>
             <div class="sl-hdr-cell" style="width:72px;">KMs</div>
             <div class="sl-hdr-cell" style="width:120px;">Bin / Status</div>
@@ -16709,73 +16710,101 @@ function _slRenderResults() {
         _slRenderActionBar(); return;
     }
 
+    // Both sections share one column template so they line up like a spreadsheet.
+    // Stock # / Bin are blank for other yards (private); Yard / Chat blank for own.
     const rowHTML = (r, isOwn) => {
         const img    = (r.listing_images || []).sort((a,b) => a.position-b.position)[0]?.storage_path || '';
         const grade  = r.condition || '';
         const gradeClass = grade ? `grade-${grade.charAt(0).toUpperCase()}` : '';
-        const yard   = escapeHtml(r.profiles?.display_name || 'Wrecker');
         const chk    = _slSelected.has(r.id) ? ' checked' : '';
         const chatBtn = !isOwn && r.seller_id
-            ? `<div class="sl-cell sl-cell-chat"><button class="sl-chat-row-btn"
+            ? `<button class="sl-chat-row-btn"
                   data-lid="${r.id}" data-sid="${r.seller_id}"
                   data-title="${escapeHtml(r.title)}" data-seller="${escapeHtml(r.profiles?.display_name || 'Wrecker')}"
-                  onclick="event.stopPropagation();_slOpenChatBtn(this)">Chat</button></div>` : '';
+                  onclick="event.stopPropagation();_slOpenChatBtn(this)">Chat</button>` : '';
         const matchClass = r._match ? ` sl-row--${r._match}` : '';
         const matchBadge = r._match ? `<span class="sl-match sl-match--${r._match}">${r._match === 'exact' ? 'Exact' : 'Possible'}</span>` : '';
         return `<div class="sl-row${isOwn ? ' own' : ''}${matchClass}${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
             <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
-            <div class="sl-cell sl-cell-thumb">
-                ${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}
-            </div>
+            <div class="sl-cell sl-cell-thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}</div>
             <div class="sl-cell-title"><span>${matchBadge}${escapeHtml(r.title)}</span></div>
-            ${!isOwn ? `<div class="sl-cell sl-cell-yard">${yard}</div>` : ''}
-            <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
-            <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
-            ${isOwn ? `<div class="sl-cell sl-cell-stock">${escapeHtml(r.stock_number || '')}</div>
-            <div class="sl-cell sl-cell-bin">${escapeHtml(r.warehouse_bin || '')}</div>` : ''}
+            <div class="sl-cell sl-cell-stock">${isOwn ? escapeHtml(r.stock_number || '') : ''}</div>
             <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
-            ${isOwn ? `<div class="sl-cell sl-cell-chat"></div>` : chatBtn}
+            <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
+            <div class="sl-cell sl-cell-bin">${isOwn ? escapeHtml(r.warehouse_bin || '') : ''}</div>
+            <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
+            <div class="sl-cell sl-cell-yard">${isOwn ? '' : escapeHtml(r.profiles?.display_name || 'Wrecker')}</div>
+            <div class="sl-cell sl-cell-chat">${chatBtn}</div>
         </div>`;
     };
-
-    const ownColHdr = `<div class="sl-results-col-hdr">
-        <div class="sl-hdr-cell" style="width:36px;"></div>
-        <div class="sl-hdr-cell" style="width:52px;"></div>
-        <div class="sl-hdr-cell flex">Part</div>
-        <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
-        <div class="sl-hdr-cell" style="width:70px;">Price</div>
-        <div class="sl-hdr-cell" style="width:88px;">Stock #</div>
-        <div class="sl-hdr-cell" style="width:76px;">Bin</div>
-        <div class="sl-hdr-cell" style="width:76px;">KMs</div>
-        <div class="sl-hdr-cell" style="width:68px;"></div>
-    </div>`;
-    const otherColHdr = `<div class="sl-results-col-hdr">
-        <div class="sl-hdr-cell" style="width:36px;"></div>
-        <div class="sl-hdr-cell" style="width:52px;"></div>
-        <div class="sl-hdr-cell flex">Part</div>
-        <div class="sl-hdr-cell" style="width:130px;">Yard</div>
-        <div class="sl-hdr-cell" style="width:44px;">Gr.</div>
-        <div class="sl-hdr-cell" style="width:70px;">Price</div>
-        <div class="sl-hdr-cell" style="width:76px;">KMs</div>
-        <div class="sl-hdr-cell" style="width:68px;"></div>
-    </div>`;
 
     const proToggle = `<button class="sl-pro-filter-btn${_slProOnly ? ' active' : ''}" onclick="_slToggleProOnly()">${_slProOnly ? '★ Pro only' : '☆ Pro only'}</button>`;
     const otherHdr = allOther.length
         ? `<div class="sl-section-hdr">OTHER YARDS — ${other.length}${_slProOnly && other.length < allOther.length ? ` of ${allOther.length}` : ''} result${other.length!==1?'s':''}${proToggle}</div>`
         : '';
     const otherBody = other.length
-        ? `<div class="sl-results-table">${otherColHdr}${other.map(r=>rowHTML(r,false)).join('')}</div>`
+        ? `<div class="sl-results-table">${_slResultsHdr()}${_slSortRows(other).map(r=>rowHTML(r,false)).join('')}</div>`
         : (allOther.length ? `<div class="sl-no-results" style="padding:10px 15px;font-size:12px;">No pro sellers in these results</div>` : '');
 
     content.innerHTML =
-        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div><div class="sl-results-table">${ownColHdr}${own.map(r=>rowHTML(r,true)).join('')}</div>` : '') +
+        (own.length ? `<div class="sl-section-hdr own"><span class="sl-section-own-pill">YOUR STOCK</span>${own.length} result${own.length!==1?'s':''}</div><div class="sl-results-table">${_slResultsHdr()}${_slSortRows(own).map(r=>rowHTML(r,true)).join('')}</div>` : '') +
         otherHdr + otherBody;
     _slRenderActionBar();
 }
 
 function _slToggleProOnly() {
     _slProOnly = !_slProOnly;
+    _slRenderResults();
+}
+
+// Shared spreadsheet header — clickable columns drive _slSort. Same template for
+// both YOUR STOCK and OTHER YARDS so every column lines up vertically.
+function _slResultsHdr() {
+    const arrow = k => _slSort.key === k ? (_slSort.dir > 0 ? ' ▲' : ' ▼') : '';
+    const cell  = (k, label, w) => `<div class="sl-hdr-cell sl-hdr-sort${_slSort.key === k ? ' active' : ''}" style="width:${w}px;" onclick="_slSortBy('${k}')">${label}${arrow(k)}</div>`;
+    return `<div class="sl-results-col-hdr">
+        <div class="sl-hdr-cell" style="width:36px;"></div>
+        <div class="sl-hdr-cell" style="width:52px;"></div>
+        <div class="sl-hdr-cell flex sl-hdr-sort${_slSort.key === 'title' ? ' active' : ''}" onclick="_slSortBy('title')">Part${arrow('title')}</div>
+        ${cell('stock', 'Stock #', 88)}
+        ${cell('kms',   'KMs',     76)}
+        ${cell('grade', 'Cond',    56)}
+        ${cell('bin',   'Bin',     76)}
+        ${cell('price', 'Price',   70)}
+        ${cell('yard',  'Yard',   130)}
+        <div class="sl-hdr-cell" style="width:72px;"></div>
+    </div>`;
+}
+
+function _slSortRows(rows) {
+    if (!_slSort.key) return rows;
+    const { key, dir } = _slSort;
+    const get = r => {
+        switch (key) {
+            case 'kms':   return r.odometer != null ? Number(r.odometer) : null;
+            case 'price': return r.price != null ? Number(r.price) : null;
+            case 'stock': return (r.stock_number || '').toLowerCase();
+            case 'bin':   return (r.warehouse_bin || '').toLowerCase();
+            case 'grade': return (r.condition || '').toLowerCase();
+            case 'yard':  return (r.profiles?.display_name || '').toLowerCase();
+            case 'title': return (r.title || '').toLowerCase();
+            default:      return null;
+        }
+    };
+    return [...rows].sort((a, b) => {
+        const va = get(a), vb = get(b);
+        const ea = va === null || va === '', eb = vb === null || vb === '';
+        if (ea && eb) return 0;
+        if (ea) return 1;   // blanks always sort to the bottom
+        if (eb) return -1;
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+        return String(va).localeCompare(String(vb)) * dir;
+    });
+}
+
+function _slSortBy(key) {
+    if (_slSort.key === key) _slSort.dir = -_slSort.dir;
+    else _slSort = { key, dir: 1 };
     _slRenderResults();
 }
 
