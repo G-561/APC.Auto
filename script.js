@@ -16668,12 +16668,12 @@ function _slRenderResults() {
         }
         const statusColour = { active: '#22c55e', pending: '#f59e0b', sold: '#888', draft: '#aaa' };
         const stockColHdr = `<div class="sl-results-col-hdr">
-            <div class="sl-hdr-cell" style="width:36px;"></div>
-            <div class="sl-hdr-cell" style="width:52px;"></div>
+            <div class="sl-hdr-cell" style="width:36px;padding:0 8px;"></div>
+            <div class="sl-hdr-cell" style="width:52px;padding:0 4px;"></div>
             <div class="sl-hdr-cell flex">Part</div>
             <div class="sl-hdr-cell" style="width:56px;">Gr.</div>
             <div class="sl-hdr-cell" style="width:70px;">Price</div>
-            <div class="sl-hdr-cell" style="width:72px;">KMs</div>
+            <div class="sl-hdr-cell" style="width:76px;">KMs</div>
             <div class="sl-hdr-cell" style="width:120px;">Bin / Status</div>
         </div>`;
         const stockRows = tab.results.map(r => {
@@ -16774,9 +16774,11 @@ function _slToggleProOnly() {
 function _slResultsHdr(isOwn) {
     const arrow = k => _slSort.key === k ? (_slSort.dir > 0 ? ' ▲' : ' ▼') : '';
     const cell  = (k, label, w) => `<div class="sl-hdr-cell sl-hdr-sort${_slSort.key === k ? ' active' : ''}" style="width:${w}px;" onclick="_slSortBy('${k}')">${label}${arrow(k)}</div>`;
+    // The 3 spacer cells (checkbox, thumb, action) mirror the row cells' tighter
+    // padding so every column header lines up exactly with the data below it.
     return `<div class="sl-results-col-hdr">
-        <div class="sl-hdr-cell" style="width:36px;"></div>
-        <div class="sl-hdr-cell" style="width:52px;"></div>
+        <div class="sl-hdr-cell" style="width:36px;padding:0 8px;"></div>
+        <div class="sl-hdr-cell" style="width:52px;padding:0 4px;"></div>
         <div class="sl-hdr-cell flex sl-hdr-sort${_slSort.key === 'title' ? ' active' : ''}" onclick="_slSortBy('title')">Part${arrow('title')}</div>
         ${cell('stock', 'Stock #', 88)}
         ${cell('kms',   'KMs',     76)}
@@ -16784,7 +16786,7 @@ function _slResultsHdr(isOwn) {
         ${cell('bin',   isOwn ? 'Bin' : 'State', 76)}
         ${cell('price', 'Price',   70)}
         ${cell('yard',  'Yard',   130)}
-        <div class="sl-hdr-cell" style="width:72px;"></div>
+        <div class="sl-hdr-cell" style="width:72px;padding:0 8px;"></div>
     </div>`;
 }
 
