@@ -15974,7 +15974,10 @@ function _slGetPartGroups(zI, aI) {
         if (!map.has(base)) map.set(base, []);
         if (qualifier) map.get(base).push(qualifier);
     });
-    return [...map.entries()].map(([base, qualifiers]) => ({ base, qualifiers }));
+    // fullBase carries the assembly's position (Front/Rear/Upper/…) the same way
+    // EDW bakes it into the listing title — so the search + tab identity are
+    // position-aware and Front/Rear parts of the same name don't collide.
+    return [...map.entries()].map(([base, qualifiers]) => ({ base, qualifiers, fullBase: _edwFullPartName(asm.name, base) }));
 }
 
 function _slComputeColWidths() {
@@ -16030,8 +16033,9 @@ function _slGetReverseMap() {
         zone.assemblies.forEach((asm, aI) => {
             asm.parts.forEach(p => {
                 const { base, qualifier } = _slParsePartName(p);
-                if (!_slReverseMap.has(base)) _slReverseMap.set(base, { zI, aI });
-                if (qualifier) _slReverseMap.set(`${base} — ${qualifier}`, { zI, aI });
+                const fullBase = _edwFullPartName(asm.name, base);
+                if (!_slReverseMap.has(fullBase)) _slReverseMap.set(fullBase, { zI, aI });
+                if (qualifier) _slReverseMap.set(`${fullBase} — ${qualifier}`, { zI, aI });
             });
         });
     });
@@ -16082,14 +16086,14 @@ function _buildSlParts(zI, aI) {
     const groups = _slGetPartGroups(zI, aI);
     if (!groups.length) return `<div class="edw-panel-empty">Select an assembly</div>`;
     const searched = new Set(_slTabs.map(t => t.partName));
-    return groups.map(({ base, qualifiers }, idx) => {
+    return groups.map(({ base, qualifiers, fullBase }, idx) => {
         const hasQuals   = qualifiers.length > 0;
         const isSelected = _slSelectedPartBase?.base === base;
-        const checkedAll = searched.has(base);
-        const checkedAny = hasQuals && qualifiers.some(q => searched.has(`${base} — ${q}`));
+        const checkedAll = searched.has(fullBase);
+        const checkedAny = hasQuals && qualifiers.some(q => searched.has(`${fullBase} — ${q}`));
         const checked    = checkedAll || checkedAny;
         const count      = hasQuals
-            ? qualifiers.filter(q => searched.has(`${base} — ${q}`)).length + (checkedAll ? 1 : 0)
+            ? qualifiers.filter(q => searched.has(`${fullBase} — ${q}`)).length + (checkedAll ? 1 : 0)
             : (checkedAll ? 1 : 0);
         return `<div class="edw-panel-row sl-part-row${checked ? ' searched' : ''}${isSelected ? ' active' : ''}"
                      onclick="_slSelectPartBase(${idx})">
@@ -16104,9 +16108,9 @@ function _buildSlQualifiers() {
     if (!_slSelectedPartBase) {
         return `<div class="edw-panel-empty" style="font-size:12px;padding:20px 10px;text-align:center;">← select<br>a part</div>`;
     }
-    const { base, qualifiers } = _slSelectedPartBase;
+    const { base, qualifiers, fullBase } = _slSelectedPartBase;
     const searched  = new Set(_slTabs.map(t => t.partName));
-    const safeBase  = escapeHtml(base).replace(/'/g, "\\'");
+    const safeBase  = escapeHtml(fullBase).replace(/'/g, "\\'");
 
     // No qualifiers — check for engine codes if in Engine assembly, otherwise show "Select"
     if (!qualifiers.length) {
@@ -16118,7 +16122,7 @@ function _buildSlQualifiers() {
 
         if (engineCodes.length) {
             return engineCodes.map(code => {
-                const done    = searched.has(`${base} — ${code}`);
+                const done    = searched.has(`${fullBase} — ${code}`);
                 const safeCode = escapeHtml(code).replace(/'/g, "\\'");
                 return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
                     <label class="sl-part-check" onclick="event.stopPropagation()">
@@ -16129,7 +16133,7 @@ function _buildSlQualifiers() {
             }).join('');
         }
 
-        const checked = searched.has(base);
+        const checked = searched.has(fullBase);
         return `<div class="edw-panel-row sl-part-row${checked ? ' searched' : ''}">
             <label class="sl-part-check" onclick="event.stopPropagation()">
                 <input type="checkbox"${checked ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','',this.checked)">
@@ -16140,7 +16144,7 @@ function _buildSlQualifiers() {
 
     // Has qualifiers — show each as a checkbox row
     return qualifiers.map(q => {
-        const done  = searched.has(`${base} — ${q}`);
+        const done  = searched.has(`${fullBase} — ${q}`);
         const safeQ = escapeHtml(q).replace(/'/g, "\\'");
         return `<div class="edw-panel-row sl-part-row${done ? ' searched' : ''}">
             <label class="sl-part-check" onclick="event.stopPropagation()"><input type="checkbox"${done ? ' checked' : ''} onchange="_slTogglePartCheck('${safeBase}','${safeQ}',this.checked)"></label>
