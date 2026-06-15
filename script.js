@@ -16497,7 +16497,9 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         .eq('seller_id', currentUserId).eq('status', 'active')
         .ilike('title', `%${partBase}%`).order('created_at', { ascending: false }).limit(60);
     if (qualifier) ownQ = ownQ.ilike('title', `%${qualifier}%`);
-    if (make && model && vehicleIds.length) ownQ = ownQ.in('id', vehicleIds);
+    // Always restrict to the selected vehicle's listings — an empty match must
+    // return nothing, never fall back to matching the part name alone.
+    if (make && model) ownQ = ownQ.in('id', vehicleIds);
     ownQ = applyYearFilter(ownQ);
 
     // Search B: other yards — via listing_vehicles
