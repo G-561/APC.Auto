@@ -7748,7 +7748,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-cf-send:hover { background: #d95f10; }
 
 /* Chat button on OTHER YARDS rows */
-.sl-cell-chat { display: flex; align-items: center; flex-shrink: 0; padding: 0 8px; }
+.sl-cell-chat { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 72px; padding: 0 8px; }
 .sl-chat-row-btn { padding: 4px 10px; background: #1a1a2e; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .sl-chat-row-btn:hover { background: #f07020; }
 

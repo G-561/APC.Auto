@@ -16720,7 +16720,7 @@ function _slRenderResults() {
             ${isOwn ? `<div class="sl-cell sl-cell-stock">${escapeHtml(r.stock_number || '')}</div>
             <div class="sl-cell sl-cell-bin">${escapeHtml(r.warehouse_bin || '')}</div>` : ''}
             <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
-            ${chatBtn}
+            ${isOwn ? `<div class="sl-cell sl-cell-chat"></div>` : chatBtn}
         </div>`;
     };
 
@@ -16733,6 +16733,7 @@ function _slRenderResults() {
         <div class="sl-hdr-cell" style="width:88px;">Stock #</div>
         <div class="sl-hdr-cell" style="width:76px;">Bin</div>
         <div class="sl-hdr-cell" style="width:76px;">KMs</div>
+        <div class="sl-hdr-cell" style="width:68px;"></div>
     </div>`;
     const otherColHdr = `<div class="sl-results-col-hdr">
         <div class="sl-hdr-cell" style="width:36px;"></div>
