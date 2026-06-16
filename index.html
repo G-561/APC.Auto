@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=85">
+    <link rel="stylesheet" href="style.css?v=86">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -125,6 +125,10 @@
             <span class="pro-hdr-link" id="proNavStock" onclick="proOpenStockLookup()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 Stock Lookup
+            </span>
+            <span class="pro-hdr-link pro-hdr-refresh" id="proNavRefresh" onclick="proRefresh()" title="Refresh data — stays on this page">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Refresh
             </span>
         </nav>
         <span class="pro-hdr-link pro-hdr-settings" id="proNavSettings" onclick="onMenuOpenSettings()" style="gap:6px;">
@@ -3039,7 +3043,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=160"></script>
+<script src="script.js?v=161"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

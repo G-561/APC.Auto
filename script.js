@@ -12568,6 +12568,37 @@ function proHideAllViews() {
     _dashListingsCtx = 'dash';
 }
 
+// In-app refresh: re-pull data and re-render the current Pro view WITHOUT a browser
+// reload (a real reload drops the user back to the home page, since the view isn't
+// in the URL). Lets a Pro user pick up bin/location/quote updates and stay put.
+async function proRefresh() {
+    const btn = document.getElementById('proNavRefresh');
+    btn?.classList.add('pro-hdr-refreshing');
+    const vis = id => { const el = document.getElementById(id); return el && el.style.display !== 'none' && el.style.display !== ''; };
+    try {
+        if (currentUserId) await loadUserListingsFromSupabase(currentUserId);
+        if (vis('proListingsView')) {
+            await _loadQuotedListingsMap();
+            _updateProLstTabCounts();
+            const idx = [...document.querySelectorAll('#proLstTabs .dash-tab')].findIndex(b => b.classList.contains('active'));
+            renderDashListings(['active', 'pending', 'sold'][idx] || 'active', null, 'pro');
+        } else if (vis('proStockView')) {
+            _slLoadTodaysQuotes();
+            _slLoadMarkers();
+        } else if (vis('proEnquiriesView')) {
+            if (currentUserId) await loadConversationsFromSupabase(currentUserId);
+            proRenderConvList(); proUpdateFolderBadges();
+        } else {
+            renderDashboard();
+        }
+        showToast('Refreshed');
+    } catch (e) {
+        showToast('Refresh failed — try again');
+    } finally {
+        btn?.classList.remove('pro-hdr-refreshing');
+    }
+}
+
 function proOpenMyListings(tab) {
     proShowView('proListingsView', 'proNavListings');
     const openTab = tab || _dashCurrentTab || 'active';
