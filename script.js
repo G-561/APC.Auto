@@ -12990,6 +12990,7 @@ function proOpenStockLookup() {
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = -1; _slSelectedPartBase = null;
     _slSelected.clear(); _slResultsMap.clear(); _slActiveQuote = null;
+    _slQuotedListings.clear(); _slPartNotes.clear();
     _slColWidths = null;    // recompute column widths against current styles
     _slSearchHistory = []; // fresh session log
     _slRenderSearchHistory();
@@ -12998,6 +12999,7 @@ function proOpenStockLookup() {
     try { _slRenderSelector(); }   catch(e) { console.error('SL selector error:', e); }
     _slRenderResultsArea();
     _slLoadTodaysQuotes();
+    _slLoadMarkers();
 }
 
 function proOpenEDW() {
@@ -15843,6 +15845,8 @@ let _slSearchHistory  = [];   // session log: { partName, vehicle, time, tabIdx,
 let _slColWidths      = null; // computed once from full taxonomy — never recalculated
 let _slSelected       = new Map(); // listingId -> { title, price, stock_number }
 let _slResultsMap     = new Map(); // listingId -> result row data (populated when results load)
+let _slQuotedListings = new Map(); // listingId -> [{id, quote_number, customer_name, status}] active quotes
+let _slPartNotes      = new Map(); // listingId -> EDW note text (own parts only)
 let _slQuotes         = [];        // quotes loaded from Supabase
 let _slActiveQuote    = null;      // { quote, lines } currently shown in detail panel
 let _slQuoteConvContext = null;    // set when quote overlay is opened from a DBMC conversation
@@ -16699,7 +16703,7 @@ function _slRenderResults() {
                 return `<div class="sl-row own${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
                     <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
                     <div class="sl-cell sl-cell-thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}</div>
-                    <div class="sl-cell-title"><span>${escapeHtml(r.title)}</span></div>
+                    <div class="sl-cell-title"><span class="sl-title-text">${escapeHtml(r.title)}</span></div>
                     <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
                     <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
                     <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
@@ -16741,10 +16745,16 @@ function _slRenderResults() {
                   onclick="event.stopPropagation();_slOpenChatBtn(this)">Chat</button>` : '';
         const matchClass = r._match ? ` sl-row--${r._match}` : '';
         const matchBadge = r._match ? `<span class="sl-match sl-match--${r._match}">${r._match === 'exact' ? 'Exact' : 'Possible'}</span>` : '';
+        const quotes = _slQuotedListings.get(r.id) || [];
+        const note   = isOwn ? _slPartNotes.get(r.id) : null;
+        const quoteChip = quotes.length
+            ? `<button class="sl-quote-chip" title="On ${quotes.length} active quote${quotes.length>1?'s':''}" onclick="event.stopPropagation();_slShowQuotesFor(${r.id},this)">📋 ${quotes.length}</button>` : '';
+        const noteIcon = note
+            ? `<span class="sl-note-icon" title="${escapeHtml(note)}" onclick="event.stopPropagation();_slShowNoteFor(${r.id},this)">📝</span>` : '';
         return `<div class="sl-row${isOwn ? ' own' : ''}${matchClass}${_slSelected.has(r.id) ? ' selected' : ''}" onclick="_slOpenResultDetail(${r.id})">
             <label class="sl-cell sl-cell-check" onclick="event.stopPropagation()"><input type="checkbox"${chk} onchange="_slToggleSelect(${r.id},this.checked)"></label>
             <div class="sl-cell sl-cell-thumb">${img ? `<img src="${escapeHtml(img)}" alt="">` : `<div class="sl-no-img">📦</div>`}</div>
-            <div class="sl-cell-title"><span>${matchBadge}${escapeHtml(r.title)}</span></div>
+            <div class="sl-cell-title">${matchBadge}<span class="sl-title-text">${escapeHtml(r.title)}</span>${noteIcon}${quoteChip}</div>
             <div class="sl-cell sl-cell-stock">${isOwn ? escapeHtml(r.stock_number || '') : ''}</div>
             <div class="sl-cell sl-cell-kms">${r.odometer ? Number(r.odometer).toLocaleString('en-AU') : ''}</div>
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
@@ -16932,6 +16942,72 @@ function _slRenderActionBar() {
 
 // ── Quote loading / panel rendering ──────────────────────────────────────
 
+// ── Result-row markers: quote membership + EDW notes ─────────────────────────
+// Loads which listings sit on the user's active (draft/sent) quotes, and which of
+// their own parts carry an EDW note. Re-renders results so the markers appear.
+async function _slLoadMarkers() {
+    if (!sb || !currentUserId) return;
+    _slQuotedListings = new Map();
+    _slPartNotes = new Map();
+    const [{ data: quotes }, { data: notes }] = await Promise.all([
+        sb.from('quotes').select('id, quote_number, customer_name, status')
+            .eq('user_id', currentUserId).in('status', ['draft', 'sent']),
+        sb.from('dismantling_items').select('listing_id, notes')
+            .eq('user_id', currentUserId).not('listing_id', 'is', null).neq('notes', ''),
+    ]);
+    if (quotes && quotes.length) {
+        const qById = new Map(quotes.map(q => [q.id, q]));
+        const { data: lines } = await sb.from('quote_lines')
+            .select('listing_id, quote_id').in('quote_id', quotes.map(q => q.id));
+        (lines || []).forEach(l => {
+            const q = qById.get(l.quote_id);
+            if (!q || l.listing_id == null) return;
+            const key = Number(l.listing_id);
+            const arr = _slQuotedListings.get(key) || [];
+            arr.push({ id: q.id, quote_number: q.quote_number, customer_name: q.customer_name, status: q.status });
+            _slQuotedListings.set(key, arr);
+        });
+    }
+    (notes || []).forEach(n => {
+        if (n.listing_id != null && n.notes && n.notes.trim()) _slPartNotes.set(Number(n.listing_id), n.notes.trim());
+    });
+    if (_slActiveTab >= 0) _slRenderResults();
+}
+
+function _slMarkerPopover(anchorEl, html) {
+    document.getElementById('slMarkerPop')?.remove();
+    const pop = document.createElement('div');
+    pop.id = 'slMarkerPop';
+    pop.className = 'sl-marker-pop';
+    pop.innerHTML = html;
+    document.body.appendChild(pop);
+    const rect = anchorEl.getBoundingClientRect();
+    pop.style.top  = `${rect.bottom + 6}px`;
+    pop.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - pop.offsetWidth - 12))}px`;
+    setTimeout(() => {
+        const close = e => { if (!pop.contains(e.target)) { pop.remove(); document.removeEventListener('mousedown', close); } };
+        document.addEventListener('mousedown', close);
+    }, 0);
+}
+
+function _slShowQuotesFor(id, el) {
+    const quotes = _slQuotedListings.get(Number(id)) || [];
+    if (!quotes.length) return;
+    const rows = quotes.map(q =>
+        `<div class="sl-mp-row" onclick="document.getElementById('slMarkerPop')?.remove();_slOpenQuoteDetail(${q.id})">
+            <span class="sl-mp-qnum">${escapeHtml(q.quote_number)}</span>
+            <span class="sl-mp-cust${q.customer_name ? '' : ' sl-mp-cust--none'}">${escapeHtml(q.customer_name || 'No name yet')}</span>
+            <span class="sl-mp-status sl-mp-status--${q.status}">${escapeHtml(q.status)}</span>
+        </div>`).join('');
+    _slMarkerPopover(el, `<div class="sl-mp-title">On ${quotes.length} active quote${quotes.length>1?'s':''}</div>${rows}`);
+}
+
+function _slShowNoteFor(id, el) {
+    const note = _slPartNotes.get(Number(id));
+    if (!note) return;
+    _slMarkerPopover(el, `<div class="sl-mp-title">Part note</div><div class="sl-mp-note">${escapeHtml(note)}</div>`);
+}
+
 async function _slLoadTodaysQuotes() {
     if (!currentUserId || !sb) return;
     const { data } = await sb.from('quotes')
@@ -17096,6 +17172,7 @@ async function _slAddToExistingQuote(quoteId) {
     if (error) { showToast('Could not add parts to quote'); return; }
     showToast(`${lines.length} part${lines.length !== 1 ? 's' : ''} added`);
     _slClearSelection();
+    _slLoadMarkers();
     _slOpenQuoteDetail(quoteId);
 }
 
@@ -17125,6 +17202,7 @@ async function _slSaveNewQuote() {
     _slClearSelection();
     _slCloseQuoteModal();
     _slRenderQuotesList();
+    _slLoadMarkers();
     showToast(`Quote ${qn} saved`);
 }
 
