@@ -1817,6 +1817,7 @@ async function loadPublicListingsFromSupabase(append = false) {
                     _sfUserId ? (p.sellerId === _sfUserId || p.seller === _sfSeller) : p.seller === _sfSeller
                 );
                 _sfGrid.innerHTML = _sfParts.map(p => buildCardHTML(p)).join('');
+                _sfUpdatePartsVisibility();
                 const _sfListEl = document.getElementById('sfStatListings');
                 const _sfSaveEl = document.getElementById('sfStatSaves');
                 if (_sfListEl) _sfListEl.textContent = _sfParts.length;
@@ -1927,6 +1928,7 @@ async function loadUserListingsFromSupabase(userId) {
             const sellerName = sfGrid.dataset.seller || '';
             const parts = getAllParts().filter(p => p.sellerId === userId || p.seller === sellerName);
             sfGrid.innerHTML = parts.map(p => buildCardHTML(p)).join('');
+            _sfUpdatePartsVisibility();
             const listEl = document.getElementById('sfStatListings');
             const saveEl = document.getElementById('sfStatSaves');
             if (listEl) listEl.textContent = parts.length;
@@ -7422,12 +7424,19 @@ function renderWorkshopStorefront(data) {
         condEl.textContent = pt === 'new' ? 'New parts only' : pt === 'used' ? 'Used / reconditioned parts' : pt === 'both' ? 'New & used parts' : '';
     }
 
-    // Hide search + parts grid for service-only
+    // Show the parts grid whenever the seller has parts listed — even a service
+    // provider may stock parts. Only hide the parts UI when there's nothing to show.
+    _sfUpdatePartsVisibility();
+}
+
+// Parts grid + search show whenever the storefront has any parts, regardless of
+// business type (a service workshop can still list parts).
+function _sfUpdatePartsVisibility() {
+    const grid       = document.getElementById('sellerPartsGrid');
     const searchWrap = document.querySelector('#storefrontDrawer .sf-search-wrap');
-    const partsGrid  = document.getElementById('sellerPartsGrid');
-    const isService  = bizType === 'service';
-    if (searchWrap) searchWrap.style.display = isService ? 'none' : '';
-    if (partsGrid)  partsGrid.style.display  = isService ? 'none' : '';
+    const hasParts   = !!(grid && grid.children.length > 0);
+    if (grid)       grid.style.display       = hasParts ? '' : 'none';
+    if (searchWrap) searchWrap.style.display = hasParts ? '' : 'none';
 }
 
 // Fetch a workshop profile by userId from Supabase, then open their storefront
