@@ -12983,6 +12983,9 @@ function proOpenStockLookup() {
     if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
     if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Stock Lookup requires APC Pro'); return; }
     proShowView('proStockView', 'proNavStock');
+    // Resume an in-progress lookup rather than wiping it — stepping out to read a
+    // message/thread and coming back must not lose the search. 'Clear' resets it.
+    if (_slTabs.length || _slVehicle.make || _slSelectedAsm >= 0) { _slChatClose(); return; }
     _slVehicle = { make: '', model: '', year: '', series: '' };
     _slTabs = []; _slActiveTab = -1;
     _slSelectedZone = 0; _slSelectedAsm = -1; _slSelectedPartBase = null;
@@ -13272,7 +13275,7 @@ function _renderEdwStep1() {
             </div>
             <div class="edw-field" id="edwSeriesGroup">
                 <label class="edw-label">Series</label>
-                <select id="edwSeries" class="edw-input" onchange="_edwSaveField('series', this.value)">
+                <select id="edwSeries" class="edw-input" onchange="_edwOnSeriesChange()">
                     <option value="">Select series…</option>
                 </select>
             </div>
@@ -13297,7 +13300,7 @@ function _renderEdwStep1() {
             </div>
             <div class="edw-field">
                 <label class="edw-label">Engine Code</label>
-                <div id="edwEngineCodeWrap">${_buildEngineCodeField('edw', v.make, v.model, v.engineCode)}</div>
+                <div id="edwEngineCodeWrap">${_buildEngineCodeField('edw', v.make, v.model, v.engineCode, v.series)}</div>
             </div>
             <div class="edw-field">
                 <label class="edw-label">Transmission Code</label>
@@ -13413,6 +13416,13 @@ function _edwOnYearChange() {
     _edwRefreshSeries();
 }
 
+function _edwOnSeriesChange() {
+    _edwVehicle.series = document.getElementById('edwSeries')?.value || '';
+    // Rebuild engine codes for the chosen generation (e.g. Mazda "6 1gen")
+    const ecWrap = document.getElementById('edwEngineCodeWrap');
+    if (ecWrap) ecWrap.innerHTML = _buildEngineCodeField('edw', _edwVehicle.make, _edwVehicle.model, _edwVehicle.engineCode || '', _edwVehicle.series);
+}
+
 function _edwRefreshSeries() {
     const grp = document.getElementById('edwSeriesGroup');
     const sel = document.getElementById('edwSeries');
@@ -13445,8 +13455,12 @@ function _edwSaveField(field, value) {
     _edwVehicle[field] = value;
 }
 
-function _buildEngineCodeField(prefix, make, model, currentVal) {
-    const engines = (typeof VEHICLE_ENGINES !== 'undefined' && VEHICLE_ENGINES[make]?.[model]) || [];
+function _buildEngineCodeField(prefix, make, model, currentVal, series) {
+    // Match Stock Lookup: try the generation-specific key first (e.g. "6 1gen"),
+    // then the bare model — some models only have gen-specific engine entries.
+    const key = series ? `${model} ${series}` : model;
+    const engines = (typeof VEHICLE_ENGINES !== 'undefined' &&
+        (VEHICLE_ENGINES[make]?.[key] || VEHICLE_ENGINES[make]?.[model])) || [];
     const id = `${prefix}EngineCode`;
     if (engines.length) {
         const opts = ['<option value="">Select engine code…</option>',
