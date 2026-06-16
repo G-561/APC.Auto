@@ -14060,7 +14060,7 @@ function _buildEdwPanelQuals() {
         const key     = `${zI}:${aI}:${group.directPI}`;
         const checked = !!_edwItems[key];
         const asmName = EDW_TAXONOMY[zI]?.assemblies[aI]?.name || '';
-        const engineCode = (asmName === 'Engine' && group.base === 'Engine' && _edwVehicle.engineCode)
+        const engineCode = (asmName === 'Engine' && group.base === 'Complete Engine' && _edwVehicle.engineCode)
             ? _edwVehicle.engineCode : null;
         const transCode  = (!engineCode && asmName === 'Gearbox / Transmission'
             && (group.base === 'Auto Transmission' || group.base === 'CVT Transmission')
