@@ -1712,6 +1712,15 @@ async function syncListingToSupabase(localListing) {
     } catch (e) { showToast('Sync error: ' + (e.message || e)); }
 }
 
+let _marketplaceTotal = null; // total active/pending listings (for the "X of Y" counter)
+async function _loadMarketplaceTotal() {
+    if (!sb) return;
+    const { count } = await sb.from('listings')
+        .select('id', { count: 'exact', head: true })
+        .in('status', ['active', 'pending']);
+    if (typeof count === 'number') { _marketplaceTotal = count; renderMainGrid(); }
+}
+
 async function loadPublicListingsFromSupabase(append = false) {
     if (_listingsLoading) return;
     _listingsLoading = true;
@@ -1830,6 +1839,7 @@ async function loadPublicListingsFromSupabase(append = false) {
             }
         }
         if (!append) {
+            _loadMarketplaceTotal();
             refreshInboxThreadHeader();
             if (_pendingStoreOpen) {
                 const sid = _pendingStoreOpen;
@@ -4422,10 +4432,17 @@ function syncDetailSaveButton(partId) {
     }
 }
 
-function updateGridHeading(label, count) {
+function updateGridHeading(label, count, opts = {}) {
     const el = document.getElementById('gridHeading');
     if (!el) return;
-    el.innerHTML = `<span class="grid-heading-label">${label}</span><span class="grid-heading-count">${count} part${count !== 1 ? 's' : ''}</span>`;
+    const { total = null, partial = false, noun = 'part' } = opts;
+    let countText;
+    if (total != null && total > count) {
+        countText = `Showing ${count.toLocaleString()} of ${total.toLocaleString()} ${noun}${total !== 1 ? 's' : ''}`;
+    } else {
+        countText = `${count.toLocaleString()}${partial ? '+' : ''} ${noun}${count !== 1 ? 's' : ''}`;
+    }
+    el.innerHTML = `<span class="grid-heading-label">${label}</span><span class="grid-heading-count">${countText}</span>`;
     el.style.display = 'flex';
 }
 
@@ -4501,11 +4518,11 @@ function renderMainGrid() {
 
     // Set heading label based on state
     if (hasSearch) {
-        updateGridHeading(`Results for "${escapeHtml(activeFilters.search)}"`, filtered.length);
+        updateGridHeading(`Results for "${escapeHtml(activeFilters.search)}"`, filtered.length, { noun: 'result', partial: !_listingsExhausted });
     } else if (hasFilters) {
-        updateGridHeading('Filtered results', filtered.length);
+        updateGridHeading('Filtered results', filtered.length, { noun: 'result', partial: !_listingsExhausted });
     } else {
-        updateGridHeading('Recently Listed', filtered.length);
+        updateGridHeading('Recently Listed', filtered.length, { total: _marketplaceTotal });
     }
 
     mainGrid.innerHTML = buildGridWithSponsored(filtered);
