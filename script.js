@@ -17849,7 +17849,14 @@ function renderDashListings(tab, btn, ctx) {
     if (tab === 'active') {
         let items = userListings.filter(p => p.status !== 'sold' && p.status !== 'removed');
         const total = items.length;
-        if (q)   items = items.filter(p => p.title.toLowerCase().includes(q) || (p.category || '').includes(q) || p.loc.toLowerCase().includes(q) || String(p.stockNumber || '').includes(q));
+        if (q) {
+            const tokens = q.split(/\s+/).filter(Boolean);
+            items = items.filter(p => {
+                const vehicleText = (p.fits || []).map(f => [f.make, f.model, f.variant].filter(Boolean).join(' ')).join(' ');
+                const haystack = [p.title, p.category, p.loc, p.stockNumber, p.apcId, vehicleText].filter(Boolean).join(' ').toLowerCase();
+                return tokens.every(t => haystack.includes(t));
+            });
+        }
         if (cat) items = items.filter(p => p.category === cat);
         if (countEl) countEl.textContent = items.length < total ? `${items.length} of ${total} listings` : `${total} listing${total !== 1 ? 's' : ''}`;
         if (!total) {
