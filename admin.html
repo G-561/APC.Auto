@@ -1065,10 +1065,12 @@ async function _refreshUserRow(userId) {
 }
 
 async function giftPro(userId) {
-    const { error } = await sb.from('profiles')
+    const { data, error } = await sb.from('profiles')
         .update({ tier: 'pro', is_pro: true, gifted_pro: true })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select('id');
     if (error) { alert('Failed: ' + error.message); return; }
+    if (!data || !data.length) { alert('Nothing changed — the update was blocked by RLS (0 rows). Check the profiles update policies.'); return; }
     showAdminToast('★ Pro membership gifted!');
     _refreshUserRow(userId);
     loadGiftedPro();
@@ -1077,10 +1079,12 @@ async function giftPro(userId) {
 
 async function removeGift(userId) {
     if (!confirm('Remove gifted Pro? This user will be downgraded to Personal.')) return;
-    const { error } = await sb.from('profiles')
+    const { data, error } = await sb.from('profiles')
         .update({ tier: 'personal', is_pro: false, gifted_pro: false })
-        .eq('id', userId);
+        .eq('id', userId)
+        .select('id');
     if (error) { alert('Failed: ' + error.message); return; }
+    if (!data || !data.length) { alert('Nothing changed — the update was blocked by RLS (0 rows). Check the profiles update policies.'); return; }
     showAdminToast('Gifted Pro removed.');
     _refreshUserRow(userId);
     loadGiftedPro();
@@ -1116,8 +1120,9 @@ async function changeTier(userId, newTier) {
     if (newTier === 'pro')      { updates.is_pro = true; }
     if (newTier === 'trade')    { updates.is_pro = false; }
     if (newTier === 'personal') { updates.is_pro = false; updates.gifted_pro = false; }
-    const { error } = await sb.from('profiles').update(updates).eq('id', userId);
+    const { data, error } = await sb.from('profiles').update(updates).eq('id', userId).select('id');
     if (error) { alert('Failed: ' + error.message); return; }
+    if (!data || !data.length) { alert('Nothing changed — the update was blocked by RLS (0 rows). Check the profiles update policies.'); return; }
     showAdminToast(`Tier set to ${newTier}.`);
     _refreshUserRow(userId);
     loadGiftedPro();
