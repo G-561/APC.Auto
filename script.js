@@ -1732,6 +1732,11 @@ async function loadPublicListingsFromSupabase(append = false) {
             .order('created_at', { ascending: false })
             .limit(20);
 
+        // Own listings come from userListings (loaded separately). Excluding them here
+        // stops pagination from burning whole pages on the signed-in seller's own —
+        // often the newest — stock, which left the grid showing only their own parts.
+        if (currentUserId) query = query.neq('seller_id', currentUserId);
+
         if (append && _listingsCursor) {
             query = query.lt('created_at', _listingsCursor);
         }
