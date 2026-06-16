@@ -10569,30 +10569,14 @@ function selectUpgradePlan(plan) {
     document.getElementById('planAnnual').classList.toggle('upgrade-plan-active',  plan === 'annual');
 }
 
-async function confirmUpgrade() {
-    if (!currentUserId) { showToast('Please sign in first.'); return; }
-
-    const btn = document.getElementById('confirmUpgradeBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Activating…'; }
-
-    const { error } = await sb.from('profiles')
-        .update({ is_pro: true, tier: 'pro' })
-        .eq('id', currentUserId);
-
-    if (error) {
-        if (btn) { btn.disabled = false; btn.textContent = 'Start Free Trial →'; }
-        showToast('Could not activate Pro — please try again.');
-        console.error('Upgrade error:', error.message);
-        return;
-    }
-
-    currentUserTier = 'pro';
+function confirmUpgrade() {
+    // Self-serve Pro activation is intentionally disabled until the Stripe billing flow
+    // ships. The 'No client is_pro escalation' RLS policy blocks client-side is_pro/tier
+    // writes by design — Pro is granted server-side (Stripe webhook) or via the admin
+    // gift panel. Re-wire this button to create-checkout-session when Stripe lands.
+    if (!currentUserId) { openAuthDrawer(); return; }
     closeUpgradeModal();
-    renderAccountState();
-    if (document.getElementById('workshopDrawer')?.classList.contains('active')) {
-        renderWorkshopProfile();
-    }
-    showToast('Pro activated! Welcome to APC Pro.');
+    showToast('APC Pro is launching soon — we\'ll let you know the moment trials open. 🎉');
 }
 
 function closeUpgradeModal() {
