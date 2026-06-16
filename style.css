@@ -7882,6 +7882,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-quote-modal { background: #fff; border-radius: 16px; width: 520px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
 .sl-qm-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid #eee; }
 .sl-qm-title { font-size: 14px; font-weight: 800; color: #333; }
+.sl-qm-title .sl-qm-eyebrow { display: block; font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; color: #aaa; line-height: 1; margin-bottom: 3px; }
+.sl-qm-title .sl-qm-qnum-big { display: block; font-size: 18px; font-weight: 900; color: #f07020; letter-spacing: 0.3px; }
 .sl-qm-close { background: none; border: none; font-size: 18px; color: #aaa; cursor: pointer; padding: 4px; line-height: 1; }
 .sl-qm-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
 .sl-qm-subtitle { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-bottom: 8px; }

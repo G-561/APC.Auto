@@ -15850,6 +15850,7 @@ let _slQuoteDebounce  = null;
 let _slProOnly        = false;     // when true, OTHER YARDS section filters to pro sellers only
 let _slSort           = { key: null, dir: 1 }; // results sort: column key + direction (spreadsheet headers)
 let _slStateFilter    = null;      // OTHER YARDS: filter listings to one state (derived from postcode)
+let _slPendingQuoteNumber = null;  // quote # generated when the add-to-quote modal opens (consumed on save)
 
 function openStockLookup() {
     proOpenStockLookup();
@@ -16994,7 +16995,7 @@ async function _slNewQuote() {
 
 // ── Add-to-quote modal ────────────────────────────────────────────────────
 
-function _slOpenAddToQuote() {
+async function _slOpenAddToQuote() {
     if (!_slSelected.size) return;
     const partsHtml = [..._slSelected.entries()].map(([, d]) =>
         `<div class="sl-qm-parts-row">
@@ -17026,7 +17027,7 @@ function _slOpenAddToQuote() {
     overlay.innerHTML = `
         <div class="sl-quote-modal">
             <div class="sl-qm-header">
-                <span class="sl-qm-title">New Quote</span>
+                <span class="sl-qm-title" id="slQmTitle">New Quote</span>
                 <button class="sl-qm-close" onclick="_slCloseQuoteModal()">✕</button>
             </div>
             <div class="sl-qm-body">
@@ -17055,9 +17056,24 @@ function _slOpenAddToQuote() {
             </div>
         </div>`;
     document.body.appendChild(overlay);
+
+    // Generate the quote number now (not at save) and show it at the top, so the
+    // wrecker can read it to the caller while filling in freight/details. It's only
+    // consumed on Save — cancelling leaves it free for the next quote (no gaps).
+    _slPendingQuoteNumber = null;
+    const titleEl = document.getElementById('slQmTitle');
+    if (titleEl) titleEl.innerHTML = '<span class="sl-qm-eyebrow">New Quote</span><span class="sl-qm-qnum-big">…</span>';
+    const qn = await _slGenerateQuoteNumber().catch(() => null);
+    if (!document.getElementById('slQuoteModalOverlay')) return; // closed while generating
+    _slPendingQuoteNumber = qn;
+    const t = document.getElementById('slQmTitle');
+    if (t) t.innerHTML = qn
+        ? `<span class="sl-qm-eyebrow">New Quote</span><span class="sl-qm-qnum-big">${escapeHtml(qn)}</span>`
+        : 'New Quote';
 }
 
 function _slCloseQuoteModal() {
+    _slPendingQuoteNumber = null;
     const overlay = document.getElementById('slQuoteModalOverlay');
     if (overlay) overlay.remove();
 }
@@ -17091,7 +17107,7 @@ async function _slSaveNewQuote() {
     const freight = parseFloat(document.getElementById('slQmFreight')?.value) || 0;
     const notes   = document.getElementById('slQmNotes')?.value.trim() || null;
 
-    const qn = await _slGenerateQuoteNumber();
+    const qn = _slPendingQuoteNumber || await _slGenerateQuoteNumber();
     const { data: quote, error } = await sb.from('quotes').insert({
         quote_number: qn, user_id: currentUserId, status: 'draft',
         customer_name: name, customer_phone: phone, customer_email: email,
