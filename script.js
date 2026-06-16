@@ -5936,9 +5936,17 @@ async function submitSellListing() {
         ? (document.getElementById('sellChassisVin')?.value.trim() || null)
         : null;
     const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
-    const warehouseBin = (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement)
-        ? (document.getElementById('sellWarehouseBin')?.value.trim() || null)
-        : null;
+    // Warehouse bin: when the warehouse field is in play, its value wins (incl. clearing).
+    // Otherwise, on an edit, keep the listing's existing bin so re-saving never wipes a
+    // location set elsewhere (e.g. by the put-away scanner). New listings default to null.
+    let warehouseBin;
+    if (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement) {
+        warehouseBin = document.getElementById('sellWarehouseBin')?.value.trim() || null;
+    } else if (currentEditingListingId !== null) {
+        warehouseBin = userListings.find(l => l.id === currentEditingListingId)?.warehouseBin || null;
+    } else {
+        warehouseBin = null;
+    }
     const quantity = (userIsSignedIn && currentUserTier === 'pro')
         ? (Math.max(1, parseInt(document.getElementById('sellQuantity')?.value, 10) || 1))
         : 1;
