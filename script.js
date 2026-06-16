@@ -12576,6 +12576,11 @@ function proOpenMyListings(tab) {
     tabBtns.forEach((b, i) => b.classList.toggle('active', i === tabIdx));
     _updateProLstTabCounts();
     renderDashListings(openTab, null, 'pro');
+    // Load quote-interest badges in the background, then refresh the active tab
+    _loadQuotedListingsMap().then(() => {
+        const active = [...document.querySelectorAll('#proLstTabs .dash-tab')].findIndex(b => b.classList.contains('active'));
+        if (active === 0 && document.getElementById('proListingsView')?.style.display !== 'none') renderDashListings('active', null, 'pro');
+    });
 }
 
 function _updateProLstTabCounts() {
@@ -16945,29 +16950,34 @@ function _slRenderActionBar() {
 // ── Result-row markers: quote membership + EDW notes ─────────────────────────
 // Loads which listings sit on the user's active (draft/sent) quotes, and which of
 // their own parts carry an EDW note. Re-renders results so the markers appear.
+// Builds _slQuotedListings: listingId -> the active (draft/sent) quotes it sits on.
+// Shared by Stock Lookup result rows and the My Listings table badge.
+async function _loadQuotedListingsMap() {
+    _slQuotedListings = new Map();
+    if (!sb || !currentUserId) return;
+    const { data: quotes } = await sb.from('quotes')
+        .select('id, quote_number, customer_name, status')
+        .eq('user_id', currentUserId).in('status', ['draft', 'sent']);
+    if (!quotes || !quotes.length) return;
+    const qById = new Map(quotes.map(q => [q.id, q]));
+    const { data: lines } = await sb.from('quote_lines')
+        .select('listing_id, quote_id').in('quote_id', quotes.map(q => q.id));
+    (lines || []).forEach(l => {
+        const q = qById.get(l.quote_id);
+        if (!q || l.listing_id == null) return;
+        const key = Number(l.listing_id);
+        const arr = _slQuotedListings.get(key) || [];
+        arr.push({ id: q.id, quote_number: q.quote_number, customer_name: q.customer_name, status: q.status });
+        _slQuotedListings.set(key, arr);
+    });
+}
+
 async function _slLoadMarkers() {
     if (!sb || !currentUserId) return;
-    _slQuotedListings = new Map();
+    await _loadQuotedListingsMap();
     _slPartNotes = new Map();
-    const [{ data: quotes }, { data: notes }] = await Promise.all([
-        sb.from('quotes').select('id, quote_number, customer_name, status')
-            .eq('user_id', currentUserId).in('status', ['draft', 'sent']),
-        sb.from('dismantling_items').select('listing_id, notes')
-            .eq('user_id', currentUserId).not('listing_id', 'is', null).neq('notes', ''),
-    ]);
-    if (quotes && quotes.length) {
-        const qById = new Map(quotes.map(q => [q.id, q]));
-        const { data: lines } = await sb.from('quote_lines')
-            .select('listing_id, quote_id').in('quote_id', quotes.map(q => q.id));
-        (lines || []).forEach(l => {
-            const q = qById.get(l.quote_id);
-            if (!q || l.listing_id == null) return;
-            const key = Number(l.listing_id);
-            const arr = _slQuotedListings.get(key) || [];
-            arr.push({ id: q.id, quote_number: q.quote_number, customer_name: q.customer_name, status: q.status });
-            _slQuotedListings.set(key, arr);
-        });
-    }
+    const { data: notes } = await sb.from('dismantling_items').select('listing_id, notes')
+        .eq('user_id', currentUserId).not('listing_id', 'is', null).neq('notes', '');
     (notes || []).forEach(n => {
         if (n.listing_id != null && n.notes && n.notes.trim()) _slPartNotes.set(Number(n.listing_id), n.notes.trim());
     });
@@ -16994,7 +17004,7 @@ function _slShowQuotesFor(id, el) {
     const quotes = _slQuotedListings.get(Number(id)) || [];
     if (!quotes.length) return;
     const rows = quotes.map(q =>
-        `<div class="sl-mp-row" onclick="document.getElementById('slMarkerPop')?.remove();_slOpenQuoteDetail(${q.id})">
+        `<div class="sl-mp-row" onclick="_slGotoQuoteDetail(${q.id})">
             <span class="sl-mp-qnum">${escapeHtml(q.quote_number)}</span>
             <span class="sl-mp-cust${q.customer_name ? '' : ' sl-mp-cust--none'}">${escapeHtml(q.customer_name || 'No name yet')}</span>
             <span class="sl-mp-status sl-mp-status--${q.status}">${escapeHtml(q.status)}</span>
@@ -17006,6 +17016,23 @@ function _slShowNoteFor(id, el) {
     const note = _slPartNotes.get(Number(id));
     if (!note) return;
     _slMarkerPopover(el, `<div class="sl-mp-title">Part note</div><div class="sl-mp-note">${escapeHtml(note)}</div>`);
+}
+
+// Open a quote from anywhere — switches to the Stock Lookup view first if needed
+// (the quotes panel lives there), so the My Listings badge can jump to it too.
+function _slGotoQuoteDetail(id) {
+    document.getElementById('slMarkerPop')?.remove();
+    const slView = document.getElementById('proStockView');
+    if (slView && slView.style.display === 'none') proShowView('proStockView', 'proNavStock');
+    _slOpenQuoteDetail(id);
+}
+
+// Quote-interest chip for the My Listings table — same data/popover as Stock Lookup.
+function _dashQuoteChip(p) {
+    const ql = _slQuotedListings.get(Number(p.supabaseId || p.id)) || [];
+    return ql.length
+        ? `<span class="dash-quote-chip" title="On ${ql.length} active quote${ql.length>1?'s':''}" onclick="event.stopPropagation();_slShowQuotesFor(${p.supabaseId || p.id},this)">📋 ${ql.length}</span>`
+        : '';
 }
 
 async function _slLoadTodaysQuotes() {
@@ -17807,7 +17834,7 @@ function renderDashListings(tab, btn, ctx) {
         hasMore = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
             <td><img class="dash-thumb" src="${escapeHtml(thumbUrl((p.images && p.images[0]) || 'images/placeholder.png', 200))}" alt="" onclick="openItemDetail('${p.supabaseId || p.id}')" style="cursor:pointer;" title="View listing"></td>
-            <td><div class="dash-part-name">${escapeHtml(p.title)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
+            <td><div class="dash-part-name">${escapeHtml(p.title)}${_dashQuoteChip(p)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
             <td class="dash-td-stock">${p.stockNumber ? escapeHtml(p.stockNumber) : '<span class="dash-td-loc--empty">—</span>'}</td>
             <td class="dash-td-loc">${p.warehouseBin ? `<span class="dash-bin-chip">${escapeHtml(p.warehouseBin)}</span>` : '<span class="dash-td-loc--empty">—</span>'}</td>
