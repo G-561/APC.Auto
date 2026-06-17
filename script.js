@@ -18091,6 +18091,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const _workerToken = new URLSearchParams(location.search).get('job');
     if (_workerToken && sb) { initWorkerView(_workerToken); return; }
 
+    // Put-away worker view: ?putaway=<token> — no-login scanner scoped to that yard.
+    // (Legacy ?putaway=1 falls through to the signed-in flow below.)
+    const _paToken = new URLSearchParams(location.search).get('putaway');
+    if (_paToken && _paToken !== '1' && sb) { initPutAwayWorkerView(_paToken); return; }
+
     // Always start with a blank filter postcode — never pre-fill from browser autocomplete or profile
     const fp = document.getElementById('filterPostcode');
     if (fp) {
@@ -18273,6 +18278,7 @@ let _whLabelCodes       = [];
 let _whRafId            = null;
 let _whBarcodeDetector  = null;
 let _whScanMode         = 'putaway'; // putaway | stocktake
+let _whPutawayToken     = null;      // set in the no-login worker view — routes reads/writes via RPCs
 let _stkRack            = '';
 let _stkExpected        = [];  // [{ id, title, apcId, status, scanned }]
 let _stkExtras          = [];  // parts scanned that aren't assigned to this rack
@@ -18288,14 +18294,81 @@ function openWarehouseDrawer() {
     whRenderWorkerQR();
 }
 
-function whRenderWorkerQR() {
+async function whRenderWorkerQR() {
     const wrap = document.getElementById('whWorkerQr');
     if (!wrap || !window.QRCode) return;
     if (wrap.querySelector('canvas') || wrap.querySelector('img')) return; // already rendered
     const base = (location.protocol === 'file:' || location.hostname === 'localhost')
         ? 'https://autopartsconnection.com.au/'
         : `${location.origin}${location.pathname}`;
-    new QRCode(wrap, { text: `${base}?putaway=1`, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    // Per-yard token → workers scan in with no login, scoped to put-away only.
+    let token = null;
+    if (sb && currentUserId) {
+        const { data } = await sb.from('profiles').select('putaway_token').eq('id', currentUserId).single();
+        token = data?.putaway_token || null;
+    }
+    const url = token ? `${base}?putaway=${token}` : `${base}?putaway=1`;
+    new QRCode(wrap, { text: url, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+}
+
+// No-login worker put-away view — opened by scanning the boss's ?putaway=<token> QR.
+// Reuses the normal scanner engine; reads/writes go through token-scoped RPCs.
+async function initPutAwayWorkerView(token) {
+    _whPutawayToken = token;
+    _whScanMode = 'putaway';
+    document.body.innerHTML = `<div style="min-height:100vh;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#aaa;font-family:-apple-system,sans-serif;">Loading…</div>`;
+    let yard = null;
+    try { const { data } = await sb.rpc('putaway_resolve', { p_token: token }); yard = data || null; } catch (e) {}
+    if (!yard) {
+        document.body.innerHTML = `<div style="min-height:100vh;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:-apple-system,sans-serif;text-align:center;padding:30px;">
+            <div style="font-size:40px;margin-bottom:12px;">✕</div>
+            <div style="font-size:17px;font-weight:800;margin-bottom:6px;">Link not valid</div>
+            <div style="font-size:13px;color:#aaa;">This put-away code has expired or is incorrect. Ask the yard for a fresh QR.</div>
+        </div>`;
+        return;
+    }
+    document.body.innerHTML = `
+    <div style="min-height:100vh;background:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+        <div style="background:#16213e;color:#fff;padding:16px;text-align:center;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:0.6px;color:#f07020;text-transform:uppercase;">📥 Put-Away Scanner</div>
+            <div style="font-size:16px;font-weight:700;margin-top:3px;">${escapeHtml(yard)}</div>
+        </div>
+        <div style="max-width:480px;margin:0 auto;padding:12px;">
+            <div class="wh-camera-wrap">
+                <video id="whCameraVideo" autoplay playsinline muted class="wh-camera-video"></video>
+                <canvas id="whCameraCanvas" style="display:none;"></canvas>
+                <div class="wh-scan-corner wh-sc-tl"></div>
+                <div class="wh-scan-corner wh-sc-tr"></div>
+                <div class="wh-scan-corner wh-sc-bl"></div>
+                <div class="wh-scan-corner wh-sc-br"></div>
+                <div class="wh-scan-status-bar" id="whScanStatus">Point camera at a part label</div>
+            </div>
+            <div class="wh-scan-info">
+                <div id="whPutawayUi" class="wh-scan-stack">
+                    <div id="whPartCard" class="wh-result-card" style="display:none;">
+                        <div id="whPartThumb" class="wh-result-thumb"></div>
+                        <div class="wh-result-body">
+                            <div class="wh-result-title" id="whPartTitle"></div>
+                            <div class="wh-result-meta" id="whPartMeta"></div>
+                        </div>
+                        <div class="wh-result-check">✓</div>
+                    </div>
+                    <div id="whRackCard" class="wh-result-card wh-result-card--rack" style="display:none;">
+                        <div class="wh-result-thumb wh-result-thumb--rack">📍</div>
+                        <div class="wh-result-body">
+                            <div class="wh-result-title" id="whRackCode"></div>
+                            <div class="wh-result-meta">Rack location scanned</div>
+                        </div>
+                        <div class="wh-result-check">✓</div>
+                    </div>
+                    <button id="whSaveBtn" class="btn-full-action" style="display:none; margin:12px 15px 4px;" onclick="whSaveLocation()">Save Location</button>
+                    <button id="whResetBtn" class="wh-ghost-btn" style="display:none;" onclick="whResetScan()">Scan another part →</button>
+                    <div id="whScanHint" class="wh-scan-hint">Scan the QR code on a part label first, then scan the rack location label.</div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    whStartCamera();
 }
 
 function closeWarehouseDrawer() {
@@ -18680,7 +18753,17 @@ function _whPartRef(data) {
     return /^APC[-\d]/i.test(t) ? t : null;
 }
 async function _whFetchPart(apcId, cols) {
-    if (!sb || !currentUserId || !apcId) return null;
+    if (!sb || !apcId) return null;
+    if (_whPutawayToken) {
+        // No-login worker: look up via the token-scoped RPC, shaped like a listings row.
+        const { data } = await sb.rpc('putaway_lookup_part', { p_token: _whPutawayToken, p_apc_id: apcId });
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!row) return null;
+        return { id: row.id, title: row.title, apc_id: row.apc_id,
+                 listing_images: row.image ? [{ storage_path: row.image, position: 0 }] : [],
+                 listing_vehicles: [] };
+    }
+    if (!currentUserId) return null;
     const { data } = await sb.from('listings').select(cols).eq('seller_id', currentUserId).eq('apc_id', apcId).single();
     return data;
 }
@@ -18755,19 +18838,28 @@ async function whSaveLocation() {
     if (!_whScannedPart?.id || !_whScannedRack) return;
     const saveBtn = document.getElementById('whSaveBtn');
     if (saveBtn) saveBtn.textContent = 'Saving…';
-    const { error } = await sb.from('listings')
-        .update({ warehouse_bin: _whScannedRack })
-        .eq('id', _whScannedPart.id)
-        .eq('seller_id', currentUserId);
-    if (error) { showToast('Error: ' + error.message); if (saveBtn) saveBtn.textContent = 'Save Location'; return; }
+    let ok = false, errMsg = '';
+    if (_whPutawayToken) {
+        const { data, error } = await sb.rpc('putaway_set_bin', { p_token: _whPutawayToken, p_listing_id: _whScannedPart.id, p_bin: _whScannedRack });
+        ok = !error && !!data; errMsg = error?.message || (!data ? 'Part not found for this yard' : '');
+    } else {
+        const { error } = await sb.from('listings')
+            .update({ warehouse_bin: _whScannedRack })
+            .eq('id', _whScannedPart.id)
+            .eq('seller_id', currentUserId);
+        ok = !error; errMsg = error?.message || '';
+    }
+    if (!ok) { showToast('Error: ' + errMsg); if (saveBtn) saveBtn.textContent = 'Save Location'; return; }
     showToast(`📍 Saved: ${_whScannedPart.title} → ${_whScannedRack}`);
     if (saveBtn)  saveBtn.style.display  = 'none';
     const resetBtn = document.getElementById('whResetBtn');
     if (resetBtn) resetBtn.style.display = '';
     whSetStatus('Saved! Tap "Scan another part" to continue');
-    // Also update local cache
-    const local = userListings.find(l => l.supabaseId === _whScannedPart.id || l.id === _whScannedPart.id);
-    if (local) local.warehouseBin = _whScannedRack;
+    // Update local cache (signed-in boss only — worker view has no userListings)
+    if (!_whPutawayToken) {
+        const local = userListings.find(l => l.supabaseId === _whScannedPart.id || l.id === _whScannedPart.id);
+        if (local) local.warehouseBin = _whScannedRack;
+    }
 }
 
 function whResetScan() {
