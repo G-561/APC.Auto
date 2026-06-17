@@ -15369,13 +15369,12 @@ function _dashWrFilter(q) {
     const list    = document.getElementById('dashWrList');
     const countEl = document.getElementById('dashWrCount');
     if (!list) return;
-    const lq = q.toLowerCase();
-    const filtered = q
-        ? publicWantedDatabase.filter(w =>
-            w.partName.toLowerCase().includes(lq) ||
-            w.make.toLowerCase().includes(lq) ||
-            w.model.toLowerCase().includes(lq) ||
-            (w.loc || '').toLowerCase().includes(lq))
+    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+    const filtered = tokens.length
+        ? publicWantedDatabase.filter(w => {
+            const haystack = [w.partName, w.make, w.model, w.year, w.loc, w.category].filter(Boolean).join(' ').toLowerCase();
+            return tokens.every(t => haystack.includes(t));
+          })
         : publicWantedDatabase;
 
     if (countEl) countEl.textContent = `${filtered.length} request${filtered.length !== 1 ? 's' : ''}`;
