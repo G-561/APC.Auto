@@ -1479,7 +1479,6 @@ function renderSettingsDrawer() {
         settingNotifyPriceDrops:    'notifyPriceDrops',
         settingNotifyNewListings:   'notifyNewListings',
         settingPrivacyPublic:       'privacyPublicProfile',
-        settingWarehouseManagement: 'warehouseManagement',
         proSettingDefaultFitting:   'defaultFitting'
     };
     Object.entries(toggleMap).forEach(([elId, key]) => {
@@ -5866,16 +5865,10 @@ function updateSellQuantityVisibility() {
 function updateWarehouseBinVisibility() {
     const section = document.getElementById('sellWarehouseBinSection');
     if (!section) return;
-    const warehouseOn = userIsSignedIn && currentUserTier === 'pro' && !!userSettings.warehouseManagement;
+    const warehouseOn = userIsSignedIn && currentUserTier === 'pro';
     section.style.display = warehouseOn ? 'block' : 'none';
     const printSection = document.getElementById('sellPrintLabelSection');
     if (printSection) printSection.style.display = (userIsSignedIn && currentUserTier === 'pro') ? 'block' : 'none';
-}
-
-function onToggleWarehouseManagement() {
-    const el = document.getElementById('settingWarehouseManagement');
-    if (el) saveSettingsToggle('warehouseManagement', el.checked);
-    updateWarehouseBinVisibility();
 }
 
 async function submitSellListing() {
@@ -5936,11 +5929,11 @@ async function submitSellListing() {
         ? (document.getElementById('sellChassisVin')?.value.trim() || null)
         : null;
     const openToOffers = !!document.getElementById('sellOpenToOffers')?.checked;
-    // Warehouse bin: when the warehouse field is in play, its value wins (incl. clearing).
-    // Otherwise, on an edit, keep the listing's existing bin so re-saving never wipes a
+    // Warehouse bin (Pro): the sell-form field is authoritative — set it or clear it.
+    // For a non-Pro edit, keep the listing's existing bin so a save never wipes a
     // location set elsewhere (e.g. by the put-away scanner). New listings default to null.
     let warehouseBin;
-    if (userIsSignedIn && currentUserTier === 'pro' && userSettings.warehouseManagement) {
+    if (userIsSignedIn && currentUserTier === 'pro') {
         warehouseBin = document.getElementById('sellWarehouseBin')?.value.trim() || null;
     } else if (currentEditingListingId !== null) {
         warehouseBin = userListings.find(l => l.id === currentEditingListingId)?.warehouseBin || null;
