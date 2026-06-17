@@ -18311,6 +18311,19 @@ async function whRenderWorkerQR() {
     new QRCode(wrap, { text: url, width: 120, height: 120, colorDark: '#1a1a1a', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 }
 
+// Regenerate the yard's put-away token — instantly revokes every previously shared QR.
+async function whResetWorkerAccess() {
+    if (!sb || !currentUserId) return;
+    if (!confirm('Reset worker access?\n\nThe current QR will stop working — workers will need to scan the new one.')) return;
+    const newToken = crypto.randomUUID();
+    const { error } = await sb.from('profiles').update({ putaway_token: newToken }).eq('id', currentUserId);
+    if (error) { showToast('Could not reset: ' + error.message); return; }
+    const wrap = document.getElementById('whWorkerQr');
+    if (wrap) wrap.innerHTML = ''; // clear the old QR so it re-renders with the new token
+    whRenderWorkerQR();
+    showToast('Worker access reset — share the new QR');
+}
+
 // No-login worker put-away view — opened by scanning the boss's ?putaway=<token> QR.
 // Reuses the normal scanner engine; reads/writes go through token-scoped RPCs.
 async function initPutAwayWorkerView(token) {

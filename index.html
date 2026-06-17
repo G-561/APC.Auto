@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=87">
+    <link rel="stylesheet" href="style.css?v=88">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -490,7 +490,8 @@
                     <div id="whWorkerQr" class="wh-worker-qr-wrap"></div>
                     <div class="wh-worker-qr-info">
                         <div class="wh-worker-qr-title">Put-Away Scanner</div>
-                        <div class="wh-worker-qr-desc">Workers scan this QR with their phone to open the put-away scanner directly — no menu navigation needed.</div>
+                        <div class="wh-worker-qr-desc">Workers scan this QR with their phone to open the put-away scanner directly — no login needed. The same QR works every time; reset it to revoke access.</div>
+                        <button class="wh-worker-qr-reset" onclick="whResetWorkerAccess()">↻ Reset worker access</button>
                     </div>
                 </div>
             </div>
@@ -3036,7 +3037,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=172"></script>
+<script src="script.js?v=173"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
