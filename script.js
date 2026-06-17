@@ -13909,17 +13909,25 @@ function _donorFieldsFromJob(job) {
 }
 
 // When a stock card is edited after parts are published, stamp the donor fields onto
-// every linked part so My Listings / Stock Lookup stay in sync. warehouse_bin is
-// per-part and never touched; make/model/series live in listing_vehicles.
+// every part off that vehicle so My Listings / Stock Lookup stay in sync. We match
+// BOTH the internal link (dismantling_job_id) AND the shared stock number — so a
+// vehicle whose parts were published without the job link still updates. warehouse_bin
+// is per-part and never touched; make/model/series live in listing_vehicles.
 async function _backfillJobToListings(jobId, fields) {
     if (!sb || !currentUserId || !jobId) return 0;
-    const { data: parts } = await sb.from('listings')
-        .select('id').eq('dismantling_job_id', jobId).eq('seller_id', currentUserId);
-    if (!parts || !parts.length) return 0;
-    await sb.from('listings').update(fields)
-        .eq('dismantling_job_id', jobId).eq('seller_id', currentUserId);
+    const ids = new Set();
+    const { data: byJob } = await sb.from('listings')
+        .select('id').eq('seller_id', currentUserId).eq('dismantling_job_id', jobId);
+    (byJob || []).forEach(p => ids.add(p.id));
+    if (fields.stock_number) {
+        const { data: bySn } = await sb.from('listings')
+            .select('id').eq('seller_id', currentUserId).eq('stock_number', fields.stock_number);
+        (bySn || []).forEach(p => ids.add(p.id));
+    }
+    if (!ids.size) return 0;
+    await sb.from('listings').update(fields).eq('seller_id', currentUserId).in('id', [...ids]);
     await loadUserListingsFromSupabase(currentUserId);
-    return parts.length;
+    return ids.size;
 }
 
 function _edwStartWalkaround(jobId) {
