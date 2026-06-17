@@ -4991,14 +4991,17 @@ function renderMyParts() {
         if (el) el.textContent = counts[k] || '';
     });
 
+    const tokens = query.split(/\s+/).filter(Boolean);
     const tabParts = allParts.filter(p => {
         const matchTab =
             _myListingsTab === 'active'  ? (!p.status || p.status === 'active') :
             _myListingsTab === 'pending' ? p.status === 'pending' :
             _myListingsTab === 'sold'    ? p.status === 'sold' : true;
-        return matchTab && (!query || p.title.toLowerCase().includes(query)
-            || (p.apcId       || '').toLowerCase().includes(query)
-            || (p.stockNumber || '').toLowerCase().includes(query));
+        if (!matchTab) return false;
+        if (!tokens.length) return true;
+        const vehicleText = (p.fits || []).map(f => [f.make, f.model, f.variant].filter(Boolean).join(' ')).join(' ');
+        const haystack = [p.title, p.category, p.loc, p.stockNumber, p.apcId, vehicleText].filter(Boolean).join(' ').toLowerCase();
+        return tokens.every(t => haystack.includes(t));
     }).sort((a, b) => (b.date || 0) - (a.date || 0));
 
     myPartsList.innerHTML = '';
