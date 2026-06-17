@@ -18149,6 +18149,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadSavedListingsFromSupabase(session.user.id);
                 loadPublicWantedFromSupabase();
                 loadNotificationsFromSupabase();
+            } else if (!session?.user && _pendingPutAway && !userIsSignedIn) {
+                // Worker scanned the put-away QR but isn't signed in — open the sign-in
+                // modal directly so they don't have to hunt for it. The _pendingPutAway
+                // hook in renderAccountState opens the scanner once they're signed in.
+                openAuthDrawer();
             }
         });
     }
