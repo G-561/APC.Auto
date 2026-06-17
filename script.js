@@ -18325,6 +18325,52 @@ async function whResetWorkerAccess() {
     showToast('Worker access reset — share the new QR');
 }
 
+// Print the worker QR as a scan-ready label (large QR + simple instructions).
+async function whPrintWorkerQR() {
+    const base = (location.protocol === 'file:' || location.hostname === 'localhost')
+        ? 'https://autopartsconnection.com.au/'
+        : `${location.origin}${location.pathname}`;
+    let token = null;
+    if (sb && currentUserId) {
+        const { data } = await sb.from('profiles').select('putaway_token').eq('id', currentUserId).single();
+        token = data?.putaway_token || null;
+    }
+    const url = token ? `${base}?putaway=${token}` : `${base}?putaway=1`;
+    const bizName = (userSettings.businessName || '').trim() || 'Put-Away Scanner';
+    const win = window.open('', '_blank');
+    if (!win) { showToast('Allow pop-ups to print the QR'); return; }
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Put-Away QR</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
+<style>
+  *{box-sizing:border-box;} body{font-family:-apple-system,'Segoe UI',sans-serif;margin:0;padding:40px;text-align:center;color:#1a1a2e;}
+  .pa-card{max-width:480px;margin:0 auto;border:2px solid #1a1a2e;border-radius:16px;padding:32px;}
+  .pa-eyebrow{font-size:13px;font-weight:800;letter-spacing:1px;color:#f07020;text-transform:uppercase;}
+  .pa-title{font-size:26px;font-weight:900;margin:6px 0 4px;}
+  .pa-sub{font-size:13px;color:#555;margin-bottom:22px;}
+  .pa-qr{display:inline-block;padding:12px;background:#fff;}
+  .pa-steps{font-size:14px;color:#333;margin-top:22px;line-height:1.8;text-align:left;display:inline-block;}
+  @media print{@page{margin:12mm;} body{padding:0;}}
+</style></head><body>
+  <div class="pa-card">
+    <div class="pa-eyebrow">&#128229; Put-Away Scanner</div>
+    <div class="pa-title">${escapeHtml(bizName)}</div>
+    <div class="pa-sub">Scan with your phone camera to put parts away</div>
+    <div class="pa-qr" id="paQr"></div>
+    <div class="pa-steps">
+      1. Point your phone camera at this code<br>
+      2. Scan a part label<br>
+      3. Scan the rack / shelf label<br>
+      4. Tap <b>Save</b> &mdash; done!
+    </div>
+  </div>
+  <script>
+    new QRCode(document.getElementById('paQr'), { text: ${JSON.stringify(url)}, width: 320, height: 320, correctLevel: QRCode.CorrectLevel.M });
+    setTimeout(() => window.print(), 600);
+  <\/script>
+</body></html>`);
+    win.document.close();
+}
+
 // No-login worker put-away view — opened by scanning the boss's ?putaway=<token> QR.
 // Reuses the normal scanner engine; reads/writes go through token-scoped RPCs.
 async function initPutAwayWorkerView(token) {
