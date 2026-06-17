@@ -13872,7 +13872,6 @@ async function _edwSaveVehicle(jobId) {
         transmission_type: get('transmission_type'), transmission_code: get('transmission_code'),
         paint_code: get('paint_code'), build_date: get('build_date'),
     };
-    const oldDonor = JSON.stringify(_donorFieldsFromJob(_edwStockCardData?.job || {}));
     const { error } = await sb.from('dismantling_jobs').update(updates).eq('id', jobId);
     if (error) { showToast('Save failed: ' + error.message); return; }
     Object.assign(_edwStockCardData.job, updates);
@@ -13882,17 +13881,14 @@ async function _edwSaveVehicle(jobId) {
     const titleEl = document.querySelector('#edwStockCardOverlay span[style*="font-size:15px"]');
     if (titleEl) titleEl.textContent = label;
 
-    let savedMsg = 'Vehicle updated';
-    const newDonor = _donorFieldsFromJob(_edwStockCardData.job);
-    if (JSON.stringify(newDonor) !== oldDonor) {
-        const n = await _backfillJobToListings(jobId, newDonor);
-        const { data: freshParts } = await sb.from('listings')
-            .select('id, title, price, status, stock_number, warehouse_bin, condition')
-            .eq('dismantling_job_id', jobId).eq('seller_id', currentUserId).order('title');
-        _edwStockCardData.parts = freshParts || [];
-        if (n) savedMsg = `Synced to ${n} listed part${n !== 1 ? 's' : ''}`;
-    }
-    showToast(savedMsg);
+    // Always stamp donor fields onto the parts (idempotent) — repairs parts published
+    // before they were ever synced, even when nothing changed in this save.
+    const n = await _backfillJobToListings(jobId, _donorFieldsFromJob(_edwStockCardData.job));
+    const { data: freshParts } = await sb.from('listings')
+        .select('id, title, price, status, stock_number, warehouse_bin, condition')
+        .eq('dismantling_job_id', jobId).eq('seller_id', currentUserId).order('title');
+    if (freshParts && freshParts.length) _edwStockCardData.parts = freshParts;
+    showToast(n ? `Synced to ${n} listed part${n !== 1 ? 's' : ''}` : 'Vehicle updated');
     _edwStockCardTab('vehicle');
 }
 
@@ -19257,7 +19253,6 @@ async function _vscSaveVehicle() {
         transmission_type: get('transmission_type'), transmission_code: get('transmission_code'),
         paint_code: get('paint_code'), build_date: get('build_date'),
     };
-    const oldDonor = JSON.stringify(_donorFieldsFromJob(_vscCurrentJob || {}));
     const saveBtn = document.querySelector('#vscVehicleCard button[onclick="_vscSaveVehicle()"]');
     if (saveBtn) saveBtn.textContent = 'Saving…';
     const { error } = await sb.from('dismantling_jobs').update(updates).eq('id', _vscCurrentJobId);
@@ -19268,14 +19263,11 @@ async function _vscSaveVehicle() {
         const stub = _edwStock.find(j => j.id === _vscCurrentJobId);
         if (stub) Object.assign(stub, updates);
     }
-    if (JSON.stringify(_donorFieldsFromJob(_vscCurrentJob)) !== oldDonor) {
-        const n = await _backfillJobToListings(_vscCurrentJobId, _donorFieldsFromJob(_vscCurrentJob));
-        showToast(n ? `Synced to ${n} listed part${n !== 1 ? 's' : ''}` : 'Vehicle details saved');
-        _edwLoadAndOpen(_vscCurrentJobId); // reload so the parts list shows the new values
-        return;
-    }
-    showToast('Vehicle details saved');
-    _vscCancelEditVehicle(); // returns to read view
+    // Always stamp donor fields onto the parts (idempotent) — repairs parts published
+    // before they were ever synced, even when nothing changed in this save.
+    const n = await _backfillJobToListings(_vscCurrentJobId, _donorFieldsFromJob(_vscCurrentJob));
+    showToast(n ? `Synced to ${n} listed part${n !== 1 ? 's' : ''}` : 'Vehicle details saved');
+    _edwLoadAndOpen(_vscCurrentJobId); // reload so the parts list shows the new values
 }
 
 function _vscBuildPartRows(parts) {
