@@ -18279,6 +18279,7 @@ let _whRafId            = null;
 let _whBarcodeDetector  = null;
 let _whScanMode         = 'putaway'; // putaway | stocktake
 let _whPutawayToken     = null;      // set in the no-login worker view — routes reads/writes via RPCs
+let _paSessionCount     = 0;         // parts put away in the current worker session
 let _stkRack            = '';
 let _stkExpected        = [];  // [{ id, title, apcId, status, scanned }]
 let _stkExtras          = [];  // parts scanned that aren't assigned to this rack
@@ -18329,6 +18330,7 @@ async function whResetWorkerAccess() {
 async function initPutAwayWorkerView(token) {
     _whPutawayToken = token;
     _whScanMode = 'putaway';
+    _paSessionCount = 0;
     document.body.innerHTML = `<div style="min-height:100vh;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#aaa;font-family:-apple-system,sans-serif;">Loading…</div>`;
     let yard = null;
     try { const { data } = await sb.rpc('putaway_resolve', { p_token: token }); yard = data || null; } catch (e) {}
@@ -18379,9 +18381,23 @@ async function initPutAwayWorkerView(token) {
                     <div id="whScanHint" class="wh-scan-hint">Scan the QR code on a part label first, then scan the rack location label.</div>
                 </div>
             </div>
+            <button onclick="whWorkerDone()" style="display:block;width:calc(100% - 24px);margin:18px 12px 30px;padding:13px;background:#16213e;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;">✓ Done — Close Scanner</button>
         </div>
     </div>`;
     whStartCamera();
+}
+
+function whWorkerDone() {
+    whStopCamera();
+    const n = _paSessionCount;
+    document.body.innerHTML = `
+    <div style="min-height:100vh;background:#1a1a2e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;color:#fff;">
+        <div style="font-size:52px;margin-bottom:14px;">✓</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:6px;">All done</div>
+        <div style="font-size:14px;color:#bbb;margin-bottom:26px;">${n} part${n !== 1 ? 's' : ''} put away this session</div>
+        <button onclick="initPutAwayWorkerView(_whPutawayToken)" style="background:#f07020;color:#fff;border:none;border-radius:10px;padding:13px 28px;font-size:14px;font-weight:800;cursor:pointer;">Scan more parts</button>
+        <div style="font-size:12px;color:#777;margin-top:22px;">You can now close this tab.</div>
+    </div>`;
 }
 
 function closeWarehouseDrawer() {
@@ -18864,6 +18880,7 @@ async function whSaveLocation() {
     }
     if (!ok) { showToast('Error: ' + errMsg); if (saveBtn) saveBtn.textContent = 'Save Location'; return; }
     showToast(`📍 Saved: ${_whScannedPart.title} → ${_whScannedRack}`);
+    if (_whPutawayToken) _paSessionCount++;
     if (saveBtn)  saveBtn.style.display  = 'none';
     const resetBtn = document.getElementById('whResetBtn');
     if (resetBtn) resetBtn.style.display = '';
