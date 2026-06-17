@@ -1530,25 +1530,46 @@ function saveSearchDemand(data) {
     try { localStorage.setItem(SEARCH_DEMAND_KEY, JSON.stringify(data)); } catch(e) {}
 }
 let _lastRecordedSearch = '';
-function recordSearch(term) {
+// source: 'marketplace' = buyer searching APC (site-wide demand) | 'stocklookup' = a yard's
+// own phone-enquiry lookup (their private demand report). found: did the search return stock?
+function recordSearch(term, opts = {}) {
+    const source = opts.source || 'marketplace';
+    const found  = (opts.found === undefined) ? null : !!opts.found;
     const clean = (term || '').toLowerCase().trim();
-    if (!clean || clean.length < 3 || clean === _lastRecordedSearch) return;
-    _lastRecordedSearch = clean;
+    if (!clean || clean.length < 3) return;
+    // Dedupe only marketplace typeahead spam — each yard enquiry is a distinct phone call.
+    if (source === 'marketplace') {
+        if (clean === _lastRecordedSearch) return;
+        _lastRecordedSearch = clean;
+    }
     const now = Date.now();
     const data = loadSearchDemand();
-    data.push({ term: clean, ts: now });
+    data.push({ term: clean, ts: now, source, found, user_id: currentUserId || null });
     saveSearchDemand(data.filter(d => d.ts > Date.now() - 180 * 24 * 60 * 60 * 1000).slice(-3000));
     if (sb) {
         sb.from('search_demand')
-            .insert({ term: clean, ts: new Date(now).toISOString(), user_id: currentUserId || null })
+            .insert({ term: clean, ts: new Date(now).toISOString(), user_id: currentUserId || null, source, found })
             .then(() => {});
     }
 }
 
+// A yard's own stock-lookup enquiry (typically a phone call). Recorded once results are
+// known so we capture whether the yard could supply. Light dedupe stops a re-run/jump
+// double-counting the same enquiry; a genuine later call logs as new demand.
+let _lastYardEnquiry = { term: '', ts: 0 };
+function recordYardEnquiry(term, found) {
+    const clean = (term || '').toLowerCase().trim();
+    if (clean && clean === _lastYardEnquiry.term && Date.now() - _lastYardEnquiry.ts < 30000) return;
+    _lastYardEnquiry = { term: clean, ts: Date.now() };
+    recordSearch(term, { source: 'stocklookup', found });
+}
+
 async function getDemandReport(fromTs, toTs) {
     if (sb) {
+        // APC-wide buyer demand only — a yard's own lookups live in their My Yard report.
         const { data } = await sb.from('search_demand')
             .select('term')
+            .neq('source', 'stocklookup')
             .gte('ts', new Date(fromTs).toISOString())
             .lte('ts', new Date(toTs).toISOString());
         if (data?.length) {
@@ -1560,13 +1581,39 @@ async function getDemandReport(fromTs, toTs) {
                 .slice(0, 10);
         }
     }
-    const local = loadSearchDemand().filter(d => d.ts >= fromTs && d.ts <= toTs);
+    const local = loadSearchDemand().filter(d => d.source !== 'stocklookup' && d.ts >= fromTs && d.ts <= toTs);
     const counts = {};
     local.forEach(d => { counts[d.term] = (counts[d.term] || 0) + 1; });
     return Object.entries(counts)
         .map(([term, count]) => ({ term, count }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
+}
+
+// This yard's own enquiry log: term, how many times asked, and how many of those we
+// couldn't supply (found = false). miss>0 = stock the yard should be carrying.
+async function getYardDemandReport(fromTs, toTs) {
+    const tally = rows => {
+        const agg = {};
+        rows.forEach(d => {
+            const k = d.term;
+            if (!agg[k]) agg[k] = { term: k, count: 0, miss: 0 };
+            agg[k].count++;
+            if (d.found === false) agg[k].miss++;
+        });
+        return Object.values(agg).sort((a, b) => b.count - a.count).slice(0, 12);
+    };
+    if (sb && currentUserId) {
+        const { data } = await sb.from('search_demand')
+            .select('term, found')
+            .eq('user_id', currentUserId).eq('source', 'stocklookup')
+            .gte('ts', new Date(fromTs).toISOString())
+            .lte('ts', new Date(toTs).toISOString());
+        if (data?.length) return tally(data);
+    }
+    const local = loadSearchDemand().filter(d =>
+        d.source === 'stocklookup' && d.user_id === currentUserId && d.ts >= fromTs && d.ts <= toTs);
+    return tally(local);
 }
 
 // EDW_TAXONOMY is defined in taxonomy.js (loaded before script.js in index.html)
@@ -13110,10 +13157,17 @@ function setDemandPeriod(period) {
     if (card) { card.dataset.period = period; renderDemandWidget(); }
 }
 
+function setDemandScope(scope) {
+    const card = document.getElementById('dashDemandCard');
+    if (card) { card.dataset.scope = scope; renderDemandWidget(); }
+}
+
 async function renderDemandWidget() {
     const card = document.getElementById('dashDemandCard');
     if (!card) return;
 
+    const scope  = card.dataset.scope || 'site';
+    const isYard = scope === 'yard';
     const period = card.dataset.period || 'month';
     const now = Date.now();
     let fromTs, periodLabel;
@@ -13129,38 +13183,65 @@ async function renderDemandWidget() {
         periodLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
     }
 
+    const scopeToggle = `<div class="demand-scope">
+        <button class="demand-scope-btn${!isYard ? ' active' : ''}" onclick="setDemandScope('site')">APC-wide</button>
+        <button class="demand-scope-btn${isYard ? ' active' : ''}" onclick="setDemandScope('yard')">My Yard</button>
+    </div>`;
     const pills = `<div class="demand-periods">
         <button class="demand-pill${period === 'week' ? ' active' : ''}" onclick="setDemandPeriod('week')">This Week</button>
         <button class="demand-pill${period === 'month' ? ' active' : ''}" onclick="setDemandPeriod('month')">This Month</button>
         <button class="demand-pill${period === '90' ? ' active' : ''}" onclick="setDemandPeriod('90')">Last 90 Days</button>
     </div>`;
-
-    card.innerHTML = `
+    const shell = body => `
         <div class="dash-card-hdr">
-            <span class="dash-card-title">Search Demand</span>
+            <span class="dash-card-title">${isYard ? 'My Yard Enquiries' : 'Search Demand'}</span>
             <span class="dash-card-meta">${periodLabel}</span>
         </div>
+        ${scopeToggle}
         ${pills}
-        <div class="dash-empty-state" style="padding:16px 0;color:#aaa;">Loading…</div>
-    `;
+        ${body}`;
 
-    const report = await getDemandReport(fromTs, now);
+    card.innerHTML = shell(`<div class="dash-empty-state" style="padding:16px 0;color:#aaa;">Loading…</div>`);
+
+    const report = isYard ? await getYardDemandReport(fromTs, now) : await getDemandReport(fromTs, now);
 
     if (!report.length) {
-        card.innerHTML = `
-            <div class="dash-card-hdr">
-                <span class="dash-card-title">Search Demand</span>
-                <span class="dash-card-meta">${periodLabel}</span>
-            </div>
-            ${pills}
-            <div class="dash-empty-state" style="padding:20px 0;">No search data for this period — trends appear as buyers search APC.</div>
-        `;
+        const empty = isYard
+            ? 'No enquiries yet — each Stock Lookup you run (e.g. when a customer phones) is logged here.'
+            : 'No search data for this period — trends appear as buyers search APC.';
+        card.innerHTML = shell(`<div class="dash-empty-state" style="padding:20px 0;">${empty}</div>`);
         return;
     }
 
     const maxCount = report[0].count;
-    const gaps = report.filter(r => !getAllParts().some(p => p.title.toLowerCase().includes(r.term.toLowerCase())));
 
+    if (isYard) {
+        const bars = report.map(r => {
+            const pct  = Math.round((r.count / maxCount) * 100);
+            const miss = r.miss > 0;
+            return `<div class="demand-bar-row">
+                <div class="demand-bar-label">${escapeHtml(r.term)}</div>
+                <div class="demand-bar-track">
+                    <div class="demand-bar-fill${miss ? ' demand-bar-gap' : ''}" style="width:${pct}%"></div>
+                </div>
+                <div class="demand-bar-count">${r.count}${miss ? ` <span class="demand-miss">${r.miss}✕</span>` : ''}</div>
+            </div>`;
+        }).join('');
+        const missed = report.filter(r => r.miss > 0);
+        const insight = missed.length
+            ? `<div class="demand-insight">
+                   <span class="demand-insight-ico">🎯</span>
+                   <div><strong>${missed.length} ${missed.length === 1 ? 'part' : 'parts'} you couldn't supply</strong> — asked but no stock: ${missed.slice(0,3).map(g => `<em>${escapeHtml(g.term)}</em>`).join(', ')}${missed.length > 3 ? ` +${missed.length - 3} more` : ''}. Worth sourcing.</div>
+               </div>`
+            : '';
+        card.innerHTML = shell(`
+            <p class="demand-subtitle">What customers asked your yard for via Stock Lookup — orange = you had none in stock (${maxCount > 0 ? '✕ = missed enquiries' : ''})</p>
+            <div class="demand-bars">${bars}</div>
+            ${insight}`);
+        return;
+    }
+
+    const gaps = report.filter(r => !getAllParts().some(p => p.title.toLowerCase().includes(r.term.toLowerCase())));
     const bars = report.map(r => {
         const pct = Math.round((r.count / maxCount) * 100);
         const isGap = !getAllParts().some(p => p.title.toLowerCase().includes(r.term.toLowerCase()));
@@ -13180,16 +13261,10 @@ async function renderDemandWidget() {
            </div>`
         : '';
 
-    card.innerHTML = `
-        <div class="dash-card-hdr">
-            <span class="dash-card-title">Search Demand</span>
-            <span class="dash-card-meta">${periodLabel}</span>
-        </div>
-        ${pills}
+    card.innerHTML = shell(`
         <p class="demand-subtitle">Most searched terms on APC — orange bars have no matching listings</p>
         <div class="demand-bars">${bars}</div>
-        ${insight}
-    `;
+        ${insight}`);
 }
 
 // ─── ELECTRONIC DISMANTLING WORKFLOW (EDW) ────────────────────────────────
@@ -16596,7 +16671,6 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     const { make, model, year } = _slVehicle;
     const vehiclePrefix = [make, model].filter(Boolean).join(' ');
     const demandTerm = [vehiclePrefix, partBase, qualifier].filter(Boolean).join(' ');
-    recordSearch(demandTerm);
     const _slSeries = _slVehicle.series;
     const yearRange = (year && make && model)
         ? (_slSeries && getVehicleYearRange(make, `${model} ${_slSeries}`, year))
@@ -16669,6 +16743,9 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     ];
     results = _slClassifyByEngine(results, qualifier);
     results.forEach(r => _slResultsMap.set(r.id, r));
+
+    // Log this lookup as the yard's own demand (their phone enquiry), with whether we could supply.
+    recordYardEnquiry(demandTerm, results.length > 0);
 
     if (_slTabs[tabIdx]) {
         _slTabs[tabIdx].loading = false;
