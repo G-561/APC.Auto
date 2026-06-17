@@ -5797,6 +5797,11 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-td-kms    { white-space: nowrap; font-size: 12px; font-weight: 600; color: #555; }
 .dash-quote-chip { display: inline-block; margin-left: 6px; background: #eef2ff; border: 1px solid #c7d2fe; color: #4f46e5; border-radius: 20px; font-size: 10px; font-weight: 800; padding: 1px 7px; cursor: pointer; vertical-align: middle; }
 .dash-quote-chip:hover { background: #e0e7ff; }
+.dash-bulk-bar { position: sticky; top: 0; z-index: 6; display: flex; align-items: center; gap: 14px; padding: 9px 14px; margin-bottom: 10px; background: #fff8f2; border: 1px solid #ffe0c2; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.dash-bulk-count { font-weight: 800; font-size: 13px; color: #f07020; }
+.dash-bulk-actions { display: flex; gap: 8px; margin-left: auto; }
+.dash-chk-cell { width: 36px; text-align: center; }
+.dash-chk-cell input { width: 16px; height: 16px; accent-color: #f07020; cursor: pointer; vertical-align: middle; }
 .dash-td-loc--empty { color: #ccc; }
 .dash-bin-chip  { display: inline-block; background: #f0f0f0; border: 1px solid #ddd; border-radius: 5px; padding: 2px 7px; font-size: 11px; font-weight: 700; color: #555; letter-spacing: 0.3px; }
 .dash-td-saves  { color: #999; font-weight: 600; white-space: nowrap; }

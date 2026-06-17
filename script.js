@@ -17859,9 +17859,11 @@ function loadMoreDashListings() {
     renderDashListings(_dashCurrentTab);
 }
 
+let _dashSelected = new Set(); // bulk-select on the dashboard My Listings (active tab)
 function renderDashListings(tab, btn, ctx) {
     if (ctx) _dashListingsCtx = ctx;
     _dashCurrentTab = tab;
+    _dashSelected.clear();
     const isPro = _dashListingsCtx === 'pro';
     if (btn) {
         const tabScope = isPro ? '#proLstTabs' : '#dashListingsTabs';
@@ -17905,6 +17907,7 @@ function renderDashListings(tab, btn, ctx) {
         const visible = isFiltered ? items : items.slice(0, _dashListingsShown);
         hasMore = !isFiltered && items.length > _dashListingsShown;
         rows = visible.map(p => `<tr>
+            <td class="dash-chk-cell"><input type="checkbox" class="dash-row-chk" data-id="${p.id}" onchange="_dashToggleSelect(${p.id},this.checked)"></td>
             <td><img class="dash-thumb" src="${escapeHtml(thumbUrl((p.images && p.images[0]) || 'images/placeholder.png', 200))}" alt="" onclick="openItemDetail('${p.supabaseId || p.id}')" style="cursor:pointer;" title="View listing"></td>
             <td><div class="dash-part-name">${escapeHtml(p.title)}${_dashQuoteChip(p)}</div>${p.quantity > 1 ? `<div class="dash-part-sub">Qty: ${p.quantity}</div>` : ''}${p.status === 'pending' ? `<span class="dash-pending-chip">PENDING</span>` : ''}</td>
             <td class="dash-td-price">$${p.price}</td>
@@ -17914,11 +17917,9 @@ function renderDashListings(tab, btn, ctx) {
             <td class="dash-td-saves">&#x2665;&#xFE0E; ${p.saves || 0}</td>
             <td class="dash-td-date">${dashFmtDate(p.date)}</td>
             <td>
-                <button class="dash-action-btn dash-btn-label" onclick="printPartLabel(${p.id})">&#127991; Label</button>
                 ${p.status === 'pending' ? `<button class="dash-action-btn dash-btn-warning" onclick="clearListingPending(${p.id})">Remove Pending</button>` : ''}
                 <button class="dash-action-btn" onclick="openEditListing(${p.supabaseId ?? p.id});">Edit</button>
                 <button class="dash-action-btn dash-btn-primary" onclick="markSold(${p.id})">Mark Sold</button>
-                <button class="dash-action-btn dash-btn-danger" onclick="if(confirm('Delete this listing?')){deleteListing(${p.id});renderDashboard();}">Delete</button>
             </td></tr>`).join('');
     } else if (tab === 'pending') {
         const sellerName = getCurrentSellerName();
@@ -17986,10 +17987,97 @@ function renderDashListings(tab, btn, ctx) {
         ? ['', 'Part', 'Offer vs Listed', 'Date', 'Actions']
         : ['', 'Part', 'Sale Price', '', 'Sale Date', 'Actions'];
 
-    body.innerHTML = `<table class="dash-table">
-        <thead><tr>${hdrs.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+    const bulkBar = tab === 'active'
+        ? `<div id="dashBulkBar" class="dash-bulk-bar" style="display:none;">
+               <span id="dashBulkCount" class="dash-bulk-count">0 selected</span>
+               <div class="dash-bulk-actions">
+                   <button class="dash-action-btn dash-btn-label" onclick="_dashBulkLabels()">&#127991; Print Labels</button>
+                   <button class="dash-action-btn dash-btn-danger" onclick="_dashBulkDelete()">&#128465;&#xFE0F; Delete</button>
+                   <button class="dash-action-btn" onclick="_dashClearSelection()">Clear</button>
+               </div>
+           </div>`
+        : '';
+    const selectAllTh = tab === 'active'
+        ? `<th class="dash-chk-cell"><input type="checkbox" id="dashSelectAll" onchange="_dashSelectAll(this.checked)" title="Select all"></th>`
+        : '';
+
+    body.innerHTML = `${bulkBar}<table class="dash-table">
+        <thead><tr>${selectAllTh}${hdrs.map(h => `<th>${h}</th>`).join('')}</tr></thead>
         <tbody>${rows}</tbody>
     </table>${hasMore ? `<div style="text-align:center; padding: 14px 0;"><button class="dash-action-btn" style="padding: 8px 24px; font-size:13px;" onclick="loadMoreDashListings()">Load more listings</button></div>` : ''}`;
+}
+
+// ── Dashboard My Listings — bulk select (email-style) ────────────────────────
+function _dashToggleSelect(id, checked) {
+    if (checked) _dashSelected.add(id); else _dashSelected.delete(id);
+    _dashUpdateBulkBar();
+}
+function _dashSelectAll(checked) {
+    document.querySelectorAll('.dash-row-chk').forEach(cb => {
+        cb.checked = checked;
+        const id = Number(cb.dataset.id);
+        if (checked) _dashSelected.add(id); else _dashSelected.delete(id);
+    });
+    _dashUpdateBulkBar();
+}
+function _dashClearSelection() {
+    _dashSelected.clear();
+    document.querySelectorAll('.dash-row-chk').forEach(cb => { cb.checked = false; });
+    _dashUpdateBulkBar();
+}
+function _dashUpdateBulkBar() {
+    const n = _dashSelected.size;
+    const countEl = document.getElementById('dashBulkCount');
+    if (countEl) countEl.textContent = `${n} selected`;
+    const bar = document.getElementById('dashBulkBar');
+    if (bar) bar.style.display = n > 0 ? '' : 'none';
+    const sa = document.getElementById('dashSelectAll');
+    if (sa) {
+        const all = document.querySelectorAll('.dash-row-chk');
+        const checked = [...all].filter(cb => cb.checked).length;
+        sa.checked = all.length > 0 && checked === all.length;
+        sa.indeterminate = checked > 0 && checked < all.length;
+    }
+}
+function _dashSelectedParts() {
+    return [..._dashSelected].map(id => userListings.find(l => l.id === id)).filter(p => p && p.sellerId === currentUserId);
+}
+function _dashBulkLabels() {
+    const parts = _dashSelectedParts();
+    if (!parts.length) return;
+    if (!confirm(`Print ${parts.length} label${parts.length !== 1 ? 's' : ''}?`)) return;
+    printEdwLabelsBatch(parts.map(p => ({
+        id: p.id, supabaseId: p.supabaseId, title: p.title, apcId: p.apcId,
+        condition: p.condition, fits: p.fits || [], year: p.year,
+        stockNumber: p.stockNumber, warehouseBin: p.warehouseBin,
+    })));
+}
+function _dashBulkDelete() {
+    const parts = _dashSelectedParts();
+    if (!parts.length) return;
+    showConfirmDialog(
+        'Delete Listings',
+        `Delete ${parts.length} listing${parts.length !== 1 ? 's' : ''}? This cannot be undone.`,
+        `DELETE ${parts.length}`,
+        async () => {
+            const supabaseIds = parts.map(p => p.supabaseId).filter(Boolean);
+            parts.forEach(p => { const idx = userListings.indexOf(p); if (idx !== -1) userListings.splice(idx, 1); });
+            saveUserListings();
+            _dashSelected.clear();
+            showToast(`${parts.length} listing${parts.length !== 1 ? 's' : ''} deleted`);
+            renderMainGrid();
+            renderMyParts();
+            renderDashListings(_dashCurrentTab || 'active', null, _dashListingsCtx);
+            for (const sid of supabaseIds) {
+                try {
+                    await sb.from('listing_images').delete().eq('listing_id', sid);
+                    await sb.from('listing_vehicles').delete().eq('listing_id', sid);
+                    await sb.from('dismantling_items').update({ listing_id: null }).eq('listing_id', sid);
+                    await sb.from('listings').delete().eq('id', sid);
+                } catch (e) { console.warn('Supabase delete error:', e); }
+            }
+        }
+    );
 }
 
 function dashFmtDate(ts) {
