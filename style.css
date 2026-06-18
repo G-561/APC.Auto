@@ -2458,6 +2458,68 @@ header {
 .demand-scope-btn.active { background: #f07020; color: #fff; }
 .demand-miss { color: var(--apc-orange); font-weight: 700; font-size: 11px; margin-left: 2px; }
 
+/* My Yard summary on the demand card */
+.yard-sum {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;
+    padding: 4px 0 12px; font-size: 12px; color: #666;
+}
+.yard-sum strong { font-size: 15px; color: #333; font-weight: 800; }
+.yard-sum-miss strong { color: var(--apc-orange); }
+.yard-report-link {
+    margin-top: 12px; width: 100%; padding: 11px; border: 1.5px solid #f07020;
+    border-radius: 8px; background: rgba(240,112,32,0.06); color: #f07020;
+    font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s;
+}
+.yard-report-link:hover { background: rgba(240,112,32,0.12); }
+
+/* My Yard enquiry report drawer */
+.yr-loading, .yr-empty { padding: 40px 20px; text-align: center; color: #888; font-size: 13px; }
+.yr-top { padding: 15px 15px 0; border-bottom: 1px solid #eee; background: #fff; position: sticky; top: 0; z-index: 2; }
+.yr-period-label { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px; }
+.yr-periods { margin-bottom: 12px; }
+.yr-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.yr-stat { background: #f7f7f7; border-radius: 8px; padding: 10px 6px; text-align: center; }
+.yr-stat-num { font-size: 20px; font-weight: 800; color: #333; line-height: 1; }
+.yr-stat-lbl { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.02em; margin-top: 5px; }
+.yr-stat-miss { background: rgba(240,112,32,0.08); }
+.yr-stat-miss .yr-stat-num { color: var(--apc-orange); }
+.yr-tabs { display: flex; gap: 0; }
+.yr-tab {
+    flex: 1; padding: 11px 8px; border: none; background: transparent; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: #888; border-bottom: 3px solid transparent;
+}
+.yr-tab.active { color: #f07020; border-bottom-color: #f07020; }
+
+.yr-list { padding: 8px 0 40px; }
+.yr-hint { padding: 12px 15px 4px; font-size: 12px; color: #888; }
+.yr-make { border-bottom: 1px solid #f0f0f0; }
+.yr-make-row, .yr-model-row {
+    width: 100%; display: flex; align-items: center; gap: 8px; padding: 13px 15px;
+    border: none; background: transparent; cursor: pointer; text-align: left; font-size: 14px;
+}
+.yr-make-row { font-weight: 700; color: #333; }
+.yr-caret { color: #aaa; font-size: 11px; width: 12px; flex-shrink: 0; }
+.yr-make-name, .yr-model-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yr-make-counts, .yr-model-counts, .yr-part-counts { font-size: 12px; color: #666; font-weight: 700; flex-shrink: 0; }
+.yr-ok { color: #22c55e; }
+.yr-miss { color: var(--apc-orange); }
+.yr-model { background: #fafafa; }
+.yr-model-row { padding-left: 28px; font-weight: 600; color: #555; font-size: 13px; }
+.yr-part-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 15px 9px 50px; font-size: 13px; color: #666; background: #fff;
+    border-top: 1px solid #f3f3f3;
+}
+.yr-part-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.yr-miss-row {
+    display: flex; align-items: center; gap: 10px; padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+.yr-miss-part { flex: 1; min-width: 0; font-weight: 700; color: #333; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yr-miss-veh { font-size: 12px; color: #888; flex-shrink: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yr-miss-count { font-size: 13px; font-weight: 800; color: var(--apc-orange); flex-shrink: 0; min-width: 30px; text-align: right; }
+
 /* WANTED LIST — cards for personal wanted drawer */
 /* WANTED LIST DRAWER */
 .wl-vehicle-hdr {

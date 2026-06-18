@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=90">
+    <link rel="stylesheet" href="style.css?v=91">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -555,6 +555,15 @@
 </div>
 
 <!-- Stock Lookup — dismantler parts search tool -->
+
+<!-- My Yard — full enquiry report (drilldown from the Search Demand card) -->
+<div id="yardReportDrawer" class="drawer" style="z-index:9200;">
+    <div class="drawer-header">
+        <span>My Yard — Enquiry Report</span>
+        <div class="dh-close" onclick="closeYardReport()">×</div>
+    </div>
+    <div class="drawer-content" id="yardReportContent" style="padding:0;"></div>
+</div>
 
 <!-- EDW — Electronic Dismantling Workflow -->
 <div id="edwDrawer" class="drawer" style="z-index:9100; border-radius:0;">
@@ -3040,7 +3049,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=178"></script>
+<script src="script.js?v=179"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

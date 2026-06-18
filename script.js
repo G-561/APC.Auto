@@ -1535,6 +1535,11 @@ let _lastRecordedSearch = '';
 function recordSearch(term, opts = {}) {
     const source = opts.source || 'marketplace';
     const found  = (opts.found === undefined) ? null : !!opts.found;
+    // make/model/part are stored only for stocklookup, so the My Yard report can group
+    // by vehicle without re-parsing the term string (makes/models are often multi-word).
+    const make  = opts.make  || null;
+    const model = opts.model || null;
+    const part  = opts.part  || null;
     const clean = (term || '').toLowerCase().trim();
     if (!clean || clean.length < 3) return;
     // Dedupe only marketplace typeahead spam — each yard enquiry is a distinct phone call.
@@ -1544,11 +1549,11 @@ function recordSearch(term, opts = {}) {
     }
     const now = Date.now();
     const data = loadSearchDemand();
-    data.push({ term: clean, ts: now, source, found, user_id: currentUserId || null });
+    data.push({ term: clean, ts: now, source, found, make, model, part, user_id: currentUserId || null });
     saveSearchDemand(data.filter(d => d.ts > Date.now() - 180 * 24 * 60 * 60 * 1000).slice(-3000));
     if (sb) {
         sb.from('search_demand')
-            .insert({ term: clean, ts: new Date(now).toISOString(), user_id: currentUserId || null, source, found })
+            .insert({ term: clean, ts: new Date(now).toISOString(), user_id: currentUserId || null, source, found, make, model, part })
             .then(() => {});
     }
 }
@@ -1557,11 +1562,11 @@ function recordSearch(term, opts = {}) {
 // known so we capture whether the yard could supply. Light dedupe stops a re-run/jump
 // double-counting the same enquiry; a genuine later call logs as new demand.
 let _lastYardEnquiry = { term: '', ts: 0 };
-function recordYardEnquiry(term, found) {
+function recordYardEnquiry(term, found, ctx = {}) {
     const clean = (term || '').toLowerCase().trim();
     if (clean && clean === _lastYardEnquiry.term && Date.now() - _lastYardEnquiry.ts < 30000) return;
     _lastYardEnquiry = { term: clean, ts: Date.now() };
-    recordSearch(term, { source: 'stocklookup', found });
+    recordSearch(term, { source: 'stocklookup', found, make: ctx.make, model: ctx.model, part: ctx.part });
 }
 
 async function getDemandReport(fromTs, toTs) {
@@ -1590,30 +1595,56 @@ async function getDemandReport(fromTs, toTs) {
         .slice(0, 10);
 }
 
-// This yard's own enquiry log: term, how many times asked, and how many of those we
-// couldn't supply (found = false). miss>0 = stock the yard should be carrying.
-async function getYardDemandReport(fromTs, toTs) {
-    const tally = rows => {
-        const agg = {};
-        rows.forEach(d => {
-            const k = d.term;
-            if (!agg[k]) agg[k] = { term: k, count: 0, miss: 0 };
-            agg[k].count++;
-            if (d.found === false) agg[k].miss++;
-        });
-        return Object.values(agg).sort((a, b) => b.count - a.count).slice(0, 12);
-    };
+// This yard's own enquiry log, grouped Make → Model → Part for the report drawer.
+// Each node carries count / supplied / missed (found === false). misses[] is the flat
+// "couldn't supply" shopping list. Aggregated client-side — fine for hundreds of rows;
+// move the grouping into an RPC if a yard ever does thousands/month.
+async function getYardEnquiryReport(fromTs, toTs) {
+    let rows = [];
     if (sb && currentUserId) {
         const { data } = await sb.from('search_demand')
-            .select('term, found')
+            .select('make, model, part, term, found')
             .eq('user_id', currentUserId).eq('source', 'stocklookup')
             .gte('ts', new Date(fromTs).toISOString())
             .lte('ts', new Date(toTs).toISOString());
-        if (data?.length) return tally(data);
+        rows = data || [];
     }
-    const local = loadSearchDemand().filter(d =>
-        d.source === 'stocklookup' && d.user_id === currentUserId && d.ts >= fromTs && d.ts <= toTs);
-    return tally(local);
+    if (!rows.length) {
+        rows = loadSearchDemand().filter(d =>
+            d.source === 'stocklookup' && d.user_id === currentUserId && d.ts >= fromTs && d.ts <= toTs);
+    }
+
+    const makeMap = {}, missMap = {};
+    let total = 0, supplied = 0;
+    rows.forEach(d => {
+        total++;
+        const ok    = d.found === true;
+        if (ok) supplied++;
+        const make  = (d.make  || '—').trim() || '—';
+        const model = (d.model || '—').trim() || '—';
+        const part  = (d.part  || d.term || '—').trim() || '—';
+        const M = makeMap[make]  || (makeMap[make] = { make, count: 0, supplied: 0, missed: 0, models: {} });
+        M.count++; ok ? M.supplied++ : M.missed++;
+        const Mo = M.models[model] || (M.models[model] = { model, count: 0, supplied: 0, missed: 0, parts: {} });
+        Mo.count++; ok ? Mo.supplied++ : Mo.missed++;
+        const P = Mo.parts[part]  || (Mo.parts[part] = { part, count: 0, supplied: 0, missed: 0 });
+        P.count++; ok ? P.supplied++ : P.missed++;
+        if (!ok) {
+            const k = `${make}|${model}|${part}`;
+            (missMap[k] || (missMap[k] = { make, model, part, count: 0 })).count++;
+        }
+    });
+
+    const byCount = (a, b) => b.count - a.count;
+    const makes = Object.values(makeMap).map(M => ({
+        ...M,
+        models: Object.values(M.models).map(Mo => ({
+            ...Mo,
+            parts: Object.values(Mo.parts).sort(byCount),
+        })).sort(byCount),
+    })).sort(byCount);
+    const misses = Object.values(missMap).sort(byCount);
+    return { total, supplied, missed: total - supplied, makes, misses };
 }
 
 // EDW_TAXONOMY is defined in taxonomy.js (loaded before script.js in index.html)
@@ -13203,44 +13234,43 @@ async function renderDemandWidget() {
 
     card.innerHTML = shell(`<div class="dash-empty-state" style="padding:16px 0;color:#aaa;">Loading…</div>`);
 
-    const report = isYard ? await getYardDemandReport(fromTs, now) : await getDemandReport(fromTs, now);
-
-    if (!report.length) {
-        const empty = isYard
-            ? 'No enquiries yet — each Stock Lookup you run (e.g. when a customer phones) is logged here.'
-            : 'No search data for this period — trends appear as buyers search APC.';
-        card.innerHTML = shell(`<div class="dash-empty-state" style="padding:20px 0;">${empty}</div>`);
-        return;
-    }
-
-    const maxCount = report[0].count;
-
     if (isYard) {
-        const bars = report.map(r => {
-            const pct  = Math.round((r.count / maxCount) * 100);
-            const miss = r.miss > 0;
+        const rep = await getYardEnquiryReport(fromTs, now);
+        if (!rep.total) {
+            card.innerHTML = shell(`<div class="dash-empty-state" style="padding:20px 0;">No enquiries yet — each Stock Lookup you run (e.g. when a customer phones) is logged here.</div>`);
+            return;
+        }
+        const pct      = Math.round((rep.supplied / rep.total) * 100);
+        const topMakes = rep.makes.slice(0, 5);
+        const maxC     = topMakes[0].count;
+        const bars = topMakes.map(M => {
+            const w = Math.round((M.count / maxC) * 100);
             return `<div class="demand-bar-row">
-                <div class="demand-bar-label">${escapeHtml(r.term)}</div>
+                <div class="demand-bar-label">${escapeHtml(M.make)}</div>
                 <div class="demand-bar-track">
-                    <div class="demand-bar-fill${miss ? ' demand-bar-gap' : ''}" style="width:${pct}%"></div>
+                    <div class="demand-bar-fill${M.missed ? ' demand-bar-gap' : ''}" style="width:${w}%"></div>
                 </div>
-                <div class="demand-bar-count">${r.count}${miss ? ` <span class="demand-miss">${r.miss}✕</span>` : ''}</div>
+                <div class="demand-bar-count">${M.count}${M.missed ? ` <span class="demand-miss">${M.missed}✕</span>` : ''}</div>
             </div>`;
         }).join('');
-        const missed = report.filter(r => r.miss > 0);
-        const insight = missed.length
-            ? `<div class="demand-insight">
-                   <span class="demand-insight-ico">🎯</span>
-                   <div><strong>${missed.length} ${missed.length === 1 ? 'part' : 'parts'} you couldn't supply</strong> — asked but no stock: ${missed.slice(0,3).map(g => `<em>${escapeHtml(g.term)}</em>`).join(', ')}${missed.length > 3 ? ` +${missed.length - 3} more` : ''}. Worth sourcing.</div>
-               </div>`
-            : '';
         card.innerHTML = shell(`
-            <p class="demand-subtitle">What customers asked your yard for via Stock Lookup — orange = you had none in stock (${maxCount > 0 ? '✕ = missed enquiries' : ''})</p>
+            <div class="yard-sum">
+                <span><strong>${rep.total}</strong> enquir${rep.total === 1 ? 'y' : 'ies'}</span>
+                <span><strong>${pct}%</strong> supplied</span>
+                ${rep.missed ? `<span class="yard-sum-miss"><strong>${rep.missed}</strong> couldn't supply</span>` : ''}
+            </div>
+            <p class="demand-subtitle">Top vehicles asked for — orange = you had none in stock</p>
             <div class="demand-bars">${bars}</div>
-            ${insight}`);
+            <button class="yard-report-link" onclick="openYardReport()">View full report →</button>`);
         return;
     }
 
+    const report = await getDemandReport(fromTs, now);
+    if (!report.length) {
+        card.innerHTML = shell(`<div class="dash-empty-state" style="padding:20px 0;">No search data for this period — trends appear as buyers search APC.</div>`);
+        return;
+    }
+    const maxCount = report[0].count;
     const gaps = report.filter(r => !getAllParts().some(p => p.title.toLowerCase().includes(r.term.toLowerCase())));
     const bars = report.map(r => {
         const pct = Math.round((r.count / maxCount) * 100);
@@ -13265,6 +13295,129 @@ async function renderDemandWidget() {
         <p class="demand-subtitle">Most searched terms on APC — orange bars have no matching listings</p>
         <div class="demand-bars">${bars}</div>
         ${insight}`);
+}
+
+// ─── MY YARD ENQUIRY REPORT (full drawer) ─────────────────────────────────
+let _yrPeriod    = 'month';
+let _yrTab       = 'vehicle';     // 'vehicle' | 'miss'
+let _yrData      = null;
+let _yrExpMakes  = new Set();      // expanded makes (by name)
+let _yrExpModels = new Set();      // expanded models (by "make|model")
+
+function _yrRange() {
+    const now = Date.now();
+    if (_yrPeriod === 'week') return { fromTs: now - 7  * 24 * 60 * 60 * 1000, now, label: 'Last 7 days' };
+    if (_yrPeriod === '90')   return { fromTs: now - 90 * 24 * 60 * 60 * 1000, now, label: 'Last 90 days' };
+    const ms = new Date(); ms.setDate(1); ms.setHours(0, 0, 0, 0);
+    return { fromTs: ms.getTime(), now, label: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }) };
+}
+
+function openYardReport() {
+    _yrExpMakes = new Set(); _yrExpModels = new Set();
+    openDrawer('yardReportDrawer');
+    _renderYardReport();
+}
+function closeYardReport() {
+    document.getElementById('yardReportDrawer')?.classList.remove('active');
+    syncBackdrop();
+}
+function setYardReportPeriod(p) { _yrPeriod = p; _yrExpMakes = new Set(); _yrExpModels = new Set(); _renderYardReport(); }
+function setYardReportTab(t)    { _yrTab = t; _paintYardReport(); }
+function _toggleYardMake(i) {
+    const M = _yrData?.makes[i]; if (!M) return;
+    _yrExpMakes.has(M.make) ? _yrExpMakes.delete(M.make) : _yrExpMakes.add(M.make);
+    _paintYardReport();
+}
+function _toggleYardModel(mi, oi) {
+    const Mo = _yrData?.makes[mi]?.models[oi]; if (!Mo) return;
+    const key = _yrData.makes[mi].make + '|' + Mo.model;
+    _yrExpModels.has(key) ? _yrExpModels.delete(key) : _yrExpModels.add(key);
+    _paintYardReport();
+}
+
+async function _renderYardReport() {
+    const body = document.getElementById('yardReportContent');
+    if (!body) return;
+    body.innerHTML = `<div class="yr-loading">Loading enquiries…</div>`;
+    const { fromTs, now } = _yrRange();
+    _yrData = await getYardEnquiryReport(fromTs, now);
+    _paintYardReport();
+}
+
+function _paintYardReport() {
+    const body = document.getElementById('yardReportContent');
+    if (!body || !_yrData) return;
+    const rep = _yrData;
+    const { label } = _yrRange();
+    const pct = rep.total ? Math.round((rep.supplied / rep.total) * 100) : 0;
+
+    const periodPills = `<div class="demand-periods yr-periods">
+        <button class="demand-pill${_yrPeriod === 'week'  ? ' active' : ''}" onclick="setYardReportPeriod('week')">This Week</button>
+        <button class="demand-pill${_yrPeriod === 'month' ? ' active' : ''}" onclick="setYardReportPeriod('month')">This Month</button>
+        <button class="demand-pill${_yrPeriod === '90'    ? ' active' : ''}" onclick="setYardReportPeriod('90')">Last 90 Days</button>
+    </div>`;
+
+    const stats = `<div class="yr-stats">
+        <div class="yr-stat"><div class="yr-stat-num">${rep.total}</div><div class="yr-stat-lbl">Enquiries</div></div>
+        <div class="yr-stat"><div class="yr-stat-num">${rep.makes.length}</div><div class="yr-stat-lbl">Makes</div></div>
+        <div class="yr-stat"><div class="yr-stat-num">${pct}%</div><div class="yr-stat-lbl">Supplied</div></div>
+        <div class="yr-stat yr-stat-miss"><div class="yr-stat-num">${rep.missed}</div><div class="yr-stat-lbl">Couldn't supply</div></div>
+    </div>`;
+
+    const tabs = `<div class="yr-tabs">
+        <button class="yr-tab${_yrTab === 'vehicle' ? ' active' : ''}" onclick="setYardReportTab('vehicle')">By Vehicle</button>
+        <button class="yr-tab${_yrTab === 'miss' ? ' active' : ''}" onclick="setYardReportTab('miss')">Couldn't Supply${rep.misses.length ? ` (${rep.misses.length})` : ''}</button>
+    </div>`;
+
+    let listHTML;
+    if (!rep.total) {
+        listHTML = `<div class="yr-empty">No enquiries in this period. Each Stock Lookup you run is logged here — e.g. when a customer phones asking for a part.</div>`;
+    } else if (_yrTab === 'miss') {
+        listHTML = rep.misses.length
+            ? `<p class="yr-hint">Parts customers asked for that you had no stock of — your sourcing shortlist.</p>` +
+              rep.misses.map(m => `<div class="yr-miss-row">
+                  <div class="yr-miss-part">${escapeHtml(m.part)}</div>
+                  <div class="yr-miss-veh">${escapeHtml([m.make, m.model].filter(x => x && x !== '—').join(' ') || '—')}</div>
+                  <div class="yr-miss-count">${m.count}×</div>
+              </div>`).join('')
+            : `<div class="yr-empty">Nothing missed — you had stock for every enquiry this period. 🎉</div>`;
+    } else {
+        listHTML = rep.makes.map((M, mi) => {
+            const open = _yrExpMakes.has(M.make);
+            const models = open ? M.models.map((Mo, oi) => {
+                const mopen = _yrExpModels.has(M.make + '|' + Mo.model);
+                const parts = mopen ? Mo.parts.map(P => `<div class="yr-part-row">
+                        <span class="yr-part-name">${escapeHtml(P.part)}</span>
+                        <span class="yr-part-counts">${P.count}${P.missed ? ` <span class="yr-miss">⚠${P.missed}</span>` : ''}</span>
+                    </div>`).join('') : '';
+                return `<div class="yr-model">
+                    <button class="yr-model-row" onclick="_toggleYardModel(${mi},${oi})">
+                        <span class="yr-caret">${mopen ? '▾' : '▸'}</span>
+                        <span class="yr-model-name">${escapeHtml(Mo.model)}</span>
+                        <span class="yr-model-counts">${Mo.count}${Mo.missed ? ` <span class="yr-miss">⚠${Mo.missed}</span>` : ''}</span>
+                    </button>
+                    ${parts}
+                </div>`;
+            }).join('') : '';
+            return `<div class="yr-make">
+                <button class="yr-make-row" onclick="_toggleYardMake(${mi})">
+                    <span class="yr-caret">${open ? '▾' : '▸'}</span>
+                    <span class="yr-make-name">${escapeHtml(M.make)}</span>
+                    <span class="yr-make-counts">${M.count} <span class="yr-ok">✓${M.supplied}</span>${M.missed ? ` <span class="yr-miss">⚠${M.missed}</span>` : ''}</span>
+                </button>
+                ${models}
+            </div>`;
+        }).join('');
+    }
+
+    body.innerHTML = `
+        <div class="yr-top">
+            <div class="yr-period-label">${label}</div>
+            ${periodPills}
+            ${stats}
+            ${tabs}
+        </div>
+        <div class="yr-list">${listHTML}</div>`;
 }
 
 // ─── ELECTRONIC DISMANTLING WORKFLOW (EDW) ────────────────────────────────
@@ -16744,8 +16897,13 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     results = _slClassifyByEngine(results, qualifier);
     results.forEach(r => _slResultsMap.set(r.id, r));
 
-    // Log this lookup as the yard's own demand (their phone enquiry), with whether we could supply.
-    recordYardEnquiry(demandTerm, results.length > 0);
+    // Log this lookup as the yard's own demand (their phone enquiry), with whether we could
+    // supply. Structured make/model/part feed the My Yard report's Make → Model → Part grouping.
+    recordYardEnquiry(demandTerm, results.length > 0, {
+        make,
+        model: [model, _slSeries].filter(Boolean).join(' '),
+        part:  [partBase, qualifier].filter(Boolean).join(' '),
+    });
 
     if (_slTabs[tabIdx]) {
         _slTabs[tabIdx].loading = false;
