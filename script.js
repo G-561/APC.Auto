@@ -4027,7 +4027,9 @@ function toggleDrawer(id, allowStack = false) {
     }
 
     const anyOpen = document.querySelectorAll('.drawer.active').length > 0;
-    document.body.style.overflow = anyOpen ? 'hidden' : 'auto';
+    // Stay locked if still in Pro mode (dashboard is the base layer) after a drawer closes.
+    const proMode = document.getElementById('dashboardView')?.style.display !== 'none';
+    document.body.style.overflow = (anyOpen || proMode) ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', anyOpen);
 }
@@ -4047,7 +4049,9 @@ function syncBackdrop() {
     const dashVisible = document.getElementById('dashboardView')?.style.display !== 'none';
     const drawersOpen = document.querySelectorAll('.drawer.active:not(#filterDrawer)').length > 0
         || (window.innerWidth < 900 && document.querySelectorAll('.drawer.active').length > 0);
-    document.body.style.overflow = drawersOpen ? 'hidden' : 'auto';
+    // In Pro mode the marketplace is the base layer behind the dashboard — lock its
+    // scroll so the mouse wheel doesn't run a hidden scrollbar underneath.
+    document.body.style.overflow = (drawersOpen || dashVisible) ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', dashVisible || drawersOpen);
 }
@@ -12667,6 +12671,7 @@ function proShowView(viewId, navId) {
     if (view) view.style.display = 'flex';
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById(navId)?.classList.add('pro-hdr-active');
+    syncBackdrop(); // _pauseEdw cleared body overflow — re-lock the marketplace behind the view
 }
 
 function proHideAllViews() {
