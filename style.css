@@ -7740,7 +7740,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-pro-filter-btn.active { border-color: #f07020; background: #fff8f2; color: #f07020; }
 /* Results table — spreadsheet grid */
 .sl-results-table { display: flex; flex-direction: column; border-top: 2px solid #d0d0d0; }
-.sl-results-col-hdr { display: flex; align-items: center; background: #f0f0f0; border-bottom: 2px solid #d0d0d0; min-height: 28px; flex-shrink: 0; }
+/* Sticks just under the tab bar (~38px) for its own section, so the column
+   labels stay visible down a long list; hands off to the next section's header. */
+.sl-results-col-hdr { position: sticky; top: 37px; z-index: 5; display: flex; align-items: center; background: #f0f0f0; border-bottom: 2px solid #d0d0d0; min-height: 28px; flex-shrink: 0; }
 .sl-results-col-hdr .sl-hdr-cell { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #666; padding: 0 10px; border-right: 1px solid #d0d0d0; align-self: stretch; display: flex; align-items: center; flex-shrink: 0; }
 .sl-results-col-hdr .sl-hdr-cell.flex { flex: 1; }
 .sl-results-col-hdr .sl-hdr-cell.sl-hdr-sort { cursor: pointer; user-select: none; white-space: nowrap; }
