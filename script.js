@@ -18687,9 +18687,16 @@ let _stkExtras          = [];  // parts scanned that aren't assigned to this rac
 let _stkLastId          = null;
 let _stkLastTime        = 0;
 
+let _proNavBeforeWarehouse = null;
+
 function openWarehouseDrawer() {
     if (!userIsSignedIn || currentUserTier !== 'pro') { openAuthDrawer(openWarehouseDrawer); return; }
     _pauseEdw();
+    // Warehouse is a drawer, not a proShowView, so light up its nav item manually.
+    // Remember the prior active item to restore when the drawer closes.
+    _proNavBeforeWarehouse = document.querySelector('.pro-hdr-link.pro-hdr-active')?.id || null;
+    document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
+    document.getElementById('proNavWarehouse')?.classList.add('pro-hdr-active');
     toggleDrawer('warehouseDrawer', true);
     // Labels generator is desktop-only (printing); mobile gets the scanner.
     whSetTab(window.innerWidth < 900 ? 'scanner' : 'labels');
@@ -18850,6 +18857,13 @@ function whWorkerDone() {
 function closeWarehouseDrawer() {
     whStopCamera();
     whClearLabels();
+    // Restore the nav item that was active before — unless the user navigated elsewhere.
+    const wasActive = document.getElementById('proNavWarehouse')?.classList.contains('pro-hdr-active');
+    document.getElementById('proNavWarehouse')?.classList.remove('pro-hdr-active');
+    if (wasActive && _proNavBeforeWarehouse) {
+        document.getElementById(_proNavBeforeWarehouse)?.classList.add('pro-hdr-active');
+    }
+    _proNavBeforeWarehouse = null;
     toggleDrawer('warehouseDrawer', false);
 }
 
