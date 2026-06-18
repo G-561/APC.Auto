@@ -2266,10 +2266,24 @@ async function loadConversationsFromSupabase(userId) {
             r.buyer_id === userId ? !r.hidden_by_buyer : !r.hidden_by_seller
         );
 
+        // Resolve the other party's current name from their profile (business name preferred)
+        // so the thread list never shows a stale snapshot or a literal "Seller".
+        const otherIds = [...new Set(visibleRows
+            .map(r => (r.buyer_id === userId ? r.seller_id : r.buyer_id))
+            .filter(Boolean))];
+        let convNameMap = {};
+        if (otherIds.length) {
+            const { data: profs } = await sb.from('profiles')
+                .select('id, display_name, business_name').in('id', otherIds);
+            (profs || []).forEach(p => { const nm = p.business_name || p.display_name; if (nm) convNameMap[p.id] = nm; });
+        }
 
         visibleRows.forEach(r => {
             const isBuyer = r.buyer_id === userId;
-            const otherName = isBuyer ? (r.seller_name || 'Seller') : (r.buyer_name || 'Buyer');
+            const otherId = isBuyer ? r.seller_id : r.buyer_id;
+            const otherName = convNameMap[otherId]
+                || (isBuyer ? r.seller_name : r.buyer_name)
+                || (isBuyer ? 'Seller' : 'Buyer');
             const msgs = (r.messages || [])
                 .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
                 .map((m, idx) => ({
@@ -2655,7 +2669,12 @@ function subscribeToRealtimeMessages() {
                         .eq('id', msg.conversation_id).single();
                     if (!convRow) return;
                     const isBuyer = convRow.buyer_id === currentUserId;
-                    const otherName = isBuyer ? (convRow.seller_name || 'Seller') : (convRow.buyer_name || 'Buyer');
+                    const otherId = isBuyer ? convRow.seller_id : convRow.buyer_id;
+                    let otherName = isBuyer ? (convRow.seller_name || 'Seller') : (convRow.buyer_name || 'Buyer');
+                    if (otherId) {
+                        const { data: prof } = await sb.from('profiles').select('display_name, business_name').eq('id', otherId).single();
+                        otherName = bizDisplayName(prof, otherName);
+                    }
                     const part = [...partDatabase, ...userListings].find(p => p.supabaseId === convRow.listing_id);
                     conv = {
                         id: nextConvId(),
