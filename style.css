@@ -5568,6 +5568,16 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     /* Wider columns when inbox has full real estate */
     .pro-full .inbox-conv-col      { width: 380px; }
     .pro-full .inbox-context-panel { width: 320px; }
+
+    /* Warehouse + Yard Report keep their title/tab header (Stock Lookup & EDW
+       supply their own internal headers, so .pro-full hides the default one). */
+    #warehouseDrawer .drawer-header,
+    #yardReportDrawer .drawer-header { display: flex !important; }
+
+    /* Centre content so it reads well at full desktop width instead of stretching. */
+    #yardReportContent .yr-top,
+    #yardReportContent .yr-list { max-width: 1000px; margin-left: auto; margin-right: auto; }
+    #warehouseDrawer .drawer-content { max-width: 1040px; margin-left: auto; margin-right: auto; width: 100%; }
 }
 
 .dtb-dashboard { color: var(--apc-blue) !important; font-weight: 800 !important; }
