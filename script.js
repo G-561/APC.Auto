@@ -1571,20 +1571,14 @@ function recordYardEnquiry(term, found, ctx = {}) {
 
 async function getDemandReport(fromTs, toTs) {
     if (sb) {
-        // APC-wide buyer demand only — a yard's own lookups live in their My Yard report.
-        const { data } = await sb.from('search_demand')
-            .select('term')
-            .neq('source', 'stocklookup')
-            .gte('ts', new Date(fromTs).toISOString())
-            .lte('ts', new Date(toTs).toISOString());
-        if (data?.length) {
-            const counts = {};
-            data.forEach(d => { counts[d.term] = (counts[d.term] || 0) + 1; });
-            return Object.entries(counts)
-                .map(([term, count]) => ({ term, count }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 10);
-        }
+        // APC-wide buyer demand via a SECURITY DEFINER aggregate — returns counts only,
+        // never raw rows/user_ids. RLS keeps search_demand reads to a user's own rows
+        // (the My Yard report), so the site-wide view MUST go through this RPC.
+        const { data } = await sb.rpc('apc_demand_report', {
+            from_ts: new Date(fromTs).toISOString(),
+            to_ts:   new Date(toTs).toISOString(),
+        });
+        if (data?.length) return data.map(r => ({ term: r.term, count: Number(r.cnt) }));
     }
     const local = loadSearchDemand().filter(d => d.source !== 'stocklookup' && d.ts >= fromTs && d.ts <= toTs);
     const counts = {};
