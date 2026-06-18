@@ -14923,7 +14923,7 @@ function _edwPrintStrippingList() {
                                color:${p.grade==='A'?'#15803d':p.grade==='B'?'#1d4ed8':p.grade==='C'?'#92400e':'#991b1b'};
                                padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700;">${p.grade} — ${gradeLabel[p.grade]||''}</span>
                     </td>
-                    <td style="padding:6px 10px; font-size:12px; color:#666;">${p.notes || ''}</td>
+                    <td style="padding:6px 10px; font-size:12px; color:#666;">${escapeHtml(p.notes || '')}</td>
                 </tr>`).join('');
             return `
                 <tr><td colspan="4" style="padding:8px 10px 4px; font-size:11px; font-weight:700; color:#f07020; text-transform:uppercase; letter-spacing:0.4px;">${asm}</td></tr>
