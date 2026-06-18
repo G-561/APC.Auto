@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=94">
+    <link rel="stylesheet" href="style.css?v=95">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -317,22 +317,27 @@
                     </div>
                 </div>
                 <div class="sl-right-col">
-                    <div class="sl-quotes-panel" id="slQuotesPanel">
-                        <div class="sl-qp-header">
-                            <span class="sl-qp-title">Today's Quotes</span>
+                    <div class="sl-today">
+                        <div class="sl-today-switch">
+                            <button class="sl-today-tab sl-today-tab--active" id="slTodayTabQuotes" onclick="_slSetTodayTab('quotes')">Quotes</button>
+                            <button class="sl-today-tab" id="slTodayTabSearches" onclick="_slSetTodayTab('searches')">Searches <span id="slSearchCount" class="sl-today-badge"></span></button>
+                            <button class="sl-today-tab" id="slTodayTabChats" onclick="_slSetTodayTab('chats')">Chats <span id="slChatsBadge" class="sl-today-badge sl-today-badge--alert"></span></button>
                         </div>
-                        <div class="sl-qp-search">
-                            <input type="text" id="slQuoteSearchInput" autocomplete="off" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
+                        <div class="sl-today-body">
+                            <div id="slTodayQuotes" class="sl-today-view">
+                                <div class="sl-qp-search">
+                                    <input type="text" id="slQuoteSearchInput" autocomplete="off" placeholder="Search quote no." oninput="_slQuoteDebounceSearch(this.value)">
+                                </div>
+                                <div id="slQuotesList" class="sl-quotes-list"></div>
+                                <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
+                            </div>
+                            <div id="slTodaySearches" class="sl-today-view" style="display:none;">
+                                <div id="slSearchHistory" class="sl-sp-list"></div>
+                            </div>
+                            <div id="slTodayChats" class="sl-today-view" style="display:none;">
+                                <div id="slYardChatsList" class="sl-sp-list"></div>
+                            </div>
                         </div>
-                        <div id="slQuotesList" class="sl-quotes-list"></div>
-                        <div id="slQuoteDetail" class="sl-quote-detail" style="display:none;"></div>
-                    </div>
-                    <div class="sl-searches-panel">
-                        <div class="sl-sp-header">
-                            <span class="sl-sp-title">Today's Searches</span>
-                            <span id="slSearchCount" class="sl-sp-count"></span>
-                        </div>
-                        <div id="slSearchHistory" class="sl-sp-list"></div>
                     </div>
                 </div>
             </div>
@@ -3049,7 +3054,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=180"></script>
+<script src="script.js?v=181"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

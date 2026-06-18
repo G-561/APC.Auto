@@ -7891,6 +7891,25 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-sp-found { background: #dcfce7; color: #15803d; }
 .sl-sp-none { background: #fee2e2; color: #dc2626; }
 
+/* Today panel — segmented switch: Quotes / Searches / Yard Chats */
+.sl-today { flex: 1 1 0%; min-height: 0; background: #fafafa; display: flex; flex-direction: column; overflow: hidden; }
+.sl-today-switch { flex-shrink: 0; display: flex; background: #fff; border-bottom: 1px solid #eee; }
+.sl-today-tab {
+    flex: 1; padding: 11px 6px; border: none; background: transparent; cursor: pointer;
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #999; border-bottom: 2px solid transparent;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+}
+.sl-today-tab--active { color: #f07020; border-bottom-color: #f07020; }
+.sl-today-body { flex: 1 1 0%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.sl-today-view { flex: 1 1 0%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.sl-today-badge {
+    font-size: 10px; font-weight: 700; color: #888; background: #efefef;
+    border-radius: 99px; padding: 0 6px; min-width: 16px; text-align: center; line-height: 16px;
+}
+.sl-today-badge:empty { display: none; }
+.sl-today-badge--alert { background: #ef4444; color: #fff; }
+
 /* Today's Quotes panel — sits in top of sl-right-col */
 .sl-quotes-panel { flex: 3 1 0%; min-height: 0; background: #fafafa; display: flex; flex-direction: column; overflow: hidden; }
 .sl-qp-header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #fff; border-bottom: 1px solid #eee; }

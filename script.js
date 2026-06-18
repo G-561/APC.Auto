@@ -13149,6 +13149,8 @@ function proOpenStockLookup() {
     _slRenderResultsArea();
     _slLoadTodaysQuotes();
     _slLoadMarkers();
+    _slLoadYardChats();
+    _slSetTodayTab('quotes');
 }
 
 function proOpenEDW() {
@@ -16689,6 +16691,80 @@ async function _slOpenChat(listingId, sellerId, listingTitle, sellerName) {
     if (!conv) return;
     _slActiveChat = conv;
     _slChatRender();
+    _slPushYardChat(listingId, sellerId, sellerName, listingTitle);
+}
+
+// ── Today panel: Quotes / Searches / Yard Chats switch ────────────────────
+let _slTodayTab  = 'quotes';
+let _slYardChats = [];   // yard-to-yard chats started from Stock Lookup today
+
+function _slSetTodayTab(tab) {
+    _slTodayTab = tab;
+    [['quotes', 'slTodayQuotes', 'slTodayTabQuotes'],
+     ['searches', 'slTodaySearches', 'slTodayTabSearches'],
+     ['chats', 'slTodayChats', 'slTodayTabChats']].forEach(([t, viewId, tabId]) => {
+        const view = document.getElementById(viewId);
+        const btn  = document.getElementById(tabId);
+        if (view) view.style.display = (t === tab) ? 'flex' : 'none';
+        if (btn)  btn.classList.toggle('sl-today-tab--active', t === tab);
+    });
+}
+
+// Surface a chat the moment it's opened — keeps the list live without a round-trip.
+function _slPushYardChat(listingId, sellerId, sellerName, partTitle) {
+    const key = String(listingId);
+    _slYardChats = _slYardChats.filter(c => String(c.listingId) !== key);
+    _slYardChats.unshift({ listingId, sellerId, with: sellerName || 'Yard', partTitle: partTitle || '', time: nowClock(), unread: false });
+    _slRenderYardChats();
+}
+
+// Hydrate today's yard chats from Supabase so the list survives a refresh.
+async function _slLoadYardChats() {
+    _slYardChats = [];
+    _slRenderYardChats();
+    if (!sb || !currentUserId) return;
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const { data } = await sb.from('conversations')
+        .select('id, listing_id, seller_id, seller_name, listing_title, unread_buyer, created_at')
+        .eq('buyer_id', currentUserId).eq('source', 'stocklookup')
+        .gte('created_at', startOfDay.toISOString())
+        .order('created_at', { ascending: false }).limit(30);
+    _slYardChats = (data || []).map(c => ({
+        supabaseConvId: c.id, listingId: c.listing_id, sellerId: c.seller_id,
+        with: c.seller_name || 'Yard', partTitle: c.listing_title || '',
+        time: formatMsgTime(c.created_at), unread: !!c.unread_buyer,
+    }));
+    _slRenderYardChats();
+}
+
+function _slRenderYardChats() {
+    const list  = document.getElementById('slYardChatsList');
+    const badge = document.getElementById('slChatsBadge');
+    if (badge) {
+        const unread = _slYardChats.filter(c => c.unread).length;
+        badge.textContent = unread ? String(unread) : '';
+    }
+    if (!list) return;
+    if (!_slYardChats.length) {
+        list.innerHTML = `<div class="sl-sp-empty">No yard chats yet today. Message another yard from a search result and it shows up here.</div>`;
+        return;
+    }
+    list.innerHTML = _slYardChats.map((c, i) => `
+        <div class="sl-sp-row" onclick="_slReopenYardChat(${i})">
+            <div class="sl-sp-info">
+                <div class="sl-sp-part">${escapeHtml(c.with)}</div>
+                <div class="sl-sp-meta">${escapeHtml(c.partTitle)}${c.time ? ` · ${escapeHtml(c.time)}` : ''}</div>
+            </div>
+            ${c.unread ? `<span class="sl-sp-chip sl-sp-none">New</span>` : ''}
+        </div>`).join('');
+}
+
+function _slReopenYardChat(i) {
+    const c = _slYardChats[i];
+    if (!c) return;
+    c.unread = false;
+    _slRenderYardChats();
+    _slOpenChat(Number(c.listingId), c.sellerId, c.partTitle, c.with);
 }
 
 async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerName) {
@@ -16729,6 +16805,7 @@ async function _slEnsureConversation(listingId, sellerId, listingTitle, sellerNa
         listing_id: listingId, buyer_id: currentUserId, seller_id: sellerId,
         buyer_name: currentUserName, seller_name: sellerName,
         listing_title: listingTitle, unread_buyer: false, unread_seller: true,
+        source: 'stocklookup',
     }).select('id').single();
 
     if (error) { showToast('Could not start chat: ' + error.message); return null; }
