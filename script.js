@@ -7585,11 +7585,13 @@ async function syncWorkshopProfileToSupabase() {
     if (!userIsSignedIn || !currentUserId || !sb || !isTradeOrPro()) return;
     await sb.from('profiles').update({
         workshop_address: workshopProfile.address || null,
+        business_phone:   workshopProfile.phone   || null,
         workshop_data: {
             biz_type:         userSettings.businessType      || 'service',
             phone:            workshopProfile.phone          || null,
             email:            workshopProfile.email          || null,
             website:          workshopProfile.website        || null,
+            payment_details:  workshopProfile.paymentDetails || null,
             business_hours:   workshopProfile.businessHours || null,
             services:         workshopProfile.services       || {},
             vehicles:         workshopProfile.vehicles       || [],
@@ -8078,9 +8080,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             const wd = profile.workshop_data;
                             if (wd.biz_type)        userSettings.businessType       = wd.biz_type;
                             workshopProfile.address         = profile.workshop_address   || '';
-                            workshopProfile.phone           = wd.phone                   || '';
+                            workshopProfile.phone           = wd.phone || profile.business_phone || '';
                             workshopProfile.email           = wd.email                   || '';
                             workshopProfile.website         = wd.website                 || '';
+                            workshopProfile.paymentDetails  = wd.payment_details          || '';
                             workshopProfile.businessHours   = wd.business_hours          || null;
                             workshopProfile.services        = wd.services                || {};
                             workshopProfile.vehicles        = wd.vehicles                || [];
@@ -8090,6 +8093,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             workshopProfile.wreckingMakes   = wd.wrecking_makes          || [];
                             saveWorkshopProfile();
                         } else if (tier === 'trade' || tier === 'pro' || profile.is_pro) {
+                            if (profile.business_phone && !workshopProfile.phone) { workshopProfile.phone = profile.business_phone; saveWorkshopProfile(); }
                             const ageMs = profile.created_at ? Date.now() - new Date(profile.created_at).getTime() : Infinity;
                             if (ageMs < 2 * 60 * 1000) {
                                 showOnboardingIfNeeded();
@@ -10535,6 +10539,7 @@ async function handleSignUpProSubmit() {
     const postcode     = pcWrapPro?.dataset.selectedPostcode || document.getElementById('authPostcodePro')?.value.trim() || '';
     const suburb       = pcWrapPro?.dataset.selectedSuburb   || '';
     const email        = document.getElementById('authEmailPro')?.value.trim() || '';
+    const phone        = document.getElementById('authPhonePro')?.value.trim() || '';
     const password     = document.getElementById('authPasswordPro')?.value;
     if (!name || !businessName || !abnRaw || !email || !password) {
         showAuthError('Please fill in all fields including your Business Name and ABN.'); return;
@@ -10556,7 +10561,7 @@ async function handleSignUpProSubmit() {
     showAuthError('Creating Pro account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: true, tier: 'pro', business_name: businessName, abn: abnDigits, postcode: postcode || '', location: suburb || '' } }
+        options: { data: { display_name: name, is_pro: true, tier: 'pro', business_name: businessName, abn: abnDigits, business_phone: phone || '', postcode: postcode || '', location: suburb || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     document.getElementById('authPasswordPro').value = '';
@@ -10564,6 +10569,7 @@ async function handleSignUpProSubmit() {
     userSettings.abn = abnDigits;
     if (postcode) userSettings.postcode = postcode;
     if (suburb)   userSettings.location = suburb;
+    if (phone) { workshopProfile.phone = phone; saveWorkshopProfile(); }
     saveUserSettings();
     hideAuthError();
     toggleDrawer('authDrawer');
@@ -10580,6 +10586,7 @@ async function handleSignUpTradeSubmit() {
     const postcode     = pcWrapTrade?.dataset.selectedPostcode || document.getElementById('authPostcodeTrade')?.value.trim() || '';
     const suburb       = pcWrapTrade?.dataset.selectedSuburb   || '';
     const email        = document.getElementById('authEmailTrade')?.value.trim() || '';
+    const phone        = document.getElementById('authPhoneTrade')?.value.trim() || '';
     const password     = document.getElementById('authPasswordTrade')?.value;
     if (!name || !businessName || !abnRaw || !email || !password) {
         showAuthError('Please fill in all fields including your Business Name and ABN.'); return;
@@ -10601,7 +10608,7 @@ async function handleSignUpTradeSubmit() {
     showAuthError('Creating Trade account…', true);
     const { error } = await sb.auth.signUp({
         email, password,
-        options: { data: { display_name: name, is_pro: false, tier: 'trade', business_name: businessName, abn: abnDigits, postcode: postcode || '', location: suburb || '' } }
+        options: { data: { display_name: name, is_pro: false, tier: 'trade', business_name: businessName, abn: abnDigits, business_phone: phone || '', postcode: postcode || '', location: suburb || '' } }
     });
     if (error) { showAuthError(error.message); return; }
     document.getElementById('authPasswordTrade').value = '';
@@ -10609,6 +10616,7 @@ async function handleSignUpTradeSubmit() {
     userSettings.abn = abnDigits;
     if (postcode) userSettings.postcode = postcode;
     if (suburb)   userSettings.location = suburb;
+    if (phone) { workshopProfile.phone = phone; saveWorkshopProfile(); }
     saveUserSettings();
     hideAuthError();
     toggleDrawer('authDrawer');
@@ -11539,6 +11547,8 @@ function openWorkshopProfileEditor() {
     if (wsEmailEl) wsEmailEl.value = workshopProfile.email || '';
     const wsWebsiteEl = document.getElementById('wsWebsite');
     if (wsWebsiteEl) wsWebsiteEl.value = workshopProfile.website || '';
+    const wsPaymentEl = document.getElementById('wsPayment');
+    if (wsPaymentEl) wsPaymentEl.value = workshopProfile.paymentDetails || '';
     renderWsHoursGrid(workshopProfile.businessHours || {});
     // Pre-fill workshop location picker from saved postcode
     const wsLocWrap = document.querySelector('#workshopProfileFields .location-picker-wrap[data-mode="workshop"]');
@@ -11642,6 +11652,7 @@ function submitWorkshopProfile() {
         phone:    document.getElementById('wsPhone')?.value.trim()    || '',
         email:    document.getElementById('wsEmail')?.value.trim()    || '',
         website:  document.getElementById('wsWebsite')?.value.trim()  || '',
+        paymentDetails: document.getElementById('wsPayment')?.value.trim() || '',
         businessHours: readWsHoursGrid(),
         services: {
             generalService: getChk('wsGeneralService'), logbook: getChk('wsLogbook'),
@@ -17534,7 +17545,7 @@ function _dashQuoteChip(p) {
 async function _slLoadTodaysQuotes() {
     if (!currentUserId || !sb) return;
     const { data } = await sb.from('quotes')
-        .select('id, quote_number, status, customer_name, freight_cost, created_at')
+        .select('id, quote_number, status, customer_name, freight_cost, created_at, invoice_number, invoiced_at')
         .eq('user_id', currentUserId)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -17830,12 +17841,17 @@ function _slRenderQuoteDetail() {
                     <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slEmailQuote(${quote.id})">Email</button>
                     <button class="sl-qd-btn sl-qd-btn-danger" onclick="_slDeleteQuote(${quote.id})" title="Delete quote">🗑</button>
                 </div>
+                <div class="sl-qd-actions-row" style="margin-bottom:4px;">
+                    ${quote.invoice_number
+                        ? `<span style="flex:1;font-size:12px;font-weight:800;color:#6d28d9;display:flex;align-items:center;gap:5px;">🧾 ${escapeHtml(quote.invoice_number)}</span>`
+                        : `<button class="sl-qd-btn sl-qd-btn-primary" style="flex:1;" onclick="_slConvertToInvoice(${quote.id})">🧾 Convert to Invoice</button>`}
+                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slPrintQuoteA4()">${quote.invoice_number ? 'Print Invoice' : 'Print Quote'}</button>
+                </div>
                 <div class="sl-qd-actions-row">
                     ${st === 'draft'    ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'sent')">Process Invoice</button>` : ''}
                     ${st === 'sent'     ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
                     ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Process Sale</button>` : ''}
                     ${st === 'invoiced' ? `<span style="font-size:11px;color:#22c55e;font-weight:700;padding:0 4px;">✓ Sold</span>` : ''}
-                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slPrintQuoteA4()">Print / PDF</button>
                 </div>
             </div>
         </div>`;
@@ -17866,9 +17882,15 @@ function _slPrintQuoteA4() {
     const abn   = (userSettings.abn || '').trim();
     const loc   = (userSettings.location || '').trim();
     const email = currentUserEmail || '';
+    const phone = (workshopProfile.phone || '').trim();
+    const pay   = (workshopProfile.paymentDetails || '').trim();
     const logo  = userSettings.businessLogo || userSettings.profilePic || '';
 
-    const issued     = quote.created_at ? new Date(quote.created_at) : new Date();
+    const isInvoice = !!quote.invoice_number;
+    const docTitle  = isInvoice ? 'TAX INVOICE' : 'QUOTE';
+    const docNumber = isInvoice ? quote.invoice_number : quote.quote_number;
+    const issued    = (isInvoice && quote.invoiced_at) ? new Date(quote.invoiced_at)
+                    : (quote.created_at ? new Date(quote.created_at) : new Date());
     const validUntil = new Date(issued.getTime() + 14 * 24 * 60 * 60 * 1000);
     const fmt = d => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -17926,15 +17948,15 @@ tbody td.c { text-align: center; } tbody td.r { text-align: right; white-space: 
       ${logo ? `<img class="logo" src="${escapeHtml(logo)}" alt="">` : ''}
       <div>
         <div class="biz-name">${escapeHtml(biz)}</div>
-        <div class="biz-meta">${abn ? `ABN ${escapeHtml(abn)}<br>` : ''}${loc ? `${escapeHtml(loc)}<br>` : ''}${email ? escapeHtml(email) : ''}</div>
+        <div class="biz-meta">${abn ? `ABN ${escapeHtml(abn)}<br>` : ''}${loc ? `${escapeHtml(loc)}<br>` : ''}${phone ? `${escapeHtml(phone)}<br>` : ''}${email ? escapeHtml(email) : ''}</div>
       </div>
     </div>
     <div class="doc-block">
-      <div class="doc-title">QUOTE</div>
+      <div class="doc-title">${docTitle}</div>
       <div class="doc-meta">
-        <div><b>${escapeHtml(quote.quote_number)}</b></div>
+        <div><b>${escapeHtml(docNumber)}</b></div>
         <div>Issued ${fmt(issued)}</div>
-        <div>Valid until ${fmt(validUntil)}</div>
+        ${isInvoice ? `<div>Ref quote ${escapeHtml(quote.quote_number)}</div>` : `<div>Valid until ${fmt(validUntil)}</div>`}
       </div>
     </div>
   </div>
@@ -17962,7 +17984,9 @@ tbody td.c { text-align: center; } tbody td.r { text-align: right; white-space: 
     <div class="row gst"><span>Includes GST (10%)</span><span>$${gst.toFixed(2)}</span></div>
   </div>
 
-  <div class="terms"><b>This quote is valid until ${fmt(validUntil)}.</b> Prices are in AUD and include GST. Parts are subject to prior sale.</div>
+  ${isInvoice
+    ? `<div class="terms"><b>Payment</b><br>${pay ? escapeHtml(pay).replace(/\n/g, '<br>') : 'Payment due within 7 days. Please quote your invoice number on payment.'}<br><span style="color:#999;">Prices are in AUD and include GST.</span></div>`
+    : `<div class="terms"><b>This quote is valid until ${fmt(validUntil)}.</b> Prices are in AUD and include GST. Parts are subject to prior sale.</div>`}
   <div class="foot">Powered by Auto Parts Connection · autopartsconnection.com.au</div>
 </div>
 <script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
@@ -17971,6 +17995,42 @@ tbody td.c { text-align: center; } tbody td.r { text-align: right; white-space: 
     const tab = window.open('', '_blank');
     if (tab) { tab.document.open(); tab.document.write(html); tab.document.close(); }
     else showToast('Allow pop-ups to print the quote');
+}
+
+async function _slGenerateInvoiceNumber() {
+    const today  = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const prefix = `INV-${today}-`;
+    const { data } = await sb.from('quotes')
+        .select('invoice_number')
+        .eq('user_id', currentUserId)
+        .ilike('invoice_number', `${prefix}%`)
+        .order('invoice_number', { ascending: false })
+        .limit(1);
+    const seq = data?.[0]?.invoice_number ? parseInt(data[0].invoice_number.slice(-3)) + 1 : 1;
+    return `${prefix}${String(seq).padStart(3, '0')}`;
+}
+
+// One-click quote → tax invoice: locks in an invoice number + date, marks invoiced.
+// The same document then prints as a TAX INVOICE. Accounting stays in the wrecker's
+// own software — this is the customer-facing document only.
+async function _slConvertToInvoice(quoteId) {
+    if (!sb || !_slActiveQuote) return;
+    if (_slActiveQuote.quote.invoice_number) { _slPrintQuoteA4(); return; }
+    if (!confirm('Convert this quote to a tax invoice?\n\nThis locks in an invoice number. You can still print, email or send it.')) return;
+    const inv = await _slGenerateInvoiceNumber();
+    const now = new Date().toISOString();
+    const { error } = await sb.from('quotes')
+        .update({ invoice_number: inv, invoiced_at: now, status: 'invoiced', updated_at: now })
+        .eq('id', quoteId);
+    if (error) { showToast('Could not create invoice: ' + error.message); return; }
+    _slActiveQuote.quote.invoice_number = inv;
+    _slActiveQuote.quote.invoiced_at    = now;
+    _slActiveQuote.quote.status         = 'invoiced';
+    const q = _slQuotes.find(x => x.id === quoteId);
+    if (q) { q.invoice_number = inv; q.invoiced_at = now; q.status = 'invoiced'; }
+    showToast(`Invoice ${inv} created`);
+    _slRenderQuoteDetail();
+    _slRenderQuotesList();
 }
 
 async function _slSendQuoteToConv() {

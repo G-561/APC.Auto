@@ -1358,6 +1358,7 @@
             <div class="auth-form-heading">Pro / Business <span class="auth-pro-inline-badge">APC PRO</span></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Your Name</label><input type="text" id="authNamePro" placeholder="Your name"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Business Name</label><input type="text" id="authBusinessNamePro" placeholder="e.g. Sydney Auto Wreckers"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Phone <span style="font-weight:400; color:#aaa; font-size:11px;">optional — shown on your quotes</span></label><input type="tel" id="authPhonePro" placeholder="e.g. 08 9123 4567" autocomplete="tel"></div>
             <div class="input-group" style="margin-bottom:12px;">
                 <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
                 <input type="text" id="authAbnPro" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
@@ -1395,6 +1396,7 @@
             <div class="auth-form-heading">Workshop / Trade <span class="auth-trade-inline-badge">APC TRADE</span></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Your Name</label><input type="text" id="authNameTrade" placeholder="Your name"></div>
             <div class="input-group" style="margin-bottom:12px;"><label>Business Name</label><input type="text" id="authBusinessNameTrade" placeholder="e.g. Northside Auto Workshop"></div>
+            <div class="input-group" style="margin-bottom:12px;"><label>Phone <span style="font-weight:400; color:#aaa; font-size:11px;">optional — shown on your quotes</span></label><input type="tel" id="authPhoneTrade" placeholder="e.g. 08 9123 4567" autocomplete="tel"></div>
             <div class="input-group" style="margin-bottom:12px;">
                 <label>ABN <span style="font-weight:400; color:#aaa; font-size:11px;">Australian Business Number — required</span></label>
                 <input type="text" id="authAbnTrade" placeholder="e.g. 51 824 753 556" maxlength="14" inputmode="numeric">
@@ -2169,6 +2171,10 @@
                 <div class="input-group">
                     <label>Website <span style="font-weight:400;color:#aaa;">optional</span></label>
                     <input type="url" id="wsWebsite" placeholder="e.g. https://yourshop.com.au" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>Payment Details <span style="font-weight:400;color:#aaa;">optional — shown on invoices</span></label>
+                    <textarea id="wsPayment" class="apc-textarea" rows="2" placeholder="e.g. Bank: BSB 062-000 Acc 1234 5678 · or card/cash on pickup · Payment due within 7 days"></textarea>
                 </div>
                 <div class="input-group">
                     <label>About <span style="font-weight:400; color:#aaa;">optional</span></label>
@@ -3054,7 +3060,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=188"></script>
+<script src="script.js?v=189"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
