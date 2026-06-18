@@ -17835,7 +17835,7 @@ function _slRenderQuoteDetail() {
                     ${st === 'sent'     ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'approved')">Mark Approved</button>` : ''}
                     ${st === 'approved' ? `<button class="sl-qd-btn sl-qd-btn-primary" onclick="_slAdvanceQuoteStatus(${quote.id},'invoiced')">Process Sale</button>` : ''}
                     ${st === 'invoiced' ? `<span style="font-size:11px;color:#22c55e;font-weight:700;padding:0 4px;">✓ Sold</span>` : ''}
-                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="window.print()">Print</button>
+                    <button class="sl-qd-btn sl-qd-btn-ghost" onclick="_slPrintQuoteA4()">Print / PDF</button>
                 </div>
             </div>
         </div>`;
@@ -17847,6 +17847,130 @@ function _slCloseQuoteDetail() {
     _slQuoteConvContext = null;
     const overlay = document.getElementById('slQuoteDetailOverlay');
     if (overlay) overlay.remove();
+}
+
+// A4 quote document — business header + customer + line items + GST-inclusive totals.
+// Same print-tab approach as the labels/report; the browser's Save-as-PDF gives a
+// professional quote the wrecker can hand to a customer. Prices are GST-inclusive
+// (GST = total / 11), matching how AU trade prices are quoted.
+function _slPrintQuoteA4() {
+    if (!_slActiveQuote) { showToast('Open a quote first'); return; }
+    const { quote, lines } = _slActiveQuote;
+
+    const subtotal = lines.reduce((s, l) => s + ((l.price || 0) * (l.qty || 1)), 0);
+    const freight  = parseFloat(quote.freight_cost) || 0;
+    const total    = subtotal + freight;
+    const gst      = total / 11;
+
+    const biz   = (userSettings.businessName || currentUserName || 'My Business').trim();
+    const abn   = (userSettings.abn || '').trim();
+    const loc   = (userSettings.location || '').trim();
+    const email = currentUserEmail || '';
+    const logo  = userSettings.businessLogo || userSettings.profilePic || '';
+
+    const issued     = quote.created_at ? new Date(quote.created_at) : new Date();
+    const validUntil = new Date(issued.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const fmt = d => d.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const rows = lines.map((l, i) => {
+        const lineTotal = (l.price || 0) * (l.qty || 1);
+        return `<tr>
+            <td class="c">${i + 1}</td>
+            <td>${escapeHtml(l.title || '')}${l.stock_number ? `<span class="sku">Stock #${escapeHtml(l.stock_number)}</span>` : ''}</td>
+            <td class="c">${l.qty || 1}</td>
+            <td class="r">${l.price != null ? '$' + Number(l.price).toFixed(2) : '—'}</td>
+            <td class="r">${l.price != null ? '$' + lineTotal.toFixed(2) : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    const custLines = [quote.customer_name, quote.customer_phone, quote.customer_email]
+        .filter(Boolean).map(x => `<div>${escapeHtml(x)}</div>`).join('') || '<div class="muted">—</div>';
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Quote ${escapeHtml(quote.quote_number)} — ${escapeHtml(biz)}</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #222; margin: 0; font-size: 13px; }
+.page { max-width: 800px; margin: 0 auto; padding: 32px 36px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #f07020; padding-bottom: 18px; }
+.biz-block { display: flex; gap: 14px; align-items: flex-start; }
+.logo { max-height: 64px; max-width: 150px; object-fit: contain; }
+.biz-name { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.biz-meta { font-size: 11px; color: #666; line-height: 1.6; margin-top: 3px; }
+.doc-block { text-align: right; }
+.doc-title { font-size: 30px; font-weight: 800; color: #f07020; letter-spacing: 0.02em; line-height: 1; }
+.doc-meta { font-size: 12px; color: #555; margin-top: 10px; line-height: 1.7; }
+.doc-meta b { color: #222; }
+.parties { margin: 22px 0 18px; }
+.party-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #999; margin-bottom: 5px; }
+.party div { font-size: 13px; color: #333; line-height: 1.6; }
+.muted { color: #aaa; }
+table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+thead th { background: #1a1a2e; color: #fff; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; text-align: left; padding: 9px 10px; }
+thead th.c { text-align: center; } thead th.r { text-align: right; }
+tbody td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
+tbody td.c { text-align: center; } tbody td.r { text-align: right; white-space: nowrap; }
+.sku { display: block; font-size: 10px; color: #999; margin-top: 2px; }
+.totals { margin-top: 16px; margin-left: auto; width: 280px; }
+.totals .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #555; }
+.totals .grand { border-top: 2px solid #1a1a2e; margin-top: 4px; padding-top: 10px; font-size: 18px; font-weight: 800; color: #222; }
+.totals .gst { font-size: 11px; color: #888; padding-top: 2px; }
+.terms { margin-top: 30px; border-top: 1px solid #eee; padding-top: 14px; font-size: 11px; color: #777; line-height: 1.7; }
+.terms b { color: #444; }
+.foot { margin-top: 22px; text-align: center; font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; }
+@page { margin: 0; }
+@media print { .page { padding: 14mm; max-width: none; } }
+</style></head><body>
+<div class="page">
+  <div class="top">
+    <div class="biz-block">
+      ${logo ? `<img class="logo" src="${escapeHtml(logo)}" alt="">` : ''}
+      <div>
+        <div class="biz-name">${escapeHtml(biz)}</div>
+        <div class="biz-meta">${abn ? `ABN ${escapeHtml(abn)}<br>` : ''}${loc ? `${escapeHtml(loc)}<br>` : ''}${email ? escapeHtml(email) : ''}</div>
+      </div>
+    </div>
+    <div class="doc-block">
+      <div class="doc-title">QUOTE</div>
+      <div class="doc-meta">
+        <div><b>${escapeHtml(quote.quote_number)}</b></div>
+        <div>Issued ${fmt(issued)}</div>
+        <div>Valid until ${fmt(validUntil)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party-label">Prepared for</div>
+    <div class="party">${custLines}</div>
+  </div>
+
+  <table>
+    <thead><tr>
+      <th class="c" style="width:34px;">#</th>
+      <th>Description</th>
+      <th class="c" style="width:46px;">Qty</th>
+      <th class="r" style="width:92px;">Unit Price</th>
+      <th class="r" style="width:92px;">Amount</th>
+    </tr></thead>
+    <tbody>${rows || `<tr><td colspan="5" class="muted" style="padding:18px;text-align:center;">No parts on this quote</td></tr>`}</tbody>
+  </table>
+
+  <div class="totals">
+    <div class="row"><span>Subtotal</span><span>$${subtotal.toFixed(2)}</span></div>
+    ${freight > 0 ? `<div class="row"><span>Freight</span><span>$${freight.toFixed(2)}</span></div>` : ''}
+    <div class="row grand"><span>Total</span><span>$${total.toFixed(2)}</span></div>
+    <div class="row gst"><span>Includes GST (10%)</span><span>$${gst.toFixed(2)}</span></div>
+  </div>
+
+  <div class="terms"><b>This quote is valid until ${fmt(validUntil)}.</b> Prices are in AUD and include GST. Parts are subject to prior sale.</div>
+  <div class="foot">Powered by Auto Parts Connection · autopartsconnection.com.au</div>
+</div>
+<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
+</body></html>`;
+
+    const tab = window.open('', '_blank');
+    if (tab) { tab.document.open(); tab.document.write(html); tab.document.close(); }
+    else showToast('Allow pop-ups to print the quote');
 }
 
 async function _slSendQuoteToConv() {
