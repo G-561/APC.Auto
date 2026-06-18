@@ -5577,7 +5577,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     /* Centre content so it reads well at full desktop width instead of stretching. */
     #yardReportContent .yr-top,
     #yardReportContent .yr-list { max-width: 1000px; margin-left: auto; margin-right: auto; }
-    #warehouseDrawer .drawer-content { max-width: 1040px; margin-left: auto; margin-right: auto; width: 100%; }
 }
 
 .dtb-dashboard { color: var(--apc-blue) !important; font-weight: 800 !important; }
@@ -8395,12 +8394,15 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .wh-stk-move-btn:active { background: #fff4ec; }
 
 @media (min-width: 900px) {
-    #warehouseDrawer { left: calc(max(0px, 50vw - 800px) + 240px) !important; right: calc(max(0px, 50vw - 800px) + 220px) !important; width: auto !important; height: auto !important; bottom: 16px !important; border-radius: 16px !important; box-shadow: 0 4px 32px rgba(0,0,0,0.15) !important; border: none !important; overflow: hidden; }
+    /* Full-screen content pane, matching the other Pro drawers (Stock Lookup/EDW). */
+    #warehouseDrawer { top: 54px !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: auto !important; height: auto !important; border-radius: 0 !important; box-shadow: none !important; border: none !important; overflow: hidden; }
     .wh-camera-wrap { display: none !important; }
     .wh-scan-info { display: none !important; }
     .wh-desktop-scan-note { display: block !important; }
-    .wh-label-grid { grid-template-columns: repeat(5, 1fr); }
-    .wh-panel-inner { max-width: 700px; }
+    .wh-label-grid { grid-template-columns: repeat(6, 1fr); }
+    /* Fill the wide pane; cap the elements that would read badly stretched. */
+    .wh-worker-qr-card { max-width: 680px; }
+    .wh-textarea { max-width: 680px; }
 }
 /* Mobile: Labels generator is desktop-only (printing). Show only the scanner,
    full-screen — no tab bar, no WORKER ACCESS QR card pushing the camera down. */
