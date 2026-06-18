@@ -423,7 +423,7 @@ function silentSavePostcode(value) {
 async function isUsernameAvailable(name, excludeId) {
     if (!sb || !name) return true;
     try {
-        let q = sb.from('profiles')
+        let q = sb.from('public_profiles')
             .select('id', { count: 'exact', head: true })
             .ilike('display_name', name);
         if (excludeId) q = q.neq('id', excludeId);
@@ -1834,7 +1834,7 @@ async function loadPublicListingsFromSupabase(append = false) {
         let nameMap = {};
         if (sellerIds.length) {
             const [{ data: profiles }, { data: ratings }] = await Promise.all([
-                sb.from('profiles').select('id, display_name, business_name, avatar_url, is_public').in('id', sellerIds),
+                sb.from('public_profiles').select('id, display_name, business_name, avatar_url, is_public').in('id', sellerIds),
                 sb.from('seller_ratings').select('seller_id, stars').in('seller_id', sellerIds),
             ]);
             (profiles || []).forEach(p => {
@@ -2267,7 +2267,7 @@ async function loadConversationsFromSupabase(userId) {
             .filter(Boolean))];
         let convNameMap = {};
         if (otherIds.length) {
-            const { data: profs } = await sb.from('profiles')
+            const { data: profs } = await sb.from('public_profiles')
                 .select('id, display_name, business_name').in('id', otherIds);
             (profs || []).forEach(p => { const nm = p.business_name || p.display_name; if (nm) convNameMap[p.id] = nm; });
         }
@@ -2453,7 +2453,7 @@ async function loadPublicWantedFromSupabase() {
         if (!rows?.length) { publicWantedDatabase.splice(0); return; }
 
         const userIds = [...new Set(rows.map(r => r.user_id))];
-        const { data: profiles } = await sb.from('profiles')
+        const { data: profiles } = await sb.from('public_profiles')
             .select('id, display_name, business_name, is_pro, tier, location')
             .in('id', userIds);
         const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
@@ -2525,7 +2525,7 @@ async function fetchWorkshopById(id) {
     if (inDb) return inDb;
     if (_workshopById.has(id)) return _workshopById.get(id);
     try {
-        const { data } = await sb.from('profiles')
+        const { data } = await sb.from('public_profiles')
             .select('id, display_name, business_name, location, postcode, avatar_url, about, workshop_data, workshop_address')
             .eq('id', id).single();
         if (!data?.workshop_data) return null;
@@ -2539,7 +2539,7 @@ async function loadWorkshopDatabase() {
     if (!sb) return;
     _workshopLoadState = 'loading';
     try {
-        const { data, error } = await sb.from('profiles')
+        const { data, error } = await sb.from('public_profiles')
             .select('id, display_name, business_name, location, postcode, avatar_url, about, workshop_data, workshop_address')
             .or('tier.in.(trade,pro),is_pro.eq.true')
             .not('workshop_data', 'is', null)
@@ -2666,7 +2666,7 @@ function subscribeToRealtimeMessages() {
                     const otherId = isBuyer ? convRow.seller_id : convRow.buyer_id;
                     let otherName = isBuyer ? (convRow.seller_name || 'Seller') : (convRow.buyer_name || 'Buyer');
                     if (otherId) {
-                        const { data: prof } = await sb.from('profiles').select('display_name, business_name').eq('id', otherId).single();
+                        const { data: prof } = await sb.from('public_profiles').select('display_name, business_name').eq('id', otherId).single();
                         otherName = bizDisplayName(prof, otherName);
                     }
                     const part = [...partDatabase, ...userListings].find(p => p.supabaseId === convRow.listing_id);
@@ -3968,7 +3968,7 @@ function getCurrentSellerName() {
 
 async function openStorefrontByUserId(userId) {
     if (!sb || !userId) return;
-    const { data: profile } = await sb.from('profiles')
+    const { data: profile } = await sb.from('public_profiles')
         .select('display_name, is_pro, tier, business_name, abn, about, avatar_url, location, banner_color, is_public, workshop_data, workshop_address')
         .eq('id', userId).single();
     if (!profile) return;
@@ -6590,7 +6590,7 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     applyAvatar(colAvatar, initialPic);
     // Cache miss for another seller — fetch lazily so avatar fills in without blocking the overlay
     if (!isOwnListing && !initialPic && part.sellerId && sb) {
-        sb.from('profiles').select('avatar_url').eq('id', part.sellerId).single().then(({ data }) => {
+        sb.from('public_profiles').select('avatar_url').eq('id', part.sellerId).single().then(({ data }) => {
             if (data?.avatar_url) {
                 _sellerPicCache[part.sellerId] = data.avatar_url;
                 applyAvatar(sellerAvatar, data.avatar_url);
@@ -7424,7 +7424,7 @@ function openStorefront(partId) {
         _showStorefront(cached || '', '', '', '', '', '');
         return;
     }
-    sb.from('profiles')
+    sb.from('public_profiles')
         .select('display_name, is_pro, tier, avatar_url, business_name, abn, about, location, banner_color, workshop_data, workshop_address')
         .eq('id', part.sellerId).single()
         .then(({ data: profile }) => {
@@ -8673,7 +8673,7 @@ function openStoreFromSaved(idx) {
         return;
     }
     if (!sb) { showToast('Could not open store'); return; }
-    sb.from('profiles').select('id').eq('display_name', sellerName).maybeSingle()
+    sb.from('public_profiles').select('id').eq('display_name', sellerName).maybeSingle()
         .then(({ data }) => {
             if (data?.id) openStorefrontByUserId(data.id);
             else showToast('Could not find this seller');
@@ -17082,7 +17082,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     if (otherResults.length) {
         const sellerIds = [...new Set(otherResults.map(r => r.seller_id))].filter(Boolean);
         if (sellerIds.length) {
-            const { data: profs } = await sb.from('profiles').select('id, display_name, business_name, is_pro').in('id', sellerIds);
+            const { data: profs } = await sb.from('public_profiles').select('id, display_name, business_name, is_pro').in('id', sellerIds);
             profileMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
         }
     }
@@ -17384,7 +17384,7 @@ async function _slOpenResultDetail(id) {
 
     let sellerName = 'Seller';
     if (r.seller_id) {
-        const { data: prof } = await sb.from('profiles').select('display_name, avatar_url').eq('id', r.seller_id).single();
+        const { data: prof } = await sb.from('public_profiles').select('display_name, avatar_url').eq('id', r.seller_id).single();
         if (prof?.display_name) sellerName = prof.display_name;
         if (prof?.avatar_url) _sellerPicCache[r.seller_id] = prof.avatar_url;
     }
