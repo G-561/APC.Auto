@@ -15220,16 +15220,32 @@ let _wItems = [];
 async function initWorkerView(token) {
     document.body.innerHTML = `<div id="workerApp" style="min-height:100vh;background:#f2f2f7;font-family:-apple-system,sans-serif;"><div style="padding:60px 20px;text-align:center;color:#888;">Loading job…</div></div>`;
 
-    const { data: job } = await sb.from('dismantling_jobs').select('*').eq('job_token', token).single();
-    if (!job) {
+    // Token-scoped via SECURITY DEFINER RPC — anon never reads the jobs/items tables
+    // directly (that exposed vehicle_cost and let anyone edit any yard's items).
+    const { data, error } = await sb.rpc('worker_get_job', { p_token: token });
+    const job = data?.job;
+    if (error || !job) {
         document.getElementById('workerApp').innerHTML = `<div class="w-empty"><div class="w-empty-ico">✕</div><div class="w-empty-title">Job not found</div><div class="w-empty-sub">This link may have expired or been entered incorrectly.</div></div>`;
         return;
     }
-
-    const { data: items } = await sb.from('dismantling_items').select('*').eq('job_id', job.id).order('id');
-    _wJob   = job;
-    _wItems = items || [];
+    _wJob   = { ...job, job_token: token };
+    _wItems = data.items || [];
     _renderWorkerView();
+}
+
+// Persist an item's full current state through the token-validated RPC. The client holds
+// the complete item (grade/notes/photos/done from worker_get_job), so sending all four
+// each save never clobbers an unedited field.
+function _wSaveItem(item) {
+    if (!sb || !_wJob || !item) return;
+    sb.rpc('worker_save_item', {
+        p_token:  _wJob.job_token,
+        p_item_id: item.id,
+        p_grade:  item.grade || null,
+        p_notes:  item.notes || null,
+        p_photos: item.worker_photos || [],
+        p_done:   !!item.worker_done,
+    }).then(() => {});
 }
 
 function _renderWorkerView() {
@@ -15313,7 +15329,7 @@ async function _wSetGrade(itemId, grade) {
     const item = _wItems.find(i => i.id === itemId);
     if (!item) return;
     item.grade = grade;
-    if (sb) sb.from('dismantling_items').update({ grade }).eq('id', itemId).then(() => {});
+    _wSaveItem(item);
     const gradeLabel = { A: 'Like New', B: 'Good Used', C: 'Average', D: 'Damaged' };
     const body = document.getElementById(`wbody-${itemId}`);
     if (body) {
@@ -15330,7 +15346,7 @@ async function _wSetNotes(itemId, notes) {
     const item = _wItems.find(i => i.id === itemId);
     if (!item) return;
     item.notes = notes;
-    if (sb) sb.from('dismantling_items').update({ notes }).eq('id', itemId).then(() => {});
+    _wSaveItem(item);
 }
 
 async function _wAddPhotos(itemId, input) {
@@ -15359,7 +15375,7 @@ async function _wAddPhotos(itemId, input) {
     if (row) row.innerHTML = merged.map(p => `<img src="${escapeHtml(p)}" class="w-photo-thumb" alt="part photo">`).join('');
     showToast(`${uploaded.length} photo${uploaded.length !== 1 ? 's' : ''} saved`);
     input.value = '';
-    sb.from('dismantling_items').update({ worker_photos: merged }).eq('id', itemId).then(() => {});
+    _wSaveItem(item);
 }
 
 async function _wMarkDone(itemId) {
@@ -15367,7 +15383,7 @@ async function _wMarkDone(itemId) {
     if (!item) return;
     item.worker_done = !item.worker_done;
     _renderWorkerView();
-    if (sb) sb.from('dismantling_items').update({ worker_done: item.worker_done }).eq('id', itemId).then(() => {});
+    _wSaveItem(item);
 }
 
 async function _wSubmitForReview() {
