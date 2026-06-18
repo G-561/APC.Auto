@@ -7710,10 +7710,12 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* selector reuses .edw-3panel / .edw-3ph / .edw-3pcol / .edw-panel-row classes */
 .sl-part-row { cursor: pointer; }
 .sl-part-row.searched { background: #fff4ec; color: #f07020; }
-.sl-results-area { flex: 1 1 0%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+/* Grows with content so the whole left column scrolls as one; fills the viewport when results are short */
+.sl-results-area { flex: 1 0 auto; display: flex; flex-direction: column; }
 .sl-results-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; text-align: center; padding: 30px; }
 /* Tab bar */
-.sl-tab-bar { flex-shrink: 0; display: flex; align-items: center; gap: 0; overflow-x: auto; background: #fff; border-bottom: 1px solid #ddd; padding: 0 8px; }
+/* Sticks to the top of the scroll area once the selector scrolls past it */
+.sl-tab-bar { position: sticky; top: 0; z-index: 6; flex-shrink: 0; display: flex; align-items: center; gap: 0; overflow-x: auto; background: #fff; border-bottom: 1px solid #ddd; padding: 0 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
 .sl-tab {
     display: flex; align-items: center; gap: 6px;
     padding: 10px 14px; cursor: pointer; white-space: nowrap;
@@ -7794,7 +7796,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 
 /* ─── Stock Lookup: main area + panels ───────────────────────────────────── */
 .sl-main-area { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; position: relative; }
-.sl-left-col { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
+.sl-left-col { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow-y: auto; overflow-x: hidden; }
 .sl-right-col { width: 360px; flex-shrink: 0; border-left: 2px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
 .sl-selector { flex-shrink: 0; border-bottom: 2px solid #ddd; overflow-x: auto; overflow-y: hidden; }
 
@@ -7816,8 +7818,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-match--exact { background: #d4f3df; color: #15803d; }
 .sl-match--possible { background: #ffe3cc; color: #f07020; }
 
-/* Action bar */
-.sl-action-bar { flex-shrink: 0; background: #1a1a2e; color: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+/* Action bar — pinned to the bottom of the scroll area so it stays visible while selecting */
+.sl-action-bar { position: sticky; bottom: 0; z-index: 6; flex-shrink: 0; background: #1a1a2e; color: #fff; display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
 .sl-action-count { flex: 1; font-size: 12px; font-weight: 700; color: #f07020; }
 .sl-action-btn { padding: 7px 14px; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 .sl-action-btn-primary { background: #f07020; color: #fff; }
