@@ -16612,10 +16612,11 @@ function _slRefreshSelectorBadges() {
 function _slLogSearch(partName, tabIdx) {
     const vehicle = [_slVehicle.year, _slVehicle.make, _slVehicle.model].filter(Boolean).join(' ');
     const time    = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
-    // Avoid duplicating the same part name searched within the same session
-    const existing = _slSearchHistory.findIndex(h => h.partName === partName);
-    if (existing >= 0) { _slSearchHistory[existing].tabIdx = tabIdx; _slSearchHistory[existing].time = time; }
-    else               { _slSearchHistory.unshift({ partName, vehicle, time, tabIdx, found: null }); }
+    const veh     = { ..._slVehicle };  // structured context so a click can repopulate the fields
+    // Dedupe on part + vehicle so the same part on a different car stays a separate entry
+    const existing = _slSearchHistory.findIndex(h => h.partName === partName && h.vehicle === vehicle);
+    if (existing >= 0) { _slSearchHistory[existing].tabIdx = tabIdx; _slSearchHistory[existing].time = time; _slSearchHistory[existing].veh = veh; }
+    else               { _slSearchHistory.unshift({ partName, vehicle, veh, time, tabIdx, found: null }); }
     _slRenderSearchHistory();
 }
 
@@ -16653,15 +16654,18 @@ function _slJumpToSearch(idx) {
     const h = _slSearchHistory[idx];
     if (!h) return;
     const tabIdx = _slTabs.findIndex(t => t.partName === h.partName);
-    if (tabIdx >= 0) {
-        _slSetActiveTab(tabIdx);
-    } else {
-        // Re-run the search
-        const [base, qualifier] = h.partName.includes(' — ')
-            ? h.partName.split(' — ', 2)
-            : [h.partName, null];
-        _slSelectQualifier(base, qualifier);
+    if (tabIdx >= 0) { _slSetActiveTab(tabIdx); return; }
+    // Restore the vehicle this search was run against so the Make/Model/Year/Series
+    // fields repopulate, then re-run the part search to bring the results back up.
+    if (h.veh && h.veh.make) {
+        _slVehicle = { make: h.veh.make || '', model: h.veh.model || '', year: h.veh.year || '', series: h.veh.series || '' };
+        _slRenderVehicleBar();
+        _slRenderSelector();
     }
+    const [base, qualifier] = h.partName.includes(' — ')
+        ? h.partName.split(' — ', 2)
+        : [h.partName, null];
+    _slSelectQualifier(base, qualifier);
 }
 
 // ─── Stock Lookup: in-place chat ─────────────────────────────────────────────
