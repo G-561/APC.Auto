@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=95">
+    <link rel="stylesheet" href="style.css?v=96">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -278,28 +278,6 @@
 
     <!-- Pro Stock Lookup View: full-screen stock lookup tool -->
     <div id="proStockView" style="display:none; position:absolute; inset:0; z-index:5; flex-direction:column; overflow:hidden;">
-        <!-- Floating chat panel — sits above sl-shell, anchored bottom-right of results area -->
-        <div id="slChatFloat" class="sl-chat-float" style="display:none;">
-            <div class="sl-cf-header">
-                <div class="sl-cf-hdr-info">
-                    <div class="sl-cf-yard" id="slCfYard"></div>
-                    <div class="sl-cf-part" id="slCfPart"></div>
-                </div>
-                <div class="sl-cf-hdr-btns">
-                    <button class="sl-cf-btn" onclick="_slChatMinimize()" title="Minimise">—</button>
-                    <button class="sl-cf-btn" onclick="_slChatClose()" title="Close">✕</button>
-                </div>
-            </div>
-            <div id="slCfMsgs" class="sl-cf-msgs"></div>
-            <div class="sl-cf-enquiries-link">
-                <button onclick="_slViewInEnquiries()">View full thread in Messages →</button>
-            </div>
-            <div class="sl-cf-input-row">
-                <textarea id="slCfInput" class="sl-cf-input" placeholder="Ask about availability, freight, condition…" rows="1"
-                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_slChatSend();}"></textarea>
-                <button class="sl-cf-send" onclick="_slChatSend()">↑</button>
-            </div>
-        </div>
         <div class="sl-shell">
             <div class="sl-header">
                 <div class="sl-header-title">Stock Lookup</div>
@@ -307,6 +285,28 @@
             </div>
             <div class="sl-vehicle-bar" id="slVehicleBar"></div>
             <div class="sl-main-area">
+                <!-- Yard chat docks top-right of the results area, over the dead space beside the selector -->
+                <div id="slChatFloat" class="sl-chat-float" style="display:none;">
+                    <div class="sl-cf-header">
+                        <div class="sl-cf-hdr-info">
+                            <div class="sl-cf-yard" id="slCfYard"></div>
+                            <div class="sl-cf-part" id="slCfPart"></div>
+                        </div>
+                        <div class="sl-cf-hdr-btns">
+                            <button class="sl-cf-btn" onclick="_slChatMinimize()" title="Minimise">—</button>
+                            <button class="sl-cf-btn" onclick="_slChatClose()" title="Close">✕</button>
+                        </div>
+                    </div>
+                    <div id="slCfMsgs" class="sl-cf-msgs"></div>
+                    <div class="sl-cf-enquiries-link">
+                        <button onclick="_slViewInEnquiries()">View full thread in Messages →</button>
+                    </div>
+                    <div class="sl-cf-input-row">
+                        <textarea id="slCfInput" class="sl-cf-input" placeholder="Ask about availability, freight, condition…" rows="1"
+                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();_slChatSend();}"></textarea>
+                        <button class="sl-cf-send" onclick="_slChatSend()">↑</button>
+                    </div>
+                </div>
                 <div class="sl-left-col">
                     <div class="sl-selector" id="slSelector"></div>
                     <div class="sl-results-area" id="slResultsArea">
@@ -3054,7 +3054,7 @@
 <script src="taxonomy.js?v=2"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=182"></script>
+<script src="script.js?v=183"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

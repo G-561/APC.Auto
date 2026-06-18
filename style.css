@@ -7793,7 +7793,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .sl-no-results { padding: 30px; text-align: center; color: #aaa; font-size: 13px; }
 
 /* ─── Stock Lookup: main area + panels ───────────────────────────────────── */
-.sl-main-area { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; }
+.sl-main-area { display: flex; flex: 1 1 0%; min-height: 0; overflow: hidden; position: relative; }
 .sl-left-col { display: flex; flex-direction: column; flex: 1 1 0%; min-width: 0; overflow: hidden; }
 .sl-right-col { width: 360px; flex-shrink: 0; border-left: 2px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
 .sl-selector { flex-shrink: 0; border-bottom: 2px solid #ddd; overflow-x: auto; overflow-y: hidden; }
@@ -7828,13 +7828,13 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* Today's Quotes panel */
 /* SL floating chat panel */
 .sl-chat-float {
-    position: absolute; bottom: 0;
-    right: 492px; /* 280px quotes + 210px searches + 2px border */
-    width: 310px; z-index: 20;
+    position: absolute; top: 8px;
+    right: 372px; /* 360px Today panel + 12px gap → docks in the dead space beside the selector */
+    width: 380px; max-height: calc(100% - 16px); z-index: 20;
     display: flex; flex-direction: column;
-    background: white; border-radius: 12px 12px 0 0;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-    border: 1px solid #ddd; border-bottom: none;
+    background: white; border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    border: 1px solid #ddd;
     overflow: hidden;
 }
 .sl-chat-float.minimised .sl-cf-msgs,

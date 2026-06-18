@@ -16660,8 +16660,16 @@ function _slJumpToSearch(idx) {
     if (h.veh && h.veh.make) {
         _slVehicle = { make: h.veh.make || '', model: h.veh.model || '', year: h.veh.year || '', series: h.veh.series || '' };
         _slRenderVehicleBar();
-        _slRenderSelector();
     }
+    // Restore the zone → assembly → part highlight for visual continuity.
+    const fullBase = h.partName.includes(' — ') ? h.partName.split(' — ', 2)[0] : h.partName;
+    const map = _slGetReverseMap();
+    const loc = map.get(h.partName) || map.get(fullBase);
+    if (loc) {
+        _slSelectedZone = loc.zI; _slSelectedAsm = loc.aI;
+        _slSelectedPartBase = _slGetPartGroups(loc.zI, loc.aI).find(g => g.fullBase === fullBase) || null;
+    }
+    _slRenderSelector();
     const [base, qualifier] = h.partName.includes(' — ')
         ? h.partName.split(' — ', 2)
         : [h.partName, null];
