@@ -1840,11 +1840,12 @@ async function loadPublicListingsFromSupabase(append = false) {
         let nameMap = {};
         if (sellerIds.length) {
             const [{ data: profiles }, { data: ratings }] = await Promise.all([
-                sb.from('profiles').select('id, display_name, avatar_url, is_public').in('id', sellerIds),
+                sb.from('profiles').select('id, display_name, business_name, avatar_url, is_public').in('id', sellerIds),
                 sb.from('seller_ratings').select('seller_id, stars').in('seller_id', sellerIds),
             ]);
             (profiles || []).forEach(p => {
-                if (p.display_name) nameMap[p.id] = p.display_name;
+                const nm = p.business_name || p.display_name;
+                if (nm) nameMap[p.id] = nm;
                 if (p.avatar_url)   _sellerPicCache[p.id] = p.avatar_url;
                 if (p.is_public === false) _hiddenSellerIds.add(p.id);
                 else _hiddenSellerIds.delete(p.id);
@@ -2445,7 +2446,7 @@ async function loadPublicWantedFromSupabase() {
 
         const userIds = [...new Set(rows.map(r => r.user_id))];
         const { data: profiles } = await sb.from('profiles')
-            .select('id, display_name, is_pro, tier, location')
+            .select('id, display_name, business_name, is_pro, tier, location')
             .in('id', userIds);
         const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
 
@@ -2464,8 +2465,8 @@ async function loadPublicWantedFromSupabase() {
                 loc: prof.location || '',
                 posted: new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
                 userId: r.user_id,
-                buyer: prof.display_name || 'Member',
-                sellerName: prof.display_name || '',
+                buyer: bizDisplayName(prof, 'Member'),
+                sellerName: bizDisplayName(prof, ''),
             });
         });
     } catch (e) { console.warn('loadPublicWantedFromSupabase:', e); }
@@ -3941,6 +3942,11 @@ function contactWorkshop(workshopId, workshopName, prefillMsg) {
 // Business name takes precedence over display name for all tiers — one consistent name on all listings.
 function getPublicSellerName() {
     return userSettings.businessName || currentUserName || 'Guest Seller';
+}
+
+// Public-facing name for ANOTHER user's profile row: business name wins, username falls back.
+function bizDisplayName(profile, fallback = 'Seller') {
+    return (profile && (profile.business_name || profile.display_name)) || fallback;
 }
 
 function getCurrentSellerName() {
@@ -17052,7 +17058,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
     if (otherResults.length) {
         const sellerIds = [...new Set(otherResults.map(r => r.seller_id))].filter(Boolean);
         if (sellerIds.length) {
-            const { data: profs } = await sb.from('profiles').select('id, display_name, is_pro').in('id', sellerIds);
+            const { data: profs } = await sb.from('profiles').select('id, display_name, business_name, is_pro').in('id', sellerIds);
             profileMap = Object.fromEntries((profs || []).map(p => [p.id, p]));
         }
     }
@@ -17217,7 +17223,7 @@ function _slRenderResults() {
         const chatBtn = !isOwn && r.seller_id
             ? `<button class="sl-chat-row-btn"
                   data-lid="${r.id}" data-sid="${r.seller_id}"
-                  data-title="${escapeHtml(r.title)}" data-seller="${escapeHtml(r.profiles?.display_name || 'Wrecker')}"
+                  data-title="${escapeHtml(r.title)}" data-seller="${escapeHtml(bizDisplayName(r.profiles, 'Wrecker'))}"
                   onclick="event.stopPropagation();_slOpenChatBtn(this)">Chat</button>` : '';
         const matchClass = r._match ? ` sl-row--${r._match}` : '';
         const matchBadge = r._match ? `<span class="sl-match sl-match--${r._match}">${r._match === 'exact' ? 'Exact' : 'Possible'}</span>` : '';
@@ -17236,7 +17242,7 @@ function _slRenderResults() {
             <div class="sl-cell sl-cell-grade ${gradeClass}">${escapeHtml(grade)}</div>
             <div class="sl-cell sl-cell-bin">${isOwn ? escapeHtml(r.warehouse_bin || '') : escapeHtml(_slStateOf(r))}</div>
             <div class="sl-cell sl-cell-price">${r.price ? '$'+r.price : '—'}</div>
-            <div class="sl-cell sl-cell-yard">${isOwn ? '' : escapeHtml(r.profiles?.display_name || 'Wrecker')}</div>
+            <div class="sl-cell sl-cell-yard">${isOwn ? '' : escapeHtml(bizDisplayName(r.profiles, 'Wrecker'))}</div>
             <div class="sl-cell sl-cell-chat">${chatBtn}</div>
         </div>`;
     };
@@ -17315,7 +17321,7 @@ function _slSortRows(rows) {
             case 'stock': return (r.stock_number || '').toLowerCase();
             case 'bin':   return (r.warehouse_bin || _slStateOf(r) || '').toLowerCase();
             case 'grade': return (r.condition || '').toLowerCase();
-            case 'yard':  return (r.profiles?.display_name || '').toLowerCase();
+            case 'yard':  return bizDisplayName(r.profiles, '').toLowerCase();
             case 'title': return (r.title || '').toLowerCase();
             default:      return null;
         }
