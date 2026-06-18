@@ -2475,7 +2475,14 @@ header {
 /* My Yard enquiry report drawer */
 .yr-loading, .yr-empty { padding: 40px 20px; text-align: center; color: #888; font-size: 13px; }
 .yr-top { padding: 15px 15px 0; border-bottom: 1px solid #eee; background: #fff; position: sticky; top: 0; z-index: 2; }
-.yr-period-label { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px; }
+.yr-period-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.yr-period-label { font-size: 12px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.yr-export {
+    flex-shrink: 0; padding: 6px 12px; border: 1.5px solid #ddd; border-radius: 8px;
+    background: #fff; font-size: 12px; font-weight: 700; color: #666; cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+.yr-export:hover { border-color: #f07020; color: #f07020; }
 .yr-periods { margin-bottom: 12px; }
 .yr-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
 .yr-stat { background: #f7f7f7; border-radius: 8px; padding: 10px 6px; text-align: center; }

@@ -13412,12 +13412,85 @@ function _paintYardReport() {
 
     body.innerHTML = `
         <div class="yr-top">
-            <div class="yr-period-label">${label}</div>
+            <div class="yr-period-row">
+                <div class="yr-period-label">${label}</div>
+                ${rep.total ? `<button class="yr-export" onclick="exportYardReportPDF()">⤓ Export PDF</button>` : ''}
+            </div>
             ${periodPills}
             ${stats}
             ${tabs}
         </div>
         <div class="yr-list">${listHTML}</div>`;
+}
+
+// Print-window PDF of the current period — full Make→Model→Part breakdown + misses list.
+// Same browser-print approach as the label tabs (no PDF library); user picks "Save as PDF".
+function exportYardReportPDF() {
+    if (!_yrData || !_yrData.total) { showToast('No enquiries to export'); return; }
+    const rep = _yrData;
+    const { label } = _yrRange();
+    const biz   = (userSettings.businessName || currentUserName || 'My Yard').trim();
+    const pct   = Math.round((rep.supplied / rep.total) * 100);
+    const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const vehicleRows = rep.makes.map(M => {
+        const models = M.models.map(Mo => {
+            const parts = Mo.parts.map(P => `<tr class="r-part">
+                <td>${escapeHtml(P.part)}</td><td class="num">${P.count}</td><td class="num miss">${P.missed || ''}</td></tr>`).join('');
+            return `<tr class="r-model"><td>${escapeHtml(Mo.model)}</td><td class="num">${Mo.count}</td><td class="num miss">${Mo.missed || ''}</td></tr>${parts}`;
+        }).join('');
+        return `<tr class="r-make"><td>${escapeHtml(M.make)}</td><td class="num">${M.count}</td><td class="num miss">${M.missed || ''}</td></tr>${models}`;
+    }).join('');
+
+    const missRows = rep.misses.length
+        ? rep.misses.map(m => `<tr><td>${escapeHtml(m.part)}</td><td>${escapeHtml([m.make, m.model].filter(x => x && x !== '—').join(' ') || '—')}</td><td class="num">${m.count}</td></tr>`).join('')
+        : `<tr><td colspan="3" class="empty">Nothing missed — every enquiry was supplied.</td></tr>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(biz)} — Enquiry Report</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #222; margin: 28px; font-size: 12px; }
+header { border-bottom: 3px solid #f07020; padding-bottom: 10px; margin-bottom: 16px; }
+.biz { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
+.rh { font-size: 14px; color: #444; margin-top: 2px; }
+.gen { font-size: 10px; color: #999; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.stats { display: flex; gap: 22px; margin-bottom: 20px; }
+.stats div { font-size: 12px; color: #666; }
+.stats b { font-size: 20px; color: #222; display: block; font-weight: 800; }
+.stats .m b { color: #f07020; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #f07020; border-bottom: 1px solid #eee; padding-bottom: 5px; margin: 22px 0 8px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #999; padding: 4px 6px; border-bottom: 1px solid #ddd; }
+td { padding: 5px 6px; border-bottom: 1px solid #f2f2f2; }
+.num { text-align: right; width: 70px; }
+.miss { color: #f07020; font-weight: 700; }
+.r-make td { font-weight: 800; background: #faf6f2; border-top: 1px solid #eee; }
+.r-model td:first-child { padding-left: 22px; font-weight: 600; color: #555; }
+.r-part td:first-child { padding-left: 40px; color: #666; }
+.empty { color: #888; font-style: italic; }
+@media print { body { margin: 12mm; } .r-make { page-break-inside: avoid; } }
+</style></head><body>
+<header>
+    <div class="biz">${escapeHtml(biz)}</div>
+    <div class="rh">Stock Enquiry Report · ${escapeHtml(label)}</div>
+    <div class="gen">Generated ${today} · Auto Parts Connection</div>
+</header>
+<div class="stats">
+    <div><b>${rep.total}</b> Enquiries</div>
+    <div><b>${rep.makes.length}</b> Makes</div>
+    <div><b>${pct}%</b> Supplied</div>
+    <div class="m"><b>${rep.missed}</b> Couldn't supply</div>
+</div>
+<h2>By Vehicle</h2>
+<table><thead><tr><th>Make / Model / Part</th><th class="num">Asked</th><th class="num">Missed</th></tr></thead><tbody>${vehicleRows}</tbody></table>
+<h2>Couldn't Supply — sourcing shortlist</h2>
+<table><thead><tr><th>Part</th><th>Vehicle</th><th class="num">Times</th></tr></thead><tbody>${missRows}</tbody></table>
+<script>window.onload = () => { window.print(); window.onafterprint = () => window.close(); };<\/script>
+</body></html>`;
+
+    const tab = window.open('', '_blank');
+    if (tab) { tab.document.open(); tab.document.write(html); tab.document.close(); }
+    else showToast('Allow pop-ups to export the report');
 }
 
 // ─── ELECTRONIC DISMANTLING WORKFLOW (EDW) ────────────────────────────────
