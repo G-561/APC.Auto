@@ -17137,19 +17137,23 @@ function _slClassifyByEngine(results, qualifier) {
     const oppRe  = sideMatch && new RegExp(`\\b${sideMatch[1] === 'left' ? 'right' : 'left'}\\b`);
     const wrongSide = t => oppRe && oppRe.test(t) && !sideRe.test(t);
 
+    // Match the engine code against title + the listing's variant field (where EDW/older
+    // listings store it, e.g. "Engine / Variant: L3-VE 2.3") — the title alone misses it.
+    const hayOf = r => `${(r.title || '').toLowerCase()} ${(r.variant || '').toLowerCase()}`;
     if (!codes.length) {
         return results.filter(r => {
             const t = (r.title || '').toLowerCase();
-            return !wrongSide(t) && t.includes(qLow);
+            return !wrongSide(t) && hayOf(r).includes(qLow);
         });
     }
     const out = [];
     for (const r of results) {
-        const t = (r.title || '').toLowerCase();
-        if (wrongSide(t))                   continue; // opposite side — never fits
-        if (t.includes(qLow))               out.push({ ...r, _match: 'exact' });
-        else if (codes.some(c => t.includes(c))) continue; // names a different engine
-        else                                out.push({ ...r, _match: 'possible' });
+        const t   = (r.title || '').toLowerCase();
+        const hay = hayOf(r);
+        if (wrongSide(t))                     continue; // opposite side — never fits
+        if (hay.includes(qLow))               out.push({ ...r, _match: 'exact' });
+        else if (codes.some(c => hay.includes(c))) continue; // names a different engine
+        else                                  out.push({ ...r, _match: 'possible' });
     }
     out.sort((a, b) => (a._match === 'exact' ? 0 : 1) - (b._match === 'exact' ? 0 : 1));
     return out;
@@ -17180,7 +17184,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         return q;
     };
 
-    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer, postcode, location,
+    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer, postcode, location, variant,
                   listing_images(storage_path, position)`;
 
     // Fetch vehicle-matching listing IDs first — used for both own and other-yard filtering
