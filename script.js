@@ -4022,6 +4022,54 @@ async function openStorefrontByUserId(userId) {
     if (sfEl)    sfEl.style.zIndex    = '';
     if (backBar) backBar.style.display = 'none';
     openDrawer('storefrontDrawer');
+    _sfLoadSellerListings(userId, sellerName);
+}
+
+// Fetch a seller's active listings directly (scoped to seller_id) so the storefront shows
+// ALL their stock to anyone — including a logged-out visitor arriving via the QR badge, whose
+// global feed hasn't paged in that seller's parts yet. Merges into partDatabase (deduped).
+async function _sfLoadSellerListings(userId, sellerName) {
+    if (!sb || !userId) { _sfRenderGrid(userId, sellerName); return; }
+    const { data: rows } = await sb.from('listings')
+        .select(`id, apc_id, title, price, condition, category, description, location, postcode,
+                 pickup, postage, open_to_offers, is_pro, stock_number, odometer, chassis_vin,
+                 warehouse_bin, quantity, fitting_available, fits_year, variant, saves_count,
+                 created_at, seller_id, status, listing_images(storage_path, position),
+                 listing_vehicles(make, model, series)`)
+        .eq('seller_id', userId).eq('status', 'active')
+        .order('created_at', { ascending: false }).limit(200);
+    (rows || []).forEach(r => {
+        if (partDatabase.some(p => p.supabaseId === r.id) || userListings.some(l => l.supabaseId === r.id)) return;
+        const images = (r.listing_images || []).sort((a, b) => a.position - b.position).map(i => i.storage_path).filter(Boolean);
+        const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
+        partDatabase.push({
+            id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
+            saves: r.saves_count || 0, date: new Date(r.created_at).getTime(),
+            apcId: r.apc_id, title: r.title, category: r.category, price: r.price,
+            condition: r.condition, description: r.description, loc: r.location,
+            postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+            openToOffers: r.open_to_offers, isPro: r.is_pro,
+            stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
+            warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
+            fit: r.fitting_available, year: r.fits_year, variant: r.variant || null,
+            seller: sellerName || '', images: images.length ? images : [], fits,
+        });
+    });
+    _sfRenderGrid(userId, sellerName);
+}
+
+function _sfRenderGrid(userId, sellerName) {
+    const grid = document.getElementById('sellerPartsGrid');
+    if (!grid) return;
+    const sName = sellerName || grid.dataset.seller || currentStorefrontSeller || '';
+    const parts = getAllParts().filter(p =>
+        userId ? (p.sellerId === userId || p.seller === sName) : p.seller === sName);
+    grid.innerHTML = parts.map(p => buildCardHTML(p)).join('');
+    _sfUpdatePartsVisibility();
+    const listEl = document.getElementById('sfStatListings');
+    const saveEl = document.getElementById('sfStatSaves');
+    if (listEl) listEl.textContent = parts.length;
+    if (saveEl) saveEl.textContent = parts.reduce((s, p) => s + (p.saves || 0), 0);
 }
 
 // --- CORE UI CONTROLS ---
