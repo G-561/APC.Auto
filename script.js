@@ -1978,7 +1978,7 @@ async function loadUserListingsFromSupabase(userId) {
                     fit: r.fitting_available, year: r.fits_year,
                     variant: r.variant || null,
                     saves: r.saves_count || 0, sellerId: r.seller_id, fits,
-                    seller: currentUserName || r.seller_name || '',
+                    seller: getPublicSellerName(),
                     ...(images.length ? { images } : {}),
                 });
             } else {
@@ -1997,7 +1997,7 @@ async function loadUserListingsFromSupabase(userId) {
                     warehouseBin: r.warehouse_bin,
                     quantity: r.quantity || 1, fit: r.fitting_available,
                     year: r.fits_year, variant: r.variant || null,
-                    seller: r.seller_name || currentUserName || '',
+                    seller: getPublicSellerName(),
                     images: images.length ? images : [], fits,
                 });
             }
