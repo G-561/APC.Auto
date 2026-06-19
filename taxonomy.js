@@ -38,7 +38,7 @@ const EDW_TAXONOMY = [
         zone: "Exhaust",
         apcCategory: "engine",
         assemblies: [
-            { name: "Exhaust System", parts: ["Exhaust Manifold", "Front Pipe / Downpipe", "Catalytic Converter", "DPF (Diesel Particulate Filter)", "Centre Pipe", "Muffler / Centre Silencer", "Rear Muffler", "Exhaust Tips"] },
+            { name: "Exhaust System", parts: ["Exhaust Manifold", "Headers / Extractors", "Front Pipe / Downpipe", "Catalytic Converter", "DPF (Diesel Particulate Filter)", "Centre Pipe", "Muffler / Centre Silencer", "Rear Muffler", "Exhaust Tips"] },
         ]
     },
     {
