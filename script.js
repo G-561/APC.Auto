@@ -17951,6 +17951,10 @@ function _slRenderQuoteDetail() {
     const total    = subtotal + freight;
     const statusLabel = { draft: 'Draft', sent: 'Sent', approved: 'Approved', invoiced: 'Invoiced' };
     const st = quote.status || 'draft';
+    const fmtD = d => d ? new Date(d).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+    const dateLabel = quote.invoice_number
+        ? `Invoiced ${fmtD(quote.invoiced_at || quote.created_at)}`
+        : `Created ${fmtD(quote.created_at)}`;
 
     const overlay = document.createElement('div');
     overlay.className = 'sl-quote-modal-overlay';
@@ -17960,9 +17964,12 @@ function _slRenderQuoteDetail() {
     overlay.innerHTML = `
         <div class="sl-quote-modal" style="width:460px;">
             <div class="sl-qm-header">
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="sl-qm-title">${escapeHtml(quote.quote_number)}</span>
-                    ${st !== 'draft' ? `<span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>` : ''}
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="sl-qm-title">${escapeHtml(quote.quote_number)}</span>
+                        ${st !== 'draft' ? `<span class="sl-quote-badge ${st}">${statusLabel[st] || st}</span>` : ''}
+                    </div>
+                    <span style="font-size:11px;color:#999;font-weight:600;">${dateLabel}</span>
                 </div>
                 <button class="sl-qm-close" onclick="_slCloseQuoteDetail()">✕</button>
             </div>
