@@ -13572,6 +13572,17 @@ function _edwFullPartName(asmName, partName) {
     return `${first} ${partName}`;
 }
 
+// Part name with the engine variant baked in for the Complete Engine, so the listing
+// title carries the engine code (e.g. "Complete Engine 2ZZ-GE 1.8") — that's what makes
+// Stock Lookup's engine-variant matching find it. Applied at every publish/preview path.
+function _edwPartNameWithVariant(asmName, partName) {
+    const full = _edwFullPartName(asmName, partName);
+    if (asmName === 'Engine' && full === 'Complete Engine' && _edwVehicle.engineCode) {
+        return `${full} ${_edwVehicle.engineCode}`;
+    }
+    return full;
+}
+
 function _edwPositionDrawer(drawer) {
     if (window.innerWidth < 900) {
         drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
@@ -14578,13 +14589,34 @@ function _buildEdwPanelQuals() {
         const key     = `${zI}:${aI}:${group.directPI}`;
         const checked = !!_edwItems[key];
         const asmName = EDW_TAXONOMY[zI]?.assemblies[aI]?.name || '';
-        const engineCode = (asmName === 'Engine' && group.base === 'Complete Engine' && _edwVehicle.engineCode)
-            ? _edwVehicle.engineCode : null;
-        const transCode  = (!engineCode && asmName === 'Gearbox / Transmission'
+        const isEngine = asmName === 'Engine' && group.base === 'Complete Engine';
+
+        // Complete Engine → inline variant dropdown from VEHICLE_ENGINES (same data Stock
+        // Lookup uses). One car = one engine; picking it tags the listed engine for search.
+        if (isEngine) {
+            const { make, model, series } = _edwVehicle;
+            const variants = (typeof VEHICLE_ENGINES !== 'undefined' &&
+                (VEHICLE_ENGINES[make]?.[series ? `${model} ${series}` : model] || VEHICLE_ENGINES[make]?.[model])) || [];
+            if (variants.length) {
+                const opts = ['<option value="">Select engine…</option>',
+                    ...variants.map(e => `<option value="${escapeHtml(e)}"${e === _edwVehicle.engineCode ? ' selected' : ''}>${escapeHtml(e)}</option>`)
+                ].join('');
+                return `
+                <div class="edw-panel-part${checked ? ' checked' : ''}">
+                    <div class="edw-pcell edw-pcell-name" style="gap:8px;">
+                        <input type="checkbox" ${checked ? 'checked' : ''} onchange="_edwTogglePart('${key}',${zI},${aI},${group.directPI},this.checked)" style="flex-shrink:0;cursor:pointer;">
+                        <select class="edw-engine-pick" onchange="_edwSetEngineVariant(this.value)">${opts}</select>
+                    </div>
+                    ${_buildEdwPartControls(key, zI)}
+                </div>`;
+            }
+        }
+
+        const transCode  = (!isEngine && asmName === 'Gearbox / Transmission'
             && (group.base === 'Auto Transmission' || group.base === 'CVT Transmission')
             && _edwVehicle.transCode)
             ? _edwVehicle.transCode : null;
-        const displayCode = engineCode || transCode;
+        const displayCode = (isEngine && _edwVehicle.engineCode) ? _edwVehicle.engineCode : transCode;
         const label = displayCode
             ? `<span class="edw-part-name">${escapeHtml(displayCode)}</span>`
             : `<span class="edw-part-name" style="font-style:italic;color:#999;">Select</span>`;
@@ -14614,6 +14646,12 @@ function _buildEdwPanelQuals() {
             ${_buildEdwPartControls(key, zI)}
         </div>`;
     }).join('');
+}
+
+function _edwSetEngineVariant(val) {
+    _edwVehicle.engineCode = val;
+    const q = document.getElementById('edwPanelQuals');
+    if (q) q.innerHTML = _buildEdwPanelQuals();
 }
 
 function _edwSelectZonePanel(zI) {
@@ -14910,7 +14948,7 @@ function _renderEdwStep3() {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone  = EDW_TAXONOMY[zI];
         const asm   = zone?.assemblies[aI];
-        const part  = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
+        const part  = _edwPartNameWithVariant(asm?.name, asm?.parts[pI] || '');
         const listingTitle = `${part} to suit ${vehicleTitle}`;
         return `
             <div class="edw-review-card">
@@ -15105,7 +15143,7 @@ async function _edwPublish() {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone  = EDW_TAXONOMY[zI];
         const asm   = zone?.assemblies[aI];
-        const part  = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
+        const part  = _edwPartNameWithVariant(asm?.name, asm?.parts[pI] || '');
         const title = `${part} to suit ${vehicleTitle}`;
         const price = item.price ? Number(item.price) : 0;
         const apcId = generateApcId();
@@ -15235,7 +15273,7 @@ async function _edwSendToWorkers() {
         const [zI, aI, pI] = key.split(':').map(Number);
         const zone = EDW_TAXONOMY[zI];
         const asm  = zone?.assemblies[aI];
-        const part = _edwFullPartName(asm?.name, asm?.parts[pI] || '');
+        const part = _edwPartNameWithVariant(asm?.name, asm?.parts[pI] || '');
         return {
             job_id: job.id, user_id: currentUserId,
             zone: zone?.zone || '', assembly: asm?.name || '', part_name: part,

@@ -7293,6 +7293,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .edw-part-check { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .edw-part-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: #f07020; flex-shrink: 0; }
 .edw-part-name { font-size: 14px; color: #333; }
+.edw-engine-pick { flex: 1; min-width: 0; padding: 5px 8px; border: 1.5px solid #f07020; border-radius: 6px; font-size: 13px; font-family: inherit; color: #333; background: #fff; cursor: pointer; outline: none; }
+.edw-engine-pick:focus { border-color: #d95f10; }
 .edw-part-detail { margin-top: 8px; padding-left: 28px; display: flex; flex-direction: column; gap: 7px; }
 .edw-grade-row { display: flex; align-items: center; gap: 6px; }
 .edw-grade-btn {
