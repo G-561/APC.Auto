@@ -15808,11 +15808,7 @@ async function openVehicleStockCard(jobId) {
     const activeVal = active.reduce((s, p) => s + Number(p.price || 0), 0);
     const profit    = cost != null ? soldRev - cost : null;
 
-    const photos = (job.vehicle_photos || []).slice(0, 6);
-    _vscPhotos = photos;
-    const photoStrip = photos.length
-        ? `<div class="vsc-photos">${photos.map((u, i) => `<img class="vsc-photo" src="${escapeHtml(u)}" alt="" onclick="_vscOpenPhoto(${i})" style="cursor:zoom-in;">`).join('')}</div>`
-        : '';
+    _vscPhotos = job.vehicle_photos || [];
 
     const fmtMoney = (n) => n != null ? `$${Number(n).toLocaleString('en-AU')}` : '—';
     const profitCls = profit == null ? '' : profit >= 0 ? 'vsc-profit-pos' : 'vsc-profit-neg';
@@ -15830,7 +15826,7 @@ async function openVehicleStockCard(jobId) {
     const partsRows = _vscBuildPartRows(allParts);
 
     body.innerHTML = `
-        ${photoStrip}
+        <div id="vscPhotoSection" class="vsc-photo-section">${_vscPhotoSectionHTML()}</div>
         <div class="vsc-grid">
             <div class="vsc-card" id="vscVehicleCard">
                 <div class="vsc-section-title" style="display:flex;align-items:center;justify-content:space-between;">
@@ -19874,6 +19870,96 @@ function _vscCancelEditVehicle() {
         <dl class="vsc-dl" id="vscVehicleDl">
             ${details.map(([k, v]) => `<div class="vsc-dl-row"><dt>${escapeHtml(k)}</dt><dd>${escapeHtml(String(v))}</dd></div>`).join('')}
         </dl>`;
+}
+
+// ─── VSC vehicle photos — view + edit (add / remove) ──────────────────────
+let _vscPhotosEdit = [];
+
+function _vscPhotoSectionHTML() {
+    const photos = _vscPhotos || [];
+    const strip = photos.length
+        ? `<div class="vsc-photos">${photos.map((u, i) => `<img class="vsc-photo" src="${escapeHtml(u)}" alt="" onclick="_vscOpenPhoto(${i})" style="cursor:zoom-in;">`).join('')}</div>`
+        : `<div class="vsc-photos-empty">No vehicle photos yet</div>`;
+    return `
+        <div class="vsc-photo-hdr">
+            <span class="vsc-section-title" style="margin-bottom:0;">Vehicle Photos${photos.length ? ` (${photos.length})` : ''}</span>
+            <button class="vsc-photo-edit-btn" onclick="_vscEditPhotos()">${photos.length ? 'Edit Photos' : '+ Add Photos'}</button>
+        </div>
+        ${strip}`;
+}
+
+function _vscEditPhotos() {
+    _vscPhotosEdit = [..._vscPhotos];
+    _vscRenderPhotoEdit();
+}
+
+function _vscRenderPhotoEdit() {
+    const sec = document.getElementById('vscPhotoSection');
+    if (!sec) return;
+    const tiles = _vscPhotosEdit.map((u, i) => `
+        <div class="vsc-photo-edit-tile">
+            <img src="${escapeHtml(u)}" alt="">
+            <button class="vsc-photo-remove" onclick="_vscRemovePhoto(${i})" title="Remove photo">✕</button>
+        </div>`).join('');
+    sec.innerHTML = `
+        <div class="vsc-photo-hdr">
+            <span class="vsc-section-title" style="margin-bottom:0;">Edit Photos (${_vscPhotosEdit.length})</span>
+            <div style="display:flex;gap:8px;">
+                <button class="vsc-photo-edit-btn" onclick="_vscCancelEditPhotos()">Cancel</button>
+                <button class="vsc-photo-save-btn" onclick="_vscSavePhotos()">Done</button>
+            </div>
+        </div>
+        <div class="vsc-photos vsc-photos-edit">
+            ${tiles}
+            <label class="vsc-photo-add-tile">
+                <input type="file" accept="image/*" multiple style="display:none" onchange="_vscAddPhotos(this)">
+                <span>+ Add</span>
+            </label>
+        </div>`;
+}
+
+function _vscRemovePhoto(idx) {
+    _vscPhotosEdit.splice(idx, 1);
+    _vscRenderPhotoEdit();
+}
+
+async function _vscAddPhotos(input) {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    if (!files.length || !_vscCurrentJobId || !sb) return;
+    showToast('Uploading…');
+    const urls = [];
+    for (let i = 0; i < files.length; i++) {
+        try {
+            const b64 = await _fileToBase64(files[i]);
+            if (!b64?.startsWith('data:')) continue;
+            const compressed = await compressBase64(b64, 1600, 0.88);
+            const blob = await (await fetch(compressed)).blob();
+            const path = `vehicle-photos/${_vscCurrentJobId}/${Date.now()}_${i}.jpg`;
+            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (!error) { const { data } = sb.storage.from('listing-images').getPublicUrl(path); urls.push(data.publicUrl); }
+        } catch (_) {}
+    }
+    if (!urls.length) { showToast('Upload failed'); return; }
+    _vscPhotosEdit.push(...urls);
+    _vscRenderPhotoEdit();
+    showToast(`${urls.length} photo${urls.length !== 1 ? 's' : ''} added`);
+}
+
+async function _vscSavePhotos() {
+    if (!_vscCurrentJobId || !sb) return;
+    const { error } = await sb.from('dismantling_jobs').update({ vehicle_photos: _vscPhotosEdit }).eq('id', _vscCurrentJobId);
+    if (error) { showToast('Save failed: ' + error.message); return; }
+    _vscPhotos = [..._vscPhotosEdit];
+    if (_vscCurrentJob) _vscCurrentJob.vehicle_photos = _vscPhotos;
+    const sec = document.getElementById('vscPhotoSection');
+    if (sec) sec.innerHTML = _vscPhotoSectionHTML();
+    showToast('Photos saved');
+}
+
+function _vscCancelEditPhotos() {
+    const sec = document.getElementById('vscPhotoSection');
+    if (sec) sec.innerHTML = _vscPhotoSectionHTML();
 }
 
 async function _vscSaveVehicle() {
