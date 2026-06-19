@@ -20168,7 +20168,7 @@ async function _vscSaveVehicle() {
     // before they were ever synced, even when nothing changed in this save.
     const n = await _backfillJobToListings(_vscCurrentJobId, _donorFieldsFromJob(_vscCurrentJob));
     showToast(n ? `Synced to ${n} listed part${n !== 1 ? 's' : ''}` : 'Vehicle details saved');
-    _edwLoadAndOpen(_vscCurrentJobId); // reload so the parts list shows the new values
+    openVehicleStockCard(_vscCurrentJobId); // re-render the stock card in place — stay on the VSC, not EDW
 }
 
 function _vscBuildPartRows(parts) {
