@@ -14036,9 +14036,6 @@ function _edwStockCardTab(tab) {
     if (!body || !footer) return;
 
     if (tab === 'vehicle') {
-        const photosHtml = job.vehicle_photos?.length
-            ? `<div style="display:flex;gap:8px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid #eee;">${job.vehicle_photos.map(url => `<img src="${escapeHtml(url)}" alt="" style="height:80px;width:auto;border-radius:6px;flex-shrink:0;" loading="lazy">`).join('')}</div>`
-            : '';
         const fields = [
             ['stock_number','Stock #',job.stock_number], ['vin','VIN',job.vin],
             ['colour','Colour',job.colour], ['odometer','Odometer',job.odometer],
@@ -14053,7 +14050,7 @@ function _edwStockCardTab(tab) {
                 <span style="font-size:13px;color:#333;font-weight:600;text-align:right;">${escapeHtml(String(val))}</span>
             </div>`).join('');
         const emptyMsg = fields.every(([,,v]) => !v) ? '<div style="padding:20px;text-align:center;color:#aaa;font-size:13px;">No vehicle details recorded</div>' : '';
-        body.innerHTML = `${photosHtml}<div style="padding:4px 16px 12px;">${rowsHtml}${emptyMsg}</div>`;
+        body.innerHTML = `<div id="edwPhotoSection">${_edwPhotoSectionHTML()}</div><div style="padding:4px 16px 12px;">${rowsHtml}${emptyMsg}</div>`;
         footer.innerHTML = `
             <div style="display:flex;gap:10px;">
                 <button onclick="_edwEditVehicle(${job.id})" style="flex:1;padding:12px;border:1.5px solid #f07020;color:#f07020;background:#fff;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">Edit Vehicle</button>
@@ -14064,6 +14061,99 @@ function _edwStockCardTab(tab) {
         body.innerHTML = _edwPartsTabHtml(parts);
         footer.innerHTML = `<button onclick="_edwStartWalkaround(${job.id})" style="width:100%;padding:12px;background:#f07020;color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;">Select Parts to Dismantle →</button>`;
     }
+}
+
+// ─── EDW stock-card vehicle photos — view + edit (add / remove) ───────────
+let _edwPhotosEdit = [];
+
+function _edwPhotoSectionHTML() {
+    const photos = _edwStockCardData?.job?.vehicle_photos || [];
+    const strip = photos.length
+        ? `<div style="display:flex;gap:8px;overflow-x:auto;padding:0 16px 10px;">${photos.map(u => `<img src="${escapeHtml(u)}" alt="" style="height:80px;width:auto;border-radius:6px;flex-shrink:0;" loading="lazy">`).join('')}</div>`
+        : `<div style="padding:0 16px 10px;color:#aaa;font-size:13px;">No vehicle photos yet</div>`;
+    return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#aaa;">Photos${photos.length ? ` (${photos.length})` : ''}</span>
+            <button class="vsc-photo-edit-btn" onclick="_edwEditPhotos()">${photos.length ? 'Edit Photos' : '+ Add Photos'}</button>
+        </div>
+        ${strip}
+        <div style="border-bottom:1px solid #eee;"></div>`;
+}
+
+function _edwEditPhotos() {
+    _edwPhotosEdit = [...(_edwStockCardData?.job?.vehicle_photos || [])];
+    _edwRenderPhotoEdit();
+}
+
+function _edwRenderPhotoEdit() {
+    const sec = document.getElementById('edwPhotoSection');
+    if (!sec) return;
+    const tiles = _edwPhotosEdit.map((u, i) => `
+        <div class="vsc-photo-edit-tile" style="width:110px;height:80px;">
+            <img src="${escapeHtml(u)}" alt="">
+            <button class="vsc-photo-remove" onclick="_edwRemovePhoto(${i})" title="Remove photo">✕</button>
+        </div>`).join('');
+    sec.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px;">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:#aaa;">Edit Photos (${_edwPhotosEdit.length})</span>
+            <div style="display:flex;gap:8px;">
+                <button class="vsc-photo-edit-btn" onclick="_edwCancelEditPhotos()">Cancel</button>
+                <button class="vsc-photo-save-btn" onclick="_edwSavePhotos()">Done</button>
+            </div>
+        </div>
+        <div class="vsc-photos vsc-photos-edit" style="padding:0 16px 10px;">
+            ${tiles}
+            <label class="vsc-photo-add-tile" style="width:110px;height:80px;">
+                <input type="file" accept="image/*" multiple style="display:none" onchange="_edwAddPhotos(this)">
+                <span>+ Add</span>
+            </label>
+        </div>
+        <div style="border-bottom:1px solid #eee;"></div>`;
+}
+
+function _edwRemovePhoto(i) {
+    _edwPhotosEdit.splice(i, 1);
+    _edwRenderPhotoEdit();
+}
+
+async function _edwAddPhotos(input) {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    const jobId = _edwStockCardData?.job?.id;
+    if (!files.length || !jobId || !sb) return;
+    showToast('Uploading…');
+    const urls = [];
+    for (let i = 0; i < files.length; i++) {
+        try {
+            const b64 = await _fileToBase64(files[i]);
+            if (!b64?.startsWith('data:')) continue;
+            const compressed = await compressBase64(b64, 1600, 0.88);
+            const blob = await (await fetch(compressed)).blob();
+            const path = `vehicle-photos/${jobId}/${Date.now()}_${i}.jpg`;
+            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (!error) { const { data } = sb.storage.from('listing-images').getPublicUrl(path); urls.push(data.publicUrl); }
+        } catch (_) {}
+    }
+    if (!urls.length) { showToast('Upload failed'); return; }
+    _edwPhotosEdit.push(...urls);
+    _edwRenderPhotoEdit();
+    showToast(`${urls.length} photo${urls.length !== 1 ? 's' : ''} added`);
+}
+
+async function _edwSavePhotos() {
+    const jobId = _edwStockCardData?.job?.id;
+    if (!jobId || !sb) return;
+    const { error } = await sb.from('dismantling_jobs').update({ vehicle_photos: _edwPhotosEdit }).eq('id', jobId);
+    if (error) { showToast('Save failed: ' + error.message); return; }
+    _edwStockCardData.job.vehicle_photos = [..._edwPhotosEdit];
+    const sec = document.getElementById('edwPhotoSection');
+    if (sec) sec.innerHTML = _edwPhotoSectionHTML();
+    showToast('Photos saved');
+}
+
+function _edwCancelEditPhotos() {
+    const sec = document.getElementById('edwPhotoSection');
+    if (sec) sec.innerHTML = _edwPhotoSectionHTML();
 }
 
 function _edwPartsTabHtml(parts) {
