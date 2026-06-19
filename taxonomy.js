@@ -48,7 +48,7 @@ const EDW_TAXONOMY = [
             { name: "Front End", parts: ["Bonnet / Hood", "Front Clamshell", "Front Bumper Bar", "Front Bumper Reinforcement", "Grille", "Radiator Support Panel", "Front Crossmember", "Bonnet Latch / Release", "Bonnet Hinge (Left)", "Bonnet Hinge (Right)"] },
             { name: "Front Guards", parts: ["Front Guard (Left)", "Front Guard (Right)", "Guard Liner (Left)", "Guard Liner (Right)"] },
             { name: "Rear End", parts: ["Boot Lid", "Rear Clamshell", "Tailgate", "Tray (Ute)", "Rear Bumper Bar", "Rear Bumper Reinforcement", "Rear Quarter Panel (Left)", "Rear Quarter Panel (Right)", "Rear Guard Liner (Left)", "Rear Guard Liner (Right)"] },
-            { name: "Roof & Pillars", parts: ["Roof Panel", "Sunroof Assembly", "A Pillar (Left)", "A Pillar (Right)", "B Pillar (Left)", "B Pillar (Right)", "C Pillar (Left)", "C Pillar (Right)", "Roof Rail (Left)", "Roof Rail (Right)"] },
+            { name: "Roof & Pillars", parts: ["Roof Panel", "Sunroof Assembly", "Roll Bar", "Roll Bar Cover", "A Pillar (Left)", "A Pillar (Right)", "B Pillar (Left)", "B Pillar (Right)", "C Pillar (Left)", "C Pillar (Right)", "Roof Rail (Left)", "Roof Rail (Right)"] },
             { name: "Mouldings / Trim", parts: ["Front Door Moulding (Left)", "Rear Door Moulding (Left)", "Side Skirt - Sill Panel Moulding (Left)", "Front Door Moulding (Right)", "Rear Door Moulding (Right)", "Side Skirt - Sill Panel Moulding (Right)", "Front Bumper Lower Moulding", "Rear Bumper Lower Moulding", "Front Wheel Arch Trim (Left)", "Front Wheel Arch Trim (Right)", "Rear Wheel Arch Trim (Left)", "Rear Wheel Arch Trim (Right)"] },
         ]
     },
