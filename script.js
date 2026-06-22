@@ -6294,6 +6294,7 @@ function _buildSellLabelMarkup(item, headerText, brandFontMm, qrHtml) {
     const bin  = item.warehouseBin ? `<div class="sell-row"><span class="lbl">Bin:</span> <span class="val val-strong">${escapeHtml(item.warehouseBin)}</span></div>` : '';
     const year = item.year ? `<div class="sell-row"><span class="lbl">Year:</span> <span class="val">${escapeHtml(String(item.year))}</span></div>` : '';
     const stock = item.stockNumber ? `<div class="sell-row"><span class="lbl">Stock #:</span> <span class="val">${escapeHtml(item.stockNumber)}</span></div>` : '';
+    const vin  = item.chassisVin ? `<div class="sell-row"><span class="lbl">VIN:</span> <span class="val">${escapeHtml(item.chassisVin)}</span></div>` : '';
     return `<div class="sell-label">
   <div class="sell-header">
     <div class="sell-brand" style="font-size:${brandFontMm}mm">${headerText}</div>
@@ -6304,7 +6305,7 @@ function _buildSellLabelMarkup(item, headerText, brandFontMm, qrHtml) {
       <div class="sell-rows">
         <div class="sell-row"><span class="lbl">Condition:</span> <span class="val">${condition}</span></div>
         <div class="sell-row"><span class="lbl">Fits:</span> <span class="val">${fits}</span></div>
-        ${year}${bin}${stock}
+        ${year}${bin}${stock}${vin}
       </div>
       <div class="sell-footer">
         <div class="sell-created">Created ${createdDate}</div>
@@ -6515,6 +6516,19 @@ function openItemDetail(partId, _restoring = false, _fromInbox = false) {
             detailOdoEl.style.display = 'block';
         } else {
             detailOdoEl.style.display = 'none';
+        }
+    }
+    const detailVinEl = document.getElementById('detailVin');
+    if (detailVinEl) {
+        const ownsPart = userIsSignedIn && currentUserId && part.sellerId === currentUserId;
+        if (part.chassisVin) {
+            // Owner sees the full donor VIN; public sees the last 6 only (traceability without
+            // exposing the whole VIN, which could aid rebirthing/cloning fraud).
+            const vinText = ownsPart ? part.chassisVin : '…' + String(part.chassisVin).slice(-6);
+            detailVinEl.textContent = '🔑 Donor VIN: ' + vinText;
+            detailVinEl.style.display = 'block';
+        } else {
+            detailVinEl.style.display = 'none';
         }
     }
     const detailBinEl = document.getElementById('detailWarehouseBin');
@@ -13946,6 +13960,12 @@ function _edwStep1Next() {
         showToast('Please select Make, Model and Year to continue');
         return;
     }
+    // VIN / chassis is compulsory before stripping — every part must trace to its donor vehicle.
+    if (!(_edwVehicle.vin || '').trim()) {
+        showToast('Enter the VIN / chassis number before stripping — required for parts traceability');
+        document.getElementById('edwVin')?.focus();
+        return;
+    }
     _edwStep = 2;
     _renderEdw();
     document.getElementById('edwBody')?.scrollTo(0, 0);
@@ -14416,6 +14436,11 @@ async function _backfillJobToListings(jobId, fields) {
 function _edwStartWalkaround(jobId) {
     const job = _edwStock.find(j => j.id === jobId);
     if (!job) return;
+    // VIN / chassis is compulsory before stripping — required for parts traceability.
+    if (!(job.vin || '').trim()) {
+        showToast('Add the VIN / chassis number before stripping (Edit Vehicle → VIN)');
+        return;
+    }
     document.getElementById('edwStockCardOverlay')?.remove();
     _edwJobId = jobId;
     _edwItems = {};
@@ -17232,7 +17257,7 @@ async function _slSearch(partBase, qualifier, tabIdx) {
         return q;
     };
 
-    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer, postcode, location, variant,
+    const cols = `id, title, price, condition, status, seller_id, apc_id, stock_number, warehouse_bin, odometer, postcode, location, variant, chassis_vin,
                   listing_images(storage_path, position)`;
 
     // Fetch vehicle-matching listing IDs first — used for both own and other-yard filtering
@@ -17613,7 +17638,7 @@ async function _slOpenResultDetail(id) {
 function _slToggleSelect(id, checked) {
     if (checked) {
         const r = _slResultsMap.get(id);
-        if (r) _slSelected.set(id, { title: r.title, price: r.price, stock_number: r.stock_number });
+        if (r) _slSelected.set(id, { title: r.title, price: r.price, stock_number: r.stock_number, chassis_vin: r.chassis_vin || null });
     } else {
         _slSelected.delete(id);
     }
@@ -17887,6 +17912,7 @@ async function _slAddToExistingQuote(quoteId) {
     const lines = [..._slSelected.entries()].map(([listing_id, d]) => ({
         quote_id: quoteId, listing_id, title: d.title,
         stock_number: d.stock_number || null, price: d.price || null, qty: 1,
+        vin: d.chassis_vin || null,
     }));
     const { error } = await sb.from('quote_lines').insert(lines);
     if (error) { showToast('Could not add parts to quote'); return; }
@@ -17915,6 +17941,7 @@ async function _slSaveNewQuote() {
     const lines = [..._slSelected.entries()].map(([listing_id, d]) => ({
         quote_id: quote.id, listing_id, title: d.title,
         stock_number: d.stock_number || null, price: d.price || null, qty: 1,
+        vin: d.chassis_vin || null,
     }));
     await sb.from('quote_lines').insert(lines);
 
@@ -17996,6 +18023,7 @@ function _slRenderQuoteDetail() {
                             <div class="sl-qd-line">
                                 <span class="sl-qd-line-title" title="${escapeHtml(l.title)}">${escapeHtml(l.title)}</span>
                                 ${l.stock_number ? `<span class="sl-qd-line-meta">${escapeHtml(l.stock_number)}</span>` : ''}
+                                ${l.vin ? `<span class="sl-qd-line-meta" title="Donor VIN">VIN ${escapeHtml(l.vin)}</span>` : ''}
                                 ${lineBin ? `<span class="sl-qd-line-bin">📍 ${escapeHtml(lineBin)}</span>` : ''}
                                 <input class="sl-qd-line-price-input" type="number" min="0" step="0.01"
                                     value="${l.price != null ? l.price : ''}" placeholder="—"
@@ -18091,7 +18119,7 @@ function _slPrintQuoteA4() {
         const lineTotal = (l.price || 0) * (l.qty || 1);
         return `<tr>
             <td class="c">${i + 1}</td>
-            <td>${escapeHtml(l.title || '')}${l.stock_number ? `<span class="sku">Stock #${escapeHtml(l.stock_number)}</span>` : ''}</td>
+            <td>${escapeHtml(l.title || '')}${l.stock_number ? `<span class="sku">Stock #${escapeHtml(l.stock_number)}</span>` : ''}${l.vin ? `<span class="sku">Donor VIN: ${escapeHtml(l.vin)}</span>` : ''}</td>
             <td class="c">${l.qty || 1}</td>
             <td class="r">${l.price != null ? '$' + Number(l.price).toFixed(2) : '—'}</td>
             <td class="r">${l.price != null ? '$' + lineTotal.toFixed(2) : '—'}</td>
