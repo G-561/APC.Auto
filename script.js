@@ -2952,6 +2952,19 @@ function openInboxConv(id) {
     document.getElementById('inboxConvCol').classList.add('slide-away');
     document.getElementById('inboxThreadCol').classList.add('slide-in');
     refreshInboxContextPanel(conv, part);
+    // Buyer side: the listing may not be loaded — fetch it, then fill the header + preview.
+    if (!part && conv.partId && conv.partId !== 'general') {
+        _fetchListingIntoCache(conv.partId).then(p => {
+            if (!p || activeConvId !== id) return;
+            const t = document.getElementById('inboxThreadThumb');
+            if (t) { t.src = p.images?.[0] || ''; t.style.display = p.images?.[0] ? '' : 'none'; }
+            const tEl = document.getElementById('inboxThreadTitle');
+            const pEl = document.getElementById('inboxThreadPrice');
+            if (tEl) tEl.textContent = p.title;
+            if (pEl) pEl.textContent = p.price ? '$' + p.price : '';
+            refreshInboxContextPanel(conv, p);
+        });
+    }
     setTimeout(() => document.getElementById('inboxReplyInput')?.focus(), 300);
 }
 
@@ -3798,6 +3811,41 @@ function findPartAnywhere(id) {
 }
 function getPartById(id) {
     return getAllParts().find(p => p.id === id || (p.supabaseId && p.supabaseId === id));
+}
+
+// Fetch a single listing by id into partDatabase if it isn't already loaded. Used when a
+// buyer opens a chat preview / "View Listing" for another seller's listing they haven't
+// paged into their feed — without this, findPartAnywhere returns null and the preview/
+// detail silently fail (works for the seller because it's in their own userListings).
+async function _fetchListingIntoCache(listingId) {
+    if (!sb || !listingId || listingId === 'general') return null;
+    const cached = findPartAnywhere(listingId);
+    if (cached) return cached;
+    const { data: r } = await sb.from('listings')
+        .select(`id, apc_id, title, price, condition, category, description, location, postcode,
+                 pickup, postage, open_to_offers, is_pro, stock_number, odometer, chassis_vin,
+                 warehouse_bin, quantity, fitting_available, fits_year, variant, saves_count,
+                 created_at, seller_id, status, seller_name,
+                 listing_images(storage_path, position), listing_vehicles(make, model, series)`)
+        .eq('id', listingId).maybeSingle();
+    if (!r) return null;
+    const images = (r.listing_images || []).sort((a, b) => a.position - b.position).map(i => i.storage_path).filter(Boolean);
+    const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
+    const part = {
+        id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
+        saves: r.saves_count || 0, date: new Date(r.created_at).getTime(),
+        apcId: r.apc_id, title: r.title, category: r.category, price: r.price,
+        condition: r.condition, description: r.description, loc: r.location,
+        postcode: r.postcode, pickup: r.pickup, postage: r.postage,
+        openToOffers: r.open_to_offers, isPro: r.is_pro,
+        stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
+        warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
+        fit: r.fitting_available, year: r.fits_year, variant: r.variant || null,
+        seller: r.seller_name || 'Seller', status: r.status === 'active' ? undefined : r.status,
+        images: images.length ? images : [], fits,
+    };
+    partDatabase.push(part);
+    return part;
 }
 
 function findSimilarActiveParts(stalePart) {
@@ -6348,7 +6396,11 @@ ${labelsHtml}
 // --- DYNAMIC ITEM DETAIL ---
 function openItemDetail(partId, _restoring = false, _fromInbox = false) {
     const part = findPartAnywhere(partId);
-    if (!part) return;
+    if (!part) {
+        // Not loaded (e.g. a buyer tapping "View Listing" on another seller's listing) — fetch then retry.
+        _fetchListingIntoCache(partId).then(p => { if (p) openItemDetail(partId, _restoring, _fromInbox); });
+        return;
+    }
 
     const fromInbox   = _fromInbox || document.getElementById('inboxDrawer')?.classList.contains('active');
     const inStoreView = _detailHistory.length > 0 || document.getElementById('storefrontDrawer')?.classList.contains('active');
@@ -13026,10 +13078,7 @@ async function proRenderContextPanel(conv, part) {
     }
     if (!part && sb) {
         panel.innerHTML = `<div class="pro-ctx-empty" style="font-size:12px;color:#aaa;">Loading listing…</div>`;
-        const { data } = await sb.from('listings')
-            .select('id, title, price, status, stock_number, warehouse_bin, condition')
-            .eq('id', conv.partId).maybeSingle();
-        if (data) part = { id: data.id, supabaseId: data.id, title: data.title, price: data.price, status: data.status, stock_number: data.stock_number, warehouse_bin: data.warehouse_bin, images: [] };
+        part = await _fetchListingIntoCache(conv.partId);
     }
     if (!part) {
         const fallbackTitle = conv.partTitle ? `<div style="font-size:13px;font-weight:600;color:#333;margin-bottom:4px;">${escapeHtml(conv.partTitle)}</div>` : '';
@@ -13041,8 +13090,8 @@ async function proRenderContextPanel(conv, part) {
     const statusLabel = s === 'pending' ? 'PENDING' : s === 'sold' ? 'SOLD' : 'ACTIVE';
     const statusClass = s === 'sold' ? 'status-sold' : s === 'pending' ? 'status-pending' : 'inbox-context-status';
     const stockMeta = [
-        part.stock_number   ? `Stock: ${escapeHtml(String(part.stock_number))}`   : '',
-        part.warehouse_bin  ? `Bin: ${escapeHtml(String(part.warehouse_bin))}`     : '',
+        part.stockNumber  ? `Stock: ${escapeHtml(String(part.stockNumber))}`  : '',
+        part.warehouseBin ? `Bin: ${escapeHtml(String(part.warehouseBin))}`    : '',
     ].filter(Boolean).join(' · ');
     const partId = part.supabaseId || part.id;
     const isSeller = userListings.some(l => l.supabaseId === partId || l.id === partId);
