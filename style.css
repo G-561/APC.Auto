@@ -1582,7 +1582,9 @@ header {
     overflow: hidden;
     box-shadow: 0 30px 60px rgba(0,0,0,0.35);
     will-change: transform;
+    touch-action: none; /* JS owns pan/pinch — stops the browser running its own (iOS page zoom) */
 }
+.lightbox-strip img { transform-origin: center center; }
 
 .image-lightbox img {
     width: 100%;
