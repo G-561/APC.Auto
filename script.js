@@ -311,6 +311,9 @@ function renderRecentlyViewed() {
     const content = document.getElementById('rvDrawerContent');
     if (!content) return;
 
+    // Load any recently-viewed listings not in the cache (fresh session) so none drop out.
+    _preloadListings(recentlyViewed.map(e => e.id)).then(added => { if (added) renderRecentlyViewed(); });
+
     const allParts = recentlyViewed.map(e => findPartAnywhere(e.id)).filter(Boolean);
 
     if (!allParts.length) {
@@ -2339,6 +2342,12 @@ async function loadConversationsFromSupabase(userId) {
         updateInboxBadge();
         proRefreshIfOpen();
         refreshInboxThreadHeader(); // correct header if auto-selected before data loaded
+        // Source-level fix for the not-loaded preview bug: batch-load every listing these
+        // conversations reference (one query) so all chat surfaces resolve it reliably —
+        // not just the ones with per-surface fetch fallbacks.
+        _preloadListings(conversations.map(c => c.partId)).then(added => {
+            if (added) { renderInboxConvList(); if (activeConvId) openInboxConv(activeConvId); proRefreshIfOpen(); }
+        });
     } catch (e) { console.warn('Load conversations:', e); }
     subscribeToRealtimeMessages();
     subscribeToRealtimeListings();
@@ -2579,6 +2588,14 @@ async function loadSavedListingsFromSupabase(userId) {
             renderMainGrid();
             if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
         }
+        // Load any saved listings that haven't paged into the feed (e.g. another seller's
+        // part you saved) so the Saved tab shows them all, not just what happened to load.
+        _preloadListings([...savedParts]).then(added => {
+            if (added) {
+                renderMainGrid();
+                if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
+            }
+        });
     } catch (e) { console.warn('loadSavedListingsFromSupabase:', e); }
 }
 
@@ -3813,25 +3830,24 @@ function getPartById(id) {
     return getAllParts().find(p => p.id === id || (p.supabaseId && p.supabaseId === id));
 }
 
-// Fetch a single listing by id into partDatabase if it isn't already loaded. Used when a
-// buyer opens a chat preview / "View Listing" for another seller's listing they haven't
-// paged into their feed — without this, findPartAnywhere returns null and the preview/
-// detail silently fail (works for the seller because it's in their own userListings).
-async function _fetchListingIntoCache(listingId) {
-    if (!sb || !listingId || listingId === 'general') return null;
-    const cached = findPartAnywhere(listingId);
-    if (cached) return cached;
-    const { data: r } = await sb.from('listings')
-        .select(`id, apc_id, title, price, condition, category, description, location, postcode,
-                 pickup, postage, open_to_offers, is_pro, stock_number, odometer, chassis_vin,
-                 warehouse_bin, quantity, fitting_available, fits_year, variant, saves_count,
-                 created_at, seller_id, status, seller_name,
-                 listing_images(storage_path, position), listing_vehicles(make, model, series)`)
-        .eq('id', listingId).maybeSingle();
-    if (!r) return null;
+// ── Listing resolution: cache-or-fetch ────────────────────────────────────
+// The marketplace feed (partDatabase) is paginated, so it's an intentionally-incomplete
+// cache. Anything that opens/previews a SPECIFIC listing by id (a buyer viewing a chat
+// about another seller's part, a notification, a deep link) must resolve it from the
+// source of truth if it isn't loaded — otherwise findPartAnywhere returns null and the
+// surface silently fails. These helpers are the single canonical way to do that.
+
+const LISTING_SELECT_COLS = `id, apc_id, title, price, condition, category, description, location, postcode,
+    pickup, postage, open_to_offers, is_pro, stock_number, odometer, chassis_vin,
+    warehouse_bin, quantity, fitting_available, fits_year, variant, saves_count,
+    created_at, seller_id, status, seller_name,
+    listing_images(storage_path, position), listing_vehicles(make, model, series)`;
+
+// Canonical Supabase listing row → in-memory part object. One source of truth for the shape.
+function _listingRowToPart(r) {
     const images = (r.listing_images || []).sort((a, b) => a.position - b.position).map(i => i.storage_path).filter(Boolean);
     const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
-    const part = {
+    return {
         id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
         saves: r.saves_count || 0, date: new Date(r.created_at).getTime(),
         apcId: r.apc_id, title: r.title, category: r.category, price: r.price,
@@ -3844,8 +3860,36 @@ async function _fetchListingIntoCache(listingId) {
         seller: r.seller_name || 'Seller', status: r.status === 'active' ? undefined : r.status,
         images: images.length ? images : [], fits,
     };
+}
+
+// Fetch ONE listing into the cache if it isn't already loaded. Returns the part (or null).
+async function _fetchListingIntoCache(listingId) {
+    if (!sb || !listingId || listingId === 'general') return null;
+    const cached = findPartAnywhere(listingId);
+    if (cached) return cached;
+    const { data: r } = await sb.from('listings').select(LISTING_SELECT_COLS).eq('id', listingId).maybeSingle();
+    if (!r) return null;
+    const part = _listingRowToPart(r);
     partDatabase.push(part);
     return part;
+}
+
+// Batch-preload a set of listing ids into the cache (one query) — used at conversation /
+// notification load so every later findPartAnywhere(referenced id) just works.
+async function _preloadListings(ids) {
+    if (!sb) return 0;
+    const missing = [...new Set(ids)].filter(id => id && id !== 'general' && !findPartAnywhere(id));
+    if (!missing.length) return 0;
+    const { data: rows } = await sb.from('listings').select(LISTING_SELECT_COLS).in('id', missing);
+    let added = 0;
+    (rows || []).forEach(r => { if (!findPartAnywhere(r.id)) { partDatabase.push(_listingRowToPart(r)); added++; } });
+    return added;
+}
+
+// Canonical resolver: cache first, fetch if missing. Use this in any "open/preview a
+// specific listing by id" entry point so the not-loaded bug class can't recur.
+async function resolvePart(id) {
+    return findPartAnywhere(id) || await _fetchListingIntoCache(id);
 }
 
 function findSimilarActiveParts(stalePart) {
@@ -4078,30 +4122,12 @@ async function openStorefrontByUserId(userId) {
 // global feed hasn't paged in that seller's parts yet. Merges into partDatabase (deduped).
 async function _sfLoadSellerListings(userId, sellerName) {
     if (!sb || !userId) { _sfRenderGrid(userId, sellerName); return; }
-    const { data: rows } = await sb.from('listings')
-        .select(`id, apc_id, title, price, condition, category, description, location, postcode,
-                 pickup, postage, open_to_offers, is_pro, stock_number, odometer, chassis_vin,
-                 warehouse_bin, quantity, fitting_available, fits_year, variant, saves_count,
-                 created_at, seller_id, status, listing_images(storage_path, position),
-                 listing_vehicles(make, model, series)`)
+    const { data: rows } = await sb.from('listings').select(LISTING_SELECT_COLS)
         .eq('seller_id', userId).eq('status', 'active')
         .order('created_at', { ascending: false }).limit(200);
     (rows || []).forEach(r => {
         if (partDatabase.some(p => p.supabaseId === r.id) || userListings.some(l => l.supabaseId === r.id)) return;
-        const images = (r.listing_images || []).sort((a, b) => a.position - b.position).map(i => i.storage_path).filter(Boolean);
-        const fits   = (r.listing_vehicles || []).map(v => ({ make: v.make, model: v.model, ...(v.series ? { variant: v.series } : {}) }));
-        partDatabase.push({
-            id: nextPartId(), supabaseId: r.id, sellerId: r.seller_id,
-            saves: r.saves_count || 0, date: new Date(r.created_at).getTime(),
-            apcId: r.apc_id, title: r.title, category: r.category, price: r.price,
-            condition: r.condition, description: r.description, loc: r.location,
-            postcode: r.postcode, pickup: r.pickup, postage: r.postage,
-            openToOffers: r.open_to_offers, isPro: r.is_pro,
-            stockNumber: r.stock_number, odometer: r.odometer, chassisVin: r.chassis_vin || null,
-            warehouseBin: r.warehouse_bin, quantity: r.quantity || 1,
-            fit: r.fitting_available, year: r.fits_year, variant: r.variant || null,
-            seller: sellerName || '', images: images.length ? images : [], fits,
-        });
+        partDatabase.push({ ..._listingRowToPart(r), seller: sellerName || r.seller_name || '' });
     });
     _sfRenderGrid(userId, sellerName);
 }
