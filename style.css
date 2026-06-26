@@ -5341,6 +5341,26 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     color: var(--tier-pro);
     font-weight: 900;
 }
+.pro-hdr-back {
+    color: rgba(255,255,255,0.55);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    transition: color 0.15s;
+}
+.pro-hdr-exit {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-left: 1px solid rgba(255,255,255,0.2);
+    padding-left: 9px;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+.pro-hdr-brand:hover .pro-hdr-exit,
+.pro-hdr-brand:hover .pro-hdr-back { color: #f07020; }
 .pro-hdr-pro-badge {
     background: #f07020;
     color: white;
