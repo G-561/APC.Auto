@@ -1586,6 +1586,20 @@ header {
 }
 .lightbox-strip img { transform-origin: center center; }
 
+/* Mobile: lightbox is full-screen so the image is edge-to-edge and can grow past the
+   viewport when zoomed — no fixed "porthole" card. (Desktop keeps the centred modal.) */
+@media (max-width: 899px) {
+    .image-lightbox { padding: 0; background: #000; }
+    .image-lightbox-inner {
+        max-width: none; max-height: none;
+        width: 100%; height: 100%;
+        border-radius: 0;
+    }
+    .lightbox-strip { width: 300%; height: 100%; align-items: center; }
+    .image-lightbox img,
+    .lightbox-strip img { max-height: 100vh; height: 100vh; object-fit: contain; }
+}
+
 .image-lightbox img {
     width: 100%;
     height: auto;
