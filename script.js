@@ -7165,12 +7165,18 @@ function _initLightboxPullDown(lightbox) {
     let pinching = false, pinchDist0 = 0, pinchScale0 = 1, pinchIx = 0, pinchIy = 0;
     let panning = false, panX0 = 0, panY0 = 0, panTx0 = 0, panTy0 = 0;
     let lastTap = 0;
+    // true while a pinch is/was in progress until ALL fingers lift — stops the leftover
+    // finger after a pinch from triggering swipe / pull-down-to-close with stale coords.
+    let multiTouch = false;
 
     // Block iOS native page zoom — the lightbox owns the pinch now.
     ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev =>
         inner.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
     inner.addEventListener('touchstart', e => {
+        // A fresh single finger clears it; a 2nd finger sets it. The leftover finger after a
+        // pinch gets no new touchstart, so this stays true until they fully lift and start over.
+        multiTouch = e.touches.length >= 2;
         if (e.touches.length === 2) {
             // pinch start — anchor to the midpoint in image space
             pinching = true; panning = false; activeDrag = false; lockDir = null;
@@ -7218,8 +7224,8 @@ function _initLightboxPullDown(lightbox) {
             applyZoom();
             return;
         }
-        if (e.touches.length !== 1 || _lbScale > 1) return;
-        // ── swipe / pull-down (only at fit) ──
+        if (e.touches.length !== 1 || _lbScale > 1 || multiTouch) return;
+        // ── swipe / pull-down (only at fit, and not a leftover finger from a pinch) ──
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
         if (!lockDir) {
