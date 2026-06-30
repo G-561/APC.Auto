@@ -5850,6 +5850,8 @@ function openSellOverlay() {
     }
 
     _sellDonorJobId = null;
+    const _sellOv = document.getElementById('sellOverlay');
+    if (_sellOv) _sellOv.style.zIndex = '';   // default; Add-Part lifts it above the stock card
     currentEditingListingId = null;
     currentEditStatus = null;
     resetSellForm();
@@ -16393,6 +16395,8 @@ function _vscOpenAddPart() {
     set('sellOdometer',    job.odometer);
     const ov = document.getElementById('sellOverlayTitle');
     if (ov) ov.textContent = 'Add Part to Stock Card';
+    const sellOv = document.getElementById('sellOverlay');
+    if (sellOv) sellOv.style.zIndex = '3600';   // sit above the stock card overlay (3500)
     showToast('Vehicle pre-filled — add the part name, price & photos');
 }
 
