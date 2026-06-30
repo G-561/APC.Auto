@@ -5809,11 +5809,10 @@ function attachPartAutocomplete(input, opts = {}) {
         if (opts.setCategory) {
             const cat = _PART_CAT_MAP?.[name];
             const catEl = document.getElementById('sellCategory');
-            if (cat && catEl && !catEl.value) { catEl.value = cat; catEl.dispatchEvent(new Event('change', { bubbles: true })); }
+            // Always follow the picked part — so changing part (starter → door) re-points the category.
+            if (cat && catEl && catEl.value !== cat) { catEl.value = cat; catEl.dispatchEvent(new Event('change', { bubbles: true })); }
         }
-        close();
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.focus();
+        close();   // don't re-fire input/focus here — it would reopen the dropdown
     };
     const render = () => {
         items = _partSuggest(input.value, exclude());
