@@ -178,6 +178,7 @@ const CATEGORY_SERVICE_MAP = {
     suspension:   ['suspension', 'wheelAlign'],
     wheels:       ['tyreSupply', 'wheelAlign', 'suspension'],
     electrical:   ['autoElectrical', 'battery', 'autoSecurity'],
+    lighting:     ['autoElectrical'],
     cooling:      ['cooling'],
     body:         ['collision', 'sprayPaint', 'pdr', 'trimming'],
     glass:        ['autoGlass'],
@@ -5744,6 +5745,11 @@ function checkWantedGaragePrompt() {
 // typo/variant misses in wantedMatchesListing() and makes search reliable.
 let _PART_VOCAB = null;
 let _PART_CAT_MAP = null;
+// Marketplace category for a taxonomy part: part-level override → assembly → zone.
+function _partCategory(zone, asm, displayName) {
+    return (typeof PART_CATEGORY_OVERRIDES !== 'undefined' && PART_CATEGORY_OVERRIDES[displayName])
+        || asm?.apcCategory || zone?.apcCategory || 'other';
+}
 function getPartVocab() {
     if (_PART_VOCAB) return _PART_VOCAB;
     const set = new Set();
@@ -5753,7 +5759,7 @@ function getPartVocab() {
             asm.parts.forEach(p => {
                 const name = _edwFullPartName(asm.name, p);
                 set.add(name);
-                if (!_PART_CAT_MAP[name]) _PART_CAT_MAP[name] = zone.apcCategory;
+                if (!_PART_CAT_MAP[name]) _PART_CAT_MAP[name] = _partCategory(zone, asm, name);
             })));
     }
     _PART_VOCAB = [...set].sort((a, b) => a.localeCompare(b));
@@ -11300,6 +11306,7 @@ const SPB_CATEGORIES = [
     { value: 'brakes',       label: 'Brakes' },
     { value: 'wheels',       label: 'Wheels & Tyres' },
     { value: 'electrical',   label: 'Electrical' },
+    { value: 'lighting',     label: 'Lighting' },
     { value: 'cooling',      label: 'Cooling' },
     { value: 'fuel',         label: 'Fuel System' },
     { value: 'interior',     label: 'Interior' },
@@ -15524,7 +15531,7 @@ async function _edwPublish() {
             apc_id: apcId,
             title,
             price,
-            category: zone.apcCategory,
+            category: _partCategory(zone, asm, _edwFullPartName(asm?.name, asm?.parts[pI] || '')),
             condition: gradeToCondition[item.grade] || 'good',
             status: 'active',
             description: item.notes || `${gradeLabel[item.grade] || 'Used'} condition ${part} removed from a ${vehicleTitle}. Contact us for more details.`,
@@ -16727,7 +16734,8 @@ async function _jrPublish(jobId) {
 
     for (const item of items) {
         const zoneData = EDW_TAXONOMY.find(z => z.zone === item.zone);
-        const category = zoneData?.apcCategory || 'general';
+        const asmData  = zoneData?.assemblies.find(a => a.name === item.assembly);
+        const category = _partCategory(zoneData, asmData, item.part_name) || 'general';
         const title    = `${item.part_name} to suit ${vehicleTitle}`;
         const { data: listing } = await sb.from('listings').insert({
             seller_id: currentUserId,

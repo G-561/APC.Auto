@@ -5,7 +5,6 @@ const EDW_TAXONOMY = [
         assemblies: [
             { name: "Engine", parts: ["Complete Engine", "Engine Block", "Cylinder Head", "Rocker Cover", "Sump / Oil Pan", "Timing Cover", "Timing Chain Kit", "Timing Belt Kit", "Engine Mount (Left)", "Engine Mount (Right)"] },
             { name: "Air Intake", parts: ["Air Filter Box", "Airflow Meter / MAF Sensor", "Turbocharger", "Supercharger", "Intercooler Hose Kit", "Throttle Body", "Idle Control Valve", "Intake Manifold"] },
-            { name: "Engine Electrics", parts: ["Alternator", "Starter Motor", "Engine ECU / PCM", "Fuse Box (Engine Bay)", "Engine Wiring Harness", "Ignition Coil Pack", "Distributor"] },
             { name: "Engine Ancillaries", parts: ["EGR Valve", "EGR Cooler", "Vacuum Pump", "Oil Cooler", "Oil Separator / Catch Can"] },
         ]
     },
@@ -64,7 +63,7 @@ const EDW_TAXONOMY = [
     },
     {
         zone: "Lighting",
-        apcCategory: "electrical",
+        apcCategory: "lighting",
         assemblies: [
             { name: "Front Lighting", parts: ["Headlight (Left)", "Headlight (Right)", "Fog Light (Left)", "Fog Light (Right)", "DRL / LED Bar (Left)", "DRL / LED Bar (Right)", "Indicator (Front Left)", "Indicator (Front Right)"] },
             { name: "Rear Lighting", parts: ["Taillight (Left)", "Taillight (Right)", "High-Mount Brake Light", "Indicator (Rear Left)", "Indicator (Rear Right)", "Number Plate Light", "Reverse Light (Left)", "Reverse Light (Right)"] },
@@ -98,6 +97,7 @@ const EDW_TAXONOMY = [
             { name: "Sensors", parts: ["ABS Sensor (Front Left)", "ABS Sensor (Front Right)", "ABS Sensor (Rear Left)", "ABS Sensor (Rear Right)", "O2 Sensor (Front / Upstream)", "O2 Sensor (Rear / Downstream)", "MAP Sensor", "Camshaft Position Sensor", "Crankshaft Position Sensor", "Coolant Temp Sensor", "Knock Sensor", "Throttle Position Sensor"] },
             { name: "Wiring & Fuses", parts: ["Engine Wiring Harness", "Body Wiring Harness", "Door Wiring Loom (Front Left)", "Door Wiring Loom (Front Right)", "Fuse Box (Cabin / Interior)", "Trailer Wiring Harness"] },
             { name: "Battery & Charging", parts: ["Battery", "Battery Tray / Holder", "Alternator", "Voltage Regulator"] },
+            { name: "Engine Electrics", parts: ["Starter Motor", "Engine ECU / PCM", "Fuse Box (Engine Bay)", "Ignition Coil Pack", "Distributor"] },
         ]
     },
     {
@@ -144,3 +144,23 @@ const EDW_TAXONOMY = [
         ]
     }
 ];
+
+// Part-level marketplace-category overrides — for individual parts whose best buyer
+// category differs from their zone's. Keyed by the canonical display name produced by
+// _edwFullPartName(). Resolved by _partCategory(): part override → assembly → zone.
+const PART_CATEGORY_OVERRIDES = {
+    "Head Unit / Infotainment": "audio",
+    "Navigation Screen":        "audio",
+    "Front Door Glass (Left)":  "glass",
+    "Front Door Glass (Right)": "glass",
+    "Rear Door Glass (Left)":   "glass",
+    "Rear Door Glass (Right)":  "glass",
+    "Window Glass":             "glass",
+    "Window Glass (Rear)":      "glass",
+    "Bull Bar":                 "4x4",
+    "Nudge Bar":                "4x4",
+    "Rock Sliders":             "4x4",
+    "Skid Plates":              "4x4",
+    "Snorkel":                  "4x4",
+    "Winch":                    "4x4",
+};
