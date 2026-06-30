@@ -16234,10 +16234,13 @@ async function openVehicleStockCard(jobId) {
         <div class="vsc-card vsc-parts-card">
             <div class="vsc-parts-hdr">
                 <span class="vsc-section-title" style="margin-bottom:0;">Parts (${allParts.length})</span>
-                <span class="vsc-parts-summary">
-                    <span class="vsc-status-chip vsc-part-active">${active.length} active</span>
-                    <span class="vsc-status-chip vsc-part-sold">${sold.length} sold</span>
-                </span>
+                <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+                    <span class="vsc-parts-summary">
+                        <span class="vsc-status-chip vsc-part-active">${active.length} active</span>
+                        <span class="vsc-status-chip vsc-part-sold">${sold.length} sold</span>
+                    </span>
+                    <button class="vsc-add-part-btn" onclick="_vscOpenAddPart()">+ Add Part</button>
+                </div>
             </div>
             <input id="vscPartsSearch" type="text" placeholder="Search parts, stock number…"
                 oninput="_vscFilterParts(this.value)"
@@ -16248,6 +16251,152 @@ async function openVehicleStockCard(jobId) {
                 <tbody id="vscPartsBody">${partsRows}</tbody>
             </table>
         </div>`;
+}
+
+// ─── VSC Add Part — quick single-part listing off this donor vehicle ───────────
+// Skips the full EDW walkaround; donor fields (stock#/VIN/KMs/fits-year/variant)
+// and vehicle photos are applied automatically from the stock card.
+let _vscApGrade = 'B';
+
+function _vscPartOptions() {
+    return EDW_TAXONOMY.map((zone, zI) =>
+        zone.assemblies.map((asm, aI) =>
+            `<optgroup label="${escapeHtml(zone.zone)} › ${escapeHtml(asm.name)}">` +
+            asm.parts.map((p, pI) =>
+                `<option value="${zI}:${aI}:${pI}">${escapeHtml(_edwFullPartName(asm.name, p))}</option>`
+            ).join('') +
+            `</optgroup>`
+        ).join('')
+    ).join('');
+}
+
+function _vscOpenAddPart() {
+    const job = _vscCurrentJob;
+    if (!job) return;
+    _vscApGrade = 'B';
+    document.getElementById('vscAddPartOverlay')?.remove();
+    const vehicleTitle = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}`.trim();
+    const grades = [['A','Excellent'],['B','Good'],['C','Fair'],['D','Damaged']];
+    const overlay = document.createElement('div');
+    overlay.id = 'vscAddPartOverlay';
+    overlay.className = 'vsc-ap-overlay';
+    overlay.onclick = e => { if (e.target === overlay) _vscCloseAddPart(); };
+    overlay.innerHTML = `
+        <div class="vsc-ap-modal" onclick="event.stopPropagation()">
+            <div class="vsc-ap-hdr">
+                <div>
+                    <div class="vsc-ap-title">Add Part</div>
+                    <div class="vsc-ap-sub">${escapeHtml(vehicleTitle)}${job.stock_number ? ' · #' + escapeHtml(job.stock_number) : ''}</div>
+                </div>
+                <button class="vsc-ap-x" onclick="_vscCloseAddPart()">✕</button>
+            </div>
+            <div class="vsc-ap-body">
+                <label class="vsc-ap-label">Part</label>
+                <select id="vscApPart" class="vsc-ap-select">
+                    <option value="">Select a part…</option>
+                    ${_vscPartOptions()}
+                </select>
+
+                <label class="vsc-ap-label">Condition Grade</label>
+                <div id="vscApGrades" class="vsc-ap-grades">
+                    ${grades.map(([g, lbl]) => `<button class="vsc-ap-grade${g === 'B' ? ' active' : ''}" data-grade="${g}" onclick="_vscApSetGrade(this)"><b>${g}</b><span>${lbl}</span></button>`).join('')}
+                </div>
+
+                <label class="vsc-ap-label">Price ($)</label>
+                <input id="vscApPrice" class="vsc-ap-input" type="number" min="0" step="1" inputmode="decimal" placeholder="0">
+
+                <label class="vsc-ap-label">Notes <span class="vsc-ap-opt">optional</span></label>
+                <textarea id="vscApNotes" class="vsc-ap-input vsc-ap-textarea" placeholder="Condition notes for the listing…"></textarea>
+
+                <div class="vsc-ap-note">Donor details (stock #, VIN, KMs, fits-year) and the vehicle photos are applied automatically from this stock card.</div>
+            </div>
+            <div class="vsc-ap-foot">
+                <button class="vsc-ap-cancel" onclick="_vscCloseAddPart()">Cancel</button>
+                <button id="vscApSave" class="vsc-ap-save" onclick="_vscSaveAddPart()">Add to Stock Card</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function _vscApSetGrade(btn) {
+    _vscApGrade = btn.dataset.grade;
+    document.querySelectorAll('#vscApGrades .vsc-ap-grade').forEach(b => b.classList.toggle('active', b === btn));
+}
+
+function _vscCloseAddPart() { document.getElementById('vscAddPartOverlay')?.remove(); }
+
+async function _vscSaveAddPart() {
+    const job = _vscCurrentJob;
+    if (!job || !sb || !currentUserId) return;
+
+    const sel = document.getElementById('vscApPart')?.value || '';
+    if (!sel) { showToast('Pick a part'); return; }
+    const [zI, aI, pI] = sel.split(':').map(Number);
+    const zone = EDW_TAXONOMY[zI];
+    const asm  = zone?.assemblies[aI];
+    if (!zone || !asm) { showToast('Pick a part'); return; }
+    let part = _edwFullPartName(asm.name, asm.parts[pI] || '');
+    if (part === 'Complete Engine' && job.engine_code) part = `Complete Engine ${job.engine_code}`;
+
+    const grade = _vscApGrade;
+    const price = parseFloat(document.getElementById('vscApPrice')?.value) || 0;
+    const notes = (document.getElementById('vscApNotes')?.value || '').trim();
+
+    const gradeToCondition = { A: 'excellent', B: 'good', C: 'fair', D: 'damaged' };
+    const gradeLabel       = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'Damaged' };
+    const vehicleTitle = `${job.year || ''} ${job.make || ''} ${job.model || ''}${job.series ? ' ' + job.series : ''}${job.variant ? ' — ' + job.variant : ''}`.trim();
+
+    const saveBtn = document.getElementById('vscApSave');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Adding…'; }
+
+    const { data: listing, error } = await sb.from('listings').insert({
+        seller_id:   currentUserId,
+        seller_name: getPublicSellerName(),
+        apc_id:      generateApcId(),
+        title:       `${part} to suit ${vehicleTitle}`,
+        price,
+        category:    zone.apcCategory,
+        condition:   gradeToCondition[grade] || 'good',
+        status:      'active',
+        description: notes || `${gradeLabel[grade] || 'Used'} condition ${part} removed from a ${vehicleTitle}. Contact us for more details.`,
+        fits_year:   job.year ? Number(job.year) : null,
+        variant:     job.variant || null,
+        chassis_vin: job.vin || null,
+        stock_number: job.stock_number || null,
+        odometer:    (job.odometer != null && job.odometer !== '') ? Number(job.odometer) : null,
+        location:    userSettings.location || null,
+        postcode:    userSettings.postcode || null,
+        dismantling_job_id: job.id,
+    }).select('id').single();
+
+    if (error || !listing?.id) {
+        showToast('Could not add part' + (error?.message ? ': ' + error.message : ''));
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Add to Stock Card'; }
+        return;
+    }
+
+    await sb.from('listing_vehicles').insert({
+        listing_id: listing.id,
+        make: job.make, model: job.model,
+        series: job.series || null,
+    });
+
+    if (job.vehicle_photos?.length) {
+        await sb.from('listing_images').insert(
+            job.vehicle_photos.map((url, i) => ({ listing_id: listing.id, storage_path: url, position: i }))
+        );
+    }
+
+    await sb.from('dismantling_items').insert({
+        job_id: job.id, user_id: currentUserId,
+        zone: zone.zone, assembly: asm.name, part_name: part,
+        grade, notes, price, listing_id: listing.id, status: 'published',
+    });
+
+    showToast('Part added to stock card');
+    _vscCloseAddPart();
+    loadUserListingsFromSupabase(currentUserId);
+    openVehicleStockCard(job.id);
 }
 
 // ─── Vehicle Intake — standalone entry form ───────────────────────────────────
