@@ -13998,6 +13998,20 @@ function closeEdw() {
     document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
 }
 
+// EDW is Pro-only — after publishing, send a desktop Pro user to their working
+// view (the dashboard spreadsheet), not the consumer grid. A tablet (768–899, no
+// dashboard) or any non-Pro falls back to the normal My Listings.
+function _edwViewMyListings() {
+    closeEdw();
+    if (window.innerWidth >= 900 && currentUserTier === 'pro') {
+        const dv = document.getElementById('dashboardView');
+        if (!dv || dv.style.display === 'none') openDashboard();
+        proOpenMyListings('active');
+    } else {
+        onMenuOpenMyListings();
+    }
+}
+
 function _renderEdw() {
     _renderEdwHeader();
     if (_edwStep === 0)      _renderEdwStep0();
@@ -15599,7 +15613,7 @@ async function _edwPublish() {
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
             ${labelItems.length ? `<button class="edw-btn-primary" style="margin-top:24px;" onclick="printEdwLabelsBatch(_edwPendingLabels)">&#128424; Print ${labelItems.length} label${labelItems.length !== 1 ? 's' : ''}</button>
-            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>` : `<button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>`}
+            <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwViewMyListings();">View My Listings</button>` : `<button class="edw-btn-primary" style="margin-top:24px;" onclick="_edwViewMyListings();">View My Listings</button>`}
             <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwCommitted=false;_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;
@@ -16777,7 +16791,7 @@ async function _jrPublish(jobId) {
             <div class="edw-success-ico">✓</div>
             <div class="edw-success-title">${published} listing${published !== 1 ? 's' : ''} published</div>
             <div class="edw-success-sub">All parts for ${escapeHtml(vehicleTitle)} are now live on APC.</div>
-            <button class="edw-btn-primary" style="margin-top:24px;" onclick="closeEdw(); onMenuOpenMyListings();">View My Listings</button>
+            <button class="edw-btn-primary" style="margin-top:24px;" onclick="_edwViewMyListings();">View My Listings</button>
             <button class="edw-btn-secondary" style="margin-top:10px;width:100%;" onclick="_edwCommitted=false;_edwStep=0;_edwJobId=null;_renderEdw();_renderEdwStep0();">Back to Stock</button>
         </div>
     `;
