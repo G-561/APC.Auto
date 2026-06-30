@@ -4838,18 +4838,19 @@ async function confirmNotifyBuyers() {
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
 
     const lid = Number(listingId) || null;
-    const rows = checked.map(cb => ({
-        user_id:    cb.dataset.userId,
-        type:       'listing_match',
-        title:      'New listing matching your wanted request',
-        body:       `A seller has listed "${listingTitle}" — check if it's what you need.`,
-        listing_id: lid,
-        read:       false
-    }));
-
-    const { error } = await sb.from('notifications').insert(rows);
-    if (error) showToast('Could not send notifications: ' + error.message);
-    else showToast(`${rows.length} buyer${rows.length !== 1 ? 's' : ''} notified`);
+    // Server-side notify_buyer RPC: verifies we own the listing + the target has that wanted
+    // request, and templates the message — so the notifications table isn't open to spam.
+    const results = await Promise.all(checked.map(cb =>
+        sb.rpc('notify_buyer', {
+            p_kind: 'listing_match',
+            p_user_id: cb.dataset.userId,
+            p_listing_id: lid,
+            p_wanted_part_id: Number(cb.dataset.wantedId) || null,
+        }).then(({ data, error }) => !error && data === true)
+    ));
+    const sent = results.filter(Boolean).length;
+    if (!sent) showToast('Could not send notifications');
+    else showToast(`${sent} buyer${sent !== 1 ? 's' : ''} notified`);
 
     if (btn) { btn.disabled = false; btn.textContent = 'NOTIFY SELECTED BUYERS'; }
     closeNotifyModal();
@@ -5024,13 +5025,10 @@ function showBuyerFeedbackDialog(listingId) {
             );
             const buyerUserId = matchedConv?.buyerId;
             if (buyerUserId) {
-                sb.from('notifications').insert({
-                    user_id:    buyerUserId,
-                    type:       'rate_seller',
-                    title:      'How was your purchase?',
-                    body:       `You bought "${listing.title}" from ${currentUserName || 'a seller'} — leave a quick rating.`,
-                    listing_id: listing.supabaseId,
-                    read:       false
+                sb.rpc('notify_buyer', {
+                    p_kind: 'rate_seller',
+                    p_user_id: buyerUserId,
+                    p_listing_id: listing.supabaseId,
                 }).then(({ error }) => { if (error) console.warn('rate_seller notif:', error.message); });
             }
         }
@@ -15908,17 +15906,14 @@ async function notifyWantedBuyer(btn) {
     btn.disabled = true;
     btn.textContent = 'Sending…';
 
-    const { error } = await sb.from('notifications').insert([{
-        user_id:        userId,
-        type:           'listing_match',
-        title:          'A seller may have what you\'re looking for',
-        body:           `Check out: "${listingTitle}"`,
-        listing_id:     Number(listingId) || null,
-        wanted_part_id: Number(wantedId) || null,
-        read:           false
-    }]);
+    const { data, error } = await sb.rpc('notify_buyer', {
+        p_kind: 'listing_match',
+        p_user_id: userId,
+        p_listing_id: Number(listingId) || null,
+        p_wanted_part_id: Number(wantedId) || null,
+    });
 
-    if (error) {
+    if (error || data !== true) {
         showToast('Could not notify buyer');
         btn.disabled = false;
         btn.textContent = 'Notify';
