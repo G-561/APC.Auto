@@ -9076,6 +9076,8 @@ function renderGarageUniversal() {
 const SAVED_STORAGE_KEY = 'apc.saved.v1';
 let savedParts = loadSavedParts();   // Set<partId>
 let savedPartsTab = 'active';        // 'active' | 'ended' | 'stores'
+let _savedSearch = '';               // saved-parts filter query
+const SAVED_SEARCH_THRESHOLD = 15;   // show the search box once the active list hits this
 
 // --- SAVED STORES ---
 const SAVED_STORES_KEY = 'apc.savedStores.v1';
@@ -9238,6 +9240,7 @@ function closeSavedPartsDrawer() {
 function onMenuOpenSavedParts() {
     closeAccountDropdown();
     savedPartsTab = 'active';
+    _savedSearch = '';
     renderSavedParts();
     toggleDrawer('savedPartsDrawer');
 }
@@ -9312,38 +9315,73 @@ function renderSavedParts() {
         </div>`;
     }).join('');
 
-    const buildActiveGrid = (parts) => {
-        const grid = document.createElement('div');
-        grid.className = 'results-grid';
-        parts.forEach(part => {
-            const temp = document.createElement('div');
-            temp.innerHTML = buildCardHTML(part);
-            const card = temp.firstElementChild;
-            if (!card) return;
-            const xBtn = document.createElement('button');
-            xBtn.className = 'my-card-x-float';
-            xBtn.title = 'Remove from saved';
-            xBtn.textContent = '×';
-            xBtn.onclick = (e) => { e.stopPropagation(); confirmUnsavePart(part.supabaseId || part.id); };
-            card.appendChild(xBtn);
-            grid.appendChild(card);
-        });
-        return grid;
-    };
-
     content.innerHTML = `<div style="padding: 12px 15px 10px; background:white; margin-bottom:12px; border-bottom:1px solid #eee;">${tabsHTML}</div>`;
 
     if (savedPartsTab === 'active') {
-        if (activeParts.length) {
-            content.appendChild(buildActiveGrid(activeParts));
+        // Search bar appears only once the list is big enough to warrant it
+        if (activeParts.length >= SAVED_SEARCH_THRESHOLD) {
+            content.insertAdjacentHTML('beforeend', `
+                <div style="padding:0 15px 12px;">
+                    <input type="text" id="savedSearchInput" autocomplete="off" placeholder="Search saved parts…"
+                        value="${escapeHtml(_savedSearch)}"
+                        oninput="_savedSearch = this.value; _renderSavedActiveGrid();"
+                        style="width:100%; padding:11px 14px; border:1px solid #ddd; border-radius:10px; box-sizing:border-box; font-size:14px; outline:none; font-family:inherit;">
+                </div>`);
         } else {
-            content.insertAdjacentHTML('beforeend', `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">All your saved listings have ended.</div>`);
+            _savedSearch = '';
         }
+        const gridWrap = document.createElement('div');
+        gridWrap.id = 'savedActiveGrid';
+        content.appendChild(gridWrap);
+        _renderSavedActiveGrid();
     } else if (savedPartsTab === 'ended') {
         content.insertAdjacentHTML('beforeend', staleParts.length
             ? buildStaleHTML(staleParts)
             : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">No ended listings — all your saves are still live.</div>`);
     }
+}
+
+// Build the saved "active" grid (each card gets a remove-×)
+function _buildSavedActiveGrid(parts) {
+    const grid = document.createElement('div');
+    grid.className = 'results-grid';
+    parts.forEach(part => {
+        const temp = document.createElement('div');
+        temp.innerHTML = buildCardHTML(part);
+        const card = temp.firstElementChild;
+        if (!card) return;
+        const xBtn = document.createElement('button');
+        xBtn.className = 'my-card-x-float';
+        xBtn.title = 'Remove from saved';
+        xBtn.textContent = '×';
+        xBtn.onclick = (e) => { e.stopPropagation(); confirmUnsavePart(part.supabaseId || part.id); };
+        card.appendChild(xBtn);
+        grid.appendChild(card);
+    });
+    return grid;
+}
+
+// Re-render just the saved active grid, filtered by _savedSearch (keeps the input focused)
+function _renderSavedActiveGrid() {
+    const wrap = document.getElementById('savedActiveGrid');
+    if (!wrap) return;
+    let parts = [...savedParts].map(id => getPartById(id)).filter(Boolean);
+    const q = _savedSearch.trim().toLowerCase();
+    if (q) {
+        const terms = q.split(/\s+/);
+        parts = parts.filter(p => {
+            const hay = `${p.title || ''} ${(p.fits || []).map(f => `${f.make || ''} ${f.model || ''} ${f.variant || ''}`).join(' ')} ${p.year || ''}`.toLowerCase();
+            return terms.every(t => hay.includes(t));
+        });
+    }
+    wrap.innerHTML = '';
+    if (!parts.length) {
+        wrap.innerHTML = q
+            ? `<div style="text-align:center; padding:36px 20px; color:#aaa; font-size:13px;">No saved parts match your search.</div>`
+            : `<div style="text-align:center; padding:40px 20px; color:#aaa; font-size:13px;">All your saved listings have ended.</div>`;
+        return;
+    }
+    wrap.appendChild(_buildSavedActiveGrid(parts));
 }
 
 function dismissStalePart(partId) {
