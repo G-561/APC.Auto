@@ -5779,19 +5779,9 @@ function onWantedYearChange() {
 }
 
 function checkWantedGaragePrompt() {
-    const make  = document.getElementById('wantedMake')?.value || '';
-    const model = document.getElementById('wantedModel')?.value || '';
+    // Vehicles now auto-add to the garage on submit, so the inline prompt is redundant
     const prompt = document.getElementById('wantedGaragePrompt');
-    const label  = document.getElementById('wantedGaragePromptText');
-    if (!prompt) return;
-    if (!make || !model) { prompt.style.display = 'none'; return; }
-    const alreadyIn = myVehicles.some(v =>
-        v.make.toLowerCase() === make.toLowerCase() &&
-        v.model.toLowerCase() === model.toLowerCase()
-    );
-    if (alreadyIn) { prompt.style.display = 'none'; return; }
-    if (label) label.textContent = `${make} ${model} isn't in your garage yet.`;
-    prompt.style.display = 'flex';
+    if (prompt) prompt.style.display = 'none';
 }
 
 // ── Taxonomy-backed part-name suggestions ─────────────────────────────────────
@@ -9053,21 +9043,7 @@ function renderGarageCar(v) {
             `Nothing on your list for this ${v.make} ${v.model} yet — add a part and we'll watch for it.`));
     }
     c.appendChild(needs.wrap);
-
-    const saved = getAllParts().filter(p =>
-        savedParts.has(p.supabaseId || p.id) && (
-            (p.fits?.length > 0 && partFitsVehicle(p, v)) ||
-            vehicleWanted.some(w => wantedMatchesPart(w, p))
-        )
-    );
-    if (saved.length) {
-        const sec = _garageSection('SAVED FOR THIS CAR', saved.length, null);
-        const strip = document.createElement('div');
-        strip.className = 'gh-strip';
-        strip.innerHTML = saved.map(p => buildCardHTML(p)).join('');
-        sec.body.appendChild(strip);
-        c.appendChild(sec.wrap);
-    }
+    // "Saved for this car" removed — the dedicated Saved drawer covers that
 }
 
 // All Cars view: every need you're chasing, grouped by car (+ a no-vehicle bucket)
@@ -9403,6 +9379,9 @@ function openAddWantedFromStale(partId) {
         if (match) document.getElementById('wantedVehicleSelect').value = match.id;
     }
     closeSavedPartsDrawer();
+    const uni = document.getElementById('wantedUniversalToggle');
+    if (uni) uni.checked = false;
+    onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer', true);
 }
 
@@ -9915,6 +9894,9 @@ function openAddWantedFromList() {
     if (catEl) catEl.value = '';
     initWantedVehicleDropdowns('', '', '');
     populateWantedGarageChips();
+    const uni = document.getElementById('wantedUniversalToggle');
+    if (uni) uni.checked = false;
+    onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer', true);
 }
 
@@ -9931,6 +9913,9 @@ function onAddWantedFromSearch() {
 
     initWantedVehicleDropdowns(prefillMake, prefillModel, prefillYear);
     populateWantedGarageChips(prefillMake, prefillModel, prefillYear);
+    const uni = document.getElementById('wantedUniversalToggle');
+    if (uni) uni.checked = false;
+    onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer');
 }
 
@@ -9940,21 +9925,62 @@ function openAddWantedForVehicle(vehicleId) {
     document.getElementById('wantedMaxPrice').value = '';
     const catEl = document.getElementById('wantedCategory');
     if (catEl) catEl.value = '';
+    const uni = document.getElementById('wantedUniversalToggle');
+    if (uni) uni.checked = (vehicleId == null);   // opened from "Universal Parts" → default universal
     initWantedVehicleDropdowns(v?.make || '', v?.model || '', v?.year || '');
     populateWantedGarageChips(null, null, null, vehicleId);
+    onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer', true);
+}
+
+// Universal part toggle — hides the vehicle picker; the want is saved with no vehicle
+function onWantedUniversalToggle() {
+    const on = !!document.getElementById('wantedUniversalToggle')?.checked;
+    const picker = document.getElementById('wantedVehiclePicker');
+    if (picker) picker.style.display = on ? 'none' : '';
+    if (on) {
+        ['wantedMake', 'wantedModel', 'wantedYear', 'wantedSeries'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.value = '';
+        });
+        const sg = document.getElementById('wantedSeriesGroup'); if (sg) sg.style.display = 'none';
+    }
+}
+
+// Dynamic garage — add a vehicle (local + Supabase) if it's not already there. Returns it.
+function _ensureVehicleInGarage(make, model, year) {
+    if (!make) return null;
+    const existing = myVehicles.find(v =>
+        v.make.toLowerCase() === make.toLowerCase() &&
+        (v.model || '').toLowerCase() === (model || '').toLowerCase()
+    );
+    if (existing) return existing;
+    const newV = { id: nextVehicleId(), make, model: model || '', year: Number(year) || year || '', variant: '', nickname: '', vin: '' };
+    myVehicles.push(newV);
+    if (currentUserId) {
+        sb.from('vehicles').insert({
+            user_id: currentUserId, make, model: model || '', year: String(year || ''),
+            variant: '', engine_code: null, nickname: '', vin: ''
+        }).select('id').single()
+          .then(({ data, error }) => {
+              if (error) console.warn('vehicle auto-insert:', error.message);
+              else if (data) { newV.supabaseId = data.id; saveVehicles(); }
+          });
+    }
+    saveVehicles();
+    return newV;
 }
 
 // Submit Add Wanted
 let _pendingWanted = null; // stash form data while "check listings" modal is open
 
 function submitAddWanted() {
+    const universal = !!document.getElementById('wantedUniversalToggle')?.checked;
     const partName = document.getElementById('wantedPartName').value.trim();
     const maxPriceStr = document.getElementById('wantedMaxPrice').value.trim();
-    const make     = document.getElementById('wantedMake').value.trim();
-    const model    = document.getElementById('wantedModel').value.trim();
-    const year     = document.getElementById('wantedYear').value.trim();
-    const series   = document.getElementById('wantedSeries')?.value.trim() || '';
+    const make     = universal ? '' : document.getElementById('wantedMake').value.trim();
+    const model    = universal ? '' : document.getElementById('wantedModel').value.trim();
+    const year     = universal ? '' : document.getElementById('wantedYear').value.trim();
+    const series   = universal ? '' : (document.getElementById('wantedSeries')?.value.trim() || '');
     const category = document.getElementById('wantedCategory')?.value || '';
 
     if (!partName) { showToast('Part name is required.'); return; }
@@ -9974,6 +10000,8 @@ function submitAddWanted() {
 }
 
 function _doAddWanted(partName, make, model, year, maxPrice, category, series) {
+    // Dynamic garage — a wanted part for a car adds that car to the garage (deletable later)
+    if (make) _ensureVehicleInGarage(make, model, year);
     addWanted(partName, make, model, year, maxPrice, category, series);
 
     _refreshGarageIfOpen();
@@ -9989,23 +10017,6 @@ function _doAddWanted(partName, make, model, year, maxPrice, category, series) {
 
         const searchEl = document.getElementById('mainSearchInput');
         if (searchEl) { searchEl.value = ''; activeFilters.search = ''; renderMainGrid(); }
-
-        const alreadyInGarage = make && myVehicles.some(v =>
-            v.make.toLowerCase() === make.toLowerCase() &&
-            v.model.toLowerCase() === model.toLowerCase()
-        );
-        if (make && !alreadyInGarage) {
-            showToastWithAction(
-                `"${partName}" added`,
-                `Save ${make} ${model} to garage?`,
-                () => {
-                    myVehicles.push({ id: nextVehicleId(), make, model, year: Number(year) || year || '', variant: '', nickname: '', vin: '' });
-                    saveVehicles();
-                    renderGarage();
-                    showToast(`${make} ${model} saved to garage`);
-                }
-            );
-        }
     }, 1500);
 }
 

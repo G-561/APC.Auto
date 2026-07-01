@@ -2647,6 +2647,17 @@
         <!-- VEHICLE FIRST -->
         <div style="margin-bottom:16px;">
             <div style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; margin-bottom:10px;">Vehicle</div>
+            <div class="sell-toggle-row" style="margin-bottom:12px;">
+                <div>
+                    <div class="sell-toggle-label" style="font-size:13px;">Universal part</div>
+                    <div class="sell-toggle-sub">Fits any vehicle — 4x4 gear, tools, accessories</div>
+                </div>
+                <label class="settings-toggle" style="flex-shrink:0;">
+                    <input type="checkbox" id="wantedUniversalToggle" onchange="onWantedUniversalToggle()">
+                    <span class="settings-toggle-track"></span>
+                </label>
+            </div>
+            <div id="wantedVehiclePicker">
             <div id="wantedGarageQuickFill" style="display:none; margin-bottom:10px;">
                 <div style="margin-bottom:7px;">
                     <span style="font-size:11px; font-weight:700; color:#888;">Garage vehicles</span>
@@ -2664,6 +2675,7 @@
                 <span id="wantedGaragePromptText" style="font-size:12px; font-weight:700; color:#555; flex:1;"></span>
                 <button onclick="saveWantedVehicleToGarage()" style="background:var(--apc-orange); border:none; color:white; font-size:11px; font-weight:800; padding:6px 14px; border-radius:20px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">+ Add to Garage</button>
             </div>
+            </div><!-- /#wantedVehiclePicker -->
         </div>
 
         <!-- SUCCESS FLASH -->
@@ -3072,7 +3084,7 @@
 <script src="taxonomy.js?v=6"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=223"></script>
+<script src="script.js?v=224"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
