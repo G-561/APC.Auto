@@ -12670,6 +12670,7 @@ function updateHeaderOffset() {
     if (header && grid) {
         const topBarH   = topBar ? topBar.offsetHeight : 0;
         const totalH    = header.offsetHeight + topBarH;
+        document.documentElement.style.setProperty('--hdr-total-h', totalH + 'px');
         const mainContentArea = document.getElementById('mainContentArea');
         if (mainContentArea) {
             mainContentArea.style.marginTop = totalH + 'px';
@@ -13103,10 +13104,13 @@ function openDashboard() {
     const dv      = document.getElementById('dashboardView');
     if (fd)  fd.style.setProperty('display', 'none', 'important');
     if (rp)  rp.style.display = 'none';
-    if (hdr) hdr.style.setProperty('display', 'none', 'important');   // search header goes; top bar stays
+    // Keep the full marketplace header (logo + search) in place — Pro tools open
+    // below the orange line for a uniform look; clicking search returns to the grid.
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
+    const totalH = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    document.documentElement.style.setProperty('--hdr-total-h', totalH + 'px');
     if (dv) {
-        dv.style.top     = (topBar ? topBar.offsetHeight : 36) + 'px';
+        dv.style.top     = totalH + 'px';
         dv.style.display = 'block';
     }
     syncBackdrop();

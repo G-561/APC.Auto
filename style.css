@@ -5716,7 +5716,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     .pro-full.active {
         left: max(0px, calc(50vw - 800px)) !important;
         right: max(0px, calc(50vw - 800px)) !important;
-        top: 48px !important;
+        top: var(--hdr-total-h, 143px) !important;
         bottom: 0 !important;
         width: auto !important;
         max-width: none !important;
@@ -8642,7 +8642,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 
 @media (min-width: 900px) {
     /* Full-screen content pane, matching the other Pro drawers (Stock Lookup/EDW). */
-    #warehouseDrawer { top: 48px !important; left: max(0px, calc(50vw - 800px)) !important; right: max(0px, calc(50vw - 800px)) !important; bottom: 0 !important; width: auto !important; height: auto !important; border-radius: 0 !important; box-shadow: none !important; border: none !important; overflow: hidden; }
+    #warehouseDrawer { top: var(--hdr-total-h, 143px) !important; left: max(0px, calc(50vw - 800px)) !important; right: max(0px, calc(50vw - 800px)) !important; bottom: 0 !important; width: auto !important; height: auto !important; border-radius: 0 !important; box-shadow: none !important; border: none !important; overflow: hidden; }
     .wh-camera-wrap { display: none !important; }
     .wh-scan-info { display: none !important; }
     .wh-desktop-scan-note { display: block !important; }
