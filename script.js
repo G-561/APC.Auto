@@ -8952,6 +8952,12 @@ function _wantedMatchesFor(w) {
 }
 
 // One "need" row — the wanted part, its status, and any matching listings nested beneath it
+// Parts with live matches first, then watching-only — keeps them from intermingling
+function _sortWantedByMatches(wants) {
+    return [...wants].sort((a, b) =>
+        (_wantedMatchesFor(b).length ? 1 : 0) - (_wantedMatchesFor(a).length ? 1 : 0));
+}
+
 function buildGarageNeed(w, showVehicle) {
     const matches = _wantedMatchesFor(w);
     const wrap = document.createElement('div');
@@ -9047,7 +9053,7 @@ function renderGarageCar(v) {
     const needs = _garageSection('PARTS I NEED', vehicleWanted.length,
         { label: '+ Add part for this vehicle', fn: `openAddWantedForVehicle(${v.id})` });
     if (vehicleWanted.length) {
-        vehicleWanted.forEach(w => needs.body.appendChild(buildGarageNeed(w)));
+        _sortWantedByMatches(vehicleWanted).forEach(w => needs.body.appendChild(buildGarageNeed(w)));
     } else {
         needs.body.appendChild(_garageEmptyLine(
             `Nothing on your list for this ${v.make} ${v.model} yet — add a part and we'll watch for it.`));
@@ -9074,7 +9080,7 @@ function renderGarageUniversal() {
     const needs = _garageSection('PARTS I NEED', orphans.length,
         { label: '+ Add', fn: `openAddWantedUniversal()` });
     if (orphans.length) {
-        orphans.forEach(w => needs.body.appendChild(buildGarageNeed(w, true)));
+        _sortWantedByMatches(orphans).forEach(w => needs.body.appendChild(buildGarageNeed(w, true)));
     } else {
         needs.body.appendChild(_garageEmptyLine(
             `Nothing here yet — add a part that isn't tied to a specific vehicle (a 4x4 accessory, sun shade, universal tool…).`));
