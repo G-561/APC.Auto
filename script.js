@@ -244,19 +244,20 @@ function setDtbActive(id) {
 }
 
 // Top-bar nav wrappers — close any open drawer first, then set active + open
-function _dtbNav(id, fn) {
+function _dtbNav(id, fn, keepSurface) {
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
+    if (!keepSurface) closeDashboard();   // leaving a Pro tool for a marketplace view
     syncBackdrop();
     setDtbActive(id);
     fn();
 }
 function dtbGoHome()        { goHome(); }
-function dtbOpenDashboard() { _dtbNav('dtbDashboard', openDashboard); }
+function dtbOpenDashboard() { _dtbNav('dtbDashboard', openDashboard, true); }
 function dtbOpenGarage()    { _dtbNav('dtbGarage',    onOpenGarage); }
-function dtbOpenListings()  { _dtbNav('dtbListings',  navOpenMyListings); }
+function dtbOpenListings()  { _dtbNav('dtbListings',  navOpenMyListings, true); }
 function dtbOpenWanted()    { _dtbNav('dtbWanted',    openGarageWanted); }
 function dtbOpenSaved()     { _dtbNav('dtbSaved',     onMenuOpenSavedParts); }
-function dtbOpenInbox()     { _dtbNav('dtbMessages',  navOpenMessages); }
+function dtbOpenInbox()     { _dtbNav('dtbMessages',  navOpenMessages, true); }
 function dtbOpenWorkshops() { _dtbNav('dtbWorkshops', onMenuOpenWorkshops); }
 
 // APC PRO dropdown in the top bar — one clean door to every Pro tool, from any
@@ -271,6 +272,7 @@ function closeProMenu() {
 }
 function proMenuGo(dest) {
     closeProMenu();
+    if (dest === 'refresh') { proRefresh(); return; }
     setDtbActive('dtbDashboard');
     const dv = document.getElementById('dashboardView');
     if (!dv || dv.style.display === 'none') openDashboard();
@@ -3358,10 +3360,7 @@ function closeInboxOrThread() {
     if (isMobile && threadCol && threadCol.classList.contains('slide-in')) {
         closeInboxThread();
     } else {
-        const drawer = document.getElementById('inboxDrawer');
-        const proHdr = document.getElementById('proHeader');
-        const inProMode = proHdr && proHdr.style.display !== 'none';
-        if (inProMode) { proOpenEnquiries(); return; }
+        if (_proSurfaceOpen()) { proOpenEnquiries(); return; }
         toggleDrawer('inboxDrawer');
     }
 }
@@ -4720,10 +4719,13 @@ function goHome() {
     // Dashboard is not a drawer — close it explicitly and restore panels
     const dv = document.getElementById('dashboardView');
     if (dv) dv.style.display = 'none';
-    const fd = document.getElementById('filterDrawer');
-    const rp = document.querySelector('.desktop-right-panel');
-    if (fd) fd.style.removeProperty('display');
-    if (rp) rp.style.removeProperty('display');
+    clearInterval(_dashJobsPollInterval);
+    const fd  = document.getElementById('filterDrawer');
+    const rp  = document.querySelector('.desktop-right-panel');
+    const hdr = document.getElementById('mainHeader');
+    if (fd)  fd.style.removeProperty('display');
+    if (rp)  rp.style.removeProperty('display');
+    if (hdr) hdr.style.removeProperty('display');   // restore search header when returning to the marketplace
     syncBackdrop();
     renderMainGrid();
     window.scrollTo(0, 0);
@@ -12680,9 +12682,8 @@ function updateHeaderOffset() {
         const dashView       = document.getElementById('dashboardView');
         const drawerBackdrop = document.getElementById('drawerBackdrop');
 
-        const proHdr    = document.getElementById('proHeader');
-        const proOpen   = proHdr && proHdr.style.display !== 'none';
-        const drawerTop = proOpen ? (proHdr.offsetHeight || 54) : totalH;
+        // Search header hides in a Pro surface, so totalH collapses to the top bar height
+        const drawerTop = totalH;
 
         // Filter drawer always sits flush below the header on all screen sizes
         if (filterDrawer)    filterDrawer.style.top    = drawerTop + 'px';
@@ -13082,6 +13083,15 @@ function onDashboardMenuTap() {
 
 let _dashJobsPollInterval = null;
 
+// A Pro tool/view is showing full-screen beneath the persistent top bar
+function _proSurfaceOpen() {
+    const dv = document.getElementById('dashboardView');
+    return !!dv && dv.style.display === 'block';
+}
+
+// Open a Pro surface beneath the persistent light top bar. No dark pro-mode
+// header, no chrome swap — just hide the marketplace search header and drop the
+// full-width work surface below the top bar (which stays put on every screen).
 function openDashboard() {
     if (window.innerWidth < 900) return;
     if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Pro Dashboard requires APC Pro membership'); return; }
@@ -13090,21 +13100,14 @@ function openDashboard() {
     const rp      = document.querySelector('.desktop-right-panel');
     const topBar  = document.getElementById('desktopTopBar');
     const hdr     = document.getElementById('mainHeader');
-    const proHdr  = document.getElementById('proHeader');
     const dv      = document.getElementById('dashboardView');
-    if (fd)     fd.style.setProperty('display', 'none', 'important');
-    if (rp)     rp.style.display = 'none';
-    if (topBar) topBar.style.setProperty('display', 'none', 'important');
-    if (hdr)    hdr.style.setProperty('display', 'none', 'important');
+    if (fd)  fd.style.setProperty('display', 'none', 'important');
+    if (rp)  rp.style.display = 'none';
+    if (hdr) hdr.style.setProperty('display', 'none', 'important');   // search header goes; top bar stays
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
-    // Show dashboard FIRST so it's never stranded hidden
     if (dv) {
-        dv.style.top     = '54px';
+        dv.style.top     = (topBar ? topBar.offsetHeight : 36) + 'px';
         dv.style.display = 'block';
-    }
-    if (proHdr) {
-        proHdr.style.display = 'block';
-        try { renderProHeader(); } catch(e) { /* non-fatal */ }
     }
     syncBackdrop();
     closeAccountMenu();
@@ -13117,21 +13120,16 @@ function openDashboard() {
 function closeDashboard() {
     const dv = document.getElementById('dashboardView');
     if (!dv || dv.style.display === 'none') return;
-    // In Pro mode the dashboard is the persistent base layer — ignore auto-close calls
-    const proHdr = document.getElementById('proHeader');
-    if (proHdr && proHdr.style.display !== 'none') return;
     clearInterval(_dashJobsPollInterval);
     dv.style.display = 'none';
     setDtbActive(null);
     if (window.innerWidth >= 900) {
-        const fd     = document.getElementById('filterDrawer');
-        const rp     = document.querySelector('.desktop-right-panel');
-        const topBar = document.getElementById('desktopTopBar');
-        const hdr    = document.getElementById('mainHeader');
-        if (fd)     fd.style.removeProperty('display');
-        if (rp)     rp.style.removeProperty('display');
-        if (topBar) topBar.style.removeProperty('display');
-        if (hdr)    hdr.style.removeProperty('display');
+        const fd  = document.getElementById('filterDrawer');
+        const rp  = document.querySelector('.desktop-right-panel');
+        const hdr = document.getElementById('mainHeader');
+        if (fd)  fd.style.removeProperty('display');
+        if (rp)  rp.style.removeProperty('display');
+        if (hdr) hdr.style.removeProperty('display');   // restore the search header; top bar never left
     }
     updateHeaderOffset();
     syncBackdrop();
@@ -13247,6 +13245,7 @@ async function proRefresh() {
 
 function proOpenMyListings(tab) {
     proShowView('proListingsView', 'proNavListings');
+    setDtbActive('dtbListings');
     const openTab = tab || _dashCurrentTab || 'active';
     const tabBtns = document.querySelectorAll('#proLstTabs .dash-tab');
     const tabIdx  = ['active','pending','sold'].indexOf(openTab);
@@ -13277,6 +13276,7 @@ function _updateProLstTabCounts() {
 
 function proOpenEnquiries() {
     proShowView('proEnquiriesView', 'proNavMessages');
+    setDtbActive('dtbMessages');
     proSetFolder('selling');
     if (currentUserId) loadConversationsFromSupabase(currentUserId).then(() => { proRenderConvList(); proUpdateFolderBadges(); });
     else proRenderConvList();
@@ -14083,12 +14083,11 @@ function _edwPositionDrawer(drawer) {
         drawer.style.top = drawer.style.left = drawer.style.right = drawer.style.width = '';
         return;
     }
-    const proHdr = document.getElementById('proHeader');
-    const proOpen = proHdr && proHdr.style.display !== 'none';
+    const surfaceOpen = _proSurfaceOpen();
     const topBar  = document.getElementById('desktopTopBar');
     const hdr     = document.getElementById('mainHeader');
-    const topOffset  = proOpen ? (proHdr.offsetHeight || 54) : (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
-    const sideOffset = proOpen ? 0 : Math.max(0, Math.round(window.innerWidth / 2) - 700);
+    const topOffset  = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
+    const sideOffset = surfaceOpen ? 0 : Math.max(0, Math.round(window.innerWidth / 2) - 700);
     drawer.style.top   = topOffset + 'px';
     drawer.style.left  = sideOffset + 'px';
     drawer.style.right = sideOffset + 'px';
