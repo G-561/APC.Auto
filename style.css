@@ -2200,7 +2200,7 @@ header {
 .garage-row-delete:hover { color: #ff3b30; }
 
 #garageDrawer .drawer-content { padding-top: 20px; }
-.garage-two-col { display: flex; flex-direction: column; height: 100%; background: #f4f4f4; }
+.garage-two-col { display: flex; flex-direction: column; height: 100%; background: #fff; }
 .garage-left-col { flex-shrink: 0; }
 .garage-right-col { flex: 1; overflow-y: auto; }
 .garage-chips-bar {
@@ -2345,6 +2345,7 @@ header {
     border: 1px solid #eee;
     border-radius: 10px;
     padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 .gh-need-row.has-match { border-color: rgba(240,112,32,0.4); }
 .gh-need-info { flex: 1; min-width: 0; }
@@ -2401,6 +2402,7 @@ header {
     max-width: 150px;
     border: 1px solid #eee;
     border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 .gh-empty {
     font-size: 13px;
@@ -4954,7 +4956,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
         flex: 1;
         overflow-y: auto;
         padding: 0;
-        background: #f4f4f4;
+        background: #fff;
     }
     .garage-chips-bar {
         flex-direction: column;
@@ -6948,7 +6950,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* HELP & SUPPORT DRAWER */
 .help-drawer-content {
     padding: 20px 16px 40px;
-    background: #f4f4f4;
+    background: #fff;
 }
 .help-section-title {
     font-size: 11px;
