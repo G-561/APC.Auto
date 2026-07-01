@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=117">
+    <link rel="stylesheet" href="style.css?v=118">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -2713,6 +2713,14 @@
             </div>
         </div>
 
+        <!-- PHOTOS (optional) -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; margin-bottom:6px;">Photos <span style="color:#ccc;">· optional</span></div>
+            <div style="font-size:12px; color:#999; margin-bottom:10px; line-height:1.4;">A photo helps sellers recognise exactly what you're after.</div>
+            <div id="wantedPhotoPreviews" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+            <input type="file" id="wantedPhotoInput" accept="image/*" multiple style="display:none;" onchange="onWantedPhotoSelect(event)">
+        </div>
+
         <button class="btn-full-action" onclick="submitAddWanted()">ADD TO WANTED</button>
     </div>
 </div>
@@ -3084,7 +3092,7 @@
 <script src="taxonomy.js?v=6"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=225"></script>
+<script src="script.js?v=226"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

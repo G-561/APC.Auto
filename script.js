@@ -2468,7 +2468,7 @@ async function loadWantedFromSupabase(userId) {
                 Object.assign(existing, {
                     partName: r.part_name || r.title || '', make: r.make || '', model: r.model || '',
                     year: r.year ? String(r.year) : '', maxPrice: r.max_price || r.budget_max || null,
-                    category: r.category || '', mutedNotifications: !!r.muted_notifications
+                    category: r.category || '', photos: r.photos || [], mutedNotifications: !!r.muted_notifications
                 });
             } else {
                 myWanted.push({
@@ -2479,6 +2479,7 @@ async function loadWantedFromSupabase(userId) {
                     year: r.year ? String(r.year) : '',
                     maxPrice: r.max_price || r.budget_max || null,
                     category: r.category || '',
+                    photos: r.photos || [],
                     mutedNotifications: !!r.muted_notifications,
                     createdAt: new Date().toISOString()
                 });
@@ -2509,7 +2510,7 @@ async function loadPublicWantedFromSupabase() {
         const excludeId = currentUserId || '00000000-0000-0000-0000-000000000000';
         const { data: rows, error } = await sb
             .from('wanted_parts')
-            .select('id, user_id, part_name, title, make, model, year, max_price, budget_max, category, created_at')
+            .select('*')
             .neq('user_id', excludeId)
             .order('created_at', { ascending: false })
             .limit(200);
@@ -2533,6 +2534,7 @@ async function loadPublicWantedFromSupabase() {
                 year: r.year ? String(r.year) : '',
                 maxPrice: r.max_price || r.budget_max || null,
                 category: r.category || '',
+                photos: r.photos || [],
                 isPro: prof.tier === 'pro' || prof.is_pro || false,
                 loc: prof.location || '',
                 posted: new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }),
@@ -8391,6 +8393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Taxonomy part-name suggestions on the listing title + wanted-request field
     attachPartAutocomplete(document.getElementById('sellTitle'), { compose: true, excludeVehicle: true, setCategory: true });
     attachPartAutocomplete(document.getElementById('wantedPartName'), { setCategory: 'wantedCategory' });
+    renderWantedPhotoPreviews();   // show the "add photo" tile in the wanted modal
 
     // Enter key on any sign-in field submits the form
     ['authEmail', 'authPassword'].forEach(id => {
@@ -8991,6 +8994,13 @@ function buildGarageNeed(w, showVehicle) {
     right.appendChild(status);
     right.appendChild(del);
 
+    if (w.photos && w.photos.length) {
+        const thumb = document.createElement('img');
+        thumb.className = 'gh-need-thumb';
+        thumb.src = thumbUrl(w.photos[0], 120);
+        thumb.alt = '';
+        row.appendChild(thumb);
+    }
     row.appendChild(info);
     row.appendChild(right);
     wrap.appendChild(row);
@@ -9485,7 +9495,7 @@ function restoreDismissedMatches(wantedId) {
 }
 
 // Add a new wanted entry
-function addWanted(partName, make, model, year, maxPrice, category, series) {
+function addWanted(partName, make, model, year, maxPrice, category, series, photos) {
     const newW = {
         id: nextWantedId(),
         partName,
@@ -9495,13 +9505,14 @@ function addWanted(partName, make, model, year, maxPrice, category, series) {
         series:   series   || '',
         maxPrice: maxPrice || null,
         category: category || '',
+        photos:   photos   || [],
         mutedNotifications: false,
         createdAt: new Date().toISOString()
     };
     myWanted.push(newW);
     saveWanted();
     if (currentUserId) {
-        sb.from('wanted_parts').insert({
+        const payload = {
             user_id: currentUserId,
             title: partName,
             part_name: partName,
@@ -9510,7 +9521,11 @@ function addWanted(partName, make, model, year, maxPrice, category, series) {
             year: year ? Number(year) : null,
             max_price: maxPrice || null, budget_max: maxPrice || null,
             category: category || '', muted_notifications: false
-        }).select('id').single()
+        };
+        // Only reference the photos column when there are photos, so text-only
+        // wants keep working even before the DB column is added.
+        if (photos && photos.length) payload.photos = photos;
+        sb.from('wanted_parts').insert(payload).select('id').single()
           .then(({ data, error }) => {
               if (error) console.warn('wanted insert:', error.message);
               else if (data) { newW.supabaseId = data.id; saveWanted(); }
@@ -9861,6 +9876,8 @@ function closeAddWantedDrawer() {
     const el = document.getElementById('addWantedDrawer');
     if (el) el.classList.remove('active');
     selectedWantedVehicleId = null;
+    _wantedPhotos = [];
+    renderWantedPhotoPreviews();
     syncBackdrop();
 }
 
@@ -10008,6 +10025,64 @@ function _ensureVehicleInGarage(make, model, year) {
     return newV;
 }
 
+// ── Wanted-part photos — optional, up to 2, reuse the listing image pipeline ──
+let _wantedPhotos = [];
+const WANTED_PHOTO_MAX = 2;
+
+function onWantedPhotoSelect(event) {
+    const files = [...(event.target.files || [])];
+    event.target.value = '';   // allow re-picking the same file
+    files.forEach(file => {
+        if (_wantedPhotos.length >= WANTED_PHOTO_MAX || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = async () => {
+            if (_wantedPhotos.length >= WANTED_PHOTO_MAX) return;
+            _wantedPhotos.push(await compressBase64(reader.result, 1400, 0.85));
+            renderWantedPhotoPreviews();
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removeWantedPhoto(i) {
+    _wantedPhotos.splice(i, 1);
+    renderWantedPhotoPreviews();
+}
+
+function renderWantedPhotoPreviews() {
+    const wrap = document.getElementById('wantedPhotoPreviews');
+    if (!wrap) return;
+    wrap.innerHTML = _wantedPhotos.map((src, i) => `
+        <div class="wanted-photo-thumb">
+            <img src="${src}" alt="Wanted part photo">
+            <button type="button" class="wanted-photo-x" onclick="removeWantedPhoto(${i})" aria-label="Remove photo">×</button>
+        </div>`).join('');
+    if (_wantedPhotos.length < WANTED_PHOTO_MAX) {
+        wrap.insertAdjacentHTML('beforeend', `
+            <button type="button" class="wanted-photo-add" onclick="document.getElementById('wantedPhotoInput').click()">
+                <span style="font-size:22px; line-height:1;">＋</span>
+                <span style="font-size:11px; font-weight:700;">Add photo</span>
+            </button>`);
+    }
+}
+
+// Upload staged (already-compressed) base64 photos to storage; returns public URLs
+async function uploadWantedPhotos(base64s) {
+    const urls = [];
+    let n = 0;
+    for (const b64 of base64s) {
+        if (!b64 || !b64.startsWith('data:')) { if (b64) urls.push(b64); continue; }
+        try {
+            const blob = await (await fetch(b64)).blob();
+            const path = `wanted/${currentUserId}/${Date.now()}_${n++}.jpg`;
+            const { error } = await sb.storage.from('listing-images').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+            if (error) { console.warn('wanted photo upload:', error.message); continue; }
+            urls.push(sb.storage.from('listing-images').getPublicUrl(path).data.publicUrl);
+        } catch (e) { console.warn('wanted photo upload exception:', e); }
+    }
+    return urls;
+}
+
 // Submit Add Wanted
 let _pendingWanted = null; // stash form data while "check listings" modal is open
 
@@ -10037,10 +10112,13 @@ function submitAddWanted() {
     _doAddWanted(partName, make, model, year, maxPrice, category, series);
 }
 
-function _doAddWanted(partName, make, model, year, maxPrice, category, series) {
+async function _doAddWanted(partName, make, model, year, maxPrice, category, series) {
     // Dynamic garage — a wanted part for a car adds that car to the garage (deletable later)
     if (make) _ensureVehicleInGarage(make, model, year);
-    addWanted(partName, make, model, year, maxPrice, category, series);
+    // Upload any staged photos, then record the want with their URLs
+    const photos = (_wantedPhotos.length && currentUserId) ? await uploadWantedPhotos(_wantedPhotos) : _wantedPhotos.slice();
+    _wantedPhotos = [];
+    addWanted(partName, make, model, year, maxPrice, category, series, photos);
 
     _refreshGarageIfOpen();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
@@ -16463,8 +16541,10 @@ function _dashWrFilter(q) {
     list.innerHTML = filtered.slice(0, 30).map(w => {
         const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
         const budget  = w.maxPrice ? `<span class="dash-wr-budget">Max $${w.maxPrice}</span>` : '';
+        const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" alt="">` : '';
         return `
         <div class="dash-wr-row">
+            ${thumb}
             <div class="dash-wr-info">
                 <div class="dash-wr-part">${escapeHtml(w.partName)}</div>
                 <div class="dash-wr-meta">${escapeHtml(vehicle)}${w.loc ? ' · ' + escapeHtml(w.loc) : ''} · ${escapeHtml(w.posted)}${budget ? ' · ' + budget : ''}</div>
