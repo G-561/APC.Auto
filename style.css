@@ -4830,7 +4830,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     .bottom-nav { display: none !important; }
 
     /* Constrain page to 1600px centred — sides show html background */
-    html { background: #e0e0e0; scrollbar-gutter: stable; }
+    html { background: var(--bg); scrollbar-gutter: stable; }
     body {
         padding-bottom: 0;
         padding-left: 240px;
