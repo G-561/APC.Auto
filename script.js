@@ -253,11 +253,35 @@ function _dtbNav(id, fn) {
 function dtbGoHome()        { goHome(); }
 function dtbOpenDashboard() { _dtbNav('dtbDashboard', openDashboard); }
 function dtbOpenGarage()    { _dtbNav('dtbGarage',    onOpenGarage); }
-function dtbOpenListings()  { _dtbNav('dtbListings',  onMenuOpenMyListings); }
+function dtbOpenListings()  { _dtbNav('dtbListings',  navOpenMyListings); }
 function dtbOpenWanted()    { _dtbNav('dtbWanted',    openWantedListDrawer); }
 function dtbOpenSaved()     { _dtbNav('dtbSaved',     onMenuOpenSavedParts); }
-function dtbOpenInbox()     { _dtbNav('dtbMessages',  onOpenInbox); }
+function dtbOpenInbox()     { _dtbNav('dtbMessages',  navOpenMessages); }
 function dtbOpenWorkshops() { _dtbNav('dtbWorkshops', onMenuOpenWorkshops); }
+
+// Desktop (>=900) Pro users do listings/messages in the dashboard — route the
+// marketplace nav there instead of the consumer views. Mobile/tablet keep the
+// consumer views (no dashboard below 900). Contextual deep-links (a notification
+// opening a specific thread) still use the consumer inbox directly.
+function _navToDashboard(opener) {
+    const dv = document.getElementById('dashboardView');
+    if (!dv || dv.style.display === 'none') openDashboard();
+    opener();
+}
+function navOpenMyListings() {
+    if (window.innerWidth >= 900 && userIsSignedIn && currentUserTier === 'pro') {
+        _navToDashboard(() => proOpenMyListings('active'));
+    } else {
+        onMenuOpenMyListings();
+    }
+}
+function navOpenMessages() {
+    if (window.innerWidth >= 900 && userIsSignedIn && currentUserTier === 'pro') {
+        _navToDashboard(proOpenEnquiries);
+    } else {
+        onOpenInbox();
+    }
+}
 
 function clearRecentlyViewed() {
     recentlyViewed = [];
@@ -13999,17 +14023,11 @@ function closeEdw() {
 }
 
 // EDW is Pro-only — after publishing, send a desktop Pro user to their working
-// view (the dashboard spreadsheet), not the consumer grid. A tablet (768–899, no
-// dashboard) or any non-Pro falls back to the normal My Listings.
+// view (the dashboard spreadsheet); tablet (768–899, no dashboard) / non-Pro fall
+// back to the normal grid. Shares the nav routing (navOpenMyListings).
 function _edwViewMyListings() {
     closeEdw();
-    if (window.innerWidth >= 900 && currentUserTier === 'pro') {
-        const dv = document.getElementById('dashboardView');
-        if (!dv || dv.style.display === 'none') openDashboard();
-        proOpenMyListings('active');
-    } else {
-        onMenuOpenMyListings();
-    }
+    navOpenMyListings();
 }
 
 function _renderEdw() {
