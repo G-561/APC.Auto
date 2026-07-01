@@ -5717,12 +5717,15 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* ── Pro Full-Screen drawer — promoted from drawer to content pane ─── */
 @media (min-width: 900px) {
     .pro-full.active {
-        left: max(0px, calc(50vw - 800px)) !important;
-        right: max(0px, calc(50vw - 800px)) !important;
+        left: 0 !important;
+        right: 0 !important;
         top: var(--hdr-total-h, 143px) !important;
         bottom: 0 !important;
         width: auto !important;
         max-width: none !important;
+        padding-left: max(0px, calc(50vw - 800px)) !important;
+        padding-right: max(0px, calc(50vw - 800px)) !important;
+        box-sizing: border-box !important;
         border-radius: 0 !important;
         box-shadow: none !important;
         z-index: 2050 !important;
@@ -8680,7 +8683,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 
 @media (min-width: 900px) {
     /* Full-screen content pane, matching the other Pro drawers (Stock Lookup/EDW). */
-    #warehouseDrawer { top: var(--hdr-total-h, 143px) !important; left: max(0px, calc(50vw - 800px)) !important; right: max(0px, calc(50vw - 800px)) !important; bottom: 0 !important; width: auto !important; height: auto !important; border-radius: 0 !important; box-shadow: none !important; border: none !important; overflow: hidden; }
+    #warehouseDrawer { top: var(--hdr-total-h, 143px) !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: auto !important; height: auto !important; padding-left: max(0px, calc(50vw - 800px)) !important; padding-right: max(0px, calc(50vw - 800px)) !important; box-sizing: border-box !important; border-radius: 0 !important; box-shadow: none !important; border: none !important; overflow: hidden; }
     .wh-camera-wrap { display: none !important; }
     .wh-scan-info { display: none !important; }
     .wh-desktop-scan-note { display: block !important; }
