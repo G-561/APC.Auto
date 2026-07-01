@@ -7343,6 +7343,41 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 }
 
 /* ─── EDW — Electronic Dismantling Workflow ─────────────────────────────── */
+/* Floating "Dismantle in progress · Resume" pill (paused EDW session) */
+.edw-resume-pill {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 3050;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: #fff;
+    color: #333;
+    border: 1px solid #e6e6e6;
+    border-radius: 999px;
+    padding: 11px 16px 11px 15px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.15);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.edw-resume-pill:hover { transform: translateY(-1px); box-shadow: 0 9px 26px rgba(0,0,0,0.2); }
+.edw-resume-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--apc-orange);
+    flex-shrink: 0;
+    animation: edwResumePulse 1.8s infinite;
+}
+@keyframes edwResumePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(240,112,32,0.5); }
+    70%  { box-shadow: 0 0 0 7px rgba(240,112,32,0); }
+    100% { box-shadow: 0 0 0 0 rgba(240,112,32,0); }
+}
+.edw-resume-cta { color: var(--apc-orange); font-weight: 800; }
+
 /* EDW + SL fill their drawer fully — override bottom-sheet align from .drawer */
 #edwDrawer { border-radius: 0 !important; align-items: stretch; background: #f2f2f7; }
 #proStockView .sl-shell { height: 100%; }

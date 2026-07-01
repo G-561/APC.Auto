@@ -4241,6 +4241,7 @@ function syncBackdrop() {
     document.body.style.overflow = (drawersOpen || dashVisible) ? 'hidden' : 'auto';
     const backdrop = document.getElementById('drawerBackdrop');
     if (backdrop) backdrop.classList.toggle('active', dashVisible || drawersOpen);
+    _syncEdwResumePill();
 }
 
 // Keep inbox pinned to the visual viewport when the keyboard opens on iOS/Android.
@@ -13177,6 +13178,18 @@ function _pauseEdw() {
     const drawer = document.getElementById('edwDrawer');
     if (drawer) drawer.classList.remove('active');
     document.body.style.overflow = '';
+    _syncEdwResumePill();
+}
+
+// Floating "Dismantle in progress · Resume" pill — shown whenever an EDW session
+// is paused (real work in progress but the drawer is hidden), so resuming is
+// obvious. Hidden while EDW is open or when there's no session.
+function _syncEdwResumePill() {
+    const pill = document.getElementById('edwResumePill');
+    if (!pill) return;
+    const drawer = document.getElementById('edwDrawer');
+    const edwOpen = drawer && drawer.classList.contains('active');
+    pill.style.display = (_edwHasActiveSession() && !edwOpen) ? 'flex' : 'none';
 }
 
 function _pauseWarehouse() {
@@ -13699,6 +13712,7 @@ function proOpenEDW() {
     } else {
         openEdw();
     }
+    _syncEdwResumePill();
 }
 
 function renderProHeader() {
@@ -14117,6 +14131,7 @@ function openEdw() {
     }
     document.body.style.overflow = 'hidden';
     _renderEdw();
+    _syncEdwResumePill();
 }
 
 function closeEdw() {
@@ -14129,6 +14144,7 @@ function closeEdw() {
     document.body.style.overflow = '';
     document.querySelectorAll('.pro-hdr-link').forEach(l => l.classList.remove('pro-hdr-active'));
     document.getElementById('proNavDash')?.classList.add('pro-hdr-active');
+    _syncEdwResumePill();
 }
 
 // EDW is Pro-only — after publishing, send a desktop Pro user to their working
