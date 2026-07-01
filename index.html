@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=106">
+    <link rel="stylesheet" href="style.css?v=107">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -54,7 +54,16 @@
         <span id="dtbSaved"     class="dtb-link" onclick="dtbOpenSaved()">Saved</span>
         <span id="dtbMessages"  class="dtb-link" onclick="dtbOpenInbox()">Messages <span id="inboxBadgeTopBar" class="dtb-badge" style="display:none;"></span></span>
         <span id="dtbWorkshops" class="dtb-link" onclick="dtbOpenWorkshops()">Workshops</span>
-        <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="dtbOpenDashboard()" style="display:none;">APC Pro</span>
+        <span id="dtbProMenu" class="dtb-pro-menu" style="display:none;">
+            <span id="dtbDashboard" class="dtb-link dtb-dashboard" onclick="toggleProMenu(event)">APC PRO <span class="dtb-pro-caret">&#9662;</span></span>
+            <div id="dtbProDropdown" class="dtb-pro-dropdown">
+                <button class="dtb-pro-item" onclick="proMenuGo('dashboard')">Dashboard</button>
+                <div class="dtb-pro-divider"></div>
+                <button class="dtb-pro-item" onclick="proMenuGo('edw')">Dismantle a Vehicle</button>
+                <button class="dtb-pro-item" onclick="proMenuGo('warehouse')">Warehouse</button>
+                <button class="dtb-pro-item" onclick="proMenuGo('stock')">Stock Lookup</button>
+            </div>
+        </span>
     </div>
     <div class="dtb-right-zone">
         <span id="tierBadge" style="display:none;"></span>
@@ -3062,7 +3071,7 @@
 <script src="taxonomy.js?v=6"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=216"></script>
+<script src="script.js?v=217"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

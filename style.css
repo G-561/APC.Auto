@@ -5752,6 +5752,41 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-hdr-btn:hover { background: #fff4e6; }
 .dtb-dashboard:hover { color: var(--apc-blue) !important; background: #e8f0fe !important; }
 
+/* APC PRO dropdown — Pro tools grouped under one top-bar item */
+.dtb-pro-menu { position: relative; align-items: center; }
+.dtb-pro-caret { font-size: 9px; margin-left: 1px; opacity: 0.85; }
+.dtb-pro-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 200px;
+    padding: 6px;
+    z-index: 5000;
+}
+.dtb-pro-dropdown.open { display: block; }
+.dtb-pro-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: inherit;
+}
+.dtb-pro-item:hover { background: #f4f4f4; color: var(--apc-orange); }
+.dtb-pro-divider { height: 1px; background: #eee; margin: 5px 8px; }
+
 .dash-inner {
     max-width: 1800px;
     margin: 0 auto;

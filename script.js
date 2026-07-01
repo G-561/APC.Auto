@@ -259,6 +259,28 @@ function dtbOpenSaved()     { _dtbNav('dtbSaved',     onMenuOpenSavedParts); }
 function dtbOpenInbox()     { _dtbNav('dtbMessages',  navOpenMessages); }
 function dtbOpenWorkshops() { _dtbNav('dtbWorkshops', onMenuOpenWorkshops); }
 
+// APC PRO dropdown in the top bar — one clean door to every Pro tool, from any
+// marketplace screen. Tools still open in the dashboard for now (Stage 2 makes
+// the top bar persistent so they render beneath it).
+function toggleProMenu(e) {
+    e?.stopPropagation();
+    document.getElementById('dtbProDropdown')?.classList.toggle('open');
+}
+function closeProMenu() {
+    document.getElementById('dtbProDropdown')?.classList.remove('open');
+}
+function proMenuGo(dest) {
+    closeProMenu();
+    setDtbActive('dtbDashboard');
+    const dv = document.getElementById('dashboardView');
+    if (!dv || dv.style.display === 'none') openDashboard();
+    if      (dest === 'dashboard') proGoToDashboard();
+    else if (dest === 'edw')       proOpenEDW();
+    else if (dest === 'warehouse') openWarehouseDrawer();
+    else if (dest === 'stock')     proOpenStockLookup();
+}
+document.addEventListener('click', e => { if (!e.target.closest('#dtbProMenu')) closeProMenu(); });
+
 // Desktop (>=900) Pro users do listings/messages in the dashboard — route the
 // marketplace nav there instead of the consumer views. Mobile/tablet keep the
 // consumer views (no dashboard below 900). Contextual deep-links (a notification
@@ -12534,10 +12556,10 @@ function renderAccountState() {
         }
     }
     const isPro = userIsSignedIn && currentUserTier === 'pro';
-    const dtbDash   = document.getElementById('dtbDashboard');
-    const amenuDash = document.getElementById('amenuDashboard');
-    if (dtbDash)   dtbDash.style.display   = isPro ? 'flex' : 'none';
-    if (amenuDash) amenuDash.style.display = isPro ? 'flex' : 'none';
+    const dtbProMenu = document.getElementById('dtbProMenu');
+    const amenuDash  = document.getElementById('amenuDashboard');
+    if (dtbProMenu) dtbProMenu.style.display = isPro ? 'flex' : 'none';
+    if (amenuDash)  amenuDash.style.display  = isPro ? 'flex' : 'none';
     const amenuEdw       = document.getElementById('amenuEdw');
     const amenuWarehouse = document.getElementById('amenuWarehouse');
     if (amenuEdw)       amenuEdw.style.display       = isPro ? 'flex' : 'none';
