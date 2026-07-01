@@ -5838,7 +5838,8 @@ function attachPartAutocomplete(input, opts = {}) {
         }
         if (opts.setCategory) {
             const cat = _PART_CAT_MAP?.[name];
-            const catEl = document.getElementById('sellCategory');
+            const catId = typeof opts.setCategory === 'string' ? opts.setCategory : 'sellCategory';
+            const catEl = document.getElementById(catId);
             // Always follow the picked part — so changing part (starter → door) re-points the category.
             if (cat && catEl && catEl.value !== cat) { catEl.value = cat; catEl.dispatchEvent(new Event('change', { bubbles: true })); }
         }
@@ -8368,7 +8369,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Taxonomy part-name suggestions on the listing title + wanted-request field
     attachPartAutocomplete(document.getElementById('sellTitle'), { compose: true, excludeVehicle: true, setCategory: true });
-    attachPartAutocomplete(document.getElementById('wantedPartName'), {});
+    attachPartAutocomplete(document.getElementById('wantedPartName'), { setCategory: 'wantedCategory' });
 
     // Enter key on any sign-in field submits the form
     ['authEmail', 'authPassword'].forEach(id => {
@@ -9904,6 +9905,8 @@ function openAddWantedForVehicle(vehicleId) {
     const v = myVehicles.find(x => x.id === vehicleId);
     document.getElementById('wantedPartName').value = '';
     document.getElementById('wantedMaxPrice').value = '';
+    const catEl = document.getElementById('wantedCategory');
+    if (catEl) catEl.value = '';
     initWantedVehicleDropdowns(v?.make || '', v?.model || '', v?.year || '');
     populateWantedGarageChips(null, null, null, vehicleId);
     toggleDrawer('addWantedDrawer', true);
