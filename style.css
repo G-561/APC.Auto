@@ -9,7 +9,7 @@
     --apc-green-bg: #e6f4ea;
     --apc-amber: #FFF9F2;
     --apc-orange-light: #FFF4E6;
-    --bg: #F4F4F4;
+    --bg: #f2f2f7;
     --white: #ffffff;
     /* Tier colours — matches sign-up screen */
     --tier-personal: #f07020;
@@ -1331,7 +1331,7 @@ header {
     grid-template-columns: 1fr 1fr;
     gap: 5px;
     padding: 5px 0px;
-    background: #E4E6EB;
+    background: var(--bg);
     margin-top: 0;
 }
 /* My Listings — keep non-grid elements inset while grid is full-bleed */
@@ -4582,7 +4582,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.45);
+    background: var(--bg);
     z-index: 1998;
 }
 
@@ -5729,6 +5729,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
         padding-left: max(0px, calc(50vw - 800px)) !important;
         padding-right: max(0px, calc(50vw - 800px)) !important;
         box-sizing: border-box !important;
+        background: var(--bg) !important;
         border-radius: 0 !important;
         box-shadow: none !important;
         z-index: 2050 !important;
