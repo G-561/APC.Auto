@@ -265,10 +265,16 @@ function dtbOpenWorkshops() { _dtbNav('dtbWorkshops', onMenuOpenWorkshops); }
 // the top bar persistent so they render beneath it).
 function toggleProMenu(e) {
     e?.stopPropagation();
-    document.getElementById('dtbProDropdown')?.classList.toggle('open');
+    const dd = document.getElementById('dtbProDropdown');
+    if (!dd) return;
+    dd.classList.toggle('open');
+    // Lift the whole top bar above any open drawer while the menu is showing,
+    // so the dropdown isn't buried behind Garage/Saved/Wanted/Workshops etc.
+    document.getElementById('desktopTopBar')?.classList.toggle('pro-menu-open', dd.classList.contains('open'));
 }
 function closeProMenu() {
     document.getElementById('dtbProDropdown')?.classList.remove('open');
+    document.getElementById('desktopTopBar')?.classList.remove('pro-menu-open');
 }
 function proMenuGo(dest) {
     closeProMenu();

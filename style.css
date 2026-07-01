@@ -4604,6 +4604,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     z-index: 3100;
     box-sizing: border-box;
 }
+/* While the APC PRO dropdown is open, float the bar above open drawers so the
+   menu renders on top (drawers share z-3100 and win on DOM order otherwise) */
+.desktop-top-bar.pro-menu-open { z-index: 9500; }
 .dtb-logo-zone {
     width: 240px;
     flex-shrink: 0;
