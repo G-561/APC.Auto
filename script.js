@@ -12714,7 +12714,7 @@ function updateHeaderOffset() {
             if (authDrawer)           authDrawer.style.top           = drawerTop + 'px';
             if (dashView)             dashView.style.top             = drawerTop + 'px';
             if (rightPanel)           rightPanel.style.top           = drawerTop + 'px';
-            if (accountDropdown)      accountDropdown.style.top      = proOpen ? (drawerTop + 8) + 'px' : (topBarH + 8) + 'px';
+            if (accountDropdown)      accountDropdown.style.top      = (topBarH + 8) + 'px';
         }
     }
 }
