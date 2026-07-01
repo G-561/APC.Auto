@@ -4838,17 +4838,18 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
         box-sizing: border-box;
     }
 
-    /* Top utility bar: constrained to 1400px zone */
+    /* Top utility bar: full-width white/divider, content padded to the centred zone */
     .desktop-top-bar {
-        left: max(0px, calc(50vw - 800px));
-        right: max(0px, calc(50vw - 800px));
+        left: 0;
+        right: 0;
+        padding: 0 max(20px, calc(50vw - 800px));
     }
 
-    /* Header: constrained to 1400px zone */
+    /* Header: full-width white/orange-strip, content padded to the centred zone */
     .top-nav-container {
         top: 48px;
-        left: max(0px, calc(50vw - 800px));
-        right: max(0px, calc(50vw - 800px));
+        left: 0;
+        right: 0;
         width: auto;
     }
 
@@ -4858,6 +4859,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
         display: flex;
         align-items: center;
         padding: 8px 0;
+        padding-left: max(0px, calc(50vw - 800px));
+        padding-right: max(0px, calc(50vw - 800px));
         gap: 0;
     }
     .header-top { display: contents; }
