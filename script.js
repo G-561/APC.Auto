@@ -8811,8 +8811,8 @@ function renderGarage(initialSel) {
         bar.innerHTML = `
             <div class="garage-empty">
                 <div class="ico">🏠</div>
-                <div class="title">Your garage is empty</div>
-                <div class="sub">Add a vehicle and we'll show you parts that fit, plus notify you when wanted parts come up for sale.</div>
+                <div class="title">No wanted parts yet</div>
+                <div class="sub">Tap "+ Add Wanted Part" to list a part you're chasing — we'll organise it by vehicle and alert you when a match is listed.</div>
             </div>`;
         const detail = document.getElementById('garageInlineDetail');
         if (detail) detail.style.display = 'none';
@@ -8840,23 +8840,23 @@ function renderGarage(initialSel) {
         bar.appendChild(chip);
     });
 
-    // "Universal Parts" — wanted parts not tied to a specific car (4x4 gear, sun shades, tools…)
-    const uniChip = document.createElement('button');
-    uniChip.className = 'garage-chip garage-chip-universal';
-    uniChip.dataset.vehicleId = GARAGE_UNIVERSAL;
-    uniChip.onclick = () => selectGarageVehicle(GARAGE_UNIVERSAL);
-    const uniName = document.createElement('span');
-    uniName.className = 'garage-chip-name';
-    uniName.textContent = 'Universal Parts';
-    uniChip.appendChild(uniName);
+    // "Universal Parts" — shown only once there's actually a universal want (treated like a vehicle)
     const uniCount = _orphanWanted().length;
     if (uniCount) {
+        const uniChip = document.createElement('button');
+        uniChip.className = 'garage-chip garage-chip-universal';
+        uniChip.dataset.vehicleId = GARAGE_UNIVERSAL;
+        uniChip.onclick = () => selectGarageVehicle(GARAGE_UNIVERSAL);
+        const uniName = document.createElement('span');
+        uniName.className = 'garage-chip-name';
+        uniName.textContent = 'Universal Parts';
+        uniChip.appendChild(uniName);
         const cnt = document.createElement('span');
         cnt.className = 'garage-chip-year';
         cnt.textContent = uniCount;
         uniChip.appendChild(cnt);
+        bar.appendChild(uniChip);
     }
-    bar.appendChild(uniChip);
 
     const startSel = initialSel != null ? initialSel
                    : (myVehicles[0] ? myVehicles[0].id : GARAGE_UNIVERSAL);
@@ -8889,7 +8889,7 @@ function renderGarageInlineDetail() {
             const add = document.createElement('button');
             add.className = 'garage-vh-edit';
             add.textContent = '+ Add Part';
-            add.onclick = () => openAddWantedForVehicle();
+            add.onclick = () => openAddWantedUniversal();
             actions.appendChild(add);
             header.appendChild(nameEl);
             header.appendChild(actions);
@@ -8903,27 +8903,27 @@ function renderGarageInlineDetail() {
 
     if (header) {
         header.innerHTML = '';
+        const nameWrap = document.createElement('div');
+        nameWrap.className = 'garage-vh-namewrap';
         const nameEl = document.createElement('span');
         nameEl.className = 'garage-vh-name';
         nameEl.textContent = [v.make, v.model, v.year, v.variant].filter(Boolean).join(' · ');
-
-        const actions = document.createElement('div');
-        actions.className = 'garage-vh-actions';
-
         const editBtn = document.createElement('button');
-        editBtn.className = 'garage-vh-edit';
-        editBtn.textContent = 'Edit';
+        editBtn.className = 'garage-vh-edit-pencil';
+        editBtn.title = 'Edit vehicle';
+        editBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
         editBtn.onclick = () => openEditVehicleDrawer(v.id);
+        nameWrap.appendChild(nameEl);
+        nameWrap.appendChild(editBtn);
 
         const delBtn = document.createElement('button');
         delBtn.className = 'garage-vh-delete';
         delBtn.textContent = '×';
+        delBtn.title = 'Remove vehicle';
         delBtn.onclick = () => deleteVehicle(v.id);
 
-        actions.appendChild(editBtn);
-        actions.appendChild(delBtn);
-        header.appendChild(nameEl);
-        header.appendChild(actions);
+        header.appendChild(nameWrap);
+        header.appendChild(delBtn);
     }
 
     renderGarageCar(v);
@@ -9045,7 +9045,7 @@ function renderGarageCar(v) {
     const vehicleWanted = _vehicleWanted(v);
 
     const needs = _garageSection('PARTS I NEED', vehicleWanted.length,
-        { label: '+ Add', fn: `openAddWantedForVehicle(${v.id})` });
+        { label: '+ Add part for this vehicle', fn: `openAddWantedForVehicle(${v.id})` });
     if (vehicleWanted.length) {
         vehicleWanted.forEach(w => needs.body.appendChild(buildGarageNeed(w)));
     } else {
@@ -9072,7 +9072,7 @@ function renderGarageUniversal() {
     const orphans = _orphanWanted();
 
     const needs = _garageSection('PARTS I NEED', orphans.length,
-        { label: '+ Add', fn: `openAddWantedForVehicle()` });
+        { label: '+ Add', fn: `openAddWantedUniversal()` });
     if (orphans.length) {
         orphans.forEach(w => needs.body.appendChild(buildGarageNeed(w, true)));
     } else {
@@ -9429,6 +9429,7 @@ function openAddWantedFromStale(partId) {
     closeSavedPartsDrawer();
     const uni = document.getElementById('wantedUniversalToggle');
     if (uni) uni.checked = false;
+    _showWantedUniversalRow(true);
     onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer', true);
 }
@@ -9951,6 +9952,7 @@ function openAddWantedFromList() {
     populateWantedGarageChips();
     const uni = document.getElementById('wantedUniversalToggle');
     if (uni) uni.checked = false;
+    _showWantedUniversalRow(true);
     onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer', true);
 }
@@ -9970,20 +9972,55 @@ function onAddWantedFromSearch() {
     populateWantedGarageChips(prefillMake, prefillModel, prefillYear);
     const uni = document.getElementById('wantedUniversalToggle');
     if (uni) uni.checked = false;
+    _showWantedUniversalRow(true);
     onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer');
 }
 
-function openAddWantedForVehicle(vehicleId) {
-    const v = myVehicles.find(x => x.id === vehicleId);
+function _resetWantedForm() {
     document.getElementById('wantedPartName').value = '';
     document.getElementById('wantedMaxPrice').value = '';
     const catEl = document.getElementById('wantedCategory');
     if (catEl) catEl.value = '';
+    _wantedPhotos = [];
+    renderWantedPhotoPreviews();
+}
+function _showWantedUniversalRow(show) {
+    const row = document.getElementById('wantedUniversalRow');
+    if (row) row.style.display = show ? '' : 'none';
+}
+
+// General "Add Wanted Part" (garage header) — pick a garaged vehicle, type one, or flag universal
+function openAddWanted() {
+    _resetWantedForm();
     const uni = document.getElementById('wantedUniversalToggle');
-    if (uni) uni.checked = (vehicleId == null);   // opened from "Universal Parts" → default universal
+    if (uni) uni.checked = false;
+    _showWantedUniversalRow(true);
+    initWantedVehicleDropdowns('', '', '');
+    populateWantedGarageChips();
+    onWantedUniversalToggle();
+    toggleDrawer('addWantedDrawer', true);
+}
+
+// Add a part for a specific garage vehicle — vehicle pre-filled, no universal toggle
+function openAddWantedForVehicle(vehicleId) {
+    const v = myVehicles.find(x => x.id === vehicleId);
+    _resetWantedForm();
+    const uni = document.getElementById('wantedUniversalToggle');
+    if (uni) uni.checked = false;
+    _showWantedUniversalRow(false);
     initWantedVehicleDropdowns(v?.make || '', v?.model || '', v?.year || '');
     populateWantedGarageChips(null, null, null, vehicleId);
+    onWantedUniversalToggle();
+    toggleDrawer('addWantedDrawer', true);
+}
+
+// Add a universal part (from the Universal Parts bucket) — no vehicle, no toggle
+function openAddWantedUniversal() {
+    _resetWantedForm();
+    const uni = document.getElementById('wantedUniversalToggle');
+    if (uni) uni.checked = true;
+    _showWantedUniversalRow(false);
     onWantedUniversalToggle();
     toggleDrawer('addWantedDrawer', true);
 }

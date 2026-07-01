@@ -2256,6 +2256,20 @@ header {
     font-weight: 700;
     color: #333;
 }
+.garage-vh-namewrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.garage-vh-edit-pencil {
+    background: none;
+    border: none;
+    color: #bbb;
+    cursor: pointer;
+    padding: 3px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 6px;
+    flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+}
+.garage-vh-edit-pencil:hover { color: var(--apc-orange); background: rgba(240,112,32,0.08); }
 .garage-vh-actions {
     display: flex;
     align-items: center;
@@ -2333,6 +2347,8 @@ header {
     font-weight: 800;
     cursor: pointer;
     font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 .gh-section-add:active { background: rgba(240,112,32,0.08); }
 

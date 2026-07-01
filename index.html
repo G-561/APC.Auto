@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=118">
+    <link rel="stylesheet" href="style.css?v=119">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -2576,7 +2576,7 @@
     <div class="drawer-header">
         <span>My Wanted Parts</span>
         <div style="display:flex; align-items:center; gap:24px;">
-            <button class="dh-btn" onclick="onAddVehicleClick()">+ Add Vehicle</button>
+            <button class="dh-btn" onclick="openAddWanted()">+ Add Wanted Part</button>
             <div class="dh-close" onclick="toggleDrawer('garageDrawer')">×</div>
         </div>
     </div>
@@ -2647,7 +2647,7 @@
         <!-- VEHICLE FIRST -->
         <div style="margin-bottom:16px;">
             <div style="font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:0.5px; color:#aaa; margin-bottom:10px;">Vehicle</div>
-            <div class="sell-toggle-row" style="margin-bottom:12px;">
+            <div id="wantedUniversalRow" class="sell-toggle-row" style="margin-bottom:12px;">
                 <div>
                     <div class="sell-toggle-label" style="font-size:13px;">Universal part</div>
                     <div class="sell-toggle-sub">Fits any vehicle — 4x4 gear, tools, accessories</div>
@@ -3092,7 +3092,7 @@
 <script src="taxonomy.js?v=6"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=226"></script>
+<script src="script.js?v=227"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
