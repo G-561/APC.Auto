@@ -254,7 +254,7 @@ function dtbGoHome()        { goHome(); }
 function dtbOpenDashboard() { _dtbNav('dtbDashboard', openDashboard); }
 function dtbOpenGarage()    { _dtbNav('dtbGarage',    onOpenGarage); }
 function dtbOpenListings()  { _dtbNav('dtbListings',  navOpenMyListings); }
-function dtbOpenWanted()    { _dtbNav('dtbWanted',    openWantedListDrawer); }
+function dtbOpenWanted()    { _dtbNav('dtbWanted',    openGarageWanted); }
 function dtbOpenSaved()     { _dtbNav('dtbSaved',     onMenuOpenSavedParts); }
 function dtbOpenInbox()     { _dtbNav('dtbMessages',  navOpenMessages); }
 function dtbOpenWorkshops() { _dtbNav('dtbWorkshops', onMenuOpenWorkshops); }
@@ -8583,10 +8583,17 @@ function nextVehicleId() {
 }
 
 // Open the garage drawer (called from bottom nav)
-function onOpenGarage() {
+function onOpenGarage(mode) {
     setActiveNav('garageNavItem');
-    renderGarage();
+    renderGarage(mode === 'all' ? GARAGE_ALL : undefined);
     toggleDrawer('garageDrawer');
+}
+
+// "Wanted" now lives inside the Garage — open it straight to the All Cars overview
+function openGarageWanted() {
+    closeAccountDropdown();
+    closeAccountMenu();
+    onOpenGarage('all');
 }
 
 // Open the Add Vehicle form on top of the garage drawer
@@ -8770,12 +8777,12 @@ function deleteVehicle(id) {
 
 
 // Render the garage chips bar — XSS-safe via createElement + textContent
-function renderGarage() {
+function renderGarage(initialSel) {
     const bar = document.getElementById('garageChipsBar');
     if (!bar) return;
     bar.innerHTML = '';
 
-    if (myVehicles.length === 0) {
+    if (myVehicles.length === 0 && myWanted.length === 0) {
         bar.innerHTML = `
             <div class="garage-empty">
                 <div class="ico">🏠</div>
@@ -8786,6 +8793,23 @@ function renderGarage() {
         if (detail) detail.style.display = 'none';
         return;
     }
+
+    // "All Cars" — cross-car overview + home for every part you're chasing
+    const allChip = document.createElement('button');
+    allChip.className = 'garage-chip garage-chip-all';
+    allChip.dataset.vehicleId = GARAGE_ALL;
+    allChip.onclick = () => selectGarageVehicle(GARAGE_ALL);
+    const allName = document.createElement('span');
+    allName.className = 'garage-chip-name';
+    allName.textContent = 'All Cars';
+    allChip.appendChild(allName);
+    if (myWanted.length) {
+        const allCount = document.createElement('span');
+        allCount.className = 'garage-chip-year';
+        allCount.textContent = `${myWanted.length} wanted`;
+        allChip.appendChild(allCount);
+    }
+    bar.appendChild(allChip);
 
     myVehicles.forEach(v => {
         const chip = document.createElement('button');
@@ -8808,27 +8832,49 @@ function renderGarage() {
         bar.appendChild(chip);
     });
 
-    if (myVehicles[0]) selectGarageVehicle(myVehicles[0].id);
+    const startSel = initialSel != null ? initialSel
+                   : (myVehicles[0] ? myVehicles[0].id : GARAGE_ALL);
+    selectGarageVehicle(startSel);
 }
 
 function selectGarageVehicle(vehicleId) {
-    currentVehicleId  = vehicleId;
-    currentVehicleTab = 'wanted';
+    currentVehicleId = vehicleId;
     document.querySelectorAll('#garageChipsBar .garage-chip').forEach(c => {
-        c.classList.toggle('active', Number(c.dataset.vehicleId) === vehicleId);
+        c.classList.toggle('active', c.dataset.vehicleId === String(vehicleId));
     });
     renderGarageInlineDetail();
 }
 
 function renderGarageInlineDetail() {
-    const v      = myVehicles.find(x => x.id === currentVehicleId);
     const detail = document.getElementById('garageInlineDetail');
     if (!detail) return;
+    detail.style.display = 'block';
+    const header = document.getElementById('garageVehicleHeader');
+
+    // All Cars overview — the merged Wanted list, grouped by car
+    if (currentVehicleId === GARAGE_ALL) {
+        if (header) {
+            header.innerHTML = '';
+            const nameEl = document.createElement('span');
+            nameEl.className = 'garage-vh-name';
+            nameEl.textContent = 'All Cars';
+            const actions = document.createElement('div');
+            actions.className = 'garage-vh-actions';
+            const add = document.createElement('button');
+            add.className = 'garage-vh-edit';
+            add.textContent = '+ Add Part';
+            add.onclick = () => openAddWantedForVehicle();
+            actions.appendChild(add);
+            header.appendChild(nameEl);
+            header.appendChild(actions);
+        }
+        renderGarageAll();
+        return;
+    }
+
+    const v = myVehicles.find(x => x.id === currentVehicleId);
     if (!v) { detail.style.display = 'none'; return; }
 
-    detail.style.display = 'block';
-
-    const header = document.getElementById('garageVehicleHeader');
     if (header) {
         header.innerHTML = '';
         const nameEl = document.createElement('span');
@@ -8854,131 +8900,166 @@ function renderGarageInlineDetail() {
         header.appendChild(actions);
     }
 
-    document.querySelectorAll('#garageInlineDetail .seg').forEach(s => {
-        s.classList.toggle('active', s.dataset.gtab === 'wanted');
-    });
-
-    renderGarageTab();
+    renderGarageCar(v);
 }
 
-function setGarageTab(tab) {
-    currentVehicleTab = tab;
-    document.querySelectorAll('#garageInlineDetail .seg').forEach(s => {
-        s.classList.toggle('active', s.dataset.gtab === tab);
-    });
-    renderGarageTab();
+// Re-render the open garage after a save/match/wanted change (no-op when closed)
+function _refreshGarageIfOpen() {
+    if (document.getElementById('garageDrawer')?.classList.contains('active')) {
+        renderGarageInlineDetail();
+    }
 }
 
-function renderGarageTab() {
-    const c = document.getElementById('garageInlineTabContent');
-    if (!c) return;
-    const v = myVehicles.find(x => x.id === currentVehicleId);
-    if (!v) { c.innerHTML = ''; return; }
-    c.innerHTML = '';
-
-    const vehicleWanted = myWanted.filter(w =>
-        w.vehicleId === currentVehicleId ||
+// Wanted parts tied to a vehicle (explicit link, or make/model/year match)
+function _vehicleWanted(v) {
+    return myWanted.filter(w =>
+        w.vehicleId === v.id ||
         (w.make && w.make.toLowerCase() === v.make.toLowerCase() &&
          w.model.toLowerCase() === v.model.toLowerCase() &&
-             (!w.year || !v.year || String(w.year) === String(v.year)))
+         (!w.year || !v.year || String(w.year) === String(v.year)))
     );
-
-    if (window.innerWidth >= 900) {
-        renderGarageDesktopSections(c, v, vehicleWanted);
-        return;
-    }
-
-    if (currentVehicleTab === 'wanted') {
-        if (!vehicleWanted.length) {
-            c.appendChild(buildVehicleEmpty(
-                '🔍',
-                `No wanted parts for your ${v.make} ${v.model} yet.`,
-                { label: 'ADD WANTED PART', onClick: () => openAddWantedForVehicle(currentVehicleId) }
-            ));
-        } else {
-            const addRow = document.createElement('div');
-            addRow.style.cssText = 'display:flex; justify-content:flex-end; padding:0 0 10px 0;';
-            const addBtn = document.createElement('button');
-            addBtn.textContent = '+ Add Wanted';
-            addBtn.style.cssText = 'background:none; border:1px solid var(--apc-orange); color:var(--apc-orange); padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; cursor:pointer; font-family:inherit;';
-            addBtn.onclick = () => openAddWantedForVehicle(currentVehicleId);
-            addRow.appendChild(addBtn);
-            c.appendChild(addRow);
-            c.appendChild(buildWantedGrid(vehicleWanted));
-        }
-
-    } else if (currentVehicleTab === 'saved') {
-        const savedFitting = getAllParts().filter(p =>
-            savedParts.has(p.supabaseId || p.id) && (
-                (p.fits?.length > 0 && partFitsVehicle(p, v)) ||
-                vehicleWanted.some(w => wantedMatchesPart(w, p))
-            )
-        );
-        if (!savedFitting.length) {
-            c.appendChild(buildVehicleEmpty('♡', `No saved listings for your ${v.make} ${v.model} yet.`));
-        } else {
-            c.appendChild(buildPartsGrid(savedFitting));
-        }
-
-    } else if (currentVehicleTab === 'matches') {
-        const matchingParts = getAllParts().filter(p => {
-            const matchingWanteds = vehicleWanted.filter(w => wantedMatchesPart(w, p));
-            if (!matchingWanteds.length) return false;
-            return matchingWanteds.some(w => !dismissedMatches[String(w.id)]?.has(p.id));
-        });
-        if (!matchingParts.length) {
-            c.appendChild(buildVehicleEmpty('🔔', `No matches for your ${v.make} ${v.model} wanted parts yet.`));
-        } else {
-            c.appendChild(buildPartsGrid(matchingParts));
-        }
-    }
 }
 
-function renderGarageDesktopSections(c, v, vehicleWanted) {
-    function section(labelHTML, content) {
-        const wrap = document.createElement('div');
-        wrap.className = 'garage-section';
-        const hdr = document.createElement('div');
-        hdr.className = 'garage-section-hdr';
-        hdr.innerHTML = labelHTML;
-        wrap.appendChild(hdr);
-        wrap.appendChild(content);
-        c.appendChild(wrap);
-    }
+function _wantedMatchesFor(w) {
+    const dismissed = dismissedMatches[String(w.id)] || new Set();
+    return getAllParts().filter(p => wantedMatchesPart(w, p) && !dismissed.has(p.id));
+}
 
-    // Wanted parts
-    const wantedHdr = `WANTED PARTS <span class="garage-section-count${vehicleWanted.length ? '' : ''}">${vehicleWanted.length}</span>
-        <button class="garage-section-add" onclick="openAddWantedForVehicle(${v.id})">+ Add</button>`;
-    if (vehicleWanted.length) {
-        section(wantedHdr, buildWantedGrid(vehicleWanted));
+// One "need" row — the wanted part, its status, and any matching listings nested beneath it
+function buildGarageNeed(w) {
+    const matches = _wantedMatchesFor(w);
+    const wrap = document.createElement('div');
+    wrap.className = 'gh-need';
+
+    const row = document.createElement('div');
+    row.className = 'gh-need-row' + (matches.length ? ' has-match' : '');
+
+    const info = document.createElement('div');
+    info.className = 'gh-need-info';
+    const name = document.createElement('div');
+    name.className = 'gh-need-name';
+    name.textContent = w.partName;
+    const meta = document.createElement('div');
+    meta.className = 'gh-need-meta';
+    meta.textContent = w.maxPrice ? `Max $${w.maxPrice}`
+                     : (w.mutedNotifications ? 'Muted' : 'Watching for listings');
+    info.appendChild(name);
+    info.appendChild(meta);
+
+    const right = document.createElement('div');
+    right.className = 'gh-need-right';
+    const status = document.createElement('span');
+    if (matches.length) {
+        status.className = 'gh-need-count';
+        status.textContent = `${matches.length} match${matches.length !== 1 ? 'es' : ''}`;
     } else {
-        const emp = document.createElement('div');
-        emp.className = 'garage-section-empty';
-        emp.textContent = `No wanted parts for your ${v.make} ${v.model} yet.`;
-        section(wantedHdr, emp);
+        status.className = 'gh-need-watching';
+        status.textContent = 'Watching';
     }
+    const del = document.createElement('button');
+    del.className = 'gh-need-del';
+    del.textContent = '×';
+    del.title = 'Remove from your list';
+    del.onclick = (e) => { e.stopPropagation(); deleteWanted(w.id); };
+    right.appendChild(status);
+    right.appendChild(del);
 
-    // Matches
-    const matchingParts = getAllParts().filter(p => {
-        const mw = vehicleWanted.filter(w => wantedMatchesPart(w, p));
-        return mw.length && mw.some(w => !dismissedMatches[String(w.id)]?.has(p.id));
-    });
-    if (matchingParts.length) {
-        section(`MATCHES <span class="garage-section-count has-matches">${matchingParts.length}</span>`,
-            buildPartsGrid(matchingParts));
+    row.appendChild(info);
+    row.appendChild(right);
+    wrap.appendChild(row);
+
+    if (matches.length) {
+        const strip = document.createElement('div');
+        strip.className = 'gh-strip';
+        strip.innerHTML = matches.map(p => buildCardHTML(p)).join('');
+        wrap.appendChild(strip);
     }
+    return wrap;
+}
 
-    // Saved for this car
-    const savedFitting = getAllParts().filter(p =>
+function _garageSection(label, count, addOpts, isGroup) {
+    const wrap = document.createElement('div');
+    wrap.className = 'gh-section' + (isGroup ? ' gh-group' : '');
+    const hdr = document.createElement('div');
+    hdr.className = 'gh-section-hdr';
+    hdr.innerHTML =
+        `<span class="gh-section-label">${isGroup ? '🚗 ' : ''}${escapeHtml(label)}</span>` +
+        (count != null ? `<span class="gh-section-count">${count}</span>` : '') +
+        (addOpts ? `<button class="gh-section-add" onclick="${addOpts.fn}">${escapeHtml(addOpts.label)}</button>` : '');
+    const body = document.createElement('div');
+    body.className = 'gh-section-body';
+    wrap.appendChild(hdr);
+    wrap.appendChild(body);
+    return { wrap, body };
+}
+
+function _garageEmptyLine(text) {
+    const d = document.createElement('div');
+    d.className = 'gh-empty';
+    d.textContent = text;
+    return d;
+}
+
+// Per-car view: what this car needs (with nested matches) + saved listings that fit
+function renderGarageCar(v) {
+    const c = document.getElementById('garageInlineTabContent');
+    if (!c) return;
+    c.innerHTML = '';
+    const vehicleWanted = _vehicleWanted(v);
+
+    const needs = _garageSection('PARTS I NEED', vehicleWanted.length,
+        { label: '+ Add', fn: `openAddWantedForVehicle(${v.id})` });
+    if (vehicleWanted.length) {
+        vehicleWanted.forEach(w => needs.body.appendChild(buildGarageNeed(w)));
+    } else {
+        needs.body.appendChild(_garageEmptyLine(
+            `Nothing on your list for this ${v.make} ${v.model} yet — add a part and we'll watch for it.`));
+    }
+    c.appendChild(needs.wrap);
+
+    const saved = getAllParts().filter(p =>
         savedParts.has(p.supabaseId || p.id) && (
             (p.fits?.length > 0 && partFitsVehicle(p, v)) ||
             vehicleWanted.some(w => wantedMatchesPart(w, p))
         )
     );
-    if (savedFitting.length) {
-        section(`SAVED FOR THIS CAR <span class="garage-section-count">${savedFitting.length}</span>`,
-            buildPartsGrid(savedFitting));
+    if (saved.length) {
+        const sec = _garageSection('SAVED FOR THIS CAR', saved.length, null);
+        const strip = document.createElement('div');
+        strip.className = 'gh-strip';
+        strip.innerHTML = saved.map(p => buildCardHTML(p)).join('');
+        sec.body.appendChild(strip);
+        c.appendChild(sec.wrap);
     }
+}
+
+// All Cars view: every need you're chasing, grouped by car (+ a no-vehicle bucket)
+function renderGarageAll() {
+    const c = document.getElementById('garageInlineTabContent');
+    if (!c) return;
+    c.innerHTML = '';
+
+    if (!myWanted.length) {
+        c.appendChild(_garageEmptyLine(
+            `No parts on your list yet. Open one of your cars and add the parts you're chasing — everything shows up here.`));
+        return;
+    }
+
+    const claimed = new Set();
+    const groups = [];
+    myVehicles.forEach(v => {
+        const items = _vehicleWanted(v).filter(w => !claimed.has(w.id));
+        items.forEach(w => claimed.add(w.id));
+        if (items.length) groups.push({ label: `${v.make} ${v.model}${v.year ? ' ' + v.year : ''}`, items });
+    });
+    const orphan = myWanted.filter(w => !claimed.has(w.id));
+    if (orphan.length) groups.push({ label: 'No vehicle', items: orphan });
+
+    groups.forEach(g => {
+        const sec = _garageSection(g.label, g.items.length, null, true);
+        g.items.forEach(w => sec.body.appendChild(buildGarageNeed(w)));
+        c.appendChild(sec.wrap);
+    });
 }
 
 // --- SAVED PARTS: data model + persistence ---
@@ -9129,7 +9210,7 @@ function toggleSavedPart(partId, btn) {
     }
     syncDetailSaveButton(partId);
     renderMainGrid(); // refresh saved indicators on cards
-    if (currentVehicleId && currentVehicleTab === 'saved') renderGarageTab();
+    _refreshGarageIfOpen();
     if (document.getElementById('savedPartsDrawer')?.classList.contains('active')) renderSavedParts();
 }
 
@@ -9332,7 +9413,7 @@ function dismissMatch(wantedId, partId) {
     dismissedMatches[key].add(partId);
     saveDismissedMatches();
     renderWantedList();
-    if (currentVehicleId && currentVehicleTab === 'matches') renderGarageTab();
+    _refreshGarageIfOpen();
     if (currentMatchesWanted && String(currentMatchesWanted.id) === key) {
         const allMatches = getAllParts().filter(p => wantedMatchesPart(currentMatchesWanted, p));
         const active = allMatches.filter(p => !dismissedMatches[key]?.has(p.id));
@@ -9345,7 +9426,7 @@ function restoreDismissedMatches(wantedId) {
     delete dismissedMatches[key];
     saveDismissedMatches();
     renderWantedList();
-    if (currentVehicleId && currentVehicleTab === 'matches') renderGarageTab();
+    _refreshGarageIfOpen();
     if (currentMatchesWanted && String(currentMatchesWanted.id) === key) {
         const allMatches = getAllParts().filter(p => wantedMatchesPart(currentMatchesWanted, p));
         showWantedMatches(currentMatchesWanted, allMatches, 0);
@@ -9397,7 +9478,7 @@ function deleteWanted(id) {
           .then(({ error }) => { if (error) console.warn('wanted delete:', error.message); });
     }
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
-    if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
+    _refreshGarageIfOpen();
     renderProfile();
 }
 
@@ -9859,7 +9940,7 @@ function submitAddWanted() {
 function _doAddWanted(partName, make, model, year, maxPrice, category, series) {
     addWanted(partName, make, model, year, maxPrice, category, series);
 
-    if (currentVehicleId && currentVehicleTab === 'wanted') renderGarageTab();
+    _refreshGarageIfOpen();
     if (document.getElementById('wantedListDrawer')?.classList.contains('active')) renderWantedList();
     renderProfile();
 
@@ -9964,7 +10045,7 @@ function proceedAddWanted() {
 
 // --- VEHICLE DETAIL: open, segmented toggle, render each tab ---
 let currentVehicleId   = null;
-let currentVehicleTab  = 'all';   // 'all' | 'wanted' | 'saved' | 'matches'
+const GARAGE_ALL       = '__all__';   // sentinel: the "All Cars" overview selection
 
 // Does this part fit a given vehicle? Empty `fits` array means universal (always true).
 function partFitsVehicle(part, vehicle) {

@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=105">
+    <link rel="stylesheet" href="style.css?v=106">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -2585,11 +2585,6 @@
         <div class="garage-right-col">
             <div id="garageInlineDetail" style="display:none;">
                 <div id="garageVehicleHeader" class="garage-vehicle-header"></div>
-                <div class="segmented-control" id="garageSegControl" style="margin-bottom:12px;">
-                    <div class="seg active" data-gtab="wanted"  onclick="setGarageTab('wanted')">Wanted</div>
-                    <div class="seg"        data-gtab="saved"   onclick="setGarageTab('saved')">Saved</div>
-                    <div class="seg"        data-gtab="matches" onclick="setGarageTab('matches')">Matches</div>
-                </div>
                 <div id="garageInlineTabContent"></div>
             </div>
         </div>
@@ -2881,7 +2876,7 @@
             <button class="account-menu-item" onclick="onMenuOpenMyListings()">My Listings <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onMenuOpenSavedParts()">Saved Parts <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="onOpenRecentlyViewed(); closeAccountMenu()">Recently Viewed <span class="account-menu-chevron">›</span></button>
-            <button class="account-menu-item" onclick="openWantedListDrawer()">Wanted List <span class="account-menu-chevron">›</span></button>
+            <button class="account-menu-item" onclick="openGarageWanted()">Wanted List <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item" onclick="closeAccountMenu(); onOpenInbox()">Messages <span class="account-menu-chevron">›</span></button>
             <button class="account-menu-item amenu-mobile-only" onclick="dtbOpenWorkshops(); closeAccountMenu()">Workshops &amp; Services <span class="account-menu-chevron">›</span></button>
         </div>
@@ -3067,7 +3062,7 @@
 <script src="taxonomy.js?v=6"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=214"></script>
+<script src="script.js?v=215"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));

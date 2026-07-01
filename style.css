@@ -2287,6 +2287,131 @@ header {
 }
 .garage-vh-delete:hover { color: #ff3b30; }
 
+/* ── GARAGE HUB — car-centric, parts-first (shared desktop + mobile) ── */
+.garage-chip-all .garage-chip-name { color: var(--apc-orange); }
+.garage-chip-all.active .garage-chip-name { color: var(--apc-orange); }
+
+#garageInlineTabContent { padding: 0 2px 30px; }
+
+.gh-section { margin-bottom: 22px; }
+.gh-section.gh-group { margin-bottom: 26px; }
+.gh-section-hdr {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.gh-section-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.gh-group .gh-section-label {
+    text-transform: none;
+    font-size: 13px;
+    color: #333;
+    letter-spacing: 0;
+}
+.gh-section-count {
+    background: #eee;
+    color: #666;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+}
+.gh-section-add {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--apc-orange);
+    color: var(--apc-orange);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+}
+.gh-section-add:active { background: rgba(240,112,32,0.08); }
+
+.gh-need { margin-bottom: 12px; }
+.gh-need-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.gh-need-row.has-match { border-color: rgba(240,112,32,0.4); }
+.gh-need-info { flex: 1; min-width: 0; }
+.gh-need-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.gh-need-meta { font-size: 12px; color: #999; margin-top: 2px; }
+.gh-need-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.gh-need-count {
+    font-size: 11px;
+    font-weight: 800;
+    color: white;
+    background: var(--apc-orange);
+    padding: 3px 9px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+.gh-need-watching {
+    font-size: 11px;
+    font-weight: 700;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+.gh-need-del {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    font-family: inherit;
+}
+.gh-need-del:hover { color: #ff3b30; }
+
+.gh-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 4px;
+    padding-left: 6px;
+}
+.gh-strip > .item-card {
+    flex: 0 0 150px;
+    max-width: 150px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+.gh-empty {
+    font-size: 13px;
+    color: #999;
+    background: white;
+    border: 1px dashed #e2e2e2;
+    border-radius: 10px;
+    padding: 18px 16px;
+    line-height: 1.5;
+}
+
 .garage-empty {
     text-align: center;
     padding: 40px 20px;
@@ -4858,6 +4983,7 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
     }
     #garageSegControl { display: none !important; }
     #garageInlineTabContent { padding: 0 20px 40px; }
+    .gh-strip > .item-card { flex: 0 0 168px; max-width: 168px; }
     #garageInlineTabContent .results-grid {
         grid-template-columns: repeat(4, 1fr);
         padding: 0;
