@@ -2288,8 +2288,8 @@ header {
 .garage-vh-delete:hover { color: #ff3b30; }
 
 /* ── GARAGE HUB — car-centric, parts-first (shared desktop + mobile) ── */
-.garage-chip-all .garage-chip-name { color: var(--apc-orange); }
-.garage-chip-all.active .garage-chip-name { color: var(--apc-orange); }
+.garage-chip-universal .garage-chip-name { color: #999; }
+.garage-chip-universal.active .garage-chip-name { color: var(--apc-orange); }
 
 #garageInlineTabContent { padding: 0 2px 30px; }
 
