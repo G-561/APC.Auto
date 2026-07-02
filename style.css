@@ -5665,8 +5665,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
    across ultra-wide monitors — grey surface shows on the sides */
 @media (min-width: 900px) {
     #proEnquiriesView {
-        left: max(0px, calc(50vw - 800px)) !important;
-        right: max(0px, calc(50vw - 800px)) !important;
+        max-width: 1600px;
+        margin-left: auto;
+        margin-right: auto;
     }
 }
 .pro-mail-sidebar {
