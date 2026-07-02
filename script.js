@@ -283,9 +283,11 @@ function proMenuGo(dest) {
     const dv = document.getElementById('dashboardView');
     if (!dv || dv.style.display === 'none') openDashboard();
     if      (dest === 'dashboard') proGoToDashboard();
+    else if (dest === 'vstock')    proOpenVehicleStock();
     else if (dest === 'edw')       proOpenEDW();
     else if (dest === 'warehouse') openWarehouseDrawer();
     else if (dest === 'stock')     proOpenStockLookup();
+    else if (dest === 'wanted')    proOpenMembersWanted();
 }
 document.addEventListener('click', e => { if (!e.target.closest('#dtbProMenu')) closeProMenu(); });
 
@@ -13400,7 +13402,7 @@ function _edwHasActiveSession() {
 function proShowView(viewId, navId) {
     _pauseEdw();
     _pauseWarehouse();
-    ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
+    ['proEnquiriesView', 'proListingsView', 'proStockView', 'proVehicleStockView', 'proWantedView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -13416,7 +13418,7 @@ function proShowView(viewId, navId) {
 function proHideAllViews() {
     _pauseEdw();
     _pauseWarehouse();
-    ['proEnquiriesView', 'proListingsView', 'proStockView'].forEach(id => {
+    ['proEnquiriesView', 'proListingsView', 'proStockView', 'proVehicleStockView', 'proWantedView'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
@@ -13872,8 +13874,8 @@ function proSendPhoto(event, convId) {
 }
 
 function proOpenStockLookup() {
-    if (window.innerWidth < 900) { showToast('Stock Lookup is available on desktop only'); return; }
-    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Stock Lookup requires APC Pro'); return; }
+    if (window.innerWidth < 900) { showToast('Pro Part Search is available on desktop only'); return; }
+    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Pro Part Search requires APC Pro'); return; }
     proShowView('proStockView', 'proNavStock');
     // Resume an in-progress lookup rather than wiping it — stepping out to read a
     // message/thread and coming back must not lose the search. 'Clear' resets it.
@@ -13983,7 +13985,7 @@ async function renderDemandWidget() {
     if (isYard) {
         const rep = await getYardEnquiryReport(fromTs, now);
         if (!rep.total) {
-            card.innerHTML = shell(`<div class="dash-empty-state" style="padding:20px 0;">No enquiries yet — each Stock Lookup you run (e.g. when a customer phones) is logged here.</div>`);
+            card.innerHTML = shell(`<div class="dash-empty-state" style="padding:20px 0;">No enquiries yet — each Pro Part Search you run (e.g. when a customer phones) is logged here.</div>`);
             return;
         }
         const pct      = Math.round((rep.supplied / rep.total) * 100);
@@ -14117,7 +14119,7 @@ function _paintYardReport() {
 
     let listHTML;
     if (!rep.total) {
-        listHTML = `<div class="yr-empty">No enquiries in this period. Each Stock Lookup you run is logged here — e.g. when a customer phones asking for a part.</div>`;
+        listHTML = `<div class="yr-empty">No enquiries in this period. Each Pro Part Search you run is logged here — e.g. when a customer phones asking for a part.</div>`;
     } else if (_yrTab === 'miss') {
         listHTML = rep.misses.length
             ? `<p class="yr-hint">Parts customers asked for that you had no stock of — your sourcing shortlist.</p>` +
@@ -14247,8 +14249,9 @@ let _edwStep          = 0;
 let _edwJobId         = null; // dismantling_jobs.id for the current stock card
 let _edwCommitted     = false; // true once the job is sent/published — close without the "unsaved" prompt
 let _edwPendingLabels = []; // labels queued from the last publish — printed via the success-screen button
-let _edwStock         = [];   // loaded list of in_stock/stripping jobs
+let _edwStock         = [];   // loaded list of donor vehicles (all statuses, minus scrapped shells)
 let _edwStockFilter   = '';
+let _edwStockStatusFilter = 'all'; // all | in_stock | stripping | published
 let _edwSelectedZone  = 0;
 let _edwSelectedAsm   = -1;
 let _edwVehiclePhotos = []; // { angle, file, previewUrl, selected }
@@ -14317,6 +14320,7 @@ function openEdw() {
     _edwJobId         = null;
     _edwStock         = [];
     _edwStockFilter   = '';
+    _edwStockStatusFilter = 'all';
     _edwSelectedZone  = 0;
     _edwSelectedAsm   = -1;
     _edwVehiclePhotos = EDW_VEHICLE_ANGLES.map(angle => ({ angle, file: null, previewUrl: null, selected: true }));
@@ -14648,12 +14652,13 @@ async function _renderEdwStep0() {
     footer.innerHTML = '';
     body.innerHTML = `<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0;">Loading stock…</div>`;
     if (!sb || !currentUserId) { body.innerHTML = `<div style="text-align:center;color:#aaa;font-size:13px;padding:40px 0;">Sign in required</div>`; return; }
+    // Load the whole stock list (any status) so EDW can reach any vehicle, not just
+    // freshly-entered ones — scrapped shells excluded (nothing left to walk around).
     const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, stock_number, make, model, year, series, status, created_at, odometer, vin, vehicle_photos, colour, body_type')
+        .select('id, stock_number, make, model, year, series, status, created_at, odometer, vin, vehicle_photos, colour, body_type, shell_scrapped')
         .eq('user_id', currentUserId)
-        .in('status', ['in_stock', 'stripping'])
         .order('created_at', { ascending: false });
-    _edwStock = jobs || [];
+    _edwStock = (jobs || []).filter(j => !j.shell_scrapped);
     _edwRenderStock();
 }
 
@@ -14662,6 +14667,7 @@ function _edwRenderStock() {
     if (!body) return;
     // Only build the toolbar once — subsequent filter changes only update the list
     if (!document.getElementById('edwStockList')) {
+        const pill = (f, lbl) => `<button class="edw-stock-pill${_edwStockStatusFilter===f?' active':''}" onclick="_edwSetStockFilter('${f}',this)">${lbl}</button>`;
         body.innerHTML = `
             <div class="edw-stock-toolbar">
                 <input class="edw-input edw-stock-search" id="edwStockSearch" placeholder="Search stock no., make, model, VIN…"
@@ -14669,9 +14675,19 @@ function _edwRenderStock() {
                     oninput="_edwStockFilter=this.value;_edwUpdateStockList()">
                 <button class="edw-btn-primary edw-stock-add-btn" onclick="_edwNewVehicle()">+ Add Vehicle</button>
             </div>
+            <div class="edw-stock-pills" id="edwStockPills">
+                ${pill('all','All')}${pill('in_stock','In Stock')}${pill('stripping','Dismantling')}${pill('published','Listed')}
+            </div>
             <div id="edwStockList"></div>
         `;
     }
+    _edwUpdateStockList();
+}
+
+function _edwSetStockFilter(f, btn) {
+    _edwStockStatusFilter = f;
+    document.querySelectorAll('#edwStockPills .edw-stock-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
     _edwUpdateStockList();
 }
 
@@ -14679,13 +14695,18 @@ function _edwUpdateStockList() {
     const list = document.getElementById('edwStockList');
     if (!list) return;
     const q = _edwStockFilter.toLowerCase();
+    const sf = _edwStockStatusFilter;
+    let items = _edwStock;
+    if      (sf === 'in_stock')  items = items.filter(j => j.status === 'in_stock');
+    else if (sf === 'stripping') items = items.filter(j => j.status === 'stripping');
+    else if (sf === 'published') items = items.filter(j => ['ready','published','complete'].includes(j.status));
     const filtered = q
-        ? _edwStock.filter(j =>
+        ? items.filter(j =>
             (j.stock_number || '').toLowerCase().includes(q) ||
             (j.make || '').toLowerCase().includes(q) ||
             (j.model || '').toLowerCase().includes(q) ||
             (j.vin || '').toLowerCase().includes(q))
-        : _edwStock;
+        : items;
     list.innerHTML = filtered.length === 0 ? `
         <div class="edw-stock-empty">
             ${_edwStock.length === 0
@@ -14697,9 +14718,8 @@ function _edwUpdateStockList() {
 
 function _edwStockCardHtml(j) {
     const label = `${j.year} ${j.make} ${j.model}${j.series ? ' ' + j.series : ''}`;
-    const badge = j.status === 'stripping'
-        ? `<span class="edw-stock-badge edw-stock-badge-stripping">Dismantling</span>`
-        : `<span class="edw-stock-badge edw-stock-badge-stock">In Stock</span>`;
+    const st = _VSC_STATUS[j.status] || { label: j.status };
+    const badge = `<span class="edw-stock-badge ${j.status === 'stripping' ? 'edw-stock-badge-stripping' : 'edw-stock-badge-stock'}">${st.label}</span>`;
     const date = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
     const meta = [
         j.stock_number ? `#${escapeHtml(j.stock_number)}` : null,
@@ -16405,74 +16425,44 @@ async function notifyWantedBuyer(btn) {
     }
 }
 
+// Dashboard summary — glanceable counts + a short preview. Deep work (search,
+// filter, dismantle) lives on the Vehicle Stock page (proOpenVehicleStock).
 async function renderDashVehicleSearch() {
     const card = document.getElementById('dashVehicleSearchCard');
     if (!card || !sb || !currentUserId) return;
 
     const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, make, model, year, series, stock_number, status, shell_scrapped, colour')
+        .select('id, make, model, year, series, stock_number, status, shell_scrapped')
         .eq('user_id', currentUserId)
         .order('created_at', { ascending: false });
 
-    _dashSvJobs = jobs || [];
-    const onLot = _dashSvJobs.filter(j => !j.shell_scrapped).length;
+    const list        = jobs || [];
+    const onLot       = list.filter(j => !j.shell_scrapped).length;
+    const dismantling = list.filter(j => j.status === 'stripping').length;
 
-    card.innerHTML = `
-        <div class="dash-card-hdr">
-            <span class="dash-card-title">Vehicle Stock</span>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span class="dash-card-meta">${onLot} on lot · ${_dashSvJobs.length} total</span>
-                <button class="dash-vsearch-add" onclick="openVehicleIntake()">+ Add</button>
-            </div>
-        </div>
-        <input type="text" id="dashVsInput" class="dash-vsearch-input"
-            placeholder="Search make, model, stock no., VIN…"
-            oninput="_dashVsRender(this.value)" autocomplete="off">
-        <div id="dashVsResults" class="dash-vsearch-results"></div>`;
-
-    _dashVsRender('');
-}
-
-function _dashVsRender(q) {
-    const results = document.getElementById('dashVsResults');
-    if (!results) return;
-    const lq = (q || '').toLowerCase().trim();
-
-    const filtered = lq
-        ? _dashSvJobs.filter(j =>
-            (j.make   || '').toLowerCase().includes(lq) ||
-            (j.model  || '').toLowerCase().includes(lq) ||
-            (j.stock_number || '').toLowerCase().includes(lq) ||
-            (j.colour || '').toLowerCase().includes(lq) ||
-            String(j.year || '').includes(lq))
-        : _dashSvJobs.slice(0, 8);
-
-    if (!filtered.length) {
-        results.innerHTML = `<div class="dash-vsearch-empty">${lq ? `No vehicles matching "${escapeHtml(lq)}"` : 'No vehicles in stock yet'}</div>`;
-        return;
-    }
-
-    results.innerHTML = filtered.slice(0, 12).map(j => {
-        const title  = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
-        const sn     = j.stock_number ? `<span class="dash-vsearch-sn">#${escapeHtml(j.stock_number)}</span>` : '';
-        const st     = _VSC_STATUS[j.status] || { label: j.status, cls: '' };
-        const scrapped = j.shell_scrapped ? `<span class="dash-vsearch-scrapped">Scrapped</span>` : '';
+    const preview = list.slice(0, 4).map(j => {
+        const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+        const st    = _VSC_STATUS[j.status] || { label: j.status, cls: '' };
+        const sn    = j.stock_number ? ` <span class="dash-vsearch-sn">#${escapeHtml(j.stock_number)}</span>` : '';
         return `<div class="dash-vsearch-row" onclick="openVehicleStockCard(${j.id})">
-            <div class="dash-vsearch-info">
-                <span class="dash-vsearch-name">${escapeHtml(title)}</span>
-                ${sn}${scrapped}
-            </div>
+            <div class="dash-vsearch-info"><span class="dash-vsearch-name">${escapeHtml(title)}</span>${sn}</div>
             <span class="vsc-status-chip ${st.cls}" style="font-size:10px;flex-shrink:0;">${st.label}</span>
         </div>`;
     }).join('');
 
-    if (filtered.length > 12) {
-        results.innerHTML += `<div class="dash-vsearch-more">+ ${filtered.length - 12} more — refine your search</div>`;
-    }
+    card.innerHTML = `
+        <div class="dash-card-hdr">
+            <span class="dash-card-title">Vehicle Stock</span>
+            <button class="dash-vsearch-add" onclick="openVehicleIntake()">+ Add</button>
+        </div>
+        <div class="dash-vs-stats">
+            <div class="dash-vs-stat"><span class="dash-vs-stat-num">${onLot}</span><span class="dash-vs-stat-lbl">On lot</span></div>
+            <div class="dash-vs-stat"><span class="dash-vs-stat-num">${dismantling}</span><span class="dash-vs-stat-lbl">Dismantling</span></div>
+            <div class="dash-vs-stat"><span class="dash-vs-stat-num">${list.length}</span><span class="dash-vs-stat-lbl">Total</span></div>
+        </div>
+        <div class="dash-vsearch-results">${preview || '<div class="dash-vsearch-empty">No vehicles in stock yet</div>'}</div>
+        <button class="dash-viewall-btn" onclick="proOpenVehicleStock()">View all vehicles →</button>`;
 }
-
-let _dashSvJobs   = [];
-let _dashSvFilter2 = 'lot'; // 'all' | 'lot' | 'scrapped'
 
 const _VSC_STATUS = {
     in_stock:  { label: 'In Stock',       cls: 'vsc-s-stock' },
@@ -16482,128 +16472,83 @@ const _VSC_STATUS = {
     complete:  { label: 'Complete',       cls: 'vsc-s-done'  },
 };
 
-async function renderDashStockVehicles() {
-    const card = document.getElementById('dashStockVehiclesCard');
-    if (!card || !sb || !currentUserId) return;
-
-    const { data: jobs } = await sb.from('dismantling_jobs')
-        .select('id, make, model, year, series, stock_number, status, created_at, colour, odometer, vehicle_cost, shell_scrapped, shell_scrapped_at')
-        .eq('user_id', currentUserId)
-        .order('created_at', { ascending: false });
-
-    _dashSvJobs = jobs || [];
-    if (!_dashSvJobs.length) { card.style.display = 'none'; return; }
-    card.style.display = '';
-
-    card.innerHTML = `
-        <div class="dash-card-hdr">
-            <span class="dash-card-title">Vehicle Inventory</span>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <span class="dash-card-meta" id="dashSvCount"></span>
-                <button class="pro-lst-new-btn" style="font-size:11px;padding:6px 12px;" onclick="openVehicleIntake()">+ Add Vehicle</button>
-            </div>
-        </div>
-        <div class="dash-sv-filter-row">
-            <button class="dash-sv-pill${_dashSvFilter2==='all'?' active':''}" onclick="_dashSvSetFilter('all')">All</button>
-            <button class="dash-sv-pill${_dashSvFilter2==='lot'?' active':''}" onclick="_dashSvSetFilter('lot')">On Lot</button>
-            <button class="dash-sv-pill${_dashSvFilter2==='scrapped'?' active':''}" onclick="_dashSvSetFilter('scrapped')">Shell Scrapped</button>
-        </div>
-        <input type="text" id="dashSvSearch" class="dash-wr-search"
-            placeholder="Search make, model, stock number…"
-            oninput="_dashSvRender()">
-        <div class="dash-sv-list" id="dashSvList"></div>`;
-
-    _dashSvRender();
-}
-
-function _dashSvSetFilter(f) {
-    _dashSvFilter2 = f;
-    document.querySelectorAll('.dash-sv-pill').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.dash-sv-pill').forEach(b => {
-        if (b.textContent.toLowerCase().replace(/\s+/g,'') === {all:'all',lot:'onlot',scrapped:'shellscrapped'}[f]) b.classList.add('active');
-    });
-    _dashSvRender();
-}
-
-function _dashSvRender() {
-    const list    = document.getElementById('dashSvList');
-    const countEl = document.getElementById('dashSvCount');
-    const q       = (document.getElementById('dashSvSearch')?.value || '').toLowerCase();
-    if (!list) return;
-
-    let filtered = _dashSvJobs;
-    if (_dashSvFilter2 === 'lot')      filtered = filtered.filter(j => !j.shell_scrapped);
-    if (_dashSvFilter2 === 'scrapped') filtered = filtered.filter(j =>  j.shell_scrapped);
-    if (q) filtered = filtered.filter(j =>
-        (j.make || '').toLowerCase().includes(q) ||
-        (j.model || '').toLowerCase().includes(q) ||
-        (j.stock_number || '').toLowerCase().includes(q) ||
-        String(j.year || '').includes(q));
-
-    if (countEl) countEl.textContent = `${filtered.length} vehicle${filtered.length !== 1 ? 's' : ''}`;
-
-    list.innerHTML = filtered.map(j => {
-        const title   = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
-        const meta    = [j.stock_number ? `#${j.stock_number}` : null, j.colour || null].filter(Boolean).join(' · ');
-        const date    = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' });
-        const st      = _VSC_STATUS[j.status] || { label: j.status, cls: '' };
-        const scrappedChip = j.shell_scrapped ? `<span class="dash-sv-scrapped-chip">Shell Scrapped</span>` : '';
-        return `
-        <div class="dash-sv-row" onclick="openVehicleStockCard(${j.id})" style="cursor:pointer;">
-            <div class="dash-sv-info">
-                <div class="dash-sv-title">${escapeHtml(title)} ${scrappedChip}</div>
-                <div class="dash-sv-meta">${meta ? escapeHtml(meta) + ' · ' : ''}${date}</div>
-            </div>
-            <span class="vsc-status-chip ${st.cls}" style="font-size:10px;flex-shrink:0;">${st.label}</span>
-            <span class="dash-sv-arrow">›</span>
-        </div>`;
-    }).join('') || `<div style="padding:16px 0;color:#aaa;font-size:13px;text-align:center;">No vehicles match this filter.</div>`;
-}
-
+// Dashboard summary — count + a short preview. The full searchable demand board
+// lives on the Members Wanted page (proOpenMembersWanted).
 async function renderDashWantedRequests() {
     const card = document.getElementById('dashWantedRequestsCard');
     if (!card) return;
-
     if (!publicWantedDatabase.length) await loadPublicWantedFromSupabase();
 
     const total = publicWantedDatabase.length;
+    const preview = publicWantedDatabase.slice(0, 5).map(w => {
+        const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
+        const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" alt="">` : '';
+        return `<div class="dash-wr-row">
+            ${thumb}
+            <div class="dash-wr-info">
+                <div class="dash-wr-part">${escapeHtml(w.partName)}</div>
+                <div class="dash-wr-meta">${escapeHtml(vehicle)}${w.loc ? ' · ' + escapeHtml(w.loc) : ''}</div>
+            </div>
+        </div>`;
+    }).join('');
+
     card.innerHTML = `
         <div class="dash-card-hdr">
             <span class="dash-card-title">Members Wanted</span>
-            <span class="dash-card-meta" id="dashWrCount">${total} request${total !== 1 ? 's' : ''}</span>
+            <span class="dash-card-meta">${total} request${total !== 1 ? 's' : ''}</span>
         </div>
-        <input type="text" id="dashWrSearch" class="dash-wr-search"
-            placeholder="Search make, model, part…"
-            oninput="_dashWrFilter(this.value)">
-        <div class="dash-wr-list" id="dashWrList"></div>`;
-
-    _dashWrFilter('');
+        <div class="dash-wr-list">${preview || '<div class="dash-wr-empty">No wanted requests yet.</div>'}</div>
+        <button class="dash-viewall-btn" onclick="proOpenMembersWanted()">Browse all requests →</button>`;
 }
 
-function _dashWrFilter(q) {
-    const list    = document.getElementById('dashWrList');
-    const countEl = document.getElementById('dashWrCount');
-    if (!list) return;
-    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+// ─── Members Wanted page ──────────────────────────────────────────────────────
+// Outward-facing demand board — every buyer's wanted request, searchable, with a
+// one-tap "List This Part" to turn demand into a listing.
+function proOpenMembersWanted() {
+    if (window.innerWidth < 900) { showToast('Members Wanted is available on desktop only'); return; }
+    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Members Wanted requires APC Pro'); return; }
+    const dv = document.getElementById('dashboardView');
+    if (!dv || dv.style.display === 'none') openDashboard();
+    proShowView('proWantedView', 'proNavDash');
+    setDtbActive('dtbDashboard');
+    proRenderMembersWanted();
+}
+
+async function proRenderMembersWanted() {
+    const body = document.getElementById('proWtBody');
+    if (!body) return;
+    body.innerHTML = `<div class="dash-empty-state" style="padding:40px 0; text-align:center; color:#aaa;">Loading requests…</div>`;
+    if (!publicWantedDatabase.length) await loadPublicWantedFromSupabase();
+    _proWtRender();
+}
+
+function _proWtRender() {
+    const body    = document.getElementById('proWtBody');
+    const countEl = document.getElementById('proWtCount');
+    if (!body) return;
+    const q = (document.getElementById('proWtSearch')?.value || '').toLowerCase().trim();
+    const tokens = q.split(/\s+/).filter(Boolean);
     const filtered = tokens.length
         ? publicWantedDatabase.filter(w => {
-            const haystack = [w.partName, w.make, w.model, w.year, w.loc, w.category].filter(Boolean).join(' ').toLowerCase();
-            return tokens.every(t => haystack.includes(t));
+            const hay = [w.partName, w.make, w.model, w.year, w.loc, w.category].filter(Boolean).join(' ').toLowerCase();
+            return tokens.every(t => hay.includes(t));
           })
         : publicWantedDatabase;
 
     if (countEl) countEl.textContent = `${filtered.length} request${filtered.length !== 1 ? 's' : ''}`;
 
     if (!filtered.length) {
-        list.innerHTML = `<div class="dash-wr-empty">${q ? 'No results for "' + escapeHtml(q) + '"' : 'No wanted requests yet.'}</div>`;
+        body.innerHTML = `<div class="dash-empty-state" style="padding:40px 0; text-align:center; color:#aaa;">${q ? 'No results for "' + escapeHtml(q) + '"' : 'No wanted requests yet.'}</div>`;
         return;
     }
+    body.innerHTML = `<div class="dash-wr-list">${filtered.map(_proWtRowHtml).join('')}</div>`;
+}
 
-    list.innerHTML = filtered.slice(0, 30).map(w => {
-        const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
-        const budget  = w.maxPrice ? `<span class="dash-wr-budget">Max $${w.maxPrice}</span>` : '';
-        const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" alt="">` : '';
-        return `
+function _proWtRowHtml(w) {
+    const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
+    const budget  = w.maxPrice ? `<span class="dash-wr-budget">Max $${escapeHtml(String(w.maxPrice))}</span>` : '';
+    const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" alt="">` : '';
+    return `
         <div class="dash-wr-row">
             ${thumb}
             <div class="dash-wr-info">
@@ -16616,7 +16561,124 @@ function _dashWrFilter(q) {
                 data-model="${escapeHtml(w.model)}" data-year="${escapeHtml(w.year)}"
                 onclick="listFromWanted(this.dataset.id,this.dataset.part,this.dataset.cat,this.dataset.make,this.dataset.model,this.dataset.year)">List This Part ›</button>
         </div>`;
-    }).join('');
+}
+
+// ─── Vehicle Stock page ───────────────────────────────────────────────────────
+// The master donor-vehicle inventory. One canonical list, reachable from the Pro
+// dropdown, the dashboard summary and (via the same query) EDW's stock step.
+let _proVsJobs   = [];
+let _proVsFilter = 'all'; // all | in_stock | stripping | published | scrapped
+
+function proOpenVehicleStock() {
+    if (window.innerWidth < 900) { showToast('Vehicle Stock is available on desktop only'); return; }
+    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Vehicle Stock requires APC Pro'); return; }
+    const dv = document.getElementById('dashboardView');
+    if (!dv || dv.style.display === 'none') openDashboard();
+    proShowView('proVehicleStockView', 'proNavDash');
+    setDtbActive('dtbDashboard');
+    proRenderVehicleStock();
+}
+
+async function proRenderVehicleStock() {
+    const body = document.getElementById('proVsBody');
+    if (!body || !sb || !currentUserId) return;
+    body.innerHTML = `<div class="dash-empty-state" style="padding:40px 0; text-align:center; color:#aaa;">Loading stock…</div>`;
+    const { data: jobs } = await sb.from('dismantling_jobs')
+        .select('id, make, model, year, series, stock_number, vin, status, created_at, colour, odometer, vehicle_cost, shell_scrapped')
+        .eq('user_id', currentUserId)
+        .order('created_at', { ascending: false });
+    _proVsJobs = jobs || [];
+    _proVsRender();
+}
+
+// Re-pull the Vehicle Stock page after a stock-card edit, but only if it's on screen.
+function _refreshVsIfOpen() {
+    const view = document.getElementById('proVehicleStockView');
+    if (view && view.style.display !== 'none') proRenderVehicleStock();
+}
+
+function _proVsSetFilter(f, btn) {
+    _proVsFilter = f;
+    document.querySelectorAll('#proVsFilterRow .dash-sv-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    _proVsRender();
+}
+
+function _proVsRender() {
+    const body    = document.getElementById('proVsBody');
+    const countEl = document.getElementById('proVsCount');
+    if (!body) return;
+    const q = (document.getElementById('proVsSearch')?.value || '').toLowerCase().trim();
+
+    let filtered = _proVsJobs;
+    if      (_proVsFilter === 'scrapped')  filtered = filtered.filter(j => j.shell_scrapped);
+    else if (_proVsFilter === 'in_stock')  filtered = filtered.filter(j => j.status === 'in_stock' && !j.shell_scrapped);
+    else if (_proVsFilter === 'stripping') filtered = filtered.filter(j => j.status === 'stripping');
+    else if (_proVsFilter === 'published') filtered = filtered.filter(j => ['ready','published','complete'].includes(j.status));
+    if (q) filtered = filtered.filter(j =>
+        (j.make || '').toLowerCase().includes(q) ||
+        (j.model || '').toLowerCase().includes(q) ||
+        (j.stock_number || '').toLowerCase().includes(q) ||
+        (j.vin || '').toLowerCase().includes(q) ||
+        (j.colour || '').toLowerCase().includes(q) ||
+        String(j.year || '').includes(q));
+
+    if (countEl) countEl.textContent = `${filtered.length} vehicle${filtered.length !== 1 ? 's' : ''}`;
+
+    if (!_proVsJobs.length) {
+        body.innerHTML = `<div class="pro-vs-empty">
+            <div class="pro-vs-empty-title">No vehicles in stock yet</div>
+            <div class="pro-vs-empty-sub">Add a donor vehicle to start tracking parts and dismantling.</div>
+            <button class="pro-lst-new-btn" onclick="openVehicleIntake()">+ Add Vehicle</button>
+        </div>`;
+        return;
+    }
+    if (!filtered.length) {
+        body.innerHTML = `<div class="dash-empty-state" style="padding:40px 0; text-align:center; color:#aaa;">No vehicles match this filter.</div>`;
+        return;
+    }
+    body.innerHTML = `<div class="dash-sv-list">${filtered.map(_proVsRowHtml).join('')}</div>`;
+}
+
+function _proVsRowHtml(j) {
+    const title = `${j.year || ''} ${j.make || ''} ${j.model || ''}${j.series ? ' ' + j.series : ''}`.trim();
+    const meta  = [
+        j.stock_number ? `#${j.stock_number}` : null,
+        j.colour || null,
+        j.odometer ? `${Number(j.odometer).toLocaleString()} km` : null,
+    ].filter(Boolean).join(' · ');
+    const date  = new Date(j.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' });
+    const st    = _VSC_STATUS[j.status] || { label: j.status, cls: '' };
+    const scrapped = j.shell_scrapped ? `<span class="dash-sv-scrapped-chip">Shell Scrapped</span>` : '';
+    const canStrip = !j.shell_scrapped;
+    const dismantle = canStrip
+        ? `<button class="pro-vs-strip-btn" onclick="event.stopPropagation(); proDismantleVehicle(${j.id})">${j.status === 'stripping' ? 'Resume' : 'Dismantle'} ›</button>`
+        : '';
+    return `
+        <div class="dash-sv-row" onclick="openVehicleStockCard(${j.id})" style="cursor:pointer;">
+            <div class="dash-sv-info">
+                <div class="dash-sv-title">${escapeHtml(title)} ${scrapped}</div>
+                <div class="dash-sv-meta">${meta ? escapeHtml(meta) + ' · ' : ''}${date}</div>
+            </div>
+            <span class="vsc-status-chip ${st.cls}" style="font-size:10px; flex-shrink:0;">${st.label}</span>
+            ${dismantle}
+            <span class="dash-sv-arrow">›</span>
+        </div>`;
+}
+
+// Launch the EDW walk-around for a specific vehicle already in stock — the bridge
+// between the Vehicle Stock page and the dismantling flow. Resumes if it's the same
+// vehicle already mid-session; guards against clobbering a different live session.
+function proDismantleVehicle(jobId) {
+    if (currentUserTier !== 'pro') { showToast('EDW is a Pro feature'); return; }
+    if (window.innerWidth < 768) { showToast('Dismantling requires a tablet or larger screen'); return; }
+    if (_edwHasActiveSession()) {
+        if (_edwJobId === jobId) { proOpenEDW(); return; }  // resume the same vehicle, keep progress
+        if (!confirm('Another dismantle session is in progress. Start on this vehicle instead? Unsaved work in the other will be lost.')) return;
+        _edwCommitted = true;
+        closeEdw();
+    }
+    _edwLoadAndOpen(jobId); // same proven path as the stock card's "Start Dismantling"
 }
 
 // ─── Vehicle Stock Card ───────────────────────────────────────────────────────
@@ -16931,7 +16993,7 @@ async function saveVehicleIntake() {
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save to Stock →'; }
     showToast('Vehicle added to stock');
     closeVehicleIntake();
-    renderDashStockVehicles();
+    _refreshVsIfOpen();
     openVehicleStockCard(job.id);
 }
 
@@ -16960,7 +17022,7 @@ async function _vscToggleShellScrapped(jobId, scrapped) {
     await sb.from('dismantling_jobs').update(update).eq('id', jobId);
     showToast(scrapped ? 'Shell marked as scrapped' : 'Shell marked as still present');
     openVehicleStockCard(jobId);
-    renderDashStockVehicles();
+    _refreshVsIfOpen();
 }
 
 async function _edwLoadAndOpen(jobId) {

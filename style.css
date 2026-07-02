@@ -7686,6 +7686,9 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .edw-stock-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
 .edw-stock-search { flex: 1; }
 .edw-stock-add-btn { flex-shrink: 0; white-space: nowrap; }
+.edw-stock-pills { display: flex; gap: 8px; margin-bottom: 14px; }
+.edw-stock-pill { padding: 5px 14px; border: 1px solid #e0e0e0; border-radius: 20px; background: #fff; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; }
+.edw-stock-pill.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
 .edw-stock-empty { text-align: center; padding: 48px 20px; color: #aaa; font-size: 13px; line-height: 1.6; }
 .edw-stock-list { display: flex; flex-direction: column; gap: 8px; }
 .edw-stock-card { display: flex; align-items: center; background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 14px 16px; cursor: pointer; gap: 12px; transition: border-color 0.15s; }
@@ -8588,6 +8591,15 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-vsearch-empty { padding: 20px 4px; color: #aaa; font-size: 13px; }
 .dash-vsearch-more { padding: 8px 4px; color: #aaa; font-size: 11px; font-style: italic; }
 
+/* Dashboard summary cards — stat row + "View all" link (Vehicle Stock, Members Wanted) */
+.dash-vs-stats { display: flex; gap: 8px; margin: 4px 0 12px; }
+.dash-vs-stat { flex: 1; background: #f7f7fb; border-radius: 8px; padding: 10px 8px; text-align: center; }
+.dash-vs-stat-num { display: block; font-size: 20px; font-weight: 800; color: #333; line-height: 1; }
+.dash-vs-stat-lbl { display: block; font-size: 11px; color: #888; margin-top: 4px; }
+.dash-viewall-btn { width: 100%; margin-top: 12px; padding: 9px; background: #fff; color: #1d4ed8; border: 1px solid #dbeafe; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+.dash-viewall-btn:hover { background: #eff6ff; }
+.pro-wt-sub { margin-left: 14px; color: #888; font-size: 12px; font-weight: 500; }
+
 /* Vehicles in Stock card */
 .dash-sv-list { padding: 4px 0; }
 .dash-sv-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f0f0f0; }
@@ -8602,6 +8614,14 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .dash-sv-pill { padding: 5px 13px; border: 1px solid #e0e0e0; border-radius: 20px; background: white; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; }
 .dash-sv-pill.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
 .dash-sv-scrapped-chip { display: inline-block; padding: 2px 8px; background: #fee2e2; color: #dc2626; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; margin-left: 6px; vertical-align: middle; }
+
+/* Vehicle Stock page — per-row dismantle action + empty state */
+.pro-vs-strip-btn { padding: 6px 14px; background: #fff; color: #f07020; border: 1px solid #f07020; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.pro-vs-strip-btn:hover { background: #f07020; color: #fff; }
+.pro-vs-empty { text-align: center; padding: 60px 20px; }
+.pro-vs-empty-title { font-size: 16px; font-weight: 800; color: #333; margin-bottom: 6px; }
+.pro-vs-empty-sub { font-size: 13px; color: #888; margin-bottom: 18px; }
+.pro-vs-empty .pro-lst-new-btn { display: inline-block; }
 
 /* Vehicle stock card — lifecycle status chips */
 .vsc-s-stock  { background: #fef9c3; color: #92400e; }

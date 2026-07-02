@@ -29,7 +29,7 @@
         gtag('js', new Date());
         gtag('config', 'G-WZ0E96WJRX');
     </script>
-    <link rel="stylesheet" href="style.css?v=122">
+    <link rel="stylesheet" href="style.css?v=123">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#F7941D">
     <!-- iOS home screen support -->
@@ -58,9 +58,11 @@
             <div id="dtbProDropdown" class="dtb-pro-dropdown">
                 <button class="dtb-pro-item" onclick="proMenuGo('dashboard')">Dashboard</button>
                 <div class="dtb-pro-divider"></div>
+                <button class="dtb-pro-item" onclick="proMenuGo('vstock')">Vehicle Stock</button>
                 <button class="dtb-pro-item" onclick="proMenuGo('edw')">Dismantle a Vehicle</button>
                 <button class="dtb-pro-item" onclick="proMenuGo('warehouse')">Warehouse</button>
-                <button class="dtb-pro-item" onclick="proMenuGo('stock')">Stock Lookup</button>
+                <button class="dtb-pro-item" onclick="proMenuGo('stock')">Pro Part Search</button>
+                <button class="dtb-pro-item" onclick="proMenuGo('wanted')">Members Wanted</button>
                 <div class="dtb-pro-divider"></div>
                 <button class="dtb-pro-item" onclick="proMenuGo('refresh')">&#8635; Refresh Data</button>
             </div>
@@ -136,7 +138,7 @@
             </span>
             <span class="pro-hdr-link" id="proNavStock" onclick="proOpenStockLookup()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                Stock Lookup
+                Pro Part Search
             </span>
             <span class="pro-hdr-link pro-hdr-refresh" id="proNavRefresh" onclick="proRefresh()" title="Refresh data — stays on this page">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -293,7 +295,7 @@
     <div id="proStockView" style="display:none; position:absolute; inset:0; z-index:5; flex-direction:column; overflow:hidden;">
         <div class="sl-shell">
             <div class="sl-header">
-                <div class="sl-header-title">Stock Lookup</div>
+                <div class="sl-header-title">Pro Part Search</div>
                 <button onclick="_slPreviewChat()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;" title="Preview chat UI">Preview Chat</button>
             </div>
             <div class="sl-vehicle-bar" id="slVehicleBar"></div>
@@ -356,6 +358,43 @@
             </div>
         </div>
     </div><!-- /proStockView -->
+
+    <!-- Vehicle Stock View: the master donor-vehicle inventory -->
+    <div id="proVehicleStockView" style="display:none; position:absolute; inset:0; z-index:5; background:#f2f2f7; flex-direction:column; overflow:hidden;">
+        <div class="pro-lst-toolbar">
+            <div class="pro-lst-toolbar-left">
+                <span class="pro-lst-title">Vehicle Stock</span>
+                <div class="dash-sv-filter-row" id="proVsFilterRow" style="margin-left:24px; display:flex; gap:8px;">
+                    <button class="dash-sv-pill active" onclick="_proVsSetFilter('all',this)">All</button>
+                    <button class="dash-sv-pill" onclick="_proVsSetFilter('in_stock',this)">In Stock</button>
+                    <button class="dash-sv-pill" onclick="_proVsSetFilter('stripping',this)">Dismantling</button>
+                    <button class="dash-sv-pill" onclick="_proVsSetFilter('published',this)">Listed</button>
+                    <button class="dash-sv-pill" onclick="_proVsSetFilter('scrapped',this)">Scrapped</button>
+                </div>
+            </div>
+            <div class="pro-lst-toolbar-right">
+                <input type="text" id="proVsSearch" class="dash-search-input" autocomplete="off" placeholder="Search make, model, stock no., VIN…" oninput="_proVsRender()">
+                <span id="proVsCount" class="pro-lst-count"></span>
+                <button class="pro-lst-new-btn" onclick="openVehicleIntake()">+ Add Vehicle</button>
+            </div>
+        </div>
+        <div class="pro-lst-body" id="proVsBody"></div>
+    </div><!-- /proVehicleStockView -->
+
+    <!-- Members Wanted View: the marketplace demand board -->
+    <div id="proWantedView" style="display:none; position:absolute; inset:0; z-index:5; background:#f2f2f7; flex-direction:column; overflow:hidden;">
+        <div class="pro-lst-toolbar">
+            <div class="pro-lst-toolbar-left">
+                <span class="pro-lst-title">Members Wanted</span>
+                <span class="pro-wt-sub">What buyers are chasing right now</span>
+            </div>
+            <div class="pro-lst-toolbar-right">
+                <input type="text" id="proWtSearch" class="dash-search-input" autocomplete="off" placeholder="Search make, model, part…" oninput="_proWtRender()">
+                <span id="proWtCount" class="pro-lst-count"></span>
+            </div>
+        </div>
+        <div class="pro-lst-body" id="proWtBody"></div>
+    </div><!-- /proWantedView -->
 
     <div class="dash-inner" id="dashInner" style="height:100%; overflow-y:auto;">
 
@@ -3092,7 +3131,7 @@
 <script src="taxonomy.js?v=6"></script>
 <script src="postcodes.js?v=1"></script>
 <script src="postcode_coords.js?v=1"></script>
-<script src="script.js?v=232"></script>
+<script src="script.js?v=233"></script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
