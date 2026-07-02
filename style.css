@@ -8684,6 +8684,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 /* Members Wanted uses the full 1600px frame as a 2-column board of white cards —
    Pro users mostly search/filter rather than scroll, so density beats a tall column. */
 @media (min-width: 900px) {
+    /* Match the toolbar's full-width bar so the cards line up with the title bar edges */
+    #proWtBody { padding-left: 0; padding-right: 0; }
     #proWtBody .dash-wr-list {
         display: grid;
         grid-template-columns: 1fr 1fr;
