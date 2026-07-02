@@ -306,8 +306,8 @@ function navOpenMyListings() {
     }
 }
 function navOpenMessages() {
-    if (window.innerWidth >= 900 && userIsSignedIn && currentUserTier === 'pro') {
-        _navToDashboard(proOpenEnquiries);
+    if (window.innerWidth >= 900 && userIsSignedIn) {
+        openMessagesCentre();
     } else {
         onOpenInbox();
     }
@@ -13272,10 +13272,9 @@ function _proSurfaceOpen() {
 // Open a Pro surface beneath the persistent light top bar. No dark pro-mode
 // header, no chrome swap — just hide the marketplace search header and drop the
 // full-width work surface below the top bar (which stays put on every screen).
-function openDashboard() {
-    if (window.innerWidth < 900) return;
-    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Pro Dashboard requires APC Pro membership'); return; }
-    setDtbActive('dtbDashboard');
+// Show the full-screen surface under the persistent header — shared by the Pro
+// dashboard and the messages centre. Keeps the marketplace header (logo+search).
+function _showProSurface() {
     const fd      = document.getElementById('filterDrawer');
     const rp      = document.querySelector('.desktop-right-panel');
     const topBar  = document.getElementById('desktopTopBar');
@@ -13283,8 +13282,6 @@ function openDashboard() {
     const dv      = document.getElementById('dashboardView');
     if (fd)  fd.style.setProperty('display', 'none', 'important');
     if (rp)  rp.style.display = 'none';
-    // Keep the full marketplace header (logo + search) in place — Pro tools open
-    // below the orange line for a uniform look; clicking search returns to the grid.
     document.querySelectorAll('.drawer.active').forEach(d => d.classList.remove('active'));
     const totalH = (topBar ? topBar.offsetHeight : 0) + (hdr ? hdr.offsetHeight : 0);
     document.documentElement.style.setProperty('--hdr-total-h', totalH + 'px');
@@ -13295,9 +13292,23 @@ function openDashboard() {
     syncBackdrop();
     closeAccountMenu();
     closeAccountDropdown();
+}
+
+function openDashboard() {
+    if (window.innerWidth < 900) return;
+    if (!userIsSignedIn || currentUserTier !== 'pro') { showToast('Pro Dashboard requires APC Pro membership'); return; }
+    setDtbActive('dtbDashboard');
+    _showProSurface();
     renderDashboard();
     clearInterval(_dashJobsPollInterval);
     _dashJobsPollInterval = setInterval(renderDashJobs, 30000);
+}
+
+// Gmail-style enquiries centre — available to every signed-in desktop user
+function openMessagesCentre() {
+    if (window.innerWidth < 900) { onOpenInbox(); return; }
+    _showProSurface();
+    proOpenEnquiries();
 }
 
 function closeDashboard() {
@@ -13627,7 +13638,7 @@ function proOpenConv(id) {
                     <button class="pro-mail-photo-btn" onclick="document.getElementById('proPhotoInput${id}').click()" title="Attach photo">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                     </button>
-                    ${isSelling ? `<button class="pro-mail-quote-btn" onclick="proOpenQuoteFromConv(${id})">Quote</button>` : ''}
+                    ${isSelling && currentUserTier === 'pro' ? `<button class="pro-mail-quote-btn" onclick="proOpenQuoteFromConv(${id})">Quote</button>` : ''}
                     <textarea class="pro-mail-reply-input" id="proReplyInput" placeholder="Reply…" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();proSendReply(${id});}"></textarea>
                     <button class="pro-mail-reply-send" onclick="proSendReply(${id})">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
