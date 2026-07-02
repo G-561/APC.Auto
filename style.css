@@ -8681,14 +8681,21 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
    body own the scroll so the list uses full page height. */
 #proWtBody .dash-wr-list { max-height: none; overflow: visible; }
 
-/* Members Wanted uses the full 1600px frame as a 2-column board — Pro users
-   mostly search/filter rather than scroll, so density beats a tall column. */
+/* Members Wanted uses the full 1600px frame as a 2-column board of white cards —
+   Pro users mostly search/filter rather than scroll, so density beats a tall column. */
 @media (min-width: 900px) {
     #proWtBody .dash-wr-list {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        column-gap: 48px;
+        gap: 12px 20px;
         align-content: start;
+    }
+    #proWtBody .dash-wr-row {
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 }
 
