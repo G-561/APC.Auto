@@ -5661,6 +5661,14 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 }
 
 /* ── Pro Enquiries — Gmail-style 3-panel layout ──────────────────── */
+/* Constrain the enquiries centre to the index width so the chat isn't stretched
+   across ultra-wide monitors — grey surface shows on the sides */
+@media (min-width: 900px) {
+    #proEnquiriesView {
+        left: max(0px, calc(50vw - 800px)) !important;
+        right: max(0px, calc(50vw - 800px)) !important;
+    }
+}
 .pro-mail-sidebar {
     width: 220px; flex-shrink: 0;
     background: #f6f8fc; border-right: 1px solid #e2e8f0;
