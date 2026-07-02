@@ -8762,7 +8762,7 @@ function submitAddVehicle() {
         }
     }
     saveVehicles();
-    renderGarage();
+    renderGarage(currentVehicleId);   // stay on the vehicle just edited, don't jump to the first
     // Close only the add drawer — don't use toggleDrawer() here as it would nuke the garage underneath
     const addVehEl = document.getElementById('addVehicleDrawer');
     if (addVehEl) addVehEl.classList.remove('active');
