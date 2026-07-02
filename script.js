@@ -1984,6 +1984,15 @@ async function loadPublicListingsFromSupabase(append = false) {
                 openItemDetail(iid);
             }
         }
+
+        // A short first page can't fill a tall desktop viewport, so the scroll
+        // sentinel never enters view and infinite scroll never fires. Keep paging
+        // until the grid is tall enough to scroll (or we've loaded everything).
+        const _noFilter = !activeFilters.search.trim() && countActiveFilters() === 0;
+        if (_noFilter && !_listingsExhausted &&
+            document.documentElement.scrollHeight <= window.innerHeight + 400) {
+            requestAnimationFrame(() => loadPublicListingsFromSupabase(true));
+        }
     } catch (e) {
         console.warn('Load public listings:', e);
         renderMainGrid();
