@@ -8530,8 +8530,8 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .vsc-status-tap:active { opacity: 0.75; }
 
 /* VSC Add Part */
-.vsc-add-part-btn { flex-shrink: 0; padding: 7px 13px; border: none; border-radius: 8px; background: #f07020; color: #fff; font-weight: 800; font-size: 12px; letter-spacing: 0.2px; cursor: pointer; font-family: inherit; }
-.vsc-add-part-btn:hover { background: #d95f10; }
+.vsc-add-part-btn { flex-shrink: 0; background: none; border: 1.5px solid var(--apc-orange); color: var(--apc-orange); border-radius: 999px; padding: 6px 16px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+.vsc-add-part-btn:hover { background: var(--apc-orange); color: #fff; }
 .vsc-add-part-btn:active { transform: translateY(1px); }
 
 /* Taxonomy part-name autocomplete (listing title + wanted request) */
