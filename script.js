@@ -6444,7 +6444,14 @@ async function submitSellListing() {
         if (isNewListing && syncTarget) {
             let showShare = true;
             if (currentUserTier === 'pro' && syncTarget.supabaseId) {
-                const matches = findWantedMatches(syncTarget);
+                let matches = findWantedMatches(syncTarget);
+                // Always include the request the seller explicitly responded to — the
+                // fuzzy match can miss it (e.g. category changed on the way to listing),
+                // but the buyer who asked should always be offered a notification.
+                if (_fromWantedId) {
+                    const direct = publicWantedDatabase.find(w => w.id === _fromWantedId);
+                    if (direct && !matches.some(m => m.id === direct.id)) matches = [direct, ...matches];
+                }
                 if (matches.length) { setTimeout(() => showNotifyBuyersModal(matches, syncTarget), 350); showShare = false; }
             }
             if (showShare) setTimeout(() => _showListingSharePrompt(syncTarget), 400);
