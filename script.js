@@ -42,6 +42,7 @@ let _fromWantedId    = null;         // UUID of wanted request that triggered "L
 let myNotifications  = [];           // buyer's unread notifications from Supabase
 let _listingsCursor    = null;   // created_at of last fetched row for cursor pagination
 let _listingsExhausted = false;  // true when Supabase has no more pages
+const LISTINGS_PAGE_SIZE = 50;   // rows per marketplace grid page — 10 desktop rows, a full shop-window on first paint
 let _listingsLoading   = false;  // guard against concurrent fetches
 let _pendingStoreOpen  = null;   // seller userId to auto-open storefront from ?store= URL param
 let _pendingItemOpen   = null;   // listing id to auto-open from ?item= URL param after listings load
@@ -1870,7 +1871,7 @@ async function loadPublicListingsFromSupabase(append = false) {
             .select('*, listing_images(storage_path, position), listing_vehicles(make, model, series)')
             .in('status', ['active', 'pending'])
             .order('created_at', { ascending: false })
-            .limit(20);
+            .limit(LISTINGS_PAGE_SIZE);
 
         // Own listings come from userListings (loaded separately). Excluding them here
         // stops pagination from burning whole pages on the signed-in seller's own —
@@ -1887,7 +1888,7 @@ async function loadPublicListingsFromSupabase(append = false) {
         if (rows && rows.length > 0) {
             _listingsCursor = rows[rows.length - 1].created_at;
         }
-        if (!rows || rows.length < 20) _listingsExhausted = true;
+        if (!rows || rows.length < LISTINGS_PAGE_SIZE) _listingsExhausted = true;
 
         // Batch-fetch current display names, profile pics, visibility status, and seller ratings
         const sellerIds = [...new Set((rows || []).map(r => r.seller_id).filter(Boolean))];
