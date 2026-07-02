@@ -4824,10 +4824,9 @@ function renderMainGrid() {
 // Used both to hide already-stocked items in the seller's wanted feed,
 // and to suggest which buyers to notify after a new listing is published.
 function wantedMatchesListing(w, listing) {
-    // Category must match if both sides have one
-    const lCat = (listing.category || '').toLowerCase();
-    const wCat = (w.category   || '').toLowerCase();
-    if (lCat && wCat && lCat !== wCat) return false;
+    // Category is deliberately not a veto: the wanted-form and sell-form taxonomies
+    // don't always line up, and a category may be unset — so we match on vehicle +
+    // part-name words and let the seller confirm who to notify.
 
     // Make must match if both sides have one
     const lMake  = (listing.fits?.[0]?.make  || '').toLowerCase().trim();
