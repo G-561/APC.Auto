@@ -8674,6 +8674,21 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .pro-lst-new-btn:hover { background: #d95f10; }
 .pro-lst-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
 
+/* Members Wanted + Vehicle Stock are single-column lists, not card grids — centre
+   them to a readable width on desktop instead of stretching rows edge to edge.
+   Grey surface (#f2f2f7, same as the dashboard) shows on the sides. */
+@media (min-width: 900px) {
+    #proWantedView,
+    #proVehicleStockView {
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+/* The Wanted list was capped at 260px for the old dashboard card — let the page
+   body own the scroll so the list uses full page height. */
+#proWtBody .dash-wr-list { max-height: none; overflow: visible; }
+
 /* ─── Job Review — worker photos + banners ──────────────────────────────── */
 .edw-review-photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 .edw-review-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; cursor: pointer; }
