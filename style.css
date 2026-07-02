@@ -5661,10 +5661,13 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 }
 
 /* ── Pro Enquiries — Gmail-style 3-panel layout ──────────────────── */
-/* Constrain the enquiries centre to the index width so the chat isn't stretched
-   across ultra-wide monitors — grey surface shows on the sides */
+/* Constrain the Pro full-screen views to the index width (1600px centred, the
+   site-wide content frame) so content isn't stretched across ultra-wide
+   monitors — grey surface shows on the sides */
 @media (min-width: 900px) {
-    #proEnquiriesView {
+    #proEnquiriesView,
+    #proWantedView,
+    #proVehicleStockView {
         max-width: 1600px;
         margin-left: auto;
         margin-right: auto;
@@ -8674,17 +8677,6 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .pro-lst-new-btn:hover { background: #d95f10; }
 .pro-lst-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
 
-/* Members Wanted + Vehicle Stock are single-column lists, not card grids — centre
-   them to a readable width on desktop instead of stretching rows edge to edge.
-   Grey surface (#f2f2f7, same as the dashboard) shows on the sides. */
-@media (min-width: 900px) {
-    #proWantedView,
-    #proVehicleStockView {
-        max-width: 1000px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-}
 /* The Wanted list was capped at 260px for the old dashboard card — let the page
    body own the scroll so the list uses full page height. */
 #proWtBody .dash-wr-list { max-height: none; overflow: visible; }
