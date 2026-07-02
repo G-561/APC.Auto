@@ -13555,7 +13555,7 @@ function proRenderConvList(filter) {
     }
     list.innerHTML = convs.map(c => {
         const isSelling = c.sellerId === currentUserId;
-        const otherName = escapeHtml(isSelling ? (c.buyerName || 'Buyer') : (c.sellerName || 'Seller'));
+        const otherName = escapeHtml((isSelling ? c.buyerName : c.sellerName) || c.with || (isSelling ? 'Buyer' : 'Seller'));
         const initial   = otherName[0]?.toUpperCase() || '?';
         const partTitle = escapeHtml(getConvPartTitle(c));
         const lastMsg   = c.msgs?.length ? c.msgs[c.msgs.length - 1] : null;
@@ -13632,7 +13632,7 @@ function proOpenConv(id) {
         const partTitle = escapeHtml(getConvPartTitle(conv));
         const part      = findPartAnywhere(conv.partId);
         const isSelling = conv.sellerId === currentUserId;
-        const otherName = escapeHtml(isSelling ? (conv.buyerName || 'Buyer') : (conv.sellerName || 'Seller'));
+        const otherName = escapeHtml((isSelling ? conv.buyerName : conv.sellerName) || conv.with || (isSelling ? 'Buyer' : 'Seller'));
         content.innerHTML = `
             <div class="pro-mail-empty-msg">
                 <div class="pro-mail-thread-hdr">
