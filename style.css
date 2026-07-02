@@ -8677,6 +8677,13 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
 .pro-lst-new-btn:hover { background: #d95f10; }
 .pro-lst-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
 
+/* "List a Part" already sits in the desktop header, so the My Listings toolbar
+   "+ New Listing" is redundant on desktop — hide it there. Kept on mobile, where
+   the header button is hidden. Vehicle Stock's "+ Add Vehicle" is unaffected. */
+@media (min-width: 900px) {
+    #proListingsView .pro-lst-new-btn { display: none; }
+}
+
 /* The Wanted list was capped at 260px for the old dashboard card — let the page
    body own the scroll so the list uses full page height. */
 #proWtBody .dash-wr-list { max-height: none; overflow: visible; }
