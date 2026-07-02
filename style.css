@@ -8681,6 +8681,10 @@ body.tier-trade #settingsUpgradeNudge { order: 2; }
    body own the scroll so the list uses full page height. */
 #proWtBody .dash-wr-list { max-height: none; overflow: visible; }
 
+/* Wanted-request photos open in the shared lightbox — signal they're tappable */
+.dash-wr-thumb, .gh-need-thumb { cursor: zoom-in; }
+.dash-wr-thumb:hover, .gh-need-thumb:hover { opacity: 0.85; }
+
 /* ─── Job Review — worker photos + banners ──────────────────────────────── */
 .edw-review-photos { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 .edw-review-photo { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; cursor: pointer; }

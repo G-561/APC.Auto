@@ -7287,6 +7287,19 @@ function _lbResetZoom(animate) {
     if (animate) setTimeout(() => { if (img) img.style.transition = ''; }, 260);
 }
 
+// Light preview: open a wanted request's photo(s) in the shared lightbox so a
+// seller can eyeball the part before responding (and buyers can check their own).
+function previewWantedPhotos(photos) {
+    if (!photos || !photos.length) return;
+    const urls = photos.map(p => thumbUrl(p, 1200));
+    openDetailImageViewer(urls[0], urls, 0);
+}
+function _previewThumbEl(el) {
+    let photos = [];
+    try { photos = JSON.parse(el.dataset.photos || '[]'); } catch (e) {}
+    previewWantedPhotos(photos);
+}
+
 function openDetailImageViewer(src, images, idx) {
     _lightboxImages = (images && images.length) ? images : [src];
     _lightboxIdx    = (idx !== undefined) ? idx : _lightboxImages.indexOf(src);
@@ -9011,6 +9024,7 @@ function buildGarageNeed(w, showVehicle) {
         thumb.className = 'gh-need-thumb';
         thumb.src = thumbUrl(w.photos[0], 120);
         thumb.alt = '';
+        thumb.onclick = (e) => { e.stopPropagation(); previewWantedPhotos(w.photos); };
         row.appendChild(thumb);
     }
     row.appendChild(info);
@@ -16492,7 +16506,7 @@ async function renderDashWantedRequests() {
     const total = publicWantedDatabase.length;
     const preview = publicWantedDatabase.slice(0, 5).map(w => {
         const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
-        const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" alt="">` : '';
+        const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" data-photos="${escapeHtml(JSON.stringify(w.photos))}" onclick="event.stopPropagation(); _previewThumbEl(this)" alt="View photo">` : '';
         return `<div class="dash-wr-row">
             ${thumb}
             <div class="dash-wr-info">
@@ -16557,7 +16571,7 @@ function _proWtRender() {
 function _proWtRowHtml(w) {
     const vehicle = [w.make, w.model, w.year].filter(Boolean).join(' ');
     const budget  = w.maxPrice ? `<span class="dash-wr-budget">Max $${escapeHtml(String(w.maxPrice))}</span>` : '';
-    const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" alt="">` : '';
+    const thumb   = (w.photos && w.photos.length) ? `<img class="dash-wr-thumb" src="${escapeHtml(thumbUrl(w.photos[0], 120))}" data-photos="${escapeHtml(JSON.stringify(w.photos))}" onclick="event.stopPropagation(); _previewThumbEl(this)" alt="View photo">` : '';
     return `
         <div class="dash-wr-row">
             ${thumb}
