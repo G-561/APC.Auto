@@ -8179,9 +8179,7 @@ function handleGeneralEnquiry() {
     // If a general enquiry thread already exists with this seller, open it
     const existing = conversations.find(c => c.with === seller && c.partId === 'general');
     if (existing) {
-        toggleDrawer('inboxDrawer', true);
-        switchInboxTab('chats');
-        openInboxConv(existing.id);
+        openConversation(existing.id);
         return;
     }
 
@@ -8237,9 +8235,7 @@ function handleMessageSeller() {
         ? conversations.find(c => c.partId === part.supabaseId)
         : conversations.find(c => c.with === part.seller && c.partId === currentOpenPartId);
     if (existing) {
-        toggleDrawer('inboxDrawer', true);
-        switchInboxTab('chats');
-        openInboxConv(existing.id);
+        openConversation(existing.id);
         return;
     }
 
@@ -8312,10 +8308,8 @@ function sendContactMessage() {
 
 function viewSentConversation() {
     closeContactCard();
-    onOpenInbox();
-    if (_lastSentConvId !== null) {
-        setTimeout(() => openInboxConv(_lastSentConvId), 220);
-    }
+    if (_lastSentConvId !== null) openConversation(_lastSentConvId);
+    else onOpenInbox();
 }
 
 function closeContactCard() {
@@ -13018,8 +13012,7 @@ function submitOffer() {
 
     closeOfferSheet();
     showToast(`Offer of $${price} sent to ${part.seller}!`);
-    onOpenInbox();
-    setTimeout(() => openInboxConv(conv.id), 220);
+    openConversation(conv.id);
 }
 
 function acceptOfferCard(convId, msgIdx) {
@@ -13309,6 +13302,20 @@ function openMessagesCentre() {
     if (window.innerWidth < 900) { onOpenInbox(); return; }
     _showProSurface();
     proOpenEnquiries();
+}
+
+// Open a specific conversation in the right place for the viewport (deep-links)
+function openConversation(convId) {
+    if (window.innerWidth >= 900 && userIsSignedIn) {
+        openMessagesCentre();
+        const conv = conversations.find(c => c.id === convId);
+        if (conv) proSetFolder(conv.sellerId === currentUserId ? 'selling' : 'buying');
+        proOpenConv(convId);
+    } else {
+        onOpenInbox();
+        switchInboxTab('chats');
+        setTimeout(() => openInboxConv(convId), 220);
+    }
 }
 
 function closeDashboard() {
@@ -17809,7 +17816,7 @@ function _slViewInEnquiries() {
     proSetFolder('buying');
     if (conv?.supabaseConvId) {
         const local = conversations.find(c => c.supabaseConvId === conv.supabaseConvId);
-        if (local) setTimeout(() => openInboxConv(local.id), 250);
+        if (local) proOpenConv(local.id);
     }
 }
 
